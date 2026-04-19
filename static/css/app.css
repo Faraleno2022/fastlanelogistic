@@ -1,0 +1,47 @@
+body { background:#f4f6f9; font-family: Arial, sans-serif; }
+
+/* ==== Navbar compacte ==== */
+.navbar { padding-top: .2rem; padding-bottom: .2rem; }
+.navbar-brand { letter-spacing: .2px; font-size: .9rem !important; padding-top: .2rem; padding-bottom: .2rem; margin-right: .5rem; }
+.navbar-brand i { font-size: 1.05rem; }
+.navbar .nav-link {
+  font-size: .78rem;
+  padding: .35rem .45rem !important;
+  white-space: nowrap;
+}
+.navbar .nav-link i { font-size: .88rem; margin-right: .15rem; }
+.navbar .dropdown-menu { font-size: .85rem; min-width: 11rem; }
+.navbar .dropdown-item { padding-top: .35rem; padding-bottom: .35rem; }
+.navbar .badge { font-size: .65rem; font-weight: 500; }
+.navbar form .dropdown-item { font-size: .85rem; }
+.navbar .user-name { max-width: 150px; font-size: .78rem; }
+/* Séparateur discret entre groupes */
+.navbar .nav-item + .nav-item .nav-link { border-left: 1px solid rgba(255,255,255,.08); }
+@media (max-width: 1199.98px) {
+  .navbar .nav-item + .nav-item .nav-link { border-left: 0; }
+}
+/* Breakpoint intermédiaire : cache les libellés des dropdowns principaux entre
+   1200px et 1500px, ne laisse que les icônes (avec tooltip) */
+@media (min-width: 1200px) and (max-width: 1499.98px) {
+  .navbar .nav-link .nav-label { display: none; }
+  .navbar .user-name { max-width: 100px; }
+}
+.kpi-card { border:none; box-shadow:0 2px 8px rgba(0,0,0,.06); border-radius:14px; transition: transform .15s; }
+.kpi-card:hover { transform: translateY(-2px); }
+.kpi-title { font-size:.85rem; text-transform:uppercase; letter-spacing:.5px; color:#6c757d; }
+.kpi-value { font-size:1.65rem; font-weight:700; color:#1F4E78; }
+.kpi-icon { font-size:1.8rem; opacity:.35; }
+.section-header { background:linear-gradient(90deg,#1F4E78,#2E75B6); color:#fff; padding:.65rem 1rem; border-radius:8px; font-weight:600; letter-spacing:.3px; }
+.section-header-green { background:linear-gradient(90deg,#385723,#548235); color:#fff; padding:.65rem 1rem; border-radius:8px; font-weight:600; }
+.section-header-red { background:linear-gradient(90deg,#A52A2A,#C00000); color:#fff; padding:.65rem 1rem; border-radius:8px; font-weight:600; }
+.table-mini thead { background:#2E75B6; color:#fff; font-size:.85rem; }
+.table-mini tbody td { font-size:.88rem; }
+.pres-P { background:#C6EFCE!important; color:#006100; font-weight:700; }
+.pres-A { background:#FFC7CE!important; color:#9C0006; font-weight:700; }
+.pres-C { background:#BDD7EE!important; color:#1F4E78; font-weight:700; }
+.pres-M { background:#FFD966!important; color:#7F6000; font-weight:700; }
+.pres-D { background:#B4A7D6!important; color:#fff; font-weight:700; }
+.pres-R { background:#D9D9D9!important; color:#595959; font-weight:700; }
+.attendance-table th { font-size:.7rem; padding:2px; }
+.attendance-table td { text-align:center; font-size:.8rem; padding:2px; min-width:26px; }
+.badge-role { background:#FFE699; color:#7F6000; }

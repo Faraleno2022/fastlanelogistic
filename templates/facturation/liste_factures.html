@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Factures{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-receipt"></i> Liste des factures</h3>
+  <a href="{% url 'facturation:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Nouvelle facture</a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    {% include "_search_bar.html" with target="#tblFactures" placeholder="N° facture, client, contrat, statut..." %}
+    <div class="table-responsive">
+      <table id="tblFactures" data-searchable class="table table-hover table-striped mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>N° Facture</th>
+            <th>Client</th>
+            <th>Contrat</th>
+            <th>Période</th>
+            <th>Émission</th>
+            <th>Échéance</th>
+            <th class="text-end" data-sum="sum" data-format="int">Rotations</th>
+            <th class="text-end" data-sum="sum" data-format="dec1">Tonnage</th>
+            <th class="text-end" data-sum="sum" data-format="int">HT</th>
+            <th class="text-end" data-sum="sum" data-format="int">TVA</th>
+            <th class="text-end" data-sum="sum" data-format="int">TTC</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in factures %}
+          <tr>
+            <td><strong>{{ f.numero }}</strong></td>
+            <td>{{ f.contrat.client }}</td>
+            <td>{{ f.contrat.code }}</td>
+            <td>{{ f.periode_mois }}/{{ f.periode_annee }}</td>
+            <td>{{ f.date_emission|date:"d/m/Y" }}</td>
+            <td>{{ f.echeance|date:"d/m/Y"|default:"—" }}</td>
+            <td class="text-end">{{ f.nb_rotations }}</td>
+            <td class="text-end">{{ f.tonnage_total|floatformat:0|intcomma }}</td>
+            <td class="text-end">{{ f.montant_ht|floatformat:0|intcomma }}</td>
+            <td class="text-end">{{ f.tva|floatformat:0|intcomma }}</td>
+            <td class="text-end fw-bold">{{ f.montant_ttc|floatformat:0|intcomma }}</td>
+            <td>
+              {% if f.statut == "BROUILLON" %}
+                <span class="badge bg-secondary">Brouillon</span>
+              {% elif f.statut == "EMISE" %}
+                <span class="badge bg-primary">Émise</span>
+              {% elif f.statut == "PAYEE" %}
+                <span class="badge bg-success">Payée</span>
+              {% elif f.statut == "ANNULEE" %}
+                <span class="badge bg-danger">Annulée</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">
+              <a href="{% url 'facturation:detail' f.numero %}" class="btn btn-outline-primary btn-sm" title="Voir"><i class="bi bi-eye"></i></a>
+              <a href="{% url 'facturation:edit' f.numero %}" class="btn btn-outline-warning btn-sm" title="Modifier"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'facturation:delete' f.numero %}" class="btn btn-outline-danger btn-sm" title="Supprimer"><i class="bi bi-trash"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="13" class="text-center text-muted py-4">Aucune facture</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

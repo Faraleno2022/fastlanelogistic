@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Tableau de bord — {{ SOCIETE_NOM }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-speedometer2"></i> Tableau de bord — {{ mois_label }} {{ annee }}</h3>
+  <form method="get" class="d-flex gap-2">
+    <select name="mois" class="form-select form-select-sm" style="width:auto">
+      {% for m in "123456789101112"|make_list %}{% endfor %}
+      {% for i in "123456789012"|make_list %}{% endfor %}
+      <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+      <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+      <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+      <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+      <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+      <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+      <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+      <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+      <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+      <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+      <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+      <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+    </select>
+    <input type="number" name="annee" value="{{ annee }}" class="form-control form-control-sm" style="width:100px">
+    <button class="btn btn-sm btn-primary">Filtrer</button>
+  </form>
+</div>
+
+<!-- FLOTTE -->
+<div class="section-header mb-3"><i class="bi bi-truck"></i> Flotte</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-2"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Nb camions</div><div class="kpi-value">{{ flotte_nb }}</div></div></div></div>
+  <div class="col-md-2"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Capacité (T)</div><div class="kpi-value">{{ flotte_capacite|floatformat:0|intcomma }}</div></div></div></div>
+  <div class="col-md-3"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Valeur flotte ({{ DEVISE }})</div><div class="kpi-value">{{ flotte_prix|floatformat:0|intcomma }}</div></div></div></div>
+  <div class="col-md-2"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Amort. mensuel</div><div class="kpi-value">{{ amort_mensuel|floatformat:0|intcomma }}</div></div></div></div>
+  <div class="col-md-3"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Valeur résiduelle</div><div class="kpi-value">{{ vr_totale|floatformat:0|intcomma }}</div></div></div></div>
+</div>
+
+<!-- CARBURANT -->
+<div class="section-header mb-3"><i class="bi bi-fuel-pump"></i> Carburant du mois</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-2"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Litres pris</div><div class="kpi-value">{{ car_litres|floatformat:0|intcomma }}</div></div></div></div>
+  <div class="col-md-2"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Km parcourus</div><div class="kpi-value">{{ car_km|intcomma }}</div></div></div></div>
+  <div class="col-md-2"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">L/100 km</div><div class="kpi-value">{{ car_conso|floatformat:2 }}</div></div></div></div>
+  <div class="col-md-3"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Coût carburant</div><div class="kpi-value">{{ car_montant|floatformat:0|intcomma }}</div></div></div></div>
+  <div class="col-md-3"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">GNF / km</div><div class="kpi-value">{{ car_gnf_km|floatformat:0|intcomma }}</div></div></div></div>
+</div>
+
+<!-- PANNES & TRANSPORT -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="section-header mb-3"><i class="bi bi-tools"></i> Pannes & réparations</div>
+    <div class="row g-2">
+      <div class="col-6"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Nb pannes</div><div class="kpi-value">{{ pan_count }}</div></div></div></div>
+      <div class="col-6"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Coût total</div><div class="kpi-value">{{ pan_total|floatformat:0|intcomma }}</div></div></div></div>
+      <div class="col-6"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Pièces</div><div class="kpi-value">{{ pan_pieces|floatformat:0|intcomma }}</div></div></div></div>
+      <div class="col-6"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Jours immo.</div><div class="kpi-value">{{ pan_immo }}</div></div></div></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="section-header-green mb-3"><i class="bi bi-box-seam"></i> Transport bauxite</div>
+    <div class="row g-2">
+      <div class="col-6"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Voyages</div><div class="kpi-value">{{ trans_nb }}</div></div></div></div>
+      <div class="col-6"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Tonnage (T)</div><div class="kpi-value">{{ trans_tonnage|floatformat:0|intcomma }}</div></div></div></div>
+      <div class="col-6"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Distance (km)</div><div class="kpi-value">{{ trans_distance|floatformat:0|intcomma }}</div></div></div></div>
+      <div class="col-6"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Chiffre d'affaires</div><div class="kpi-value">{{ trans_ca|floatformat:0|intcomma }}</div></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SYNTHÈSE FINANCIÈRE -->
+<div class="section-header-red mb-3"><i class="bi bi-graph-up"></i> Synthèse financière du mois</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">CA total</div><div class="kpi-value text-success">{{ trans_ca|floatformat:0|intcomma }}</div></div></div></div>
+  <div class="col-md-3"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Charges totales</div><div class="kpi-value text-danger">{{ charges_totales|floatformat:0|intcomma }}</div></div></div></div>
+  <div class="col-md-3"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Résultat net</div><div class="kpi-value {% if resultat_net < 0 %}text-danger{% else %}text-success{% endif %}">{{ resultat_net|floatformat:0|intcomma }}</div></div></div></div>
+  <div class="col-md-3"><div class="card kpi-card"><div class="card-body"><div class="kpi-title">Marge nette</div><div class="kpi-value">{{ marge|floatformat:3 }}</div></div></div></div>
+</div>
+
+<!-- GRAPHIQUES -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm"><div class="card-body">
+      <h5 class="mb-3">CA par camion ({{ mois_label }} {{ annee }})</h5>
+      <canvas id="chartCamion"></canvas>
+    </div></div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm"><div class="card-body">
+      <h5 class="mb-3">Tonnage par chauffeur ({{ mois_label }} {{ annee }})</h5>
+      <canvas id="chartChauffeur"></canvas>
+    </div></div>
+  </div>
+  <div class="col-md-12">
+    <div class="card shadow-sm"><div class="card-body">
+      <h5 class="mb-3">Évolution mensuelle {{ annee }} — CA & Tonnage</h5>
+      <canvas id="chartMois" style="height:90px"></canvas>
+    </div></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const dataCamion = {{ ca_par_camion_json|safe }};
+new Chart(document.getElementById('chartCamion'), {
+  type: 'bar',
+  data: { labels: dataCamion.labels, datasets: [{ label: 'CA (GNF)', data: dataCamion.values, backgroundColor: '#2E75B6' }] },
+  options: { responsive: true, plugins: { legend: { display: false } } }
+});
+
+const dataChauffeur = {{ tonnage_par_chauffeur_json|safe }};
+new Chart(document.getElementById('chartChauffeur'), {
+  type: 'doughnut',
+  data: { labels: dataChauffeur.labels, datasets: [{ data: dataChauffeur.values, backgroundColor: ['#1F4E78','#2E75B6','#548235','#C00000','#FFC000','#7030A0','#385723','#00B050','#FF7F00','#888888'] }] }
+});
+
+const serie = {{ serie_mensuelle_json|safe }};
+new Chart(document.getElementById('chartMois'), {
+  type: 'line',
+  data: {
+    labels: serie.map(x => x.mois),
+    datasets: [
+      { label: 'CA (GNF)', data: serie.map(x => x.ca), borderColor: '#1F4E78', backgroundColor: 'rgba(31,78,120,.15)', fill: true, tension: .3, yAxisID: 'y' },
+      { label: 'Tonnage (T)', data: serie.map(x => x.tonnage), borderColor: '#548235', backgroundColor: 'rgba(84,130,53,.15)', fill: true, tension: .3, yAxisID: 'y1' }
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: { type: 'linear', position: 'left' },
+      y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
+    }
+  }
+});
+</script>
+{% endblock %}

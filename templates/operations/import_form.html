@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load core_extras %}
+{% block title %}Importer — {{ titre }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-upload"></i> Import Excel — {{ titre }}</h3>
+  <a href="{% url 'operations:import_template' module %}" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-file-earmark-excel"></i> Télécharger le modèle
+  </a>
+</div>
+
+<div class="alert alert-info d-flex gap-2 align-items-start small">
+  <i class="bi bi-info-circle fs-5"></i>
+  <div>
+    <strong>Comment faire :</strong>
+    <ol class="mb-1">
+      <li>Téléchargez le modèle Excel ci-dessus.</li>
+      <li>Complétez les lignes en respectant les en-têtes. Les colonnes <span class="badge bg-warning text-dark">orange</span> sont obligatoires.</li>
+      <li>Cliquez sur « Vérifier » pour un aperçu, puis « Importer » si tout est OK.</li>
+    </ol>
+  </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card shadow-sm">
+  {% csrf_token %}
+  <div class="card-body">
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Fichier Excel (.xlsx)</label>
+      <input type="file" name="fichier" accept=".xlsx" class="form-control" required>
+    </div>
+
+    {% if errors %}
+      <div class="alert alert-danger">
+        <strong><i class="bi bi-exclamation-triangle"></i> {{ errors|length }} erreur(s) détectée(s) :</strong>
+        <ul class="mb-0 small">
+          {% for ligne, msg in errors %}
+            <li>Ligne {{ ligne }} : {{ msg }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {% if preview %}
+      <div class="alert alert-{% if errors %}warning{% else %}success{% endif %}">
+        <i class="bi bi-eye"></i>
+        Aperçu des {{ preview|length }} premières ligne(s){% if total_rows %} sur {{ total_rows }} valide(s){% endif %} :
+      </div>
+      <div class="table-responsive mb-3">
+        <table class="table table-sm table-bordered">
+          <thead class="table-dark">
+            <tr>
+              <th>#</th>
+              {% for col in schema %}<th>{{ col.label }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for ligne, data in preview %}
+              <tr>
+                <td class="fw-bold">{{ ligne }}</td>
+                {% for col in schema %}<td>{{ data|dictget:col.key|default:"—" }}</td>{% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    <hr>
+    <div class="d-flex justify-content-between align-items-center">
+      <a href="javascript:history.back()" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+      </a>
+      <div class="d-flex gap-2">
+        <button type="submit" name="action" value="preview" class="btn btn-outline-primary">
+          <i class="bi bi-search"></i> Vérifier
+        </button>
+        <button type="submit" name="action" value="import" class="btn btn-success"
+                {% if errors %}disabled{% endif %}>
+          <i class="bi bi-cloud-upload"></i> Importer
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<h5 class="mt-4"><i class="bi bi-list-check"></i> Colonnes attendues</h5>
+<div class="table-responsive">
+  <table class="table table-sm table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>Colonne</th><th>Obligatoire</th><th>Type</th><th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for col in schema %}
+        <tr>
+          <td>{{ col.label }}</td>
+          <td>{% if col.required %}<span class="badge bg-warning text-dark">OUI</span>{% else %}<span class="text-muted">non</span>{% endif %}</td>
+          <td><code>{{ col.type }}</code></td>
+          <td class="small">{{ col.help|default:"—" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

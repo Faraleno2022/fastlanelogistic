@@ -1,0 +1,81 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}Appels d'offres — {{ SOCIETE_NOM }}{% endblock %}
+
+{% block content %}
+<section class="page-header py-5 text-white">
+  <div class="container">
+    <h1 class="fw-bold mb-2">Appels d'offres</h1>
+    <p class="lead mb-0">Consultations ouvertes aux fournisseurs, prestataires et partenaires de {{ SOCIETE_NOM }}.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <h3 class="fw-bold mb-4"><i class="bi bi-unlock text-success"></i> Appels d'offres ouverts</h3>
+    {% if ouverts %}
+    <div class="row g-4 mb-5">
+      {% for ao in ouverts %}
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm border-success border-start border-4">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge bg-success">Ouvert</span>
+              <small class="text-muted"><i class="bi bi-tag"></i> {{ ao.reference }}</small>
+            </div>
+            <h5 class="card-title">{{ ao.titre }}</h5>
+            <p class="card-text">{{ ao.objet }}</p>
+            <div class="small text-muted mb-3">
+              <div><i class="bi bi-calendar-plus"></i> Publié le {{ ao.date_publication|date:"d/m/Y" }}</div>
+              <div><i class="bi bi-calendar-x"></i> Clôture le <strong class="text-danger">{{ ao.date_limite|date:"d/m/Y" }}</strong>
+                {% if ao.jours_restants >= 0 %}
+                  <span class="badge bg-warning text-dark ms-1">
+                    {% if ao.jours_restants == 0 %}Dernier jour
+                    {% else %}J-{{ ao.jours_restants }}{% endif %}
+                  </span>
+                {% endif %}
+              </div>
+              {% if ao.lieu_execution %}<div><i class="bi bi-geo-alt"></i> {{ ao.lieu_execution }}</div>{% endif %}
+            </div>
+            <a href="{{ ao.get_absolute_url }}" class="btn btn-primary btn-sm">Voir le détail <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-light border text-center py-4 mb-5">
+      <i class="bi bi-info-circle"></i> Aucun appel d'offres ouvert actuellement.
+    </div>
+    {% endif %}
+
+    {% if clos %}
+    <h3 class="fw-bold mb-4 text-muted"><i class="bi bi-lock"></i> Appels d'offres clos</h3>
+    <div class="table-responsive">
+      <table class="table table-hover bg-white shadow-sm">
+        <thead class="table-light">
+          <tr>
+            <th>Référence</th>
+            <th>Titre</th>
+            <th>Clôture</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ao in clos %}
+          <tr>
+            <td class="text-muted">{{ ao.reference }}</td>
+            <td>{{ ao.titre }}</td>
+            <td class="text-muted">{{ ao.date_limite|date:"d/m/Y" }}</td>
+            <td><span class="badge bg-secondary">{{ ao.get_statut_display }}</span></td>
+            <td><a href="{{ ao.get_absolute_url }}" class="btn btn-sm btn-outline-secondary">Consulter</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Rapport mensuel — {{ mois_label }} {{ annee }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="mb-0"><i class="bi bi-clipboard-data"></i> Rapport mensuel intelligent</h3>
+    <p class="text-muted mb-0">Analyse consolidée pour <strong>{{ mois_label }} {{ annee }}</strong></p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <form method="get" class="d-flex gap-2">
+      <select name="mois" class="form-select form-select-sm">
+        {% for m in "123456789101112"|make_list %}{% endfor %}
+        {% for i in "123456789" %}
+          <option value="{{ forloop.counter }}" {% if mois == forloop.counter %}selected{% endif %}>{{ forloop.counter }}</option>
+        {% endfor %}
+        <option value="10" {% if mois == 10 %}selected{% endif %}>10</option>
+        <option value="11" {% if mois == 11 %}selected{% endif %}>11</option>
+        <option value="12" {% if mois == 12 %}selected{% endif %}>12</option>
+      </select>
+      <input type="number" name="annee" class="form-control form-control-sm" value="{{ annee }}" style="width:100px;">
+      <button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-funnel"></i></button>
+    </form>
+    <form method="post" action="{% url 'dashboard:generer_factures' %}" class="d-flex gap-1">
+      {% csrf_token %}
+      <input type="hidden" name="mois" value="{{ mois }}">
+      <input type="hidden" name="annee" value="{{ annee }}">
+      <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Générer / mettre à jour les factures de {{ mois_label }} {{ annee }} pour tous les contrats actifs ?');">
+        <i class="bi bi-receipt"></i> Générer factures
+      </button>
+      <button type="submit" name="force" value="1" class="btn btn-sm btn-outline-warning" onclick="return confirm('FORCER le recalcul de toutes les factures BROUILLON du mois ?');">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ====================== KPIs EN-TÊTE ====================== -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card border-success shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Chiffre d'affaires</div>
+        <div class="h4 mb-0 text-success">{{ trans_ca_total|floatformat:0|intcomma }} GNF</div>
+        <div class="small text-muted">{{ trans_nb_voyages }} voyages — {{ trans_tonnage_total|floatformat:1|intcomma }} T</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-danger shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Charges totales</div>
+        <div class="h4 mb-0 text-danger">{{ charges_totales|floatformat:0|intcomma }} GNF</div>
+        <div class="small text-muted">Carb. + Salaires + Amort. + Pannes + Admin.</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card {% if resultat_net >= 0 %}border-primary{% else %}border-warning{% endif %} shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Résultat net</div>
+        <div class="h4 mb-0 {% if resultat_net >= 0 %}text-primary{% else %}text-warning{% endif %}">
+          {{ resultat_net|floatformat:0|intcomma }} GNF
+        </div>
+        <div class="small text-muted">Marge : {{ marge_pct|floatformat:1 }} %</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-info shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Factures émises</div>
+        <div class="h4 mb-0 text-info">{{ facture_ttc_total|floatformat:0|intcomma }} GNF</div>
+        <div class="small text-muted">{{ factures|length }} facture(s) — TTC</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== PODIUMS ====================== -->
+<div class="row g-3 mb-4">
+
+  <!-- 🏆 Top consommateurs carburant -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-warning-subtle">
+        <strong><i class="bi bi-fuel-pump-fill text-warning"></i> Top consommateurs carburant</strong>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for c in car_top3_montant %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-{% if forloop.counter == 1 %}warning text-dark{% elif forloop.counter == 2 %}secondary{% else %}dark{% endif %} me-2">
+                {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}
+              </span>
+              <strong>{{ c.code }}</strong>
+              <div class="small text-muted">{{ c.litres|floatformat:1|intcomma }} L — {{ c.conso|floatformat:1 }} L/100km</div>
+            </div>
+            <span class="fw-bold text-warning">{{ c.montant|floatformat:0|intcomma }} GNF</span>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted text-center">Aucune donnée</li>
+        {% endfor %}
+      </ul>
+      <div class="card-footer bg-light small text-muted">
+        <i class="bi bi-info-circle"></i> Moyenne flotte : {{ car_conso_moyenne|floatformat:1 }} L/100km &middot; {{ car_gnf_km_moyen|floatformat:0|intcomma }} GNF/km
+      </div>
+    </div>
+  </div>
+
+  <!-- 🏆 Top camions transport -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-success-subtle">
+        <strong><i class="bi bi-truck text-success"></i> Top camions (tonnage)</strong>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for c in trans_top3_tonnage %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="me-2">
+                {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}
+              </span>
+              <strong>{{ c.code }}</strong>
+              <div class="small text-muted">{{ c.nb_voyages }} voyages — {{ c.taux_remplissage|floatformat:0 }}% de capacité</div>
+            </div>
+            <span class="fw-bold text-success">{{ c.tonnage|floatformat:1|intcomma }} T</span>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted text-center">Aucune donnée</li>
+        {% endfor %}
+      </ul>
+      <div class="card-footer bg-light small text-muted">
+        <i class="bi bi-info-circle"></i> Total flotte : {{ trans_tonnage_total|floatformat:1|intcomma }} T sur {{ trans_nb_voyages }} voyages
+      </div>
+    </div>
+  </div>
+
+  <!-- 🏆 Top chauffeurs -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-info-subtle">
+        <strong><i class="bi bi-person-badge-fill text-info"></i> Top chauffeurs (tonnage)</strong>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for ch in trans_top3_chauffeurs_tonnage %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="me-2">
+                {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}
+              </span>
+              <strong>{{ ch.nom }}</strong>
+              <div class="small text-muted">Camion {{ ch.camion }} — {{ ch.nb_voyages }} voyages</div>
+            </div>
+            <span class="fw-bold text-info">{{ ch.tonnage|floatformat:1|intcomma }} T</span>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted text-center">Aucune donnée</li>
+        {% endfor %}
+      </ul>
+      <div class="card-footer bg-light small text-muted">
+        <i class="bi bi-info-circle"></i> {{ nb_employes }} employés actifs — Masse salariale : {{ masse_salariale|floatformat:0|intcomma }} GNF
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== ANOMALIES ====================== -->
+{% if car_anomalies or pan_alertes %}
+<div class="card border-danger shadow-sm mb-4">
+  <div class="card-header bg-danger text-white">
+    <i class="bi bi-exclamation-triangle-fill"></i> <strong>Alertes & anomalies détectées</strong>
+  </div>
+  <div class="card-body">
+    {% if car_anomalies %}
+    <h6 class="text-danger"><i class="bi bi-fuel-pump"></i> Surconsommation carburant (&gt; 150% de la moyenne)</h6>
+    <ul class="mb-3">
+      {% for a in car_anomalies %}
+        <li><strong>{{ a.code }}</strong> — {{ a.conso|floatformat:1 }} L/100km (moyenne flotte : {{ car_conso_moyenne|floatformat:1 }})</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if pan_alertes %}
+    <h6 class="text-danger"><i class="bi bi-tools"></i> Camions à pannes répétées (≥ 3 ce mois)</h6>
+    <ul class="mb-0">
+      {% for p in pan_alertes %}
+        <li><strong>{{ p.camion__code }}</strong> — {{ p.nb_pannes }} pannes, {{ p.cout|floatformat:0|intcomma }} GNF de réparation, {{ p.immo }} j. d'immobilisation</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ====================== GRAPHIQUES ====================== -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header"><strong>Consommation & coût carburant par camion</strong></div>
+      <div class="card-body"><canvas id="chartCarburant" height="200"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header"><strong>Tonnage & voyages par camion</strong></div>
+      <div class="card-body"><canvas id="chartTransport" height="200"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header"><strong>Répartition des charges</strong></div>
+      <div class="card-body"><canvas id="chartCharges" height="200"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header"><strong>Synthèse financière</strong></div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tbody>
+            <tr><td>Chiffre d'affaires</td><td class="text-end text-success"><strong>{{ trans_ca_total|floatformat:0|intcomma }} GNF</strong></td></tr>
+            <tr><td>— Carburant</td><td class="text-end">{{ car_total_montant|floatformat:0|intcomma }}</td></tr>
+            <tr><td>— Pannes & réparations</td><td class="text-end">{{ pan_cout_total|floatformat:0|intcomma }}</td></tr>
+            <tr><td>— Masse salariale</td><td class="text-end">{{ masse_salariale|floatformat:0|intcomma }}</td></tr>
+            <tr><td>— Amortissement</td><td class="text-end">{{ amort_mensuel|floatformat:0|intcomma }}</td></tr>
+            <tr><td>— Dépenses admin.</td><td class="text-end">{{ dep_total|floatformat:0|intcomma }}</td></tr>
+            <tr class="table-active"><td><strong>Charges totales</strong></td><td class="text-end"><strong>{{ charges_totales|floatformat:0|intcomma }} GNF</strong></td></tr>
+            <tr class="{% if resultat_net >= 0 %}table-success{% else %}table-warning{% endif %}">
+              <td><strong>Résultat net</strong></td>
+              <td class="text-end"><strong>{{ resultat_net|floatformat:0|intcomma }} GNF</strong></td>
+            </tr>
+            <tr><td>Marge</td><td class="text-end"><strong>{{ marge_pct|floatformat:1 }} %</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== TABLEAUX DÉTAILLÉS ====================== -->
+<div class="card shadow-sm mb-4">
+  <div class="card-header"><strong>Détail par camion</strong></div>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Camion</th><th>Immat.</th>
+          <th class="text-end">Litres</th><th class="text-end">Km</th>
+          <th class="text-end">L/100km</th><th class="text-end">Coût carb. (GNF)</th>
+          <th class="text-end">Voyages</th><th class="text-end">Tonnage (T)</th>
+          <th class="text-end">CA (GNF)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in car_par_camion %}
+        <tr>
+          <td><strong>{{ c.code }}</strong></td>
+          <td>{{ c.immat }}</td>
+          <td class="text-end">{{ c.litres|floatformat:1|intcomma }}</td>
+          <td class="text-end">{{ c.km|intcomma }}</td>
+          <td class="text-end {% if c.conso > car_conso_moyenne|add:10 %}text-danger{% endif %}">
+            {{ c.conso|floatformat:1 }}
+          </td>
+          <td class="text-end">{{ c.montant|floatformat:0|intcomma }}</td>
+          {% for t in trans_par_camion %}
+            {% if t.code == c.code %}
+              <td class="text-end">{{ t.nb_voyages }}</td>
+              <td class="text-end">{{ t.tonnage|floatformat:1|intcomma }}</td>
+              <td class="text-end text-success">{{ t.ca|floatformat:0|intcomma }}</td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="text-center text-muted">Aucune donnée pour cette période</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Factures du mois -->
+<div class="card shadow-sm mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Factures de la période</strong>
+    <a href="{% url 'facturation:liste' %}" class="btn btn-sm btn-outline-primary">Toutes les factures →</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>N°</th><th>Client</th><th>Statut</th>
+          <th class="text-end">Voyages</th><th class="text-end">Tonnage</th>
+          <th class="text-end">Brut</th><th class="text-end">HT</th><th class="text-end">TTC</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in factures %}
+        <tr>
+          <td><strong>{{ f.numero }}</strong></td>
+          <td>{{ f.contrat.client }}</td>
+          <td>
+            <span class="badge bg-{% if f.statut == 'PAYEE' %}success{% elif f.statut == 'EMISE' %}primary{% elif f.statut == 'ANNULEE' %}danger{% else %}secondary{% endif %}">
+              {{ f.get_statut_display }}
+            </span>
+          </td>
+          <td class="text-end">{{ f.nb_rotations }}</td>
+          <td class="text-end">{{ f.tonnage_total|floatformat:1|intcomma }}</td>
+          <td class="text-end">{{ f.montant_brut|floatformat:0|intcomma }}</td>
+          <td class="text-end">{{ f.montant_ht|floatformat:0|intcomma }}</td>
+          <td class="text-end fw-bold">{{ f.montant_ttc|floatformat:0|intcomma }}</td>
+          <td><a href="{% url 'facturation:detail' f.numero %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="text-center text-muted py-3">
+          Aucune facture pour cette période — cliquez sur <strong>« Générer factures »</strong> en haut.
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const carData = {{ chart_car_par_camion_json|safe }};
+const transData = {{ chart_tonnage_par_camion_json|safe }};
+const chargesData = {{ chart_charges_json|safe }};
+
+if (carData.labels.length) {
+  new Chart(document.getElementById('chartCarburant'), {
+    type: 'bar',
+    data: {
+      labels: carData.labels,
+      datasets: [
+        { label: 'Coût (GNF)', data: carData.montants, backgroundColor: '#F59E0B', yAxisID: 'y' },
+        { label: 'Conso (L/100km)', data: carData.conso, type: 'line', borderColor: '#DC2626', backgroundColor: '#DC2626', yAxisID: 'y1', tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true, position: 'left', title: { display: true, text: 'GNF' } },
+        y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'L/100km' } }
+      }
+    }
+  });
+}
+
+if (transData.labels.length) {
+  new Chart(document.getElementById('chartTransport'), {
+    type: 'bar',
+    data: {
+      labels: transData.labels,
+      datasets: [
+        { label: 'Tonnage (T)', data: transData.tonnage, backgroundColor: '#10B981', yAxisID: 'y' },
+        { label: 'Voyages', data: transData.voyages, type: 'line', borderColor: '#1F4E78', backgroundColor: '#1F4E78', yAxisID: 'y1', tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true, position: 'left', title: { display: true, text: 'Tonnes' } },
+        y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Voyages' } }
+      }
+    }
+  });
+}
+
+if (chargesData.length) {
+  new Chart(document.getElementById('chartCharges'), {
+    type: 'doughnut',
+    data: {
+      labels: chargesData.map(x => x.label),
+      datasets: [{
+        data: chargesData.map(x => x.value),
+        backgroundColor: ['#F59E0B', '#DC2626', '#1F4E78', '#6B7280', '#10B981']
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'right' } } }
+  });
+}
+</script>
+{% endblock %}

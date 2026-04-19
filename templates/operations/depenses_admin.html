@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Dépenses administratives — {{ mois }}/{{ annee }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-file-earmark-text"></i> Dépenses administratives — {{ mois }}/{{ annee }}</h3>
+  <div class="d-flex gap-2">
+    <form method="get" class="d-flex gap-2">
+      <select name="mois" class="form-select form-select-sm" style="width:auto">
+        <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+        <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+        <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+        <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+        <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+        <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+        <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+        <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+        <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+        <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+        <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+        <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+      </select>
+      <input type="number" name="annee" value="{{ annee }}" class="form-control form-control-sm" style="width:90px">
+      <button class="btn btn-sm btn-primary">Filtrer</button>
+    </form>
+    <a href="{% url 'operations:depense_create' %}" class="btn btn-success btn-sm"><i class="bi bi-plus-lg"></i> Nouvelle dépense</a>
+    {% include "operations/_actions_menu.html" with module="depenses" fiche_type="" %}
+  </div>
+</div>
+
+<!-- KPI -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Nombre de dépenses</div>
+      <div class="kpi-value">{{ depenses|length }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Montant total ({{ DEVISE }})</div>
+      <div class="kpi-value text-danger">{{ total|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Tableau -->
+<div class="card shadow-sm">
+  <div class="card-body">
+    {% include "_search_bar.html" with target="#tblDepenses" placeholder="Type, description, référence, camion, statut..." %}
+    <div class="table-responsive">
+      <table id="tblDepenses" data-searchable class="table table-hover table-striped mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Référence</th>
+            <th>Camion</th>
+            <th class="text-end" data-sum="sum" data-format="int">Montant ({{ DEVISE }})</th>
+            <th>Échéance</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in depenses %}
+          <tr>
+            <td>{{ d.date|date:"d/m/Y" }}</td>
+            <td><span class="badge bg-secondary">{{ d.get_type_depense_display }}</span></td>
+            <td>{{ d.description }}</td>
+            <td>{{ d.reference|default:"—" }}</td>
+            <td>{{ d.camion.code|default:"Général" }}</td>
+            <td class="text-end fw-bold">{{ d.montant|floatformat:0|intcomma }}</td>
+            <td>{{ d.echeance|date:"d/m/Y"|default:"—" }}</td>
+            <td>
+              {% if d.statut == "PAYE" %}
+                <span class="badge bg-success">Payé</span>
+              {% elif d.statut == "ATTENTE" %}
+                <span class="badge bg-warning text-dark">En attente</span>
+              {% elif d.statut == "RETARD" %}
+                <span class="badge bg-danger">En retard</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">
+              <a href="{% url 'operations:depense_edit' d.pk %}" class="btn btn-outline-warning btn-sm" title="Modifier"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'operations:depense_delete' d.pk %}" class="btn btn-outline-danger btn-sm" title="Supprimer"><i class="bi bi-trash"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="text-center text-muted py-4">Aucune dépense administrative ce mois</td></tr>
+          {% endfor %}
+        </tbody>
+        {% if depenses %}
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="5">TOTAL</td>
+            <td class="text-end text-danger">{{ total|floatformat:0|intcomma }}</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

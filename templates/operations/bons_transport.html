@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Bons de transport — {{ mois }}/{{ annee }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-card-checklist"></i> Bons de transport — {{ mois }}/{{ annee }}</h3>
+  <div class="d-flex gap-2">
+    <form method="get" class="d-flex gap-2">
+      <select name="mois" class="form-select form-select-sm" style="width:auto">
+        <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+        <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+        <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+        <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+        <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+        <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+        <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+        <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+        <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+        <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+        <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+        <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+      </select>
+      <input type="number" name="annee" value="{{ annee }}" class="form-control form-control-sm" style="width:90px">
+      <button class="btn btn-sm btn-primary">Filtrer</button>
+    </form>
+    <a href="{% url 'operations:bon_create' %}" class="btn btn-success btn-sm"><i class="bi bi-plus-lg"></i> Nouveau bon</a>
+    {% include "operations/_actions_menu.html" with module="bons" fiche_type="bon_transport" %}
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Nb bons</div>
+      <div class="kpi-value">{{ nb_bons }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Quantité totale (T)</div>
+      <div class="kpi-value">{{ total_quantite|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Chauffeurs actifs</div>
+      <div class="kpi-value">{{ synth|length }}</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Synthèse par chauffeur -->
+{% if synth %}
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-info text-white"><i class="bi bi-bar-chart"></i> Synthèse par chauffeur</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th>Prénom</th>
+            <th>Nom</th>
+            <th>Téléphone</th>
+            <th>Plaque</th>
+            <th class="text-end">Nb bons</th>
+            <th class="text-end">Nb voyages</th>
+            <th class="text-end">Quantité (T)</th>
+            <th class="text-end">Moy / voyage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in synth %}
+          <tr>
+            <td>{{ s.prenom }}</td>
+            <td>{{ s.nom }}</td>
+            <td>{{ s.telephone }}</td>
+            <td>{{ s.plaque }}</td>
+            <td class="text-end">{{ s.nb_bons }}</td>
+            <td class="text-end">{{ s.nb_voyages }}</td>
+            <td class="text-end fw-bold">{{ s.quantite_totale|floatformat:1 }}</td>
+            <td class="text-end">{{ s.moyenne_voyage|floatformat:1 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Détail des bons -->
+<div class="card shadow-sm">
+  <div class="card-header bg-dark text-white"><i class="bi bi-list-ul"></i> Détail des bons</div>
+  <div class="card-body">
+    {% include "_search_bar.html" with target="#tblBons" placeholder="N° bon, chauffeur, plaque, lieu..." %}
+    <div class="table-responsive">
+      <table id="tblBons" data-searchable class="table table-hover table-striped mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th>N° Bon</th>
+            <th>Date</th>
+            <th>Prénom</th>
+            <th>Nom</th>
+            <th>Plaque</th>
+            <th>Lieu chargement</th>
+            <th>Départ</th>
+            <th>Pesée début</th>
+            <th>Pesée fin</th>
+            <th class="text-end" data-sum="sum" data-format="dec2">Quantité (T)</th>
+            <th>Observation</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bons %}
+          <tr>
+            <td><strong>{{ b.num_bon }}</strong></td>
+            <td>{{ b.date|date:"d/m/Y" }}</td>
+            <td>{{ b.prenom }}</td>
+            <td>{{ b.nom }}</td>
+            <td>{{ b.plaque }}</td>
+            <td>{{ b.lieu_chargement }}</td>
+            <td>{{ b.heure_depart|time:"H:i"|default:"—" }}</td>
+            <td>{{ b.heure_pesee_start|time:"H:i"|default:"—" }}</td>
+            <td>{{ b.heure_pesee_end|time:"H:i"|default:"—" }}</td>
+            <td class="text-end fw-bold">{{ b.quantite|floatformat:2 }}</td>
+            <td>{{ b.observation }}</td>
+            <td class="text-nowrap">
+              <a href="{% url 'operations:bon_edit' b.pk %}" class="btn btn-outline-warning btn-sm" title="Modifier"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'operations:bon_delete' b.pk %}" class="btn btn-outline-danger btn-sm" title="Supprimer"><i class="bi bi-trash"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="12" class="text-center text-muted py-4">Aucun bon de transport ce mois</td></tr>
+          {% endfor %}
+        </tbody>
+        {% if bons %}
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="9">TOTAL ({{ nb_bons }} bons)</td>
+            <td class="text-end">{{ total_quantite|floatformat:0|intcomma }} T</td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

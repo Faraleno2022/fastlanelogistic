@@ -1,0 +1,110 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}{{ ao.reference }} — {{ ao.titre }} — {{ SOCIETE_NOM }}{% endblock %}
+{% block description %}{{ ao.objet|truncatechars:150 }}{% endblock %}
+
+{% block content %}
+<section class="page-header py-5 text-white">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="{% url 'public:home' %}" class="text-white-50">Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'public:appels_offres' %}" class="text-white-50">Appels d'offres</a></li>
+        <li class="breadcrumb-item active text-white" aria-current="page">{{ ao.reference }}</li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      {% if ao.est_ouvert %}<span class="badge bg-success">Ouvert</span>
+      {% else %}<span class="badge bg-secondary">{{ ao.get_statut_display }}</span>{% endif %}
+      <span class="text-white-50">{{ ao.reference }}</span>
+    </div>
+    <h1 class="fw-bold mb-0">{{ ao.titre }}</h1>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="fw-bold mb-3">Objet</h5>
+            <p class="lead">{{ ao.objet }}</p>
+            <hr>
+            <h5 class="fw-bold mb-3">Description détaillée</h5>
+            <div>{{ ao.description|linebreaks }}</div>
+          </div>
+        </div>
+
+        {% if ao.document %}
+        <div class="card shadow-sm bg-light">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <i class="bi bi-file-earmark-pdf text-danger fs-3 me-2"></i>
+              <strong>Dossier d'appel d'offres</strong>
+            </div>
+            <a href="{{ ao.document.url }}" class="btn btn-primary" target="_blank">
+              <i class="bi bi-download"></i> Télécharger le dossier
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h6 class="fw-bold text-uppercase text-muted small mb-3">Calendrier</h6>
+            <div class="mb-3">
+              <div class="small text-muted">Publication</div>
+              <div class="fw-bold">{{ ao.date_publication|date:"d F Y" }}</div>
+            </div>
+            <div class="mb-3">
+              <div class="small text-muted">Date limite de dépôt</div>
+              <div class="fw-bold text-danger">{{ ao.date_limite|date:"d F Y" }}</div>
+            </div>
+            {% if ao.est_ouvert %}
+              {% if ao.jours_restants == 0 %}
+                <div class="alert alert-warning small mb-0"><i class="bi bi-exclamation-triangle"></i> Dernier jour de dépôt !</div>
+              {% else %}
+                <div class="alert alert-info small mb-0"><i class="bi bi-clock"></i> Il reste <strong>{{ ao.jours_restants }}</strong> jour(s).</div>
+              {% endif %}
+            {% else %}
+              <div class="alert alert-secondary small mb-0"><i class="bi bi-lock"></i> Consultation clôturée</div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if ao.lieu_execution %}
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h6 class="fw-bold text-uppercase text-muted small mb-2">Lieu d'exécution</h6>
+            <p class="mb-0"><i class="bi bi-geo-alt text-primary"></i> {{ ao.lieu_execution }}</p>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if ao.contact_email or ao.contact_telephone %}
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h6 class="fw-bold text-uppercase text-muted small mb-3">Contact</h6>
+            {% if ao.contact_email %}
+            <p class="mb-2"><i class="bi bi-envelope text-primary"></i> <a href="mailto:{{ ao.contact_email }}">{{ ao.contact_email }}</a></p>
+            {% endif %}
+            {% if ao.contact_telephone %}
+            <p class="mb-0"><i class="bi bi-telephone text-primary"></i> {{ ao.contact_telephone }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <a href="{% url 'public:appels_offres' %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

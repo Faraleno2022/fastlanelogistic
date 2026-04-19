@@ -1,0 +1,22 @@
+{% comment %}
+Barre de recherche dynamique réutilisable.
+Usage :
+  {% include "_search_bar.html" with target="#tblCarburant" placeholder="Camion, chauffeur, station..." %}
+{% endcomment %}
+<div class="row g-2 align-items-center mb-2">
+  <div class="col-md-6">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+      <input type="search" class="form-control"
+             data-table-search="{{ target }}"
+             placeholder="{{ placeholder|default:'Rechercher dans le tableau...' }}"
+             autocomplete="off">
+    </div>
+  </div>
+  <div class="col-md-6 text-md-end">
+    <small class="text-muted" data-search-count="{{ target }}">
+      <i class="bi bi-list-ul"></i>
+      <b class="cnt-visible">–</b> / <b class="cnt-total">–</b> ligne(s) &middot; totaux recalculés automatiquement
+    </small>
+  </div>
+</div>

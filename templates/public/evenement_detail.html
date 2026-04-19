@@ -1,0 +1,48 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}{{ evt.titre }} — {{ SOCIETE_NOM }}{% endblock %}
+{% block description %}{{ evt.resume|default:evt.contenu|truncatechars:150 }}{% endblock %}
+
+{% block content %}
+<section class="page-header py-5 text-white">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="{% url 'public:home' %}" class="text-white-50">Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'public:evenements' %}" class="text-white-50">Événements</a></li>
+        <li class="breadcrumb-item active text-white" aria-current="page">{{ evt.titre|truncatechars:60 }}</li>
+      </ol>
+    </nav>
+    <h1 class="fw-bold mb-2">{{ evt.titre }}</h1>
+    <p class="mb-0">
+      <i class="bi bi-calendar"></i> {{ evt.date_evenement|date:"d F Y" }}
+      {% if evt.lieu %}&middot; <i class="bi bi-geo-alt"></i> {{ evt.lieu }}{% endif %}
+    </p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-9 mx-auto">
+        {% if evt.image %}
+        <img src="{{ evt.image.url }}" class="img-fluid rounded shadow-sm mb-4" alt="{{ evt.titre }}">
+        {% endif %}
+
+        {% if evt.resume %}
+        <p class="lead">{{ evt.resume }}</p>
+        {% endif %}
+
+        <div class="evt-content">
+          {{ evt.contenu|linebreaks }}
+        </div>
+
+        <hr class="my-4">
+        <a href="{% url 'public:evenements' %}" class="btn btn-outline-primary">
+          <i class="bi bi-arrow-left"></i> Retour aux événements
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

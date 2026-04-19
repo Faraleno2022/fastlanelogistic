@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Transport bauxite — {{ mois }}/{{ annee }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-box-seam"></i> Transport bauxite — {{ mois }}/{{ annee }}</h3>
+  <div class="d-flex gap-2">
+    <form method="get" class="d-flex gap-2">
+      <select name="mois" class="form-select form-select-sm" style="width:auto">
+        <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+        <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+        <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+        <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+        <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+        <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+        <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+        <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+        <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+        <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+        <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+        <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+      </select>
+      <input type="number" name="annee" value="{{ annee }}" class="form-control form-control-sm" style="width:90px">
+      <button class="btn btn-sm btn-primary">Filtrer</button>
+    </form>
+    <a href="{% url 'operations:transport_create' %}" class="btn btn-success btn-sm"><i class="bi bi-plus-lg"></i> Nouveau voyage</a>
+    {% include "operations/_actions_menu.html" with module="transport" fiche_type="voyage_bauxite" %}
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Nb voyages</div>
+      <div class="kpi-value">{{ nb_voyages }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Tonnage total (T)</div>
+      <div class="kpi-value">{{ total_tonnage|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Distance totale (km)</div>
+      <div class="kpi-value">{{ total_distance|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Chiffre d'affaires ({{ DEVISE }})</div>
+      <div class="kpi-value text-success">{{ total_ca|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Tableau -->
+<div class="card shadow-sm">
+  <div class="card-body">
+    {% include "_search_bar.html" with target="#tblTransport" placeholder="Camion, chauffeur, trajet, client, bon..." %}
+    <div class="table-responsive">
+      <table id="tblTransport" data-searchable class="table table-hover table-striped mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Date</th>
+            <th>Camion</th>
+            <th>Chauffeur</th>
+            <th>Trajet</th>
+            <th class="text-end" data-sum="sum"  data-format="dec1">Distance (km)</th>
+            <th class="text-end" data-sum="sum"  data-format="dec2">Tonnage (T)</th>
+            <th class="text-end" data-sum="avg"  data-format="int">Tarif (GNF/T)</th>
+            <th class="text-end" data-sum="sum"  data-format="int">CA</th>
+            <th>Client</th>
+            <th>N° Bon</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in voyages %}
+          <tr>
+            <td>{{ v.date|date:"d/m/Y" }}</td>
+            <td><strong>{{ v.camion.code }}</strong></td>
+            <td>{{ v.chauffeur.nom_complet|default:"—" }}</td>
+            <td>{{ v.trajet }}</td>
+            <td class="text-end">{{ v.distance_km|floatformat:1 }}</td>
+            <td class="text-end">{{ v.tonnage|floatformat:2 }}</td>
+            <td class="text-end">{{ v.tarif_unitaire|floatformat:0|intcomma }}</td>
+            <td class="text-end fw-bold text-success">{{ v.chiffre_affaires|floatformat:0|intcomma }}</td>
+            <td>{{ v.client }}</td>
+            <td>{{ v.num_bon }}</td>
+            <td class="text-nowrap">
+              <a href="{% url 'operations:transport_edit' v.pk %}" class="btn btn-outline-warning btn-sm" title="Modifier"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'operations:transport_delete' v.pk %}" class="btn btn-outline-danger btn-sm" title="Supprimer"><i class="bi bi-trash"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="11" class="text-center text-muted py-4">Aucun voyage ce mois</td></tr>
+          {% endfor %}
+        </tbody>
+        {% if voyages %}
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="4">TOTAUX ({{ nb_voyages }} voyages)</td>
+            <td class="text-end">{{ total_distance|floatformat:0|intcomma }}</td>
+            <td class="text-end">{{ total_tonnage|floatformat:0|intcomma }}</td>
+            <td></td>
+            <td class="text-end text-success">{{ total_ca|floatformat:0|intcomma }}</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

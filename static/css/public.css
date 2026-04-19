@@ -1,0 +1,159 @@
+/* ==== Site public Fastlane Logistic ==== */
+body.public-site {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: #ffffff;
+  color: #222;
+}
+
+/* Navbar */
+.public-navbar {
+  background: #1F4E78;
+  padding-top: .55rem;
+  padding-bottom: .55rem;
+}
+.public-navbar .navbar-brand {
+  font-size: 1.15rem;
+  letter-spacing: .3px;
+}
+.public-navbar .nav-link {
+  color: rgba(255,255,255,.85) !important;
+  font-weight: 500;
+  padding: .5rem .9rem !important;
+  border-radius: 6px;
+  transition: all .2s;
+}
+.public-navbar .nav-link:hover {
+  background: rgba(255,255,255,.1);
+  color: #fff !important;
+}
+.public-navbar .nav-link.active {
+  background: rgba(255,255,255,.18);
+  color: #fff !important;
+}
+
+/* Hero */
+.hero-public {
+  background: linear-gradient(135deg, #1F4E78 0%, #2E75B6 60%, #5B9BD5 100%);
+  min-height: 60vh;
+  position: relative;
+  overflow: hidden;
+}
+.hero-public::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,.08) 0, transparent 60%),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,.06) 0, transparent 60%);
+  pointer-events: none;
+}
+.hero-public > .container { position: relative; z-index: 1; }
+
+/* Header sur pages secondaires */
+.page-header {
+  background: linear-gradient(135deg, #1F4E78, #2E75B6);
+}
+.page-header .breadcrumb-item + .breadcrumb-item::before { color: rgba(255,255,255,.5); }
+
+/* Feature cards (home) */
+.feature-card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  transition: transform .2s, box-shadow .2s;
+}
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(31,78,120,.12);
+}
+.feature-icon {
+  width: 70px; height: 70px; margin: 0 auto;
+  background: linear-gradient(135deg, #1F4E78, #2E75B6);
+  color: #fff; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+}
+
+/* Cards générales */
+.card { border-radius: 12px; border: none; }
+.card .card-title { color: #1F4E78; font-weight: 600; }
+
+/* Contenu événement */
+.evt-content { font-size: 1.05rem; line-height: 1.7; color: #333; }
+.evt-content p { margin-bottom: 1rem; }
+
+/* Footer */
+.public-footer {
+  background: #1a3d5e;
+  color: #fff;
+}
+.public-footer .footer-link {
+  color: rgba(255,255,255,.7);
+  text-decoration: none;
+}
+.public-footer .footer-link:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Hero stats (accueil) */
+.hero-stats {
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.15);
+}
+.hero-stats .display-4 { font-size: 2.5rem; line-height: 1; }
+.text-white-75 { color: rgba(255,255,255,.75) !important; }
+
+/* Présentation / visuel bauxite */
+.about-visual {
+  background: linear-gradient(135deg, #7F4500 0%, #A0522D 50%, #CD8534 100%);
+  min-height: 320px;
+  position: relative;
+}
+.about-visual::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle at 30% 40%, rgba(255,255,255,.1), transparent 60%);
+  border-radius: inherit;
+}
+.about-visual > div { position: relative; z-index: 1; }
+
+/* Cartes camion */
+.truck-card {
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.truck-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(31,78,120,.15);
+}
+.truck-visual {
+  height: 110px;
+  background: linear-gradient(135deg, #1F4E78, #2E75B6);
+  color: #fff;
+  font-size: 3rem;
+}
+
+/* Contact section */
+.contact-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #FFD966;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.contact-map {
+  background: #333;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+  .hero-public { min-height: auto; padding: 3rem 0; }
+  .hero-public h1 { font-size: 2rem; }
+  .hero-stats .display-4 { font-size: 2rem; }
+}

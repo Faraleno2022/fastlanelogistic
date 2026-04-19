@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Facture {{ facture.numero }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-receipt"></i> Facture {{ facture.numero }}</h3>
+  <div class="d-flex gap-2">
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="recalculer">
+      <button class="btn btn-warning btn-sm"><i class="bi bi-arrow-clockwise"></i> Recalculer</button>
+    </form>
+    <a href="{% url 'facturation:edit' facture.numero %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Modifier</a>
+    <a href="{% url 'facturation:delete' facture.numero %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Supprimer</a>
+    <a href="{% url 'facturation:liste' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- En-tête facture -->
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white"><i class="bi bi-building"></i> Informations contrat</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><th style="width:40%">N° Contrat</th><td>{{ facture.contrat.code }}</td></tr>
+          <tr><th>Client</th><td><strong>{{ facture.contrat.client }}</strong></td></tr>
+          <tr><th>Type facturation</th><td>{{ facture.contrat.get_type_facturation_display }}</td></tr>
+          <tr><th>Tarif unitaire</th><td>{{ facture.contrat.tarif|floatformat:0|intcomma }} {{ DEVISE }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white"><i class="bi bi-calendar3"></i> Détails facture</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><th style="width:40%">N° Facture</th><td><strong>{{ facture.numero }}</strong></td></tr>
+          <tr><th>Période</th><td>{{ facture.periode_mois }}/{{ facture.periode_annee }}</td></tr>
+          <tr><th>Date émission</th><td>{{ facture.date_emission|date:"d/m/Y" }}</td></tr>
+          <tr><th>Échéance</th><td>{{ facture.echeance|date:"d/m/Y"|default:"—" }}</td></tr>
+          <tr>
+            <th>Statut</th>
+            <td>
+              {% if facture.statut == "BROUILLON" %}
+                <span class="badge bg-secondary">Brouillon</span>
+              {% elif facture.statut == "EMISE" %}
+                <span class="badge bg-primary">Émise</span>
+              {% elif facture.statut == "PAYEE" %}
+                <span class="badge bg-success">Payée</span>
+              {% elif facture.statut == "ANNULEE" %}
+                <span class="badge bg-danger">Annulée</span>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Données opérationnelles -->
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-dark text-white"><i class="bi bi-box-seam"></i> Données opérationnelles</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><th style="width:40%">Nb bons</th><td class="text-end">{{ facture.nb_bons }}</td></tr>
+          <tr><th>Nb rotations</th><td class="text-end">{{ facture.nb_rotations }}</td></tr>
+          <tr><th>Tonnage total</th><td class="text-end fw-bold">{{ facture.tonnage_total|floatformat:2|intcomma }} T</td></tr>
+          <tr><th>Distance totale</th><td class="text-end">{{ facture.distance_total|floatformat:1|intcomma }} km</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calcul financier -->
+  <div class="col-md-6">
+    <div class="card shadow-sm border-success">
+      <div class="card-header bg-success text-white"><i class="bi bi-calculator"></i> Calcul financier</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><th style="width:40%">Montant brut</th><td class="text-end">{{ facture.montant_brut|floatformat:0|intcomma }} {{ DEVISE }}</td></tr>
+          <tr class="text-success"><th>Bonus</th><td class="text-end">+ {{ facture.bonus|floatformat:0|intcomma }}</td></tr>
+          <tr class="text-danger"><th>Pénalités</th><td class="text-end">- {{ facture.penalites|floatformat:0|intcomma }}</td></tr>
+          <tr class="text-danger"><th>Déduction carburant</th><td class="text-end">- {{ facture.deduction_carburant|floatformat:0|intcomma }}</td></tr>
+          <tr class="table-light"><th class="fw-bold">Montant HT</th><td class="text-end fw-bold">{{ facture.montant_ht|floatformat:0|intcomma }} {{ DEVISE }}</td></tr>
+          <tr><th>TVA ({{ facture.taux_tva|floatformat:0 }}%)</th><td class="text-end">{{ facture.tva|floatformat:0|intcomma }} {{ DEVISE }}</td></tr>
+          <tr class="table-success"><th class="fw-bold fs-5">Montant TTC</th><td class="text-end fw-bold fs-5 text-success">{{ facture.montant_ttc|floatformat:0|intcomma }} {{ DEVISE }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if facture.observations %}
+<div class="card shadow-sm mt-4">
+  <div class="card-header"><i class="bi bi-chat-left-text"></i> Observations</div>
+  <div class="card-body">{{ facture.observations }}</div>
+</div>
+{% endif %}
+
+{% endblock %}

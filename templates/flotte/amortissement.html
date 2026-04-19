@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Amortissement global — Flotte{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-calculator"></i> Amortissement global de la flotte</h3>
+  <a href="{% url 'flotte:liste' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Retour flotte</a>
+</div>
+
+{% for item in data %}
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-truck-front"></i> {{ item.camion.code }} — {{ item.camion.immatriculation }}</span>
+    <span>Prix : {{ item.camion.prix_achat|floatformat:0|intcomma }} {{ DEVISE }} | Amort. mensuel : {{ item.camion.amortissement_mensuel|floatformat:0|intcomma }} {{ DEVISE }}</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover table-striped mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th>Année</th>
+            <th class="text-end">Dotation annuelle</th>
+            <th class="text-end">Amort. cumulé</th>
+            <th class="text-end">VNC</th>
+            <th class="text-end">% amorti</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in item.rows %}
+          <tr>
+            <td>Année {{ row.annee }}</td>
+            <td class="text-end">{{ row.dotation|floatformat:0|intcomma }}</td>
+            <td class="text-end">{{ row.cumul|floatformat:0|intcomma }}</td>
+            <td class="text-end fw-bold">{{ row.vnc|floatformat:0|intcomma }}</td>
+            <td class="text-end">{{ row.pct|floatformat:1 }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% empty %}
+<div class="alert alert-info">Aucun camion enregistré.</div>
+{% endfor %}
+
+{% endblock %}

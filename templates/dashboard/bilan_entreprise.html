@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Bilan entreprise — {{ periode_label }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="mb-0"><i class="bi bi-building"></i> Bilan entreprise</h3>
+    <p class="text-muted mb-0">Consolidation de tous les projets pour <strong>{{ periode_label }}</strong></p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <form method="get" class="d-flex gap-2">
+      <select name="periode" class="form-select form-select-sm"
+              onchange="
+                const v=this.value; const f=this.form;
+                if(v==='all'){ f.mois.value='all'; f.annee.value='all'; }
+                else { const [m,y]=v.split('-'); f.mois.value=m; f.annee.value=y; }
+                f.submit();
+              ">
+        <option value="all" {% if mois is None and annee is None %}selected{% endif %}>Depuis le début</option>
+        {% for p in periodes_recentes %}
+          <option value="{{ p.mois }}-{{ p.annee }}" {% if p.mois == mois and p.annee == annee %}selected{% endif %}>
+            {{ p.label }}
+          </option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="mois" value="{{ mois|default:'' }}">
+      <input type="hidden" name="annee" value="{{ annee|default:'' }}">
+    </form>
+    <a href="{% url 'dashboard:projets' %}?mois={{ mois|default:'' }}&annee={{ annee|default:'' }}"
+       class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-kanban"></i> Voir projets
+    </a>
+  </div>
+</div>
+
+<!-- ========== 4 KPIs PRINCIPAUX ========== -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card border-success shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">CHIFFRE D'AFFAIRES</div>
+        <div class="h3 mb-0 text-success">{{ tot_ca|floatformat:0|intcomma }}</div>
+        <div class="small text-muted">GNF — {{ tot_voyages }} voyages / {{ tot_tonnage|floatformat:1|intcomma }} T</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-danger shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">CHARGES TOTALES</div>
+        <div class="h3 mb-0 text-danger">{{ charges_totales|floatformat:0|intcomma }}</div>
+        <div class="small text-muted">Projets + structure ({{ nb_mois|floatformat:0 }} mois)</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card {% if resultat >= 0 %}border-primary{% else %}border-warning{% endif %} shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">RÉSULTAT NET</div>
+        <div class="h3 mb-0 {% if resultat >= 0 %}text-primary{% else %}text-warning{% endif %}">
+          {{ resultat|floatformat:0|intcomma }}
+        </div>
+        <div class="small text-muted">
+          {% if resultat >= 0 %}
+            <i class="bi bi-arrow-up-circle-fill text-success"></i> Bénéfice
+          {% else %}
+            <i class="bi bi-arrow-down-circle-fill text-warning"></i> Perte
+          {% endif %}
+          &middot; Marge : {{ marge_pct|floatformat:1 }} %
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-info shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">FACTURATION</div>
+        <div class="h3 mb-0 text-info">{{ factures_ttc|floatformat:0|intcomma }}</div>
+        <div class="small text-muted">{{ factures_nb }} facture(s) TTC (HT : {{ factures_ht|floatformat:0|intcomma }})</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== STRUCTURE DES CHARGES ========== -->
+<div class="row g-3 mb-4">
+  <div class="col-md-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white d-flex justify-content-between">
+        <div><i class="bi bi-bar-chart-line"></i> Décomposition des charges</div>
+        <div class="small text-muted">{{ nb_mois|floatformat:0 }} mois</div>
+      </div>
+      <table class="table table-sm mb-0">
+        <thead class="table-light">
+          <tr><th>Poste</th><th class="text-end">Montant (GNF)</th><th class="text-end">% charges</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><i class="bi bi-fuel-pump text-warning"></i> Carburant</td>
+            <td class="text-end">{{ tot_carburant|floatformat:0|intcomma }}</td>
+            <td class="text-end">{% if charges_totales %}{{ tot_carburant|floatformat:"0" }}{% endif %}
+              <span class="text-muted small">
+                {% widthratio tot_carburant charges_totales 100 %} %
+              </span>
+            </td>
+          </tr>
+          <tr><td><i class="bi bi-tools text-danger"></i> Pannes & réparations</td>
+            <td class="text-end">{{ tot_pannes|floatformat:0|intcomma }}</td>
+            <td class="text-end text-muted small">{% widthratio tot_pannes charges_totales 100 %} %</td>
+          </tr>
+          <tr><td><i class="bi bi-receipt-cutoff text-secondary"></i> Dépenses administratives</td>
+            <td class="text-end">{{ tot_depenses|floatformat:0|intcomma }}</td>
+            <td class="text-end text-muted small">{% widthratio tot_depenses charges_totales 100 %} %</td>
+          </tr>
+          <tr><td><i class="bi bi-people text-primary"></i> Masse salariale</td>
+            <td class="text-end">{{ masse_salariale|floatformat:0|intcomma }}</td>
+            <td class="text-end text-muted small">{% widthratio masse_salariale charges_totales 100 %} %</td>
+          </tr>
+          <tr><td><i class="bi bi-bank text-info"></i> Amortissement flotte</td>
+            <td class="text-end">{{ amort|floatformat:0|intcomma }}</td>
+            <td class="text-end text-muted small">{% widthratio amort charges_totales 100 %} %</td>
+          </tr>
+          <tr class="table-secondary fw-bold">
+            <th>Total charges</th>
+            <th class="text-end">{{ charges_totales|floatformat:0|intcomma }}</th>
+            <th class="text-end">100 %</th>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><i class="bi bi-pie-chart-fill"></i> Répartition</div>
+      <div class="card-body"><canvas id="chCharges" height="220"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== CA PAR PROJET + ÉVOLUTION ========== -->
+<div class="row g-3 mb-4">
+  <div class="col-md-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><i class="bi bi-pie-chart"></i> CA par projet</div>
+      <div class="card-body"><canvas id="chCA" height="220"></canvas></div>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><i class="bi bi-graph-up"></i> Évolution mensuelle — {{ annee_serie }}</div>
+      <div class="card-body"><canvas id="chSerie" height="220"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TABLEAU RÉCAP PROJETS ========== -->
+<div class="card shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div><i class="bi bi-diagram-3"></i> Récapitulatif par projet</div>
+    {% include "_search_bar.html" with target="#tblProjetsBilan" placeholder="Filtrer…" %}
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle mb-0" id="tblProjetsBilan" data-searchable data-page-size="50">
+      <thead class="table-light">
+        <tr>
+          <th>Code</th>
+          <th>Client</th>
+          <th class="text-end" data-sum="count">Voyages</th>
+          <th class="text-end" data-sum="sum" data-format="dec2">Tonnage</th>
+          <th class="text-end" data-sum="sum" data-format="int">CA</th>
+          <th class="text-end" data-sum="sum" data-format="int">Charges</th>
+          <th class="text-end" data-sum="sum" data-format="int">Résultat</th>
+          <th class="text-end">Marge</th>
+          <th class="text-end" data-sum="sum" data-format="int">Facturé TTC</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lignes_projets %}
+        <tr>
+          <td><a href="{% url 'dashboard:projet_detail' l.contrat.code %}?mois={{ mois|default:'' }}&annee={{ annee|default:'' }}" class="fw-bold">{{ l.contrat.code }}</a></td>
+          <td>{{ l.contrat.client }}</td>
+          <td class="text-end">{{ l.nb_voyages }}</td>
+          <td class="text-end">{{ l.tonnage|floatformat:2|intcomma }}</td>
+          <td class="text-end text-success">{{ l.ca|floatformat:0|intcomma }}</td>
+          <td class="text-end text-danger">{{ l.charges|floatformat:0|intcomma }}</td>
+          <td class="text-end fw-bold {% if l.resultat >= 0 %}text-primary{% else %}text-warning{% endif %}">
+            {{ l.resultat|floatformat:0|intcomma }}
+          </td>
+          <td class="text-end">
+            <span class="badge {% if l.marge_pct >= 20 %}bg-success{% elif l.marge_pct >= 0 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+              {{ l.marge_pct|floatformat:1 }} %
+            </span>
+          </td>
+          <td class="text-end">{{ l.factures_ttc|floatformat:0|intcomma }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="text-center text-muted py-4">Aucun contrat actif.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="alert alert-light border mt-3 small">
+  <i class="bi bi-info-circle"></i>
+  Le bilan entreprise consolide tous les contrats actifs. Les charges de structure (salaires, amortissement) sont ajoutées globalement, multipliées par le nombre de mois de la période.
+  Les opérations sans contrat renseigné sont réparties au prorata du tonnage réalisé par chaque contrat.
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const caData = {{ chart_ca_json|safe }};
+  const chargesData = {{ chart_charges_json|safe }};
+  const serieData = {{ serie_mensuelle_json|safe }};
+
+  const PALETTE_CA = ['#28a745','#007bff','#fd7e14','#6f42c1','#20c997','#e83e8c','#17a2b8'];
+  const PALETTE_CH = ['#fd7e14','#dc3545','#6c757d','#0d6efd','#17a2b8'];
+
+  new Chart(document.getElementById('chCA'), {
+    type: 'doughnut',
+    data: {
+      labels: caData.map(x => `${x.label} — ${x.client}`),
+      datasets: [{ data: caData.map(x => x.value), backgroundColor: PALETTE_CA }],
+    },
+    options: {
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: (c) => `${c.label}: ${c.parsed.toLocaleString('fr-FR')} GNF` } }
+      }
+    },
+  });
+
+  new Chart(document.getElementById('chCharges'), {
+    type: 'doughnut',
+    data: {
+      labels: chargesData.map(x => x.label),
+      datasets: [{ data: chargesData.map(x => x.value), backgroundColor: PALETTE_CH }],
+    },
+    options: {
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: (c) => `${c.label}: ${c.parsed.toLocaleString('fr-FR')} GNF` } }
+      }
+    },
+  });
+
+  new Chart(document.getElementById('chSerie'), {
+    type: 'line',
+    data: {
+      labels: serieData.map(x => x.mois),
+      datasets: [
+        { label: 'CA', data: serieData.map(x => x.ca), borderColor: '#28a745', backgroundColor: 'rgba(40,167,69,.1)', fill: true, tension: .3 },
+        { label: 'Charges', data: serieData.map(x => x.charges), borderColor: '#dc3545', fill: false, tension: .3 },
+        { label: 'Résultat', data: serieData.map(x => x.resultat), borderColor: '#007bff', fill: false, tension: .3 },
+      ],
+    },
+    options: {
+      interaction: { mode: 'index', intersect: false },
+      scales: { y: { ticks: { callback: (v) => v.toLocaleString('fr-FR') } } },
+    },
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% comment %}
+Menu déroulant d'actions : Exports + Imports + Fiches terrain
+Paramètres à passer via `with` :
+  module     : slug (carburant / pannes / depenses / transport / bons)
+  fiche_type : type de fiche vierge (ou '' si aucune)
+  mois, annee : pour conserver le filtre temporel dans les exports
+{% endcomment %}
+<div class="btn-group">
+  <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"
+          data-bs-toggle="dropdown" aria-expanded="false"
+          title="Exports, imports et fiches terrain">
+    <i class="bi bi-three-dots-vertical"></i> Actions
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li class="dropdown-header small"><i class="bi bi-download"></i> Exporter</li>
+    <li>
+      <a class="dropdown-item" href="{% url 'operations:export_xlsx' module %}?mois={{ mois }}&annee={{ annee }}">
+        <i class="bi bi-file-earmark-excel text-success"></i> Excel (.xlsx)
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item" href="{% url 'operations:export_pdf' module %}?mois={{ mois }}&annee={{ annee }}">
+        <i class="bi bi-file-earmark-pdf text-danger"></i> PDF
+      </a>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li class="dropdown-header small"><i class="bi bi-upload"></i> Importer</li>
+    <li>
+      <a class="dropdown-item" href="{% url 'operations:import_upload' module %}">
+        <i class="bi bi-cloud-upload"></i> Importer depuis Excel…
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item" href="{% url 'operations:import_template' module %}">
+        <i class="bi bi-file-earmark-arrow-down"></i> Télécharger le modèle
+      </a>
+    </li>
+    {% if fiche_type %}
+      <li><hr class="dropdown-divider"></li>
+      <li class="dropdown-header small"><i class="bi bi-clipboard"></i> Fiche terrain</li>
+      <li>
+        <a class="dropdown-item" href="{% url 'operations:fiche_vierge' fiche_type %}?n=1">
+          <i class="bi bi-file-earmark-pdf"></i> Fiche vierge (1 page)
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="{% url 'operations:fiche_vierge' fiche_type %}?n=10">
+          <i class="bi bi-file-earmark-pdf"></i> Liasse de 10 fiches
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+</div>

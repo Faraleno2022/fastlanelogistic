@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Camion {{ camion.code }} — Détail{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-truck-front"></i> {{ camion }}</h3>
+  <a href="{% url 'flotte:liste' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
+</div>
+
+<!-- Fiche camion -->
+<div class="row g-4 mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white"><i class="bi bi-info-circle"></i> Informations</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><th style="width:40%">Code</th><td>{{ camion.code }}</td></tr>
+          <tr><th>Immatriculation</th><td>{{ camion.immatriculation }}</td></tr>
+          <tr><th>Marque / Modèle</th><td>{{ camion.marque_modele }}</td></tr>
+          <tr><th>Capacité</th><td>{{ camion.capacite_tonnes|floatformat:1 }} T</td></tr>
+          <tr><th>Date d'acquisition</th><td>{{ camion.date_acquisition|date:"d/m/Y" }}</td></tr>
+          <tr>
+            <th>Statut</th>
+            <td>
+              {% if camion.statut == "SERVICE" %}
+                <span class="badge bg-success">En service</span>
+              {% elif camion.statut == "ATELIER" %}
+                <span class="badge bg-warning text-dark">Atelier</span>
+              {% elif camion.statut == "HS" %}
+                <span class="badge bg-danger">Hors service</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ camion.get_statut_display }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white"><i class="bi bi-calculator"></i> Amortissement</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><th style="width:40%">Prix d'achat</th><td class="text-end">{{ camion.prix_achat|floatformat:0|intcomma }} {{ DEVISE }}</td></tr>
+          <tr><th>Durée amortissement</th><td class="text-end">{{ camion.duree_amortissement }} ans</td></tr>
+          <tr><th>Valeur résiduelle</th><td class="text-end">{{ camion.valeur_residuelle|floatformat:0|intcomma }} {{ DEVISE }}</td></tr>
+          <tr><th>Amort. annuel</th><td class="text-end">{{ camion.amortissement_annuel|floatformat:0|intcomma }} {{ DEVISE }}</td></tr>
+          <tr><th>Amort. mensuel</th><td class="text-end fw-bold text-primary">{{ camion.amortissement_mensuel|floatformat:0|intcomma }} {{ DEVISE }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tableau d'amortissement -->
+<div class="card shadow-sm">
+  <div class="card-header bg-dark text-white"><i class="bi bi-table"></i> Tableau d'amortissement linéaire</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-striped mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th>Année</th>
+            <th class="text-end">Dotation annuelle</th>
+            <th class="text-end">Amort. cumulé</th>
+            <th class="text-end">VNC (Valeur Nette Comptable)</th>
+            <th class="text-end">% amorti</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in tableau %}
+          <tr>
+            <td>Année {{ row.annee }}</td>
+            <td class="text-end">{{ row.dotation|floatformat:0|intcomma }}</td>
+            <td class="text-end">{{ row.cumul|floatformat:0|intcomma }}</td>
+            <td class="text-end fw-bold">{{ row.vnc|floatformat:0|intcomma }}</td>
+            <td class="text-end">
+              <div class="progress" style="height:18px; min-width:80px">
+                <div class="progress-bar" style="width:{{ row.pct|floatformat:0 }}%">{{ row.pct|floatformat:1 }}%</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

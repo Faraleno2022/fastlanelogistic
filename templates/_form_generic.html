@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ titre }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-{{ icone|default:'pencil-square' }}"></i> {{ titre }}</h5>
+      </div>
+      <div class="card-body">
+        {% if contrat_prefill %}
+          <div class="alert alert-warning d-flex justify-content-between align-items-center py-2 mb-3">
+            <div class="small">
+              <i class="bi bi-pin-angle-fill"></i>
+              Contrat fixé : <strong>{{ contrat_prefill.code }}</strong> — {{ contrat_prefill.client }}.
+              La saisie sera automatiquement imputée à ce projet.
+            </div>
+            <form method="post" action="{% url 'core:clear_contrat_actif' %}" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger"
+                      title="Libérer le contrat actif pour cette session">
+                <i class="bi bi-x-circle"></i> Libérer
+              </button>
+            </form>
+          </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              <i class="bi bi-exclamation-triangle"></i> {{ form.non_field_errors }}
+            </div>
+          {% endif %}
+
+          <div class="row g-3">
+            {% for field in form %}
+              {% if field.field.widget.input_type == "checkbox" %}
+              {# Checkbox inline #}
+              <div class="col-md-{{ field.field.widget.attrs.col|default:6 }} d-flex align-items-center pt-3">
+                <div class="form-check">
+                  {{ field }}
+                  <label class="form-check-label fw-semibold" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                  </label>
+                </div>
+                {% if field.errors %}
+                  <div class="invalid-feedback d-block ms-2">{{ field.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+              {% else %}
+              {# Tous les autres champs #}
+              <div class="col-md-{{ field.field.widget.attrs.col|default:6 }}">
+                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                  {{ field.label }}
+                  {% if field.field.required %}<span class="text-danger ms-1">*</span>{% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                  <div class="form-text text-muted"><i class="bi bi-info-circle"></i> {{ field.help_text }}</div>
+                {% endif %}
+                {% if field.errors %}
+                  <div class="invalid-feedback d-block">{{ field.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <hr class="my-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{% if retour_url %}{% url retour_url %}{% else %}javascript:history.back(){% endif %}"
+               class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i> Annuler
+            </a>
+            <div class="d-flex gap-2">
+              <button type="reset" class="btn btn-outline-warning">
+                <i class="bi bi-eraser"></i> Réinitialiser
+              </button>
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check-lg"></i> Enregistrer
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+/* Marquer les champs invalides avec Bootstrap is-invalid */
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.invalid-feedback').forEach(function (el) {
+    const prev = el.previousElementSibling;
+    if (prev) prev.classList.add('is-invalid');
+  });
+});
+</script>
+{% endblock %}
+{% endblock %}

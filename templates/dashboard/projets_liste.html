@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Projets — {{ periode_label }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="mb-0"><i class="bi bi-kanban"></i> Projets / Contrats</h3>
+    <p class="text-muted mb-0">Vue consolidée pour <strong>{{ periode_label }}</strong> — {{ nb_contrats }} contrat(s) actif(s)</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <form method="get" class="d-flex gap-2">
+      <select name="periode" class="form-select form-select-sm"
+              onchange="
+                const v=this.value; const f=this.form;
+                if(v==='all'){ f.mois.value='all'; f.annee.value='all'; }
+                else { const [m,y]=v.split('-'); f.mois.value=m; f.annee.value=y; }
+                f.submit();
+              ">
+        <option value="all" {% if mois is None and annee is None %}selected{% endif %}>Depuis le début</option>
+        {% for p in periodes_recentes %}
+          <option value="{{ p.mois }}-{{ p.annee }}" {% if p.mois == mois and p.annee == annee %}selected{% endif %}>
+            {{ p.label }}
+          </option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="mois" value="{{ mois|default:'' }}">
+      <input type="hidden" name="annee" value="{{ annee|default:'' }}">
+    </form>
+    <a href="{% url 'dashboard:bilan_entreprise' %}?mois={{ mois|default:'' }}&annee={{ annee|default:'' }}"
+       class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-building"></i> Bilan entreprise
+    </a>
+    <a href="{% url 'facturation:contrats' %}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-pencil-square"></i> Gérer les contrats
+    </a>
+  </div>
+</div>
+
+<!-- ========== KPI ENTREPRISE ========== -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card border-success shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">CA consolidé</div>
+        <div class="h4 mb-0 text-success">{{ tot_ca|floatformat:0|intcomma }} GNF</div>
+        <div class="small text-muted">{{ tot_voyages }} voyages — {{ tot_tonnage|floatformat:1|intcomma }} T</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-danger shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Charges totales</div>
+        <div class="h4 mb-0 text-danger">{{ charges_totales|floatformat:0|intcomma }} GNF</div>
+        <div class="small text-muted">Projets + structure</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card {% if resultat >= 0 %}border-primary{% else %}border-warning{% endif %} shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Résultat net</div>
+        <div class="h4 mb-0 {% if resultat >= 0 %}text-primary{% else %}text-warning{% endif %}">
+          {{ resultat|floatformat:0|intcomma }} GNF
+        </div>
+        <div class="small text-muted">Marge : {{ marge_pct|floatformat:1 }} %</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-info shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Bons de transport</div>
+        <div class="h4 mb-0 text-info">{{ tot_bons|intcomma }}</div>
+        <div class="small text-muted">{{ nb_camions }} camions — {{ capacite_totale|floatformat:0 }} T</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== GRAPHIQUES ========== -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><i class="bi bi-pie-chart"></i> CA par projet</div>
+      <div class="card-body"><canvas id="chCA" height="180"></canvas></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><i class="bi bi-pie-chart-fill"></i> Répartition des charges</div>
+      <div class="card-body"><canvas id="chCharges" height="180"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TABLEAU DES PROJETS ========== -->
+<div class="card shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div><i class="bi bi-diagram-3"></i> Bilan par projet</div>
+    {% include "_search_bar.html" with target="#tblProjets" placeholder="Filtrer par code, client…" %}
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped table-hover align-middle mb-0" id="tblProjets" data-searchable data-page-size="50">
+      <thead class="table-light">
+        <tr>
+          <th>Code</th>
+          <th>Client</th>
+          <th class="text-end" data-sum="count">Bons</th>
+          <th class="text-end" data-sum="count">Voyages</th>
+          <th class="text-end" data-sum="sum" data-format="dec2">Tonnage (T)</th>
+          <th class="text-end" data-sum="sum" data-format="int">CA (GNF)</th>
+          <th class="text-end" data-sum="sum" data-format="int">Carburant</th>
+          <th class="text-end" data-sum="sum" data-format="int">Pannes</th>
+          <th class="text-end" data-sum="sum" data-format="int">Dép. admin</th>
+          <th class="text-end" data-sum="sum" data-format="int">Charges</th>
+          <th class="text-end" data-sum="sum" data-format="int">Résultat</th>
+          <th class="text-end">Marge %</th>
+          <th class="text-end">% prorata</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lignes_projets %}
+        <tr>
+          <td><a href="{% url 'dashboard:projet_detail' l.contrat.code %}?mois={{ mois|default:'' }}&annee={{ annee|default:'' }}" class="fw-bold">{{ l.contrat.code }}</a></td>
+          <td>{{ l.contrat.client }}</td>
+          <td class="text-end">{{ l.nb_bons }}</td>
+          <td class="text-end">{{ l.nb_voyages }}</td>
+          <td class="text-end">{{ l.tonnage|floatformat:2|intcomma }}</td>
+          <td class="text-end fw-bold text-success">{{ l.ca|floatformat:0|intcomma }}</td>
+          <td class="text-end">{{ l.carburant|floatformat:0|intcomma }}</td>
+          <td class="text-end">{{ l.pannes|floatformat:0|intcomma }}</td>
+          <td class="text-end">{{ l.depenses|floatformat:0|intcomma }}</td>
+          <td class="text-end text-danger">{{ l.charges|floatformat:0|intcomma }}</td>
+          <td class="text-end fw-bold {% if l.resultat >= 0 %}text-primary{% else %}text-warning{% endif %}">
+            {{ l.resultat|floatformat:0|intcomma }}
+          </td>
+          <td class="text-end">
+            <span class="badge {% if l.marge_pct >= 20 %}bg-success{% elif l.marge_pct >= 0 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+              {{ l.marge_pct|floatformat:1 }} %
+            </span>
+          </td>
+          <td class="text-end text-muted small">{{ l.part_prorata_pct|floatformat:1 }} %</td>
+          <td class="text-center">
+            <a href="{% url 'dashboard:projet_detail' l.contrat.code %}?mois={{ mois|default:'' }}&annee={{ annee|default:'' }}"
+               class="btn btn-sm btn-outline-primary" title="Détail du projet">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="14" class="text-center text-muted py-4">Aucun contrat actif.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="alert alert-light border mt-3 small">
+  <i class="bi bi-info-circle"></i>
+  <strong>Méthode d'imputation :</strong> Les opérations (carburant, pannes, dépenses) avec un contrat renseigné sont imputées directement.
+  Celles <em>sans</em> contrat sont réparties au prorata du tonnage réalisé par chaque contrat sur la période.
+  Les charges de structure (salaires + amortissement) ne sont pas ventilées par projet — elles apparaissent uniquement dans le bilan entreprise.
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const caData = {{ chart_ca_json|safe }};
+  const chargesData = {{ chart_charges_json|safe }};
+
+  const PALETTE = ['#28a745','#007bff','#fd7e14','#6f42c1','#20c997','#e83e8c','#17a2b8','#ffc107','#dc3545'];
+
+  new Chart(document.getElementById('chCA'), {
+    type: 'doughnut',
+    data: {
+      labels: caData.map(x => `${x.label} — ${x.client}`),
+      datasets: [{ data: caData.map(x => x.value), backgroundColor: PALETTE }],
+    },
+    options: {
+      plugins: {
+        legend: { position: 'right' },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.label}: ${ctx.parsed.toLocaleString('fr-FR')} GNF`
+          }
+        }
+      }
+    },
+  });
+
+  new Chart(document.getElementById('chCharges'), {
+    type: 'doughnut',
+    data: {
+      labels: chargesData.map(x => x.label),
+      datasets: [{ data: chargesData.map(x => x.value), backgroundColor: ['#dc3545','#fd7e14','#ffc107','#6610f2','#6c757d'] }],
+    },
+    options: {
+      plugins: {
+        legend: { position: 'right' },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.label}: ${ctx.parsed.toLocaleString('fr-FR')} GNF`
+          }
+        }
+      }
+    },
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% load humanize static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{{ SOCIETE_NOM }}{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+{% if user.is_authenticated %}
+<nav class="navbar navbar-expand-xl navbar-dark shadow-sm" style="background:#1F4E78">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="{% url 'dashboard:home' %}">
+      <i class="bi bi-truck"></i> {{ SOCIETE_NOM }}
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto mb-2 mb-xl-0">
+        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}" title="Tableau de bord"><i class="bi bi-speedometer2"></i><span class="nav-label"> Dashboard</span></a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard:rapport' %}" title="Rapport mensuel intelligent"><i class="bi bi-clipboard-data"></i><span class="nav-label"> Rapport</span></a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" title="Suivi par projet / contrat">
+            <i class="bi bi-kanban"></i><span class="nav-label"> Projets</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'dashboard:projets' %}"><i class="bi bi-diagram-3"></i> Bilan par projet</a></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard:bilan_entreprise' %}"><i class="bi bi-building"></i> Bilan entreprise</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'facturation:contrats' %}"><i class="bi bi-file-earmark-ruled"></i> Gérer les contrats</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" title="Gestion de la flotte">
+            <i class="bi bi-truck-front"></i><span class="nav-label"> Flotte</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'flotte:liste' %}">Liste des camions</a></li>
+            <li><a class="dropdown-item" href="{% url 'flotte:amortissement' %}">Amortissement</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" title="Opérations terrain">
+            <i class="bi bi-fuel-pump"></i><span class="nav-label"> Opérations</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'operations:carburant' %}">Carburant</a></li>
+            <li><a class="dropdown-item" href="{% url 'operations:pannes' %}">Pannes & réparations</a></li>
+            <li><a class="dropdown-item" href="{% url 'operations:depenses_admin' %}">Dépenses admin.</a></li>
+            <li><a class="dropdown-item" href="{% url 'operations:transport_bauxite' %}">Transport bauxite</a></li>
+            <li><a class="dropdown-item" href="{% url 'operations:bons_transport' %}">Bons de transport</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" title="Ressources humaines">
+            <i class="bi bi-people"></i><span class="nav-label"> RH</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'rh:liste_employes' %}">Employés</a></li>
+            <li><a class="dropdown-item" href="{% url 'rh:attendance' %}">Attendance</a></li>
+            <li><a class="dropdown-item" href="{% url 'rh:heures_sup' %}">Heures sup.</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" title="Facturation et contrats">
+            <i class="bi bi-receipt"></i><span class="nav-label"> Facturation</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'facturation:liste' %}">Factures</a></li>
+            <li><a class="dropdown-item" href="{% url 'facturation:contrats' %}">Contrats</a></li>
+          </ul>
+        </li>
+      </ul>
+      <ul class="navbar-nav">
+        <!-- Sélecteur de contrat actif (mémorisé en session) -->
+        <li class="nav-item dropdown me-2">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" data-bs-toggle="dropdown"
+             title="Fixer un contrat actif pour pré-remplir les formulaires de saisie">
+            {% if CONTRAT_ACTIF %}
+              <span class="badge bg-warning text-dark"><i class="bi bi-pin-angle-fill"></i> {{ CONTRAT_ACTIF.code }}</span>
+            {% else %}
+              <span class="badge bg-secondary"><i class="bi bi-pin-angle"></i> Libre</span>
+            {% endif %}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" style="min-width:260px;">
+            <li class="dropdown-header small">
+              <i class="bi bi-info-circle"></i>
+              {% if CONTRAT_ACTIF %}
+                Contrat <strong>{{ CONTRAT_ACTIF.code }}</strong> fixé
+              {% else %}
+                Aucun contrat fixé
+              {% endif %}
+            </li>
+            <li class="px-2 small text-muted">
+              {% if CONTRAT_ACTIF %}
+                Toutes les nouvelles saisies d'opération seront imputées à <strong>{{ CONTRAT_ACTIF.client }}</strong>.
+              {% else %}
+                Choisir un contrat pour pré-remplir automatiquement les formulaires de saisie.
+              {% endif %}
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            {% for c in CONTRATS_ACTIFS_CHOIX %}
+              <li>
+                <form method="post" action="{% url 'core:set_contrat_actif' %}" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="code" value="{{ c.code }}">
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="dropdown-item d-flex justify-content-between align-items-center
+                                               {% if CONTRAT_ACTIF and CONTRAT_ACTIF.pk == c.pk %}active{% endif %}">
+                    <span><i class="bi bi-folder2"></i> <strong>{{ c.code }}</strong> — {{ c.client }}</span>
+                    {% if CONTRAT_ACTIF and CONTRAT_ACTIF.pk == c.pk %}
+                      <i class="bi bi-check-lg text-success"></i>
+                    {% endif %}
+                  </button>
+                </form>
+              </li>
+            {% empty %}
+              <li class="dropdown-item text-muted small"><em>Aucun contrat actif en base.</em></li>
+            {% endfor %}
+            <li><hr class="dropdown-divider"></li>
+            {% if CONTRAT_ACTIF %}
+              <li>
+                <form method="post" action="{% url 'core:clear_contrat_actif' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item text-danger">
+                    <i class="bi bi-x-circle"></i> Effacer (saisie libre)
+                  </button>
+                </form>
+              </li>
+            {% endif %}
+            <li><a class="dropdown-item small" href="{% url 'facturation:contrat_create' %}">
+              <i class="bi bi-plus-circle"></i> Créer un contrat…
+            </a></li>
+          </ul>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'core:parametres' %}" title="Paramètres"><i class="bi bi-sliders"></i></a></li>
+        <li class="nav-item"><a class="nav-link" href="/admin/" title="Administration Django"><i class="bi bi-gear"></i><span class="d-xl-none d-inline-block ms-1">Admin</span></a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown"
+             title="{{ user.get_full_name|default:user.username }} — {{ user.get_role_display }}">
+            <i class="bi bi-person-circle"></i>
+            <span class="user-name text-truncate ms-1">{{ user.get_full_name|default:user.username }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}">Changer mot de passe</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+                <button class="dropdown-item" type="submit">Déconnexion</button>
+              </form>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+{% endif %}
+
+<main class="container-fluid py-4">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="text-center text-muted py-3 small">
+  {{ SOCIETE_NOM }} &middot; {{ DEVISE }} &middot; © 2026
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/table_search.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,73 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}À propos — {{ SOCIETE_NOM }}{% endblock %}
+
+{% block content %}
+<section class="page-header py-5 text-white">
+  <div class="container">
+    <h1 class="fw-bold mb-2">{{ page.titre }}</h1>
+    <p class="lead mb-0">Notre histoire, notre mission et nos engagements.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-8">
+        <div class="mb-4">
+          <h3 class="fw-bold">Présentation</h3>
+          <p class="lead">{{ page.presentation|linebreaksbr }}</p>
+        </div>
+
+        {% if page.mission %}
+        <div class="mb-4">
+          <h4 class="fw-bold"><i class="bi bi-bullseye text-primary"></i> Notre mission</h4>
+          <p>{{ page.mission|linebreaksbr }}</p>
+        </div>
+        {% endif %}
+
+        {% if page.vision %}
+        <div class="mb-4">
+          <h4 class="fw-bold"><i class="bi bi-eye text-primary"></i> Notre vision</h4>
+          <p>{{ page.vision|linebreaksbr }}</p>
+        </div>
+        {% endif %}
+
+        {% if page.valeurs %}
+        <div class="mb-4">
+          <h4 class="fw-bold"><i class="bi bi-gem text-primary"></i> Nos valeurs</h4>
+          <p>{{ page.valeurs|linebreaksbr }}</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="col-lg-4">
+        {% if page.chiffres %}
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="fw-bold mb-3">Chiffres clés</h5>
+            {% for v, lbl in page.chiffres %}
+            <div class="d-flex align-items-center mb-2">
+              <span class="display-6 fw-bold text-primary me-3">{{ v }}</span>
+              <span class="text-muted">{{ lbl }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if page.adresse or page.email or page.telephone %}
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="fw-bold mb-3">Nous contacter</h5>
+            {% if page.adresse %}<p class="mb-2"><i class="bi bi-geo-alt text-primary"></i> {{ page.adresse }}</p>{% endif %}
+            {% if page.email %}<p class="mb-2"><i class="bi bi-envelope text-primary"></i> <a href="mailto:{{ page.email }}">{{ page.email }}</a></p>{% endif %}
+            {% if page.telephone %}<p class="mb-0"><i class="bi bi-telephone text-primary"></i> {{ page.telephone }}</p>{% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

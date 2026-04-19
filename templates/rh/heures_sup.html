@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Heures supplémentaires — {{ mois_label }} {{ annee }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-clock-history"></i> Heures supplémentaires — {{ mois_label }} {{ annee }}</h3>
+  <div class="d-flex gap-2">
+  <form method="get" class="d-flex gap-2">
+    <select name="mois" class="form-select form-select-sm" style="width:auto">
+      <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+      <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+      <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+      <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+      <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+      <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+      <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+      <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+      <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+      <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+      <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+      <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+    </select>
+    <input type="number" name="annee" value="{{ annee }}" class="form-control form-control-sm" style="width:90px">
+    <button class="btn btn-sm btn-primary">Filtrer</button>
+  </form>
+  <a href="{% url 'rh:hs_create' %}" class="btn btn-success btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Total heures sup.</div>
+      <div class="kpi-value">{{ total_heures|floatformat:1 }} h</div>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Montant total ({{ DEVISE }})</div>
+      <div class="kpi-value text-danger">{{ total_montant|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Nombre d'entrées</div>
+      <div class="kpi-value">{{ heures|length }}</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Synthèse par employé -->
+{% if synth %}
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-info text-white"><i class="bi bi-bar-chart"></i> Synthèse par employé</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th>Employé</th>
+            <th class="text-end">Nb entrées</th>
+            <th class="text-end">Heures</th>
+            <th class="text-end">Montant ({{ DEVISE }})</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in synth %}
+          <tr>
+            <td>{{ s.employe.code }} — {{ s.employe.nom_complet }}</td>
+            <td class="text-end">{{ s.count }}</td>
+            <td class="text-end">{{ s.nb_heures|floatformat:1 }}</td>
+            <td class="text-end fw-bold">{{ s.montant|floatformat:0|intcomma }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Détail -->
+<div class="card shadow-sm">
+  <div class="card-header bg-dark text-white"><i class="bi bi-list-ul"></i> Détail des heures supplémentaires</div>
+  <div class="card-body">
+    {% include "_search_bar.html" with target="#tblHS" placeholder="Employé, type, motif, validé par..." %}
+    <div class="table-responsive">
+      <table id="tblHS" data-searchable class="table table-hover table-striped mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th>Date</th>
+            <th>Employé</th>
+            <th>Type</th>
+            <th>Début</th>
+            <th>Fin</th>
+            <th class="text-end" data-sum="sum" data-format="dec1">Heures</th>
+            <th class="text-end" data-sum="avg" data-format="int">Majoration</th>
+            <th class="text-end" data-sum="sum" data-format="int">Montant</th>
+            <th>Motif</th>
+            <th>Validé par</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in heures %}
+          <tr>
+            <td>{{ h.date|date:"d/m/Y" }}</td>
+            <td>{{ h.employe.code }} — {{ h.employe.nom_complet }}</td>
+            <td>
+              {% if h.type_hs == "NUIT" %}
+                <span class="badge bg-dark">Nuit</span>
+              {% elif h.type_hs == "DIMANCHE" %}
+                <span class="badge bg-info">Dimanche</span>
+              {% elif h.type_hs == "FERIE" %}
+                <span class="badge bg-danger">Férié</span>
+              {% else %}
+                <span class="badge bg-secondary">Ouvré</span>
+              {% endif %}
+            </td>
+            <td>{{ h.heure_debut|time:"H:i" }}</td>
+            <td>{{ h.heure_fin|time:"H:i" }}</td>
+            <td class="text-end">{{ h.nb_heures|floatformat:1 }}</td>
+            <td class="text-end">+{{ h.majoration|floatformat:0 }}%</td>
+            <td class="text-end fw-bold">{{ h.montant|floatformat:0|intcomma }}</td>
+            <td>{{ h.motif }}</td>
+            <td>{{ h.valide_par|default:"—" }}</td>
+            <td class="text-nowrap">
+              <a href="{% url 'rh:hs_edit' h.pk %}" class="btn btn-outline-warning btn-sm" title="Modifier"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'rh:hs_delete' h.pk %}" class="btn btn-outline-danger btn-sm" title="Supprimer"><i class="bi bi-trash"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="11" class="text-center text-muted py-4">Aucune heure supplémentaire ce mois</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

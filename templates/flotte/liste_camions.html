@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Flotte — Liste des camions{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-truck-front"></i> Liste des camions</h3>
+  <a href="{% url 'flotte:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter un camion</a>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Nombre de camions</div>
+      <div class="kpi-value">{{ totaux.nombre }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Capacité totale (T)</div>
+      <div class="kpi-value">{{ totaux.total_capacite|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Valeur totale ({{ DEVISE }})</div>
+      <div class="kpi-value">{{ totaux.total_prix|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Amort. mensuel total</div>
+      <div class="kpi-value">{{ total_amort_mensuel|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Tableau -->
+<div class="card shadow-sm">
+  <div class="card-body">
+    {% include "_search_bar.html" with target="#tblCamions" placeholder="Code, immatriculation, modèle, statut..." %}
+    <div class="table-responsive">
+      <table id="tblCamions" data-searchable class="table table-hover table-striped mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Code</th>
+            <th>Immatriculation</th>
+            <th>Marque / Modèle</th>
+            <th class="text-end" data-sum="sum" data-format="dec1">Capacité (T)</th>
+            <th>Date acquisition</th>
+            <th class="text-end" data-sum="sum" data-format="int">Prix d'achat</th>
+            <th class="text-end" data-sum="sum" data-format="int">Amort. mensuel</th>
+            <th class="text-end" data-sum="sum" data-format="int">Valeur résiduelle</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in camions %}
+          <tr>
+            <td><strong>{{ c.code }}</strong></td>
+            <td>{{ c.immatriculation }}</td>
+            <td>{{ c.marque_modele }}</td>
+            <td class="text-end">{{ c.capacite_tonnes|floatformat:1 }}</td>
+            <td>{{ c.date_acquisition|date:"d/m/Y" }}</td>
+            <td class="text-end">{{ c.prix_achat|floatformat:0|intcomma }}</td>
+            <td class="text-end">{{ c.amortissement_mensuel|floatformat:0|intcomma }}</td>
+            <td class="text-end">{{ c.valeur_residuelle|floatformat:0|intcomma }}</td>
+            <td>
+              {% if c.statut == "SERVICE" %}
+                <span class="badge bg-success">En service</span>
+              {% elif c.statut == "ATELIER" %}
+                <span class="badge bg-warning text-dark">Atelier</span>
+              {% elif c.statut == "HS" %}
+                <span class="badge bg-danger">Hors service</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ c.get_statut_display }}</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">
+              <a href="{% url 'flotte:detail' c.code %}" class="btn btn-outline-primary btn-sm" title="Voir"><i class="bi bi-eye"></i></a>
+              <a href="{% url 'flotte:edit' c.code %}" class="btn btn-outline-warning btn-sm" title="Modifier"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'flotte:delete' c.code %}" class="btn btn-outline-danger btn-sm" title="Supprimer"><i class="bi bi-trash"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="10" class="text-center text-muted py-4">Aucun camion enregistré</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
