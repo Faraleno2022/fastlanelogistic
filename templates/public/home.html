@@ -5,122 +5,14 @@
 
 {% block content %}
 
-<!-- ============ BANNIÈRE HAUT DE PAGE ============ -->
+<!-- ============ BANNIÈRE HAUT DE PAGE (avec badge localisation) ============ -->
 <section class="home-top-banner">
   <img src="{% static 'images/home.png' %}" alt="{{ SOCIETE_NOM }} — Transport de bauxite" class="home-top-banner-img">
-</section>
-
-<!-- ============ HERO ============ -->
-<section class="hero-premium">
-  <div class="hero-bg"></div>
-  <div class="hero-overlay"></div>
-  <div class="container hero-content">
-    <div class="row align-items-center g-5 min-vh-80">
-      <div class="col-lg-7">
-        <div class="hero-badge">
-          <span class="hero-pulse"></span>
-          <i class="bi bi-geo-alt-fill"></i> Conakry &middot; Kipé Centre Émetteur &middot; Guinée
-        </div>
-        <h1 class="hero-title">
-          Le transport de bauxite,<br>
-          <span class="text-accent">notre métier.</span>
-        </h1>
-        <p class="hero-lead">
-          {{ SOCIETE_NOM }} accompagne les grands opérateurs miniers de Guinée
-          avec une flotte moderne, des équipes qualifiées et un engagement
-          de tous les instants pour la <strong>sécurité</strong>,
-          la <strong>ponctualité</strong> et la <strong>qualité de service</strong>.
-        </p>
-        <div class="hero-cta">
-          <a href="{% url 'public:a_propos' %}" class="btn btn-accent btn-xl">
-            <i class="bi bi-building"></i> Qui sommes-nous ?
-          </a>
-          <a href="{% url 'public:appels_offres' %}" class="btn btn-outline-light btn-xl">
-            <i class="bi bi-file-earmark-text"></i> Appels d'offres
-            <span class="badge bg-danger ms-1">{{ appels_ouverts|length }}</span>
-          </a>
-        </div>
-        <div class="hero-trust">
-          <div class="trust-item">
-            <i class="bi bi-shield-check"></i>
-            <span>Certifié HSE</span>
-          </div>
-          <div class="trust-item">
-            <i class="bi bi-clock-history"></i>
-            <span>Opérations 24/7</span>
-          </div>
-          <div class="trust-item">
-            <i class="bi bi-geo-alt"></i>
-            <span>Corridor Boké – Kamsar</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-5">
-        <div class="hero-kpi-card">
-          <div class="kpi-header">
-            <span class="kpi-label">Aperçu de la flotte</span>
-            <span class="kpi-live"><span class="kpi-dot"></span> Actif</span>
-          </div>
-          <div class="kpi-grid">
-            <div class="kpi-cell">
-              <div class="kpi-number">{{ stats_flotte.nb_total }}</div>
-              <div class="kpi-sublabel">Camions</div>
-            </div>
-            <div class="kpi-cell">
-              <div class="kpi-number">{{ stats_flotte.nb_service }}</div>
-              <div class="kpi-sublabel">En service</div>
-            </div>
-            <div class="kpi-cell">
-              <div class="kpi-number">{{ stats_flotte.capacite_totale|intcomma }}</div>
-              <div class="kpi-sublabel">Tonnes cumulées</div>
-            </div>
-            <div class="kpi-cell">
-              <div class="kpi-number">24/7</div>
-              <div class="kpi-sublabel">Disponibilité</div>
-            </div>
-          </div>
-          <div class="kpi-footer">
-            <div class="d-flex align-items-center justify-content-between">
-              <span class="small text-white-70"><i class="bi bi-truck"></i> Capacité moyenne</span>
-              <span class="fw-bold text-accent">
-                {% if stats_flotte.nb_total %}
-                  {% widthratio stats_flotte.capacite_totale stats_flotte.nb_total 1 %} T / camion
-                {% else %}—{% endif %}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="hero-scroll-indicator">
-    <i class="bi bi-chevron-down"></i>
-  </div>
-</section>
-
-<!-- ============ BANDEAU CHIFFRES ============ -->
-<section class="stats-strip">
-  <div class="container">
-    <div class="row g-0 text-center">
-      <div class="col-6 col-md-3 stats-cell">
-        <div class="stats-icon"><i class="bi bi-truck-front-fill"></i></div>
-        <div class="stats-number">{{ stats_flotte.nb_total }}+</div>
-        <div class="stats-label">Camions actifs</div>
-      </div>
-      <div class="col-6 col-md-3 stats-cell">
-        <div class="stats-icon"><i class="bi bi-box-seam-fill"></i></div>
-        <div class="stats-number">{{ stats_flotte.capacite_totale|intcomma }}</div>
-        <div class="stats-label">Tonnes de capacité</div>
-      </div>
-      <div class="col-6 col-md-3 stats-cell">
-        <div class="stats-icon"><i class="bi bi-people-fill"></i></div>
-        <div class="stats-number">200+</div>
-        <div class="stats-label">Collaborateurs</div>
-      </div>
-      <div class="col-6 col-md-3 stats-cell">
-        <div class="stats-icon"><i class="bi bi-award-fill"></i></div>
-        <div class="stats-number">15</div>
-        <div class="stats-label">Ans d'expérience</div>
+  <div class="home-top-banner-overlay">
+    <div class="container">
+      <div class="hero-badge hero-badge-on-banner">
+        <span class="hero-pulse"></span>
+        <i class="bi bi-geo-alt-fill"></i> Conakry &middot; Kipé Centre Émetteur &middot; Guinée
       </div>
     </div>
   </div>
