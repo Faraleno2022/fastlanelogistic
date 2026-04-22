@@ -4,6 +4,21 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Charge les variables depuis .env à la racine du projet (si présent)
+_ENV_FILE = BASE_DIR / ".env"
+if _ENV_FILE.exists():
+    try:
+        import environ
+        environ.Env.read_env(str(_ENV_FILE))
+    except Exception:
+        # Fallback minimal parser si django-environ indisponible
+        for _line in _ENV_FILE.read_text(encoding="utf-8").splitlines():
+            _line = _line.strip()
+            if not _line or _line.startswith("#") or "=" not in _line:
+                continue
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip().strip('"').strip("'"))
+
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "django-insecure-change-me-in-production-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",

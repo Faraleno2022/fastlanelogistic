@@ -370,15 +370,22 @@ def build_pdf(
 def build_blank_fiches(
     fiche_type: str,
     nb_copies: int = 1,
+    nb_lignes: int = 12,
 ) -> HttpResponse:
     """Génère un PDF de fiches vierges à remplir à la main.
 
     ``fiche_type`` ∈ {"bon_transport", "voyage_bauxite", "carburant", "panne"}
+
+    Mise en page : tableau multi-lignes en A4 paysage. Chaque colonne = un champ,
+    chaque ligne = une saisie (ex: une prise de carburant). ``nb_copies`` est
+    le nombre de pages à générer, ``nb_lignes`` le nombre de lignes vides
+    par page.
     """
     buf = io.BytesIO()
+    pagesize = landscape(A4)
     doc = SimpleDocTemplate(
-        buf, pagesize=A4,
-        leftMargin=12 * mm, rightMargin=12 * mm,
+        buf, pagesize=pagesize,
+        leftMargin=10 * mm, rightMargin=10 * mm,
         topMargin=10 * mm, bottomMargin=10 * mm,
         title=f"Fiche vierge — {fiche_type}",
     )
@@ -453,42 +460,76 @@ def build_blank_fiches(
         "T", parent=styles["Heading1"], fontSize=14, alignment=TA_CENTER,
         textColor=colors.HexColor("#1F4E78"), spaceAfter=3,
     )
+    style_header = ParagraphStyle(
+        "TH", parent=styles["Normal"], fontSize=7.5, leading=9,
+        textColor=colors.white, alignment=TA_CENTER, fontName="Helvetica-Bold",
+    )
     style_label = ParagraphStyle(
         "L", parent=styles["Normal"], fontSize=9,
         textColor=colors.HexColor("#333333"),
     )
 
+    # Largeur utile du corps (A4 paysage, marges 10mm * 2) = 277 mm.
+    body_width = pagesize[0] - 20 * mm
+    # Colonne "#" fixe pour numéroter les lignes.
+    col_num_width = 8 * mm
+    # Répartition des colonnes au prorata des poids fournis dans `champs`.
+    champs = spec["champs"]
+    total_poids = sum(p for _, p in champs) or 1
+    remaining_width = body_width - col_num_width
+    col_widths = [col_num_width] + [
+        (p / total_poids) * remaining_width for _, p in champs
+    ]
+
     for copy_index in range(nb_copies):
         flow.extend(_pdf_header_flowables(spec["titre"]))
 
-        # Champs à remplir : tableau 2 colonnes (label + ligne vide),
-        # chaque champ prend `height` mm.
-        data = []
-        for label, _ in spec["champs"]:
-            data.append([Paragraph(f"<b>{label}</b>", style_label), ""])
+        # Construction du tableau :
+        #   - Ligne 0 : en-têtes (bandeau bleu, texte blanc)
+        #   - N lignes vides à remplir à la main
+        header_row = [Paragraph("<b>#</b>", style_header)] + [
+            Paragraph(f"<b>{label}</b>", style_header) for label, _ in champs
+        ]
+        data = [header_row]
+        for i in range(1, nb_lignes + 1):
+            data.append([str(i)] + [""] * len(champs))
 
-        # Hauteur fixe par ligne pour laisser de la place pour écrire à la main.
-        height_per_row = 9 * mm
-        # Largeur totale du corps du document (A4 portrait, marges 12mm * 2) = 186 mm.
-        body_width = A4[0] - 24 * mm
+        header_height = 11 * mm
+        row_height = 10 * mm
+        row_heights = [header_height] + [row_height] * nb_lignes
+
         tbl = Table(
             data,
-            colWidths=[60 * mm, body_width - 60 * mm],
-            rowHeights=[height_per_row] * len(data),
+            colWidths=col_widths,
+            rowHeights=row_heights,
+            repeatRows=1,
         )
         tbl.setStyle(TableStyle([
+            # En-tête
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+            ("VALIGN", (0, 0), (-1, 0), "MIDDLE"),
+            # Numéros de ligne (colonne 0 hors en-tête)
+            ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#F2F6FA")),
+            ("ALIGN", (0, 1), (0, -1), "CENTER"),
+            ("VALIGN", (0, 1), (0, -1), "MIDDLE"),
+            ("FONTSIZE", (0, 1), (0, -1), 8),
+            ("TEXTCOLOR", (0, 1), (0, -1), colors.HexColor("#666666")),
+            # Grille générale
             ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#1F4E78")),
             ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#BFBFBF")),
-            ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#F2F6FA")),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("LEFTPADDING", (0, 0), (-1, -1), 6),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            # Alternance lignes
+            ("ROWBACKGROUNDS", (1, 1), (-1, -1),
+             [colors.white, colors.HexColor("#FAFBFD")]),
+            ("LEFTPADDING", (0, 0), (-1, -1), 3),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+            ("TOPPADDING", (0, 0), (-1, 0), 3),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 3),
         ]))
 
         flow.append(tbl)
-        flow.append(Spacer(1, 6 * mm))
+        flow.append(Spacer(1, 5 * mm))
 
         # Bloc signatures : deux colonnes de largeur égale
         half = body_width / 2
@@ -498,7 +539,7 @@ def build_blank_fiches(
         sig_tbl.setStyle(TableStyle([
             ("LINEBELOW", (0, 1), (-1, 1), 0.6, colors.black),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("TOPPADDING", (0, 1), (-1, 1), 20),
+            ("TOPPADDING", (0, 1), (-1, 1), 14),
             ("BOTTOMPADDING", (0, 1), (-1, 1), 0),
         ]))
         flow.append(sig_tbl)
@@ -511,7 +552,7 @@ def build_blank_fiches(
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(colors.HexColor("#888888"))
         footer = f"{get_company_info()['nom']} — Fiche terrain"
-        canvas.drawRightString(A4[0] - 12 * mm, 6 * mm, footer)
+        canvas.drawRightString(pagesize[0] - 10 * mm, 6 * mm, footer)
         canvas.restoreState()
 
     doc.build(flow, onFirstPage=_on_page, onLaterPages=_on_page)

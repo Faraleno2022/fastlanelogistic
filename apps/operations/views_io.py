@@ -165,6 +165,11 @@ def fiche_vierge(request, fiche_type: str):
         nb = 1
     nb = max(1, min(50, nb))
     try:
-        return build_blank_fiches(fiche_type, nb_copies=nb)
+        lignes = int(request.GET.get("l", "12"))
+    except (ValueError, TypeError):
+        lignes = 12
+    lignes = max(1, min(30, lignes))
+    try:
+        return build_blank_fiches(fiche_type, nb_copies=nb, nb_lignes=lignes)
     except ValueError:
         raise Http404(f"Type de fiche inconnu : {fiche_type}")

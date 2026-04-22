@@ -4,85 +4,204 @@
 {% block title %}{{ SOCIETE_NOM }} — Transport de bauxite en Guinée{% endblock %}
 
 {% block content %}
-<section class="hero-public text-white d-flex align-items-center">
-  <div class="container py-5">
-    <div class="row align-items-center g-5">
+
+<!-- ============ HERO ============ -->
+<section class="hero-premium">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="container hero-content">
+    <div class="row align-items-center g-5 min-vh-80">
       <div class="col-lg-7">
-        <span class="badge bg-warning text-dark mb-3 px-3 py-2">
-          <i class="bi bi-geo-alt-fill"></i> Conakry, Guinée
-        </span>
-        <h1 class="display-4 fw-bold mb-3">Le transport de bauxite,<br>notre métier.</h1>
-        <p class="lead mb-4">
+        <div class="hero-badge">
+          <span class="hero-pulse"></span>
+          <i class="bi bi-geo-alt-fill"></i> Conakry &middot; Kipé Centre Émetteur &middot; Guinée
+        </div>
+        <h1 class="hero-title">
+          Le transport de bauxite,<br>
+          <span class="text-accent">notre métier.</span>
+        </h1>
+        <p class="hero-lead">
           {{ SOCIETE_NOM }} accompagne les grands opérateurs miniers de Guinée
-          avec une flotte moderne dédiée au transport de bauxite, des équipes
-          qualifiées et un engagement de tous les instants pour la sécurité,
-          la ponctualité et la qualité de service.
+          avec une flotte moderne, des équipes qualifiées et un engagement
+          de tous les instants pour la <strong>sécurité</strong>,
+          la <strong>ponctualité</strong> et la <strong>qualité de service</strong>.
         </p>
-        <div class="d-flex gap-3 flex-wrap">
-          <a href="{% url 'public:a_propos' %}" class="btn btn-light btn-lg">
+        <div class="hero-cta">
+          <a href="{% url 'public:a_propos' %}" class="btn btn-accent btn-xl">
             <i class="bi bi-building"></i> Qui sommes-nous ?
           </a>
-          <a href="{% url 'public:appels_offres' %}" class="btn btn-outline-light btn-lg">
+          <a href="{% url 'public:appels_offres' %}" class="btn btn-outline-light btn-xl">
             <i class="bi bi-file-earmark-text"></i> Appels d'offres
+            <span class="badge bg-danger ms-1">{{ appels_ouverts|length }}</span>
           </a>
         </div>
+        <div class="hero-trust">
+          <div class="trust-item">
+            <i class="bi bi-shield-check"></i>
+            <span>Certifié HSE</span>
+          </div>
+          <div class="trust-item">
+            <i class="bi bi-clock-history"></i>
+            <span>Opérations 24/7</span>
+          </div>
+          <div class="trust-item">
+            <i class="bi bi-geo-alt"></i>
+            <span>Corridor Boké – Kamsar</span>
+          </div>
+        </div>
       </div>
-      <div class="col-lg-5 text-center">
-        <div class="hero-stats text-center p-4 rounded-3">
-          <div class="row text-white g-3">
-            <div class="col-6">
-              <div class="display-4 fw-bold">{{ stats_flotte.nb_total }}</div>
-              <div class="small text-white-75">Camions</div>
+      <div class="col-lg-5">
+        <div class="hero-kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Aperçu de la flotte</span>
+            <span class="kpi-live"><span class="kpi-dot"></span> Actif</span>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi-cell">
+              <div class="kpi-number">{{ stats_flotte.nb_total }}</div>
+              <div class="kpi-sublabel">Camions</div>
             </div>
-            <div class="col-6">
-              <div class="display-4 fw-bold">{{ stats_flotte.capacite_totale|intcomma }}</div>
-              <div class="small text-white-75">Tonnes de capacité</div>
+            <div class="kpi-cell">
+              <div class="kpi-number">{{ stats_flotte.nb_service }}</div>
+              <div class="kpi-sublabel">En service</div>
             </div>
-            <div class="col-6">
-              <div class="display-4 fw-bold">{{ stats_flotte.nb_service }}</div>
-              <div class="small text-white-75">En service</div>
+            <div class="kpi-cell">
+              <div class="kpi-number">{{ stats_flotte.capacite_totale|intcomma }}</div>
+              <div class="kpi-sublabel">Tonnes cumulées</div>
             </div>
-            <div class="col-6">
-              <div class="display-4 fw-bold">24/7</div>
-              <div class="small text-white-75">Opérations</div>
+            <div class="kpi-cell">
+              <div class="kpi-number">24/7</div>
+              <div class="kpi-sublabel">Disponibilité</div>
+            </div>
+          </div>
+          <div class="kpi-footer">
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="small text-white-70"><i class="bi bi-truck"></i> Capacité moyenne</span>
+              <span class="fw-bold text-accent">
+                {% if stats_flotte.nb_total %}
+                  {% widthratio stats_flotte.capacite_totale stats_flotte.nb_total 1 %} T / camion
+                {% else %}—{% endif %}
+              </span>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <div class="hero-scroll-indicator">
+    <i class="bi bi-chevron-down"></i>
+  </div>
 </section>
 
-<!-- Présentation -->
-<section class="py-5">
+<!-- ============ BANDEAU CHIFFRES ============ -->
+<section class="stats-strip">
+  <div class="container">
+    <div class="row g-0 text-center">
+      <div class="col-6 col-md-3 stats-cell">
+        <div class="stats-icon"><i class="bi bi-truck-front-fill"></i></div>
+        <div class="stats-number">{{ stats_flotte.nb_total }}+</div>
+        <div class="stats-label">Camions actifs</div>
+      </div>
+      <div class="col-6 col-md-3 stats-cell">
+        <div class="stats-icon"><i class="bi bi-box-seam-fill"></i></div>
+        <div class="stats-number">{{ stats_flotte.capacite_totale|intcomma }}</div>
+        <div class="stats-label">Tonnes de capacité</div>
+      </div>
+      <div class="col-6 col-md-3 stats-cell">
+        <div class="stats-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="stats-number">200+</div>
+        <div class="stats-label">Collaborateurs</div>
+      </div>
+      <div class="col-6 col-md-3 stats-cell">
+        <div class="stats-icon"><i class="bi bi-award-fill"></i></div>
+        <div class="stats-number">15</div>
+        <div class="stats-label">Ans d'expérience</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ À PROPOS EN BREF ============ -->
+<section class="section-padded">
   <div class="container">
     <div class="row g-5 align-items-center">
       <div class="col-lg-6">
-        <h2 class="fw-bold mb-3">Un partenaire logistique de confiance</h2>
-        <p class="lead text-muted">
+        <div class="section-kicker">À propos</div>
+        <h2 class="section-title">Un partenaire logistique<br>de <span class="text-accent">confiance</span>.</h2>
+        <p class="lead text-muted mb-4">
           Basés à Conakry, nous opérons sur les corridors miniers guinéens
           avec un seul objectif : livrer la bauxite avec rigueur, sécurité
-          et fiabilité.
+          et fiabilité. Notre organisation combine une flotte moderne,
+          des équipes formées et une culture d'exigence opérationnelle.
         </p>
-        <ul class="list-unstyled mt-4">
-          <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>
-            Flotte de camions bennes spécialisée bauxite (38 à 45 tonnes)</li>
-          <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>
-            Chauffeurs expérimentés formés aux pistes minières</li>
-          <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>
-            Maintenance préventive et disponibilité maximale</li>
-          <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>
-            Traçabilité complète : bons de transport, tonnage, reporting</li>
-          <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>
-            Respect strict des normes HSE (Hygiène, Sécurité, Environnement)</li>
-        </ul>
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Flotte spécialisée</strong>
+                <p class="small text-muted mb-0">Camions bennes 38 à 45 T</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Chauffeurs qualifiés</strong>
+                <p class="small text-muted mb-0">Formés aux pistes minières</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Maintenance préventive</strong>
+                <p class="small text-muted mb-0">Disponibilité maximale</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Traçabilité totale</strong>
+                <p class="small text-muted mb-0">Bons, tonnage, reporting</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <a href="{% url 'public:a_propos' %}" class="btn btn-primary btn-lg">
+          En savoir plus <i class="bi bi-arrow-right"></i>
+        </a>
       </div>
       <div class="col-lg-6">
-        <div class="about-visual rounded-3 shadow-sm d-flex align-items-center justify-content-center text-white text-center p-5">
-          <div>
-            <i class="bi bi-truck-front-fill display-1 mb-3"></i>
-            <h3 class="fw-bold">Transport de bauxite</h3>
-            <p class="mb-0">Boké • Kamsar • Conakry</p>
+        <div class="about-mosaic">
+          <div class="mosaic-main">
+            <i class="bi bi-truck-front-fill"></i>
+            <div class="mosaic-caption">
+              <strong>Transport de bauxite</strong>
+              <span>Boké • Kamsar • Conakry</span>
+            </div>
+          </div>
+          <div class="mosaic-side">
+            <div class="mosaic-tile bg-gradient-1">
+              <i class="bi bi-gear-fill"></i>
+              <span>Maintenance</span>
+            </div>
+            <div class="mosaic-tile bg-gradient-2">
+              <i class="bi bi-shield-fill-check"></i>
+              <span>Sécurité</span>
+            </div>
+            <div class="mosaic-tile bg-gradient-3">
+              <i class="bi bi-graph-up"></i>
+              <span>Reporting</span>
+            </div>
+            <div class="mosaic-tile bg-gradient-4">
+              <i class="bi bi-people-fill"></i>
+              <span>Équipes</span>
+            </div>
           </div>
         </div>
       </div>
@@ -90,86 +209,154 @@
   </div>
 </section>
 
-<!-- Flotte -->
-{% if camions %}
-<section class="py-5 bg-light">
+<!-- ============ NOS SERVICES ============ -->
+<section class="section-padded bg-subtle">
   <div class="container">
     <div class="text-center mb-5">
-      <h2 class="fw-bold mb-2">Notre flotte</h2>
-      <p class="text-muted lead">Des camions modernes, entretenus et suivis en temps réel.</p>
+      <div class="section-kicker">Nos services</div>
+      <h2 class="section-title">Une offre <span class="text-accent">complète</span> pour l'industrie minière.</h2>
+      <p class="text-muted lead mx-auto" style="max-width:720px;">
+        De l'enlèvement à la livraison, nous maîtrisons l'ensemble de la chaîne
+        de transport de bauxite en Guinée.
+      </p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="service-card">
+          <div class="service-icon service-blue">
+            <i class="bi bi-truck"></i>
+          </div>
+          <h4>Transport de bauxite</h4>
+          <p class="text-muted">
+            Acheminement de la mine au port avec des camions bennes adaptés
+            et une rotation optimisée.
+          </p>
+          <ul class="service-list">
+            <li><i class="bi bi-dot"></i> Mines de Boké et Kamsar</li>
+            <li><i class="bi bi-dot"></i> Rotations planifiées</li>
+            <li><i class="bi bi-dot"></i> Tonnage tracé</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="service-card">
+          <div class="service-icon service-gold">
+            <i class="bi bi-boxes"></i>
+          </div>
+          <h4>Logistique minière</h4>
+          <p class="text-muted">
+            Approvisionnement de sites miniers, transport de matériaux
+            et équipements lourds.
+          </p>
+          <ul class="service-list">
+            <li><i class="bi bi-dot"></i> Matériels de chantier</li>
+            <li><i class="bi bi-dot"></i> Carburant & consommables</li>
+            <li><i class="bi bi-dot"></i> Coordination multi-sites</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="service-card">
+          <div class="service-icon service-green">
+            <i class="bi bi-clipboard-data"></i>
+          </div>
+          <h4>Reporting & traçabilité</h4>
+          <p class="text-muted">
+            Bons de transport numérisés et tableaux de bord mensuels
+            transmis à chaque client.
+          </p>
+          <ul class="service-list">
+            <li><i class="bi bi-dot"></i> Bons numériques</li>
+            <li><i class="bi bi-dot"></i> KPIs opérationnels</li>
+            <li><i class="bi bi-dot"></i> Rapports mensuels</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NOTRE FLOTTE ============ -->
+{% if camions %}
+<section class="section-padded">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-end mb-5">
+      <div>
+        <div class="section-kicker">Notre flotte</div>
+        <h2 class="section-title mb-0">Des camions <span class="text-accent">modernes</span>, entretenus et suivis.</h2>
+      </div>
+      <p class="text-muted mb-0 mt-3">Capacité cumulée : <strong class="text-primary">{{ stats_flotte.capacite_totale|intcomma }} tonnes</strong></p>
     </div>
     <div class="row g-4">
       {% for c in camions %}
       <div class="col-sm-6 col-lg-3">
-        <div class="truck-card card h-100 text-center shadow-sm">
-          <div class="truck-visual d-flex align-items-center justify-content-center">
+        <div class="truck-premium">
+          <div class="truck-header">
+            <span class="truck-code">{{ c.code }}</span>
+            {% if c.statut == "SERVICE" %}
+              <span class="truck-status status-on"><span class="status-dot"></span> En service</span>
+            {% elif c.statut == "ATELIER" %}
+              <span class="truck-status status-warn"><span class="status-dot"></span> Atelier</span>
+            {% else %}
+              <span class="truck-status status-off"><span class="status-dot"></span> {{ c.get_statut_display }}</span>
+            {% endif %}
+          </div>
+          <div class="truck-visual-premium">
             <i class="bi bi-truck-front-fill"></i>
           </div>
-          <div class="card-body">
-            <div class="d-flex justify-content-center gap-2 mb-2">
-              <span class="badge bg-primary">{{ c.code }}</span>
-              {% if c.statut == "SERVICE" %}
-                <span class="badge bg-success">En service</span>
-              {% elif c.statut == "ATELIER" %}
-                <span class="badge bg-warning text-dark">Atelier</span>
-              {% else %}
-                <span class="badge bg-secondary">{{ c.get_statut_display }}</span>
-              {% endif %}
+          <div class="truck-body">
+            <h6 class="truck-model">{{ c.marque_modele }}</h6>
+            <div class="truck-specs">
+              <div class="spec"><i class="bi bi-box-seam"></i> {{ c.capacite_tonnes|floatformat:0 }} T</div>
+              <div class="spec"><i class="bi bi-card-text"></i> {{ c.immatriculation }}</div>
             </div>
-            <h6 class="fw-bold mb-1">{{ c.marque_modele }}</h6>
-            <p class="small text-muted mb-0">
-              <i class="bi bi-box-seam"></i> {{ c.capacite_tonnes|floatformat:0 }} tonnes
-            </p>
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    {% if stats_flotte.nb_total > camions|length %}
-    <p class="text-center text-muted mt-4 mb-0">
-      … et {{ stats_flotte.nb_total|add:camions|length|add:"-"|add:camions|length }}
-      autres véhicules. Capacité cumulée : <strong>{{ stats_flotte.capacite_totale|intcomma }} tonnes</strong>.
-    </p>
-    {% endif %}
   </div>
 </section>
 {% endif %}
 
-<!-- Valeurs / pourquoi nous -->
-<section class="py-5">
+<!-- ============ POURQUOI NOUS ============ -->
+<section class="section-padded section-dark">
   <div class="container">
     <div class="text-center mb-5">
-      <h2 class="fw-bold mb-2">Pourquoi {{ SOCIETE_NOM }} ?</h2>
-      <p class="text-muted lead">Trois engagements forts envers nos clients.</p>
+      <div class="section-kicker text-accent">Pourquoi {{ SOCIETE_NOM }}</div>
+      <h2 class="section-title text-white">Trois engagements, <span class="text-accent">une exigence</span>.</h2>
     </div>
     <div class="row g-4">
       <div class="col-md-4">
-        <div class="feature-card h-100 p-4 text-center">
-          <div class="feature-icon mb-3"><i class="bi bi-shield-check"></i></div>
-          <h4>Sécurité d'abord</h4>
-          <p class="text-muted mb-0">
+        <div class="reason-card">
+          <div class="reason-number">01</div>
+          <i class="bi bi-shield-check reason-icon"></i>
+          <h4 class="text-white">Sécurité d'abord</h4>
+          <p class="text-white-70 mb-0">
             Chauffeurs formés, contrôles réguliers et respect des consignes HSE
-            imposées par les grands donneurs d'ordres miniers.
+            imposées par les grands donneurs d'ordres.
           </p>
         </div>
       </div>
       <div class="col-md-4">
-        <div class="feature-card h-100 p-4 text-center">
-          <div class="feature-icon mb-3"><i class="bi bi-speedometer2"></i></div>
-          <h4>Ponctualité</h4>
-          <p class="text-muted mb-0">
-            Disponibilité 24/7, rotations planifiées et tableau de bord opérationnel
-            pour tenir les engagements contractuels.
+        <div class="reason-card">
+          <div class="reason-number">02</div>
+          <i class="bi bi-speedometer2 reason-icon"></i>
+          <h4 class="text-white">Ponctualité</h4>
+          <p class="text-white-70 mb-0">
+            Disponibilité 24/7, rotations planifiées et tableau de bord
+            opérationnel pour tenir les engagements contractuels.
           </p>
         </div>
       </div>
       <div class="col-md-4">
-        <div class="feature-card h-100 p-4 text-center">
-          <div class="feature-icon mb-3"><i class="bi bi-graph-up-arrow"></i></div>
-          <h4>Transparence</h4>
-          <p class="text-muted mb-0">
-            Bons de transport numérisés, tonnage tracé et reporting mensuel détaillé
-            transmis à chaque client.
+        <div class="reason-card">
+          <div class="reason-number">03</div>
+          <i class="bi bi-graph-up-arrow reason-icon"></i>
+          <h4 class="text-white">Transparence</h4>
+          <p class="text-white-70 mb-0">
+            Bons de transport numérisés, tonnage tracé et reporting mensuel
+            détaillé transmis à chaque client.
           </p>
         </div>
       </div>
@@ -177,31 +364,40 @@
   </div>
 </section>
 
-<!-- Appels d'offres -->
+<!-- ============ APPELS D'OFFRES ============ -->
 {% if appels_ouverts %}
-<section class="py-5 bg-light">
+<section class="section-padded bg-subtle">
   <div class="container">
-    <div class="d-flex justify-content-between align-items-end mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-end mb-5">
       <div>
-        <h2 class="fw-bold mb-1">Appels d'offres en cours</h2>
-        <p class="text-muted mb-0">Nous consultons régulièrement des fournisseurs partenaires.</p>
+        <div class="section-kicker">Opportunités</div>
+        <h2 class="section-title mb-0">Appels d'offres <span class="text-accent">en cours</span></h2>
       </div>
-      <a href="{% url 'public:appels_offres' %}" class="btn btn-outline-primary">Tout voir <i class="bi bi-arrow-right"></i></a>
+      <a href="{% url 'public:appels_offres' %}" class="btn btn-outline-primary mt-3">
+        Tout voir <i class="bi bi-arrow-right"></i>
+      </a>
     </div>
     <div class="row g-4">
       {% for ao in appels_ouverts %}
-      <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body">
-            <span class="badge bg-success mb-2">Ouvert</span>
-            <h5 class="card-title">{{ ao.titre }}</h5>
-            <p class="text-muted small mb-2"><i class="bi bi-tag"></i> {{ ao.reference }}</p>
-            <p class="card-text">{{ ao.objet }}</p>
+      <div class="col-md-6 col-lg-4">
+        <div class="ao-card">
+          <div class="ao-head">
+            <span class="ao-badge"><i class="bi bi-unlock-fill"></i> Ouvert</span>
+            <span class="ao-ref">{{ ao.reference }}</span>
           </div>
-          <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center">
-            <small class="text-muted"><i class="bi bi-calendar-event"></i> Clôture {{ ao.date_limite|date:"d/m/Y" }}</small>
-            <a href="{{ ao.get_absolute_url }}" class="btn btn-sm btn-primary">Détails</a>
+          <h5 class="ao-title">{{ ao.titre }}</h5>
+          <p class="text-muted">{{ ao.objet|truncatechars:110 }}</p>
+          <div class="ao-meta">
+            <div><i class="bi bi-calendar-event"></i> Clôture {{ ao.date_limite|date:"d/m/Y" }}</div>
+            {% if ao.jours_restants >= 0 %}
+              <div class="ao-deadline">
+                {% if ao.jours_restants == 0 %}Dernier jour{% else %}J-{{ ao.jours_restants }}{% endif %}
+              </div>
+            {% endif %}
           </div>
+          <a href="{{ ao.get_absolute_url }}" class="ao-link">
+            Voir le détail <i class="bi bi-arrow-right"></i>
+          </a>
         </div>
       </div>
       {% endfor %}
@@ -210,35 +406,43 @@
 </section>
 {% endif %}
 
-<!-- Événements -->
+<!-- ============ ÉVÉNEMENTS ============ -->
 {% if prochains_events or derniers_events %}
-<section class="py-5">
+<section class="section-padded">
   <div class="container">
-    <div class="d-flex justify-content-between align-items-end mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-end mb-5">
       <div>
-        <h2 class="fw-bold mb-1">Actualités & événements</h2>
-        <p class="text-muted mb-0">Les temps forts de {{ SOCIETE_NOM }}.</p>
+        <div class="section-kicker">Actualités</div>
+        <h2 class="section-title mb-0">Nos <span class="text-accent">événements</span></h2>
       </div>
-      <a href="{% url 'public:evenements' %}" class="btn btn-outline-primary">Tout voir <i class="bi bi-arrow-right"></i></a>
+      <a href="{% url 'public:evenements' %}" class="btn btn-outline-primary mt-3">
+        Tout voir <i class="bi bi-arrow-right"></i>
+      </a>
     </div>
     <div class="row g-4">
       {% for evt in prochains_events|default:derniers_events %}
-      <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-          {% if evt.image %}
-          <img src="{{ evt.image.url }}" class="card-img-top" alt="{{ evt.titre }}" style="height:180px;object-fit:cover">
-          {% else %}
-          <div class="card-img-top d-flex align-items-center justify-content-center text-white" style="height:180px;background:linear-gradient(135deg,#1F4E78,#2E75B6)">
-            <i class="bi bi-calendar-event" style="font-size:3rem"></i>
+      <div class="col-md-6 col-lg-4">
+        <article class="event-card">
+          <div class="event-media">
+            {% if evt.image %}
+              <img src="{{ evt.image.url }}" alt="{{ evt.titre }}">
+            {% else %}
+              <div class="event-placeholder"><i class="bi bi-calendar-event"></i></div>
+            {% endif %}
+            <div class="event-date">
+              <div class="event-day">{{ evt.date_evenement|date:"d" }}</div>
+              <div class="event-month">{{ evt.date_evenement|date:"M"|upper }}</div>
+            </div>
           </div>
-          {% endif %}
-          <div class="card-body">
-            <small class="text-muted"><i class="bi bi-calendar"></i> {{ evt.date_evenement|date:"d F Y" }}{% if evt.lieu %} · {{ evt.lieu }}{% endif %}</small>
-            <h5 class="card-title mt-2">{{ evt.titre }}</h5>
-            <p class="card-text">{{ evt.resume|default:evt.contenu|truncatechars:120 }}</p>
-            <a href="{{ evt.get_absolute_url }}" class="stretched-link">Lire la suite →</a>
+          <div class="event-body">
+            {% if evt.lieu %}<span class="event-location"><i class="bi bi-geo-alt"></i> {{ evt.lieu }}</span>{% endif %}
+            <h5 class="event-title">{{ evt.titre }}</h5>
+            <p class="text-muted">{{ evt.resume|default:evt.contenu|truncatechars:110 }}</p>
+            <a href="{{ evt.get_absolute_url }}" class="stretched-link text-decoration-none">
+              Lire la suite <i class="bi bi-arrow-right"></i>
+            </a>
           </div>
-        </div>
+        </article>
       </div>
       {% endfor %}
     </div>
@@ -246,67 +450,66 @@
 </section>
 {% endif %}
 
-<!-- Contact / adresse -->
-<section class="py-5 bg-dark text-white">
+<!-- ============ CONTACT / CTA ============ -->
+<section class="contact-premium">
   <div class="container">
-    <div class="row g-4 align-items-center">
+    <div class="row g-4 align-items-stretch">
       <div class="col-lg-6">
-        <h2 class="fw-bold mb-3">Parlons de votre projet de transport.</h2>
-        <p class="lead mb-4 text-white-75">
-          Vous cherchez un partenaire pour l'acheminement de bauxite,
-          de matériaux ou de marchandises en Guinée ? Notre équipe est à votre écoute.
-        </p>
-        <div class="row g-3">
-          <div class="col-md-6">
-            <div class="d-flex align-items-start gap-3">
-              <div class="contact-icon"><i class="bi bi-geo-alt-fill"></i></div>
+        <div class="contact-info-block">
+          <div class="section-kicker text-accent">Contact</div>
+          <h2 class="section-title text-white">Parlons de votre<br><span class="text-accent">projet de transport</span>.</h2>
+          <p class="lead text-white-70 mb-4">
+            Vous cherchez un partenaire pour l'acheminement de bauxite,
+            de matériaux ou de marchandises en Guinée ?
+            Notre équipe est à votre écoute.
+          </p>
+          <div class="contact-list">
+            <div class="contact-line">
+              <div class="contact-icon-pro"><i class="bi bi-geo-alt-fill"></i></div>
               <div>
-                <div class="small text-white-50">Adresse</div>
-                <div class="fw-bold">Conakry, Kipé Centre Émetteur</div>
-                <div class="small">République de Guinée</div>
+                <div class="contact-label">Siège social</div>
+                <div class="contact-value">Conakry, Kipé Centre Émetteur</div>
+                <div class="small text-white-70">République de Guinée</div>
               </div>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="d-flex align-items-start gap-3">
-              <div class="contact-icon"><i class="bi bi-envelope-fill"></i></div>
+            <div class="contact-line">
+              <div class="contact-icon-pro"><i class="bi bi-envelope-fill"></i></div>
               <div>
-                <div class="small text-white-50">E-mail</div>
-                <div class="fw-bold">{{ CONTACT_EMAIL|default:"contact@fastlanelogistic.com" }}</div>
+                <div class="contact-label">E-mail</div>
+                <div class="contact-value">{{ CONTACT_EMAIL|default:"contact@fastlanelogistic.com" }}</div>
               </div>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="d-flex align-items-start gap-3">
-              <div class="contact-icon"><i class="bi bi-telephone-fill"></i></div>
+            <div class="contact-line">
+              <div class="contact-icon-pro"><i class="bi bi-telephone-fill"></i></div>
               <div>
-                <div class="small text-white-50">Téléphone</div>
-                <div class="fw-bold">{{ CONTACT_TELEPHONE|default:"+224 000 000 000" }}</div>
+                <div class="contact-label">Téléphone</div>
+                <div class="contact-value">{{ CONTACT_TELEPHONE|default:"+224 000 000 000" }}</div>
               </div>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="d-flex align-items-start gap-3">
-              <div class="contact-icon"><i class="bi bi-clock-fill"></i></div>
+            <div class="contact-line">
+              <div class="contact-icon-pro"><i class="bi bi-clock-fill"></i></div>
               <div>
-                <div class="small text-white-50">Disponibilité</div>
-                <div class="fw-bold">24h/24 — 7j/7</div>
+                <div class="contact-label">Disponibilité</div>
+                <div class="contact-value">24h/24 — 7j/7</div>
               </div>
             </div>
           </div>
         </div>
       </div>
       <div class="col-lg-6">
-        <div class="contact-map rounded-3 overflow-hidden shadow-lg">
+        <div class="contact-map-pro">
           <iframe
             src="https://www.openstreetmap.org/export/embed.html?bbox=-13.6900%2C9.6200%2C-13.6500%2C9.6500&amp;layer=mapnik&amp;marker=9.6350%2C-13.6700"
-            style="width:100%;height:320px;border:0"
             loading="lazy"
             referrerpolicy="no-referrer-when-downgrade"
             title="Localisation Fastlane Logistic — Kipé Centre Émetteur, Conakry"></iframe>
+          <a class="map-expand" href="https://www.openstreetmap.org/?mlat=9.6350&mlon=-13.6700#map=15/9.6350/-13.6700" target="_blank" rel="noopener">
+            <i class="bi bi-arrows-fullscreen"></i> Agrandir
+          </a>
         </div>
       </div>
     </div>
   </div>
 </section>
+
 {% endblock %}

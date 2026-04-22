@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Connexion — {{ SOCIETE_NOM }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-5">
+    <div class="card shadow">
+      <div class="card-body p-4">
+        <h3 class="text-center mb-4" style="color:#1F4E78">
+          <i class="bi bi-truck-front-fill"></i> {{ SOCIETE_NOM }}
+        </h3>
+        <p class="text-center text-muted mb-4">Connexion au système de gestion</p>
+        {% if form.errors %}
+          <div class="alert alert-danger">Nom d'utilisateur ou mot de passe incorrect.</div>
+        {% endif %}
+        <form method="post">{% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Utilisateur</label>
+            <input type="text" name="username" class="form-control" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Mot de passe</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100" style="background:#1F4E78;border:none;">
+            <i class="bi bi-box-arrow-in-right"></i> Se connecter
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
