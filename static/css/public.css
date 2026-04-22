@@ -810,3 +810,27 @@ body.public-site {
   .section-title { font-size: 1.7rem; }
   .contact-info-block { padding-right: 0; }
 }
+
+/* ==========================================================
+   BANNIÈRE EN HAUT DE LA PAGE D'ACCUEIL (sous la navbar)
+   ========================================================== */
+.home-top-banner {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  line-height: 0;            /* supprime l'espace sous l'image */
+  background: #0d2a44;       /* fond bleu foncé si l'image est transparente */
+  overflow: hidden;
+}
+.home-top-banner-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 480px;
+  object-fit: cover;
+  object-position: center;
+}
+@media (max-width: 768px) {
+  .home-top-banner-img { max-height: 240px; }
+}
+
