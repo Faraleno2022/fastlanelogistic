@@ -1,8 +1,13 @@
 {% extends "public/base_public.html" %}
+{% load static %}
 
 {% block title %}Appels d'offres — {{ SOCIETE_NOM }}{% endblock %}
 
 {% block content %}
+<section class="page-cover-banner">
+  <img src="{% static 'images/home2.png' %}" alt="{{ SOCIETE_NOM }} — Appels d'offres" class="page-cover-banner-img">
+</section>
+
 <section class="page-header py-5 text-white">
   <div class="container">
     <h1 class="fw-bold mb-2">Appels d'offres</h1>

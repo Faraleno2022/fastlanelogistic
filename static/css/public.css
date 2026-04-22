@@ -877,3 +877,46 @@ body.public-site {
   .hero-badge-on-banner { font-size: .78rem; padding: .4rem .8rem; }
 }
 
+/* ==========================================================
+   VISUEL DANS LA SECTION "À PROPOS" DE LA HOME (remplace mosaïque)
+   ========================================================== */
+.about-visual {
+  position: relative;
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(13, 42, 68, .18);
+  background: #0d2a44;
+}
+.about-visual-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  transition: transform .5s ease;
+}
+.about-visual:hover .about-visual-img { transform: scale(1.03); }
+
+/* ==========================================================
+   PAGE COVER BANNER — À propos / Événements / Appels d'offres
+   ========================================================== */
+.page-cover-banner {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+  background: #0d2a44;
+  overflow: hidden;
+}
+.page-cover-banner-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: cover;
+  object-position: center;
+}
+@media (max-width: 768px) {
+  .page-cover-banner-img { max-height: 200px; }
+}
+
