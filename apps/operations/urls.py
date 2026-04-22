@@ -42,4 +42,5 @@ urlpatterns = [
     path("bons-transport/nouveau/", views.bon_create, name="bon_create"),
     path("bons-transport/<int:pk>/modifier/", views.bon_edit, name="bon_edit"),
     path("bons-transport/<int:pk>/supprimer/", views.bon_delete, name="bon_delete"),
+    path("bons-transport/<int:pk>/imprimer/", views.bon_imprimer, name="bon_imprimer"),
 ]

@@ -207,3 +207,12 @@ def bons_transport(request):
         "nb_bons": nb_bons, "total_quantite": total_quantite,
         "synth": synth_list,
     })
+
+
+@login_required
+def bon_imprimer(request, pk):
+    """Génère le PDF professionnel du bon pour impression / remise chauffeur."""
+    from apps.core.exports import build_bon_transport_pdf
+    bon = get_object_or_404(BonTransport, pk=pk)
+    inline = request.GET.get("inline") == "1"
+    return build_bon_transport_pdf(bon, inline=inline)

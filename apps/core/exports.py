@@ -26,6 +26,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, PageBreak,
 )
@@ -50,6 +51,59 @@ def find_logo_path() -> str | None:
         if os.path.exists(p):
             return p
     return None
+
+
+# Cache mémoire pour le logo en filigrane (ImageReader avec alpha réduit).
+_WATERMARK_CACHE: dict = {}
+
+
+def _get_watermark_image() -> "ImageReader | None":
+    """Retourne une version translucide du logo pour usage en filigrane.
+
+    Le fichier est lu une seule fois puis mis en cache (on retourne un
+    ImageReader prêt à passer à ``canvas.drawImage``). Si Pillow n'est
+    pas disponible ou si aucun logo n'est trouvé, retourne ``None``.
+    """
+    if "img" in _WATERMARK_CACHE:
+        return _WATERMARK_CACHE["img"]
+    path = find_logo_path()
+    if not path:
+        _WATERMARK_CACHE["img"] = None
+        return None
+    try:
+        from PIL import Image as PILImage
+        img = PILImage.open(path).convert("RGBA")
+        # Réduit l'opacité à ~8% pour un filigrane discret.
+        alpha = img.split()[-1].point(lambda p: int(p * 0.08))
+        img.putalpha(alpha)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        reader = ImageReader(buf)
+        _WATERMARK_CACHE["img"] = reader
+        return reader
+    except Exception:
+        _WATERMARK_CACHE["img"] = None
+        return None
+
+
+def draw_watermark(canvas, pagesize, size_mm: float = 130) -> None:
+    """Dessine le logo en filigrane centré sur la page (léger, rotation 25°)."""
+    wm = _get_watermark_image()
+    if not wm:
+        return
+    page_w, page_h = pagesize
+    size = size_mm * mm
+    canvas.saveState()
+    try:
+        canvas.translate(page_w / 2, page_h / 2)
+        canvas.rotate(25)
+        canvas.drawImage(
+            wm, -size / 2, -size / 2, width=size, height=size,
+            mask="auto", preserveAspectRatio=True,
+        )
+    finally:
+        canvas.restoreState()
 
 
 def get_company_info() -> dict:
@@ -348,6 +402,7 @@ def build_pdf(
 
     # Pied de page avec pagination
     def _on_page(canvas, d):
+        draw_watermark(canvas, pagesize)
         canvas.saveState()
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(colors.HexColor("#888888"))
@@ -548,6 +603,7 @@ def build_blank_fiches(
             flow.append(PageBreak())
 
     def _on_page(canvas, d):
+        draw_watermark(canvas, pagesize)
         canvas.saveState()
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(colors.HexColor("#888888"))
@@ -560,5 +616,236 @@ def build_blank_fiches(
     response = HttpResponse(buf.getvalue(), content_type="application/pdf")
     response["Content-Disposition"] = (
         f'attachment; filename="fiche_{fiche_type}.pdf"'
+    )
+    return response
+
+
+# ---------------------------------------------------------------------------
+# Bon de transport individuel (imprimable — à remettre au chauffeur)
+# ---------------------------------------------------------------------------
+
+def build_bon_transport_pdf(bon, inline: bool = False) -> HttpResponse:
+    """Génère un PDF professionnel pour un bon de transport individuel.
+
+    ``bon`` : instance de ``apps.operations.models.BonTransport``.
+    ``inline`` : si True, affiche dans le navigateur au lieu de télécharger.
+
+    Mise en page : A4 portrait, en-tête société + logo, grand numéro de bon
+    encadré, infos en 2 colonnes (chauffeur / chargement), zones pour
+    signatures/tampons, filigrane logo.
+    """
+    buf = io.BytesIO()
+    pagesize = A4
+    doc = SimpleDocTemplate(
+        buf, pagesize=pagesize,
+        leftMargin=15 * mm, rightMargin=15 * mm,
+        topMargin=12 * mm, bottomMargin=12 * mm,
+        title=f"Bon de transport {bon.num_bon}",
+    )
+
+    styles = getSampleStyleSheet()
+    st_label = ParagraphStyle(
+        "BtLabel", parent=styles["Normal"], fontSize=8,
+        textColor=colors.HexColor("#666666"), spaceAfter=0,
+        fontName="Helvetica",
+    )
+    st_val = ParagraphStyle(
+        "BtVal", parent=styles["Normal"], fontSize=11,
+        textColor=colors.HexColor("#1F2937"), fontName="Helvetica-Bold",
+        spaceAfter=0,
+    )
+    st_num = ParagraphStyle(
+        "BtNum", parent=styles["Title"], fontSize=22,
+        textColor=colors.HexColor("#1F4E78"), alignment=TA_CENTER,
+        fontName="Helvetica-Bold",
+    )
+    st_section = ParagraphStyle(
+        "BtSection", parent=styles["Heading3"], fontSize=10,
+        textColor=colors.white, alignment=TA_LEFT, fontName="Helvetica-Bold",
+        spaceAfter=0, leading=12,
+    )
+
+    flow = []
+    flow.extend(_pdf_header_flowables("BON DE TRANSPORT"))
+
+    # Bandeau numéro + date (grand, centré)
+    body_width = pagesize[0] - 30 * mm
+    num_date = Table(
+        [[
+            Paragraph(f"N° {bon.num_bon}", st_num),
+            Paragraph(
+                f"<font color='#666666' size='9'>DATE</font><br/>"
+                f"<font color='#1F2937' size='13'><b>{bon.date.strftime('%d/%m/%Y')}</b></font>",
+                ParagraphStyle("nd", parent=styles["Normal"], alignment=TA_CENTER),
+            ),
+        ]],
+        colWidths=[body_width * 0.60, body_width * 0.40],
+        rowHeights=[18 * mm],
+    )
+    num_date.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 1.2, colors.HexColor("#1F4E78")),
+        ("LINEAFTER", (0, 0), (0, 0), 0.6, colors.HexColor("#1F4E78")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("BACKGROUND", (0, 0), (0, 0), colors.HexColor("#F2F6FA")),
+    ]))
+    flow.append(num_date)
+    flow.append(Spacer(1, 5 * mm))
+
+    # Helper pour cellule "label + valeur" utilisée partout
+    def cell(label: str, value: str) -> Paragraph:
+        value = value if (value is not None and value != "") else "—"
+        return Paragraph(
+            f"<font color='#666666' size='7'>{label.upper()}</font><br/>"
+            f"<font color='#1F2937' size='10'><b>{value}</b></font>",
+            ParagraphStyle("c", parent=styles["Normal"], leading=11, spaceAfter=0),
+        )
+
+    def section_header(title: str) -> Table:
+        t = Table(
+            [[Paragraph(f"<b>{title}</b>", st_section)]],
+            colWidths=[body_width],
+            rowHeights=[7 * mm],
+        )
+        t.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#1F4E78")),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ]))
+        return t
+
+    # ===== CHAUFFEUR =====
+    flow.append(section_header("CHAUFFEUR"))
+    chauff_data = [[
+        cell("Prénom", bon.prenom),
+        cell("Nom", bon.nom),
+        cell("Téléphone", bon.telephone),
+    ]]
+    chauff_tbl = Table(chauff_data, colWidths=[body_width / 3] * 3, rowHeights=[14 * mm])
+    chauff_tbl.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#BFBFBF")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#BFBFBF")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    flow.append(chauff_tbl)
+    flow.append(Spacer(1, 3 * mm))
+
+    # ===== CAMION / CHARGEMENT =====
+    flow.append(section_header("CAMION & CHARGEMENT"))
+    camion_code = bon.camion.code if bon.camion else "—"
+    camion_data = [
+        [
+            cell("Plaque", bon.plaque),
+            cell("Code camion", camion_code),
+            cell("Carte d'entrée", bon.carte_entree),
+        ],
+        [
+            cell("Lieu de chargement", bon.lieu_chargement),
+            cell("Client / Projet",
+                 bon.contrat.reference if bon.contrat else "—"),
+            cell("Quantité (T)",
+                 f"{bon.quantite:.2f}" if bon.quantite else "—"),
+        ],
+    ]
+    camion_tbl = Table(
+        camion_data, colWidths=[body_width / 3] * 3,
+        rowHeights=[14 * mm, 14 * mm],
+    )
+    camion_tbl.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#BFBFBF")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#BFBFBF")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    flow.append(camion_tbl)
+    flow.append(Spacer(1, 3 * mm))
+
+    # ===== HORAIRES =====
+    flow.append(section_header("HORAIRES DE PESÉE"))
+    def _fmt_time(t):
+        return t.strftime("%H:%M") if t else "—"
+    horaires_data = [[
+        cell("Heure de départ", _fmt_time(bon.heure_depart)),
+        cell("Pesée — début", _fmt_time(bon.heure_pesee_start)),
+        cell("Pesée — fin", _fmt_time(bon.heure_pesee_end)),
+    ]]
+    horaires_tbl = Table(horaires_data, colWidths=[body_width / 3] * 3, rowHeights=[14 * mm])
+    horaires_tbl.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#BFBFBF")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#BFBFBF")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    flow.append(horaires_tbl)
+    flow.append(Spacer(1, 3 * mm))
+
+    # ===== OBSERVATIONS =====
+    flow.append(section_header("OBSERVATIONS"))
+    obs_text = bon.observation or ""
+    obs_tbl = Table(
+        [[Paragraph(obs_text or "&nbsp;", styles["Normal"])]],
+        colWidths=[body_width],
+        rowHeights=[24 * mm],
+    )
+    obs_tbl.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#BFBFBF")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+    ]))
+    flow.append(obs_tbl)
+    flow.append(Spacer(1, 8 * mm))
+
+    # ===== SIGNATURES =====
+    sig_data = [
+        [
+            Paragraph("<b>Signature chauffeur</b>", st_label),
+            Paragraph("<b>Signature agent de terrain</b>", st_label),
+            Paragraph("<b>Cachet société</b>", st_label),
+        ],
+        ["", "", ""],
+        [
+            Paragraph("Nom & date :", st_label),
+            Paragraph("Nom & date :", st_label),
+            "",
+        ],
+    ]
+    sig_tbl = Table(
+        sig_data, colWidths=[body_width / 3] * 3,
+        rowHeights=[6 * mm, 22 * mm, 8 * mm],
+    )
+    sig_tbl.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#1F4E78")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#BFBFBF")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    flow.append(sig_tbl)
+
+    # Footer + filigrane
+    def _on_page(canvas, d):
+        draw_watermark(canvas, pagesize)
+        canvas.saveState()
+        canvas.setFont("Helvetica", 7)
+        canvas.setFillColor(colors.HexColor("#888888"))
+        footer = f"{get_company_info()['nom']} — Bon de transport {bon.num_bon}"
+        canvas.drawString(15 * mm, 6 * mm, footer)
+        canvas.drawRightString(
+            pagesize[0] - 15 * mm, 6 * mm,
+            f"Édité le {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+        )
+        canvas.restoreState()
+
+    doc.build(flow, onFirstPage=_on_page, onLaterPages=_on_page)
+
+    response = HttpResponse(buf.getvalue(), content_type="application/pdf")
+    disposition = "inline" if inline else "attachment"
+    response["Content-Disposition"] = (
+        f'{disposition}; filename="bon_transport_{bon.num_bon}.pdf"'
     )
     return response
