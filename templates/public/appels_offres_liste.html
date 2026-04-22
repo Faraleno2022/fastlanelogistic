@@ -4,14 +4,14 @@
 {% block title %}Appels d'offres — {{ SOCIETE_NOM }}{% endblock %}
 
 {% block content %}
-<section class="page-cover-banner">
+<section class="page-cover-banner page-cover-banner--hero page-cover-banner--red">
   <img src="{% static 'images/home2.png' %}" alt="{{ SOCIETE_NOM }} — Appels d'offres" class="page-cover-banner-img">
-</section>
-
-<section class="page-header py-5 text-white">
-  <div class="container">
-    <h1 class="fw-bold mb-2">Appels d'offres</h1>
-    <p class="lead mb-0">Consultations ouvertes aux fournisseurs, prestataires et partenaires de {{ SOCIETE_NOM }}.</p>
+  <div class="page-cover-banner-overlay"></div>
+  <div class="page-cover-banner-content">
+    <div class="container">
+      <h1 class="page-cover-title">Appels d'offres</h1>
+      <p class="page-cover-subtitle">Consultations ouvertes aux fournisseurs, prestataires et partenaires de {{ SOCIETE_NOM }}.</p>
+    </div>
   </div>
 </section>
 

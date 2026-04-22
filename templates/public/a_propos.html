@@ -4,14 +4,14 @@
 {% block title %}À propos — {{ SOCIETE_NOM }}{% endblock %}
 
 {% block content %}
-<section class="page-cover-banner">
+<section class="page-cover-banner page-cover-banner--hero page-cover-banner--red">
   <img src="{% static 'images/home2.png' %}" alt="{{ SOCIETE_NOM }} — À propos" class="page-cover-banner-img">
-</section>
-
-<section class="page-header py-5 text-white">
-  <div class="container">
-    <h1 class="fw-bold mb-2">{{ page.titre }}</h1>
-    <p class="lead mb-0">Notre histoire, notre mission et nos engagements.</p>
+  <div class="page-cover-banner-overlay"></div>
+  <div class="page-cover-banner-content">
+    <div class="container">
+      <h1 class="page-cover-title">{{ page.titre }}</h1>
+      <p class="page-cover-subtitle">Notre histoire, notre mission et nos engagements.</p>
+    </div>
   </div>
 </section>
 
