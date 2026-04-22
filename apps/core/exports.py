@@ -627,216 +627,423 @@ def build_blank_fiches(
 def build_bon_transport_pdf(bon, inline: bool = False) -> HttpResponse:
     """Génère un PDF professionnel pour un bon de transport individuel.
 
-    ``bon`` : instance de ``apps.operations.models.BonTransport``.
-    ``inline`` : si True, affiche dans le navigateur au lieu de télécharger.
+    Mise en page calquée sur le modèle officiel FASTLANE LOGISTIC :
+      - En-tête 5 colonnes : société | N° BON | valeur | DATE | valeur
+      - Bandeau titre "BON DE TRANSPORT BAUXITE — FASTLANE LOGISTIC"
+      - Bloc principal sur 2 colonnes :
+          * gauche (étroite) : sous-sections CHAUFFEUR / VÉHICULE / CLIENT-PROJET
+          * droite (large)   : PESÉES ET QUANTITÉ + OBSERVATIONS + SIGNATURES
+      - Avertissement légal en bas
+      - Logo en filigrane sur toute la page
 
-    Mise en page : A4 portrait, en-tête société + logo, grand numéro de bon
-    encadré, infos en 2 colonnes (chauffeur / chargement), zones pour
-    signatures/tampons, filigrane logo.
+    ``bon``   : instance ``apps.operations.models.BonTransport``.
+    ``inline``: si True, le PDF s'affiche dans le navigateur ; sinon il est
+                téléchargé.
     """
+    info = get_company_info()
     buf = io.BytesIO()
     pagesize = A4
+    page_w, page_h = pagesize
+    lm = rm = 12 * mm
+    tm = bm = 12 * mm
+    body_w = page_w - lm - rm
+
     doc = SimpleDocTemplate(
         buf, pagesize=pagesize,
-        leftMargin=15 * mm, rightMargin=15 * mm,
-        topMargin=12 * mm, bottomMargin=12 * mm,
+        leftMargin=lm, rightMargin=rm,
+        topMargin=tm, bottomMargin=bm,
         title=f"Bon de transport {bon.num_bon}",
     )
 
     styles = getSampleStyleSheet()
-    st_label = ParagraphStyle(
-        "BtLabel", parent=styles["Normal"], fontSize=8,
-        textColor=colors.HexColor("#666666"), spaceAfter=0,
-        fontName="Helvetica",
+    NAVY = colors.HexColor("#1F4E78")
+    LIGHT = colors.HexColor("#F2F6FA")
+    GREY_BORDER = colors.HexColor("#BFBFBF")
+    INK = colors.HexColor("#1F2937")
+    MUTED = colors.HexColor("#666666")
+
+    st_company = ParagraphStyle(
+        "BtCompany", parent=styles["Normal"], fontSize=13, leading=15,
+        textColor=NAVY, fontName="Helvetica-Bold", spaceAfter=0,
     )
-    st_val = ParagraphStyle(
-        "BtVal", parent=styles["Normal"], fontSize=11,
-        textColor=colors.HexColor("#1F2937"), fontName="Helvetica-Bold",
-        spaceAfter=0,
+    st_company_sub = ParagraphStyle(
+        "BtCompanySub", parent=styles["Normal"], fontSize=8, leading=10,
+        textColor=MUTED, fontName="Helvetica",
     )
-    st_num = ParagraphStyle(
-        "BtNum", parent=styles["Title"], fontSize=22,
-        textColor=colors.HexColor("#1F4E78"), alignment=TA_CENTER,
-        fontName="Helvetica-Bold",
+    st_hdr_label = ParagraphStyle(
+        "BtHdrLabel", parent=styles["Normal"], fontSize=7.5, leading=9,
+        textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_CENTER,
+    )
+    st_hdr_val = ParagraphStyle(
+        "BtHdrVal", parent=styles["Normal"], fontSize=12, leading=14,
+        textColor=NAVY, fontName="Helvetica-Bold", alignment=TA_CENTER,
+    )
+    st_title_band = ParagraphStyle(
+        "BtTitleBand", parent=styles["Normal"], fontSize=13, leading=16,
+        textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_CENTER,
     )
     st_section = ParagraphStyle(
-        "BtSection", parent=styles["Heading3"], fontSize=10,
-        textColor=colors.white, alignment=TA_LEFT, fontName="Helvetica-Bold",
-        spaceAfter=0, leading=12,
+        "BtSection", parent=styles["Normal"], fontSize=9.5, leading=12,
+        textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_LEFT,
+    )
+    st_label = ParagraphStyle(
+        "BtLabel", parent=styles["Normal"], fontSize=8, leading=10,
+        textColor=MUTED, fontName="Helvetica-Bold",
+    )
+    st_val = ParagraphStyle(
+        "BtVal", parent=styles["Normal"], fontSize=10, leading=12,
+        textColor=INK, fontName="Helvetica-Bold",
+    )
+    st_weigh_head = ParagraphStyle(
+        "BtWeighHead", parent=styles["Normal"], fontSize=8, leading=10,
+        textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_CENTER,
+    )
+    st_weigh_val = ParagraphStyle(
+        "BtWeighVal", parent=styles["Normal"], fontSize=13, leading=15,
+        textColor=INK, fontName="Helvetica-Bold", alignment=TA_CENTER,
+    )
+    st_sig_role = ParagraphStyle(
+        "BtSigRole", parent=styles["Normal"], fontSize=8.5, leading=10,
+        textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_CENTER,
+    )
+    st_sig_note = ParagraphStyle(
+        "BtSigNote", parent=styles["Normal"], fontSize=7.5, leading=9,
+        textColor=MUTED, fontName="Helvetica-Oblique", alignment=TA_LEFT,
+    )
+    st_warn = ParagraphStyle(
+        "BtWarn", parent=styles["Normal"], fontSize=8, leading=10,
+        textColor=colors.HexColor("#7A1F1F"), fontName="Helvetica-Bold",
+        alignment=TA_CENTER,
     )
 
-    flow = []
-    flow.extend(_pdf_header_flowables("BON DE TRANSPORT"))
+    flow: list = []
 
-    # Bandeau numéro + date (grand, centré)
-    body_width = pagesize[0] - 30 * mm
-    num_date = Table(
-        [[
-            Paragraph(f"N° {bon.num_bon}", st_num),
-            Paragraph(
-                f"<font color='#666666' size='9'>DATE</font><br/>"
-                f"<font color='#1F2937' size='13'><b>{bon.date.strftime('%d/%m/%Y')}</b></font>",
-                ParagraphStyle("nd", parent=styles["Normal"], alignment=TA_CENTER),
-            ),
-        ]],
-        colWidths=[body_width * 0.60, body_width * 0.40],
+    # ========= EN-TÊTE (5 cellules) =========
+    logo_cell = ""
+    if info.get("logo"):
+        try:
+            logo_cell = Image(info["logo"], width=22 * mm, height=16 * mm)
+        except Exception:
+            logo_cell = ""
+
+    company_block = [
+        Paragraph(info["nom"], st_company),
+        Paragraph("Transport & Logistique — Conakry, Guinée", st_company_sub),
+    ]
+
+    # Cellule société = logo + texte en 2 sous-colonnes
+    company_cell = Table(
+        [[logo_cell, company_block]],
+        colWidths=[24 * mm, None],
+    )
+    company_cell.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+
+    header_row = [[
+        company_cell,
+        Paragraph("N° BON", st_hdr_label),
+        Paragraph(f"<b>{bon.num_bon}</b>", st_hdr_val),
+        Paragraph("DATE", st_hdr_label),
+        Paragraph(bon.date.strftime("%d/%m/%Y"), st_hdr_val),
+    ]]
+    # Largeurs : société (≈44%) | label | valeur | label | valeur
+    col_w_company = body_w * 0.44
+    col_w_label = body_w * 0.08
+    col_w_value = (body_w - col_w_company - 2 * col_w_label) / 2
+    header_tbl = Table(
+        header_row,
+        colWidths=[col_w_company, col_w_label, col_w_value, col_w_label, col_w_value],
         rowHeights=[18 * mm],
     )
-    num_date.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 1.2, colors.HexColor("#1F4E78")),
-        ("LINEAFTER", (0, 0), (0, 0), 0.6, colors.HexColor("#1F4E78")),
+    header_tbl.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 1.0, NAVY),
+        ("INNERGRID", (0, 0), (-1, -1), 0.5, NAVY),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("BACKGROUND", (0, 0), (0, 0), colors.HexColor("#F2F6FA")),
+        # Bandes bleu foncé pour les labels
+        ("BACKGROUND", (1, 0), (1, 0), NAVY),
+        ("BACKGROUND", (3, 0), (3, 0), NAVY),
+        # Zones valeur en bleu clair
+        ("BACKGROUND", (2, 0), (2, 0), LIGHT),
+        ("BACKGROUND", (4, 0), (4, 0), LIGHT),
+        ("LEFTPADDING", (0, 0), (0, 0), 6),
+        ("RIGHTPADDING", (0, 0), (0, 0), 6),
     ]))
-    flow.append(num_date)
-    flow.append(Spacer(1, 5 * mm))
+    flow.append(header_tbl)
 
-    # Helper pour cellule "label + valeur" utilisée partout
-    def cell(label: str, value: str) -> Paragraph:
-        value = value if (value is not None and value != "") else "—"
-        return Paragraph(
-            f"<font color='#666666' size='7'>{label.upper()}</font><br/>"
-            f"<font color='#1F2937' size='10'><b>{value}</b></font>",
-            ParagraphStyle("c", parent=styles["Normal"], leading=11, spaceAfter=0),
-        )
+    # ========= BANDEAU TITRE =========
+    title_tbl = Table(
+        [[Paragraph("BON DE TRANSPORT BAUXITE  ——  FASTLANE LOGISTIC", st_title_band)]],
+        colWidths=[body_w], rowHeights=[9 * mm],
+    )
+    title_tbl.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), NAVY),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("BOX", (0, 0), (-1, -1), 1.0, NAVY),
+    ]))
+    flow.append(title_tbl)
+    flow.append(Spacer(1, 3 * mm))
 
-    def section_header(title: str) -> Table:
+    # ========= HELPERS =========
+    def section_bar(text: str, width_mm: float) -> Table:
         t = Table(
-            [[Paragraph(f"<b>{title}</b>", st_section)]],
-            colWidths=[body_width],
-            rowHeights=[7 * mm],
+            [[Paragraph(f"▌  {text}", st_section)]],
+            colWidths=[width_mm], rowHeights=[6.5 * mm],
         )
         t.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#1F4E78")),
-            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("BACKGROUND", (0, 0), (-1, -1), NAVY),
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
         ]))
         return t
 
-    # ===== CHAUFFEUR =====
-    flow.append(section_header("CHAUFFEUR"))
-    chauff_data = [[
-        cell("Prénom", bon.prenom),
-        cell("Nom", bon.nom),
-        cell("Téléphone", bon.telephone),
-    ]]
-    chauff_tbl = Table(chauff_data, colWidths=[body_width / 3] * 3, rowHeights=[14 * mm])
-    chauff_tbl.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#BFBFBF")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#BFBFBF")),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-    ]))
-    flow.append(chauff_tbl)
-    flow.append(Spacer(1, 3 * mm))
+    def kv_row(label: str, value, col_w_label: float, col_w_value: float) -> list:
+        if value in (None, ""):
+            value_txt = ""
+        elif hasattr(value, "strftime"):
+            value_txt = value.strftime("%H:%M")
+        else:
+            value_txt = str(value)
+        return [
+            Paragraph(label, st_label),
+            Paragraph(value_txt, st_val),
+        ]
 
-    # ===== CAMION / CHARGEMENT =====
-    flow.append(section_header("CAMION & CHARGEMENT"))
-    camion_code = bon.camion.code if bon.camion else "—"
-    camion_data = [
+    # Formatage d'une table label/valeur
+    def build_kv_block(rows: list, width: float, col_ratio: float = 0.46) -> Table:
+        col_w_l = width * col_ratio
+        col_w_v = width - col_w_l
+        data = [kv_row(lbl, val, col_w_l, col_w_v) for lbl, val in rows]
+        t = Table(
+            data, colWidths=[col_w_l, col_w_v],
+            rowHeights=[7.5 * mm] * len(rows),
+        )
+        t.setStyle(TableStyle([
+            ("BOX", (0, 0), (-1, -1), 0.6, GREY_BORDER),
+            ("INNERGRID", (0, 0), (-1, -1), 0.3, GREY_BORDER),
+            ("BACKGROUND", (0, 0), (0, -1), LIGHT),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        return t
+
+    # ========= BLOC PRINCIPAL : 2 COLONNES =========
+    left_w = body_w * 0.42
+    right_w = body_w - left_w - 3 * mm  # petit espace entre colonnes
+
+    # ---- Colonne gauche : CHAUFFEUR / VÉHICULE / CLIENT-PROJET ----
+    chauffeur_kv = build_kv_block([
+        ("Prénom", bon.prenom),
+        ("Nom", bon.nom),
+        ("Téléphone", bon.telephone or ""),
+    ], left_w)
+
+    camion_code = bon.camion.code if bon.camion else ""
+    plaque = bon.plaque or (bon.camion.plaque if bon.camion else "")
+    vehicule_kv = build_kv_block([
+        ("Plaque camion", plaque),
+        ("Code camion", camion_code),
+        ("Carte d'entrée", bon.carte_entree or ""),
+        ("Lieu de chargement", bon.lieu_chargement or ""),
+        ("Heure de départ", bon.heure_depart),
+    ], left_w)
+
+    projet_txt = ""
+    if bon.contrat:
+        projet_txt = getattr(bon.contrat, "code", None) or getattr(bon.contrat, "reference", "") or str(bon.contrat)
+    client_kv = build_kv_block([
+        ("Client / Projet", projet_txt),
+    ], left_w)
+
+    left_col_table = Table(
         [
-            cell("Plaque", bon.plaque),
-            cell("Code camion", camion_code),
-            cell("Carte d'entrée", bon.carte_entree),
+            [section_bar("CHAUFFEUR", left_w)],
+            [chauffeur_kv],
+            [Spacer(1, 2 * mm)],
+            [section_bar("VÉHICULE", left_w)],
+            [vehicule_kv],
+            [Spacer(1, 2 * mm)],
+            [section_bar("CLIENT / PROJET", left_w)],
+            [client_kv],
         ],
-        [
-            cell("Lieu de chargement", bon.lieu_chargement),
-            cell("Client / Projet",
-                 bon.contrat.reference if bon.contrat else "—"),
-            cell("Quantité (T)",
-                 f"{bon.quantite:.2f}" if bon.quantite else "—"),
-        ],
-    ]
-    camion_tbl = Table(
-        camion_data, colWidths=[body_width / 3] * 3,
-        rowHeights=[14 * mm, 14 * mm],
+        colWidths=[left_w],
     )
-    camion_tbl.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#BFBFBF")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#BFBFBF")),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    left_col_table.setStyle(TableStyle([
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
     ]))
-    flow.append(camion_tbl)
-    flow.append(Spacer(1, 3 * mm))
 
-    # ===== HORAIRES =====
-    flow.append(section_header("HORAIRES DE PESÉE"))
+    # ---- Colonne droite : PESÉES / OBSERVATIONS / SIGNATURES ----
     def _fmt_time(t):
-        return t.strftime("%H:%M") if t else "—"
-    horaires_data = [[
-        cell("Heure de départ", _fmt_time(bon.heure_depart)),
-        cell("Pesée — début", _fmt_time(bon.heure_pesee_start)),
-        cell("Pesée — fin", _fmt_time(bon.heure_pesee_end)),
-    ]]
-    horaires_tbl = Table(horaires_data, colWidths=[body_width / 3] * 3, rowHeights=[14 * mm])
-    horaires_tbl.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#BFBFBF")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#BFBFBF")),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-    ]))
-    flow.append(horaires_tbl)
-    flow.append(Spacer(1, 3 * mm))
+        return t.strftime("%H:%M") if t else ""
 
-    # ===== OBSERVATIONS =====
-    flow.append(section_header("OBSERVATIONS"))
-    obs_text = bon.observation or ""
-    obs_tbl = Table(
-        [[Paragraph(obs_text or "&nbsp;", styles["Normal"])]],
-        colWidths=[body_width],
-        rowHeights=[24 * mm],
+    # Tableau 3 colonnes : PESÉE DÉBUT (T) | PESÉE FIN (T) | QUANTITÉ NETTE (T)
+    quant_txt = f"{bon.quantite:.2f}" if bon.quantite else ""
+    weigh_tbl = Table(
+        [
+            [
+                Paragraph("PESÉE DÉBUT (T)", st_weigh_head),
+                Paragraph("PESÉE FIN (T)", st_weigh_head),
+                Paragraph("QUANTITÉ NETTE (T)", st_weigh_head),
+            ],
+            [
+                Paragraph("", st_weigh_val),
+                Paragraph("", st_weigh_val),
+                Paragraph(quant_txt, st_weigh_val),
+            ],
+        ],
+        colWidths=[right_w / 3] * 3,
+        rowHeights=[6.5 * mm, 13 * mm],
     )
-    obs_tbl.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#BFBFBF")),
+    weigh_tbl.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+        ("BOX", (0, 0), (-1, -1), 0.6, GREY_BORDER),
+        ("INNERGRID", (0, 0), (-1, -1), 0.3, GREY_BORDER),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("BACKGROUND", (2, 1), (2, 1), LIGHT),
+    ]))
+
+    # Horaires de pesée (infos système, si présentes)
+    hr_start = _fmt_time(bon.heure_pesee_start)
+    hr_end = _fmt_time(bon.heure_pesee_end)
+    weigh_times = Table(
+        [[
+            Paragraph("HEURE PESÉE DÉBUT", st_weigh_head),
+            Paragraph("HEURE PESÉE FIN", st_weigh_head),
+        ],
+        [
+            Paragraph(hr_start, st_weigh_val),
+            Paragraph(hr_end, st_weigh_val),
+        ]],
+        colWidths=[right_w / 2] * 2,
+        rowHeights=[5.5 * mm, 9 * mm],
+    )
+    weigh_times.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#3B6EA5")),
+        ("BOX", (0, 0), (-1, -1), 0.6, GREY_BORDER),
+        ("INNERGRID", (0, 0), (-1, -1), 0.3, GREY_BORDER),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+
+    # Zone OBSERVATIONS
+    obs_txt = bon.observation or ""
+    obs_box = Table(
+        [[Paragraph(obs_txt or "&nbsp;", ParagraphStyle(
+            "obs", parent=styles["Normal"], fontSize=9.5, leading=12,
+            textColor=INK,
+        ))]],
+        colWidths=[right_w], rowHeights=[20 * mm],
+    )
+    obs_box.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.6, GREY_BORDER),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("LEFTPADDING", (0, 0), (-1, -1), 8),
         ("RIGHTPADDING", (0, 0), (-1, -1), 8),
         ("TOPPADDING", (0, 0), (-1, -1), 6),
     ]))
-    flow.append(obs_tbl)
-    flow.append(Spacer(1, 8 * mm))
 
-    # ===== SIGNATURES =====
-    sig_data = [
-        [
-            Paragraph("<b>Signature chauffeur</b>", st_label),
-            Paragraph("<b>Signature agent de terrain</b>", st_label),
-            Paragraph("<b>Cachet société</b>", st_label),
-        ],
-        ["", "", ""],
-        [
-            Paragraph("Nom & date :", st_label),
-            Paragraph("Nom & date :", st_label),
-            "",
-        ],
-    ]
-    sig_tbl = Table(
-        sig_data, colWidths=[body_width / 3] * 3,
-        rowHeights=[6 * mm, 22 * mm, 8 * mm],
+    # Zone SIGNATURES (3 colonnes : Chauffeur / Resp. site / Validation FASTLANE)
+    sig_head = Table(
+        [[
+            Paragraph("Chauffeur", st_sig_role),
+            Paragraph("Resp. site", st_sig_role),
+            Paragraph("Validation FASTLANE", st_sig_role),
+        ]],
+        colWidths=[right_w / 3] * 3, rowHeights=[6 * mm],
     )
-    sig_tbl.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#1F4E78")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#BFBFBF")),
+    sig_head.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), NAVY),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("BOX", (0, 0), (-1, -1), 0.6, NAVY),
+        ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.white),
+    ]))
+
+    sig_body = Table(
+        [[
+            Paragraph("Signature &amp; Date :", st_sig_note),
+            Paragraph("Signature &amp; Cachet :", st_sig_note),
+            Paragraph("Signature &amp; Cachet :", st_sig_note),
+        ]],
+        colWidths=[right_w / 3] * 3, rowHeights=[26 * mm],
+    )
+    sig_body.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.6, GREY_BORDER),
+        ("INNERGRID", (0, 0), (-1, -1), 0.3, GREY_BORDER),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
     ]))
-    flow.append(sig_tbl)
 
-    # Footer + filigrane
+    right_col_table = Table(
+        [
+            [section_bar("PESÉES ET QUANTITÉ TRANSPORTÉE", right_w)],
+            [weigh_tbl],
+            [Spacer(1, 1.5 * mm)],
+            [weigh_times],
+            [Spacer(1, 2 * mm)],
+            [section_bar("OBSERVATIONS", right_w)],
+            [obs_box],
+            [Spacer(1, 2 * mm)],
+            [section_bar("SIGNATURES ET VALIDATIONS", right_w)],
+            [sig_head],
+            [sig_body],
+        ],
+        colWidths=[right_w],
+    )
+    right_col_table.setStyle(TableStyle([
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+
+    main_tbl = Table(
+        [[left_col_table, "", right_col_table]],
+        colWidths=[left_w, 3 * mm, right_w],
+    )
+    main_tbl.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    flow.append(main_tbl)
+    flow.append(Spacer(1, 4 * mm))
+
+    # ========= AVERTISSEMENT LÉGAL =========
+    warn_tbl = Table(
+        [[Paragraph(
+            "⚠  Document officiel FASTLANE LOGISTIC — Toute altération est "
+            "passible de poursuites. Conserver l'original.",
+            st_warn,
+        )]],
+        colWidths=[body_w], rowHeights=[8 * mm],
+    )
+    warn_tbl.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FCE8E8")),
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#C94B4B")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    flow.append(warn_tbl)
+
+    # ========= FILIGRANE + PIED DE PAGE =========
     def _on_page(canvas, d):
         draw_watermark(canvas, pagesize)
         canvas.saveState()
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(colors.HexColor("#888888"))
-        footer = f"{get_company_info()['nom']} — Bon de transport {bon.num_bon}"
-        canvas.drawString(15 * mm, 6 * mm, footer)
+        footer = f"{info['nom']} — Bon de transport {bon.num_bon}"
+        canvas.drawString(lm, 5 * mm, footer)
         canvas.drawRightString(
-            pagesize[0] - 15 * mm, 6 * mm,
+            page_w - rm, 5 * mm,
             f"Édité le {datetime.now().strftime('%d/%m/%Y %H:%M')}",
         )
         canvas.restoreState()
