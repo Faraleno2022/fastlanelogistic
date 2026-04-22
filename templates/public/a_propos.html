@@ -15,14 +15,117 @@
   </div>
 </section>
 
-<section class="py-5">
+<!-- ============ QUI SOMMES-NOUS ? ============ -->
+<section class="section-padded apropos-intro">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-7">
+        <div class="section-kicker">Qui sommes-nous ?</div>
+        <h2 class="section-title">
+          {{ SOCIETE_NOM }} — Votre partenaire
+          <span class="text-accent">transport &amp; logistique</span>
+          en Guinée.
+        </h2>
+        <p class="lead text-muted mb-4">
+          {{ SOCIETE_NOM }} est une entreprise guinéenne spécialisée dans
+          le <strong>transport sous toutes ses formes</strong>. Nous opérons
+          aussi bien dans le <strong>transport général de marchandises</strong>
+          que dans le <strong>transport minier</strong>, avec une expertise
+          reconnue sur les opérations de <strong>bauxite</strong> et de
+          matières premières.
+        </p>
+        <p class="text-muted mb-4">
+          Nous accompagnons nos <strong>partenaires</strong> sur des
+          <strong>projets de grande envergure</strong>, s'étendant sur
+          plusieurs centaines de kilomètres de corridors miniers et
+          logistiques. Ces missions exigent <strong>patience, rigueur et
+          engagement de long terme</strong> — autant de qualités qui
+          caractérisent nos équipes depuis le premier jour.
+        </p>
+        <p class="text-muted mb-4">
+          Basés à Conakry, avec un bureau opérationnel déployé à
+          <strong>Kolaboui, dans la préfecture de Boké</strong>, nous
+          mettons à disposition une flotte moderne, des chauffeurs
+          qualifiés et une organisation rodée pour garantir à nos clients
+          <strong>sécurité, ponctualité et traçabilité</strong> sur
+          l'ensemble de leurs flux.
+        </p>
+
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Transport général</strong>
+                <p class="small text-muted mb-0">Marchandises &amp; matériaux</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Transport minier</strong>
+                <p class="small text-muted mb-0">Bauxite &amp; matières premières</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Projets partenaires</strong>
+                <p class="small text-muted mb-0">Corridors de plusieurs km</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Engagement long terme</strong>
+                <p class="small text-muted mb-0">Patience &amp; rigueur</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="apropos-gallery">
+          <div class="office-photo">
+            <img src="{% static 'images/bureau1.png' %}"
+                 alt="Bureau FASTLANE LOGISTIC à Kolaboui">
+            <div class="office-photo-caption">
+              <i class="bi bi-building"></i>
+              Bureau opérationnel — Kolaboui (Boké)
+            </div>
+          </div>
+          <div class="office-photo">
+            <img src="{% static 'images/bureau2.png' %}"
+                 alt="Salle de réunion et formation — Kolaboui">
+            <div class="office-photo-caption">
+              <i class="bi bi-mortarboard-fill"></i>
+              Salle de réunion &amp; formation
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISSION / VISION / VALEURS / CHIFFRES (dynamiques) ============ -->
+<section class="py-5 bg-subtle">
   <div class="container">
     <div class="row g-5">
       <div class="col-lg-8">
+        {% if page.presentation %}
         <div class="mb-4">
-          <h3 class="fw-bold">Présentation</h3>
+          <h3 class="fw-bold">Présentation détaillée</h3>
           <p class="lead">{{ page.presentation|linebreaksbr }}</p>
         </div>
+        {% endif %}
 
         {% if page.mission %}
         <div class="mb-4">
