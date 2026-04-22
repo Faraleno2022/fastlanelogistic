@@ -494,8 +494,8 @@ def build_blank_fiches(
         for i in range(1, nb_lignes + 1):
             data.append([str(i)] + [""] * len(champs))
 
-        header_height = 11 * mm
-        row_height = 10 * mm
+        header_height = 9 * mm
+        row_height = 8.5 * mm
         row_heights = [header_height] + [row_height] * nb_lignes
 
         tbl = Table(
@@ -529,7 +529,7 @@ def build_blank_fiches(
         ]))
 
         flow.append(tbl)
-        flow.append(Spacer(1, 5 * mm))
+        flow.append(Spacer(1, 3 * mm))
 
         # Bloc signatures : deux colonnes de largeur égale
         half = body_width / 2
@@ -539,7 +539,7 @@ def build_blank_fiches(
         sig_tbl.setStyle(TableStyle([
             ("LINEBELOW", (0, 1), (-1, 1), 0.6, colors.black),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("TOPPADDING", (0, 1), (-1, 1), 14),
+            ("TOPPADDING", (0, 1), (-1, 1), 10),
             ("BOTTOMPADDING", (0, 1), (-1, 1), 0),
         ]))
         flow.append(sig_tbl)
