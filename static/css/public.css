@@ -920,3 +920,51 @@ body.public-site {
   .page-cover-banner-img { max-height: 200px; }
 }
 
+/* ---- Variante "hero" : titre + sous-titre superposés sur l'image ---- */
+.page-cover-banner--hero {
+  position: relative;
+  line-height: 1.4;
+}
+.page-cover-banner--hero .page-cover-banner-img {
+  max-height: 420px;
+  min-height: 260px;
+  width: 100%;
+  object-fit: cover;
+}
+.page-cover-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(13, 42, 68, .15) 0%,
+    rgba(13, 42, 68, .55) 55%,
+    rgba(13, 42, 68, .80) 100%);
+}
+.page-cover-banner-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 0 2.5rem 0;
+  color: #fff;
+}
+.page-cover-title {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 800;
+  margin: 0 0 .4rem 0;
+  line-height: 1.15;
+  letter-spacing: -.01em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .35);
+}
+.page-cover-subtitle {
+  font-size: clamp(.95rem, 1.4vw, 1.15rem);
+  font-weight: 400;
+  margin: 0;
+  max-width: 680px;
+  color: rgba(255, 255, 255, .92);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .35);
+}
+@media (max-width: 768px) {
+  .page-cover-banner--hero .page-cover-banner-img { max-height: 260px; min-height: 200px; }
+  .page-cover-banner-content { padding: 0 0 1.25rem 0; }
+}
+
