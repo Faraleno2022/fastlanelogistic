@@ -1,8 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+
+from apps.public.sitemaps import sitemaps as public_sitemaps
+from apps.public.views import robots_txt
 
 admin.site.site_header = "Fastlane Logistic — Administration"
 admin.site.site_title = "Fastlane Logistic Admin"
@@ -26,6 +30,15 @@ urlpatterns = [
     path("operations/", include("apps.operations.urls")),
     path("facturation/", include("apps.facturation.urls")),
     path("dashboard/", include("apps.dashboard.urls")),
+
+    # SEO — sitemap & robots.txt
+    path(
+        "sitemap.xml",
+        sitemap,
+        {"sitemaps": public_sitemaps},
+        name="django.contrib.sitemaps.views.sitemap",
+    ),
+    path("robots.txt", robots_txt, name="robots_txt"),
 
     # Site public — racine en dernier
     path("", include("apps.public.urls")),

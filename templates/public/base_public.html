@@ -1,14 +1,132 @@
-{% load static %}
+{% load static seo_extras %}
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr-GN" prefix="og: https://ogp.me/ns#">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}{{ SOCIETE_NOM }} — Transport de bauxite{% endblock %}</title>
-<meta name="description" content="{% block description %}{{ SOCIETE_NOM }} — Transport de bauxite et logistique minière en Guinée.{% endblock %}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F2C47">
+<meta name="format-detection" content="telephone=yes">
+
+{# On rend une seule fois le titre et la description, puis on les réutilise partout #}
+{% capture_as SEO_PAGE_TITLE %}{% block title %}{{ SEO.default_title }}{% endblock %}{% endcapture_as %}
+{% capture_as SEO_PAGE_DESC %}{% block meta_description %}{{ SEO.default_description }}{% endblock %}{% endcapture_as %}
+
+<title>{{ SEO_PAGE_TITLE }}</title>
+
+<meta name="description" content="{{ SEO_PAGE_DESC }}">
+<meta name="keywords" content="{% block meta_keywords %}{{ SEO.default_keywords }}{% endblock %}">
+<meta name="author" content="{{ SEO.site_name }}">
+<meta name="robots" content="{% block meta_robots %}index, follow, max-image-preview:large, max-snippet:-1{% endblock %}">
+<meta name="language" content="French">
+<meta name="geo.region" content="GN">
+<meta name="geo.placename" content="Conakry">
+
+<link rel="canonical" href="{% block canonical %}{{ CANONICAL_URL }}{% endblock %}">
+<link rel="alternate" hreflang="fr" href="{{ CANONICAL_URL }}">
+<link rel="alternate" hreflang="x-default" href="{{ CANONICAL_URL }}">
+
+{# ---------- Open Graph (Facebook / LinkedIn / WhatsApp) ---------- #}
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:site_name" content="{{ SEO.site_name }}">
+<meta property="og:locale" content="{{ SEO.locale }}">
+<meta property="og:title" content="{{ SEO_PAGE_TITLE }}">
+<meta property="og:description" content="{{ SEO_PAGE_DESC }}">
+<meta property="og:url" content="{{ CANONICAL_URL }}">
+<meta property="og:image" content="{% block og_image %}{{ SEO.default_og_image_url }}{% endblock %}">
+<meta property="og:image:alt" content="{{ SEO.site_name }} — Transport & logistique">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+{% if SEO.fb_app_id %}<meta property="fb:app_id" content="{{ SEO.fb_app_id }}">{% endif %}
+
+{# ---------- Twitter Cards ---------- #}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ SEO_PAGE_TITLE }}">
+<meta name="twitter:description" content="{{ SEO_PAGE_DESC }}">
+<meta name="twitter:image" content="{% block tw_image %}{{ SEO.default_og_image_url }}{% endblock %}">
+{% if SEO.twitter_handle %}<meta name="twitter:site" content="{{ SEO.twitter_handle }}">{% endif %}
+
+{# ---------- Favicons ---------- #}
+<link rel="icon" type="image/png" href="{% static 'images/logo_fastlane.png' %}">
+<link rel="apple-touch-icon" href="{% static 'images/logo_fastlane.png' %}">
+
+{# ---------- Performance : preconnect CDN ---------- #}
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/public.css' %}">
+
+{# ---------- JSON-LD : Organization + LocalBusiness + WebSite ---------- #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "{{ SEO.site_url }}/#organization",
+      "name": "{{ ORG.name|default:SEO.site_name }}",
+      "legalName": "{{ ORG.legal_name|default:SEO.site_name }}",
+      "url": "{{ SEO.site_url }}/",
+      "logo": "{{ SEO.site_url }}{% static 'images/logo_fastlane.png' %}",
+      "image": "{{ SEO.default_og_image_url }}",
+      "foundingDate": "{{ ORG.founding_year|default:'' }}",
+      "areaServed": [{% for a in ORG.areas_served %}"{{ a }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "telephone": "{{ ORG.phone|default:'' }}",
+        "email": "{{ ORG.email|default:'' }}",
+        "areaServed": "GN",
+        "availableLanguage": ["French"]
+      }{% if ORG.social %},
+      "sameAs": [{% for s in ORG.social %}"{{ s }}"{% if not forloop.last %},{% endif %}{% endfor %}]{% endif %}
+    },
+    {
+      "@type": "LocalBusiness",
+      "@id": "{{ SEO.site_url }}/#localbusiness",
+      "name": "{{ ORG.name|default:SEO.site_name }}",
+      "url": "{{ SEO.site_url }}/",
+      "image": "{{ SEO.default_og_image_url }}",
+      "telephone": "{{ ORG.phone|default:'' }}",
+      "email": "{{ ORG.email|default:'' }}",
+      "priceRange": "$$",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "{{ ORG.street|default:'' }}",
+        "addressLocality": "{{ ORG.locality|default:'Conakry' }}",
+        "addressRegion": "{{ ORG.region|default:'Conakry' }}",
+        "postalCode": "{{ ORG.postal|default:'' }}",
+        "addressCountry": "{{ ORG.country|default:'GN' }}"
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+          "opens": "08:00",
+          "closes": "18:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": "Saturday",
+          "opens": "09:00",
+          "closes": "13:00"
+        }
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "{{ SEO.site_url }}/#website",
+      "url": "{{ SEO.site_url }}/",
+      "name": "{{ SEO.site_name }}",
+      "publisher": { "@id": "{{ SEO.site_url }}/#organization" },
+      "inLanguage": "fr-GN"
+    }
+  ]
+}
+</script>
+
+{% block head_extra %}{% endblock %}
 </head>
 <body class="public-site">
 

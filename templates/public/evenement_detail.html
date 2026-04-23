@@ -1,7 +1,45 @@
 {% extends "public/base_public.html" %}
 
-{% block title %}{{ evt.titre }} — {{ SOCIETE_NOM }}{% endblock %}
-{% block description %}{{ evt.resume|default:evt.contenu|truncatechars:150 }}{% endblock %}
+{% block title %}{{ evt.titre }} — Événement {{ SOCIETE_NOM }}{% endblock %}
+{% block meta_description %}{{ evt.resume|default:evt.contenu|striptags|truncatechars:160 }}{% endblock %}
+{% block meta_keywords %}événement {{ SOCIETE_NOM }}, {{ evt.titre }}{% if evt.lieu %}, {{ evt.lieu }}{% endif %}, transport bauxite, Guinée{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_image %}{% if evt.image %}{{ SEO.site_url }}{{ evt.image.url }}{% else %}{{ SEO.default_og_image_url }}{% endif %}{% endblock %}
+{% block tw_image %}{% if evt.image %}{{ SEO.site_url }}{{ evt.image.url }}{% else %}{{ SEO.default_og_image_url }}{% endif %}{% endblock %}
+
+{% block head_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Event",
+  "name": "{{ evt.titre|escapejs }}",
+  "description": "{{ evt.resume|default:evt.contenu|striptags|truncatechars:300|escapejs }}",
+  "startDate": "{{ evt.date_evenement|date:'c' }}",
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  {% if evt.lieu %}"location": {
+    "@type": "Place",
+    "name": "{{ evt.lieu|escapejs }}",
+    "address": {"@type": "PostalAddress", "addressCountry": "GN"}
+  },{% endif %}
+  {% if evt.image %}"image": "{{ SEO.site_url }}{{ evt.image.url }}",{% endif %}
+  "organizer": { "@id": "{{ SEO.site_url }}/#organization" },
+  "url": "{{ CANONICAL_URL }}",
+  "inLanguage": "fr-GN"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Accueil", "item": "{{ SEO.site_url }}/"},
+    {"@type": "ListItem", "position": 2, "name": "Événements", "item": "{{ SEO.site_url }}{% url 'public:evenements' %}"},
+    {"@type": "ListItem", "position": 3, "name": "{{ evt.titre|escapejs }}", "item": "{{ CANONICAL_URL }}"}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <section class="page-header py-5 text-white">

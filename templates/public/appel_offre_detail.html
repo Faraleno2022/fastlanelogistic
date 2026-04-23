@@ -1,7 +1,39 @@
 {% extends "public/base_public.html" %}
 
-{% block title %}{{ ao.reference }} — {{ ao.titre }} — {{ SOCIETE_NOM }}{% endblock %}
-{% block description %}{{ ao.objet|truncatechars:150 }}{% endblock %}
+{% block title %}{{ ao.reference }} — {{ ao.titre }} | Appel d'offres {{ SOCIETE_NOM }}{% endblock %}
+{% block meta_description %}{{ ao.objet|striptags|truncatechars:160 }}{% endblock %}
+{% block meta_keywords %}appel offre {{ ao.reference }}, {{ ao.titre }}, Fastlane Logistic, consultation fournisseur Guinée{% if ao.lieu_execution %}, {{ ao.lieu_execution }}{% endif %}{% endblock %}
+{% block meta_robots %}{% if ao.statut == 'brouillon' %}noindex, nofollow{% else %}index, follow, max-image-preview:large{% endif %}{% endblock %}
+
+{% block head_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ ao.reference }} — {{ ao.titre|escapejs }}",
+  "description": "{{ ao.objet|striptags|truncatechars:300|escapejs }}",
+  "datePublished": "{{ ao.date_publication|date:'c' }}",
+  "dateModified": "{{ ao.updated_at|date:'c' }}",
+  "author":    { "@id": "{{ SEO.site_url }}/#organization" },
+  "publisher": { "@id": "{{ SEO.site_url }}/#organization" },
+  "url": "{{ CANONICAL_URL }}",
+  "inLanguage": "fr-GN",
+  "about": "Appel d'offres {{ ao.reference }}",
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "{{ CANONICAL_URL }}" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Accueil", "item": "{{ SEO.site_url }}/"},
+    {"@type": "ListItem", "position": 2, "name": "Appels d'offres", "item": "{{ SEO.site_url }}{% url 'public:appels_offres' %}"},
+    {"@type": "ListItem", "position": 3, "name": "{{ ao.reference|escapejs }}", "item": "{{ CANONICAL_URL }}"}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <section class="page-header py-5 text-white">

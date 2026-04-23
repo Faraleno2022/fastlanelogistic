@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.db.models import Sum, Count, Q
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from .forms import ContactForm
@@ -135,3 +136,32 @@ def contact(request):
         "form": form,
         "page": page,
     })
+
+
+def robots_txt(request):
+    """
+    /robots.txt — autorise les moteurs sur tout le site public, bloque
+    les zones privées (admin, dashboard, espace authentifié) et annonce
+    l'emplacement du sitemap.
+    """
+    site_url = getattr(settings, "SEO_SITE_URL", "").rstrip("/")
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /accounts/",
+        "Disallow: /connexion/",
+        "Disallow: /dashboard/",
+        "Disallow: /core/",
+        "Disallow: /flotte/",
+        "Disallow: /rh/",
+        "Disallow: /operations/",
+        "Disallow: /facturation/",
+        "",
+        # Crawl-delay raisonnable pour ne pas surcharger le serveur PA
+        "Crawl-delay: 2",
+        "",
+        f"Sitemap: {site_url}/sitemap.xml" if site_url else "Sitemap: /sitemap.xml",
+        "",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")

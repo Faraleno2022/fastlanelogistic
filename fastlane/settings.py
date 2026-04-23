@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    "django.contrib.sites",
+    "django.contrib.sitemaps",
     # 3rd party
     "crispy_forms",
     "crispy_bootstrap5",
@@ -60,6 +62,8 @@ INSTALLED_APPS = [
     "apps.dashboard",
     "apps.public",
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -87,6 +91,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.core.context_processors.site_context",
+                "apps.public.context_processors.seo_context",
             ],
         },
     },
@@ -156,6 +161,49 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 SOCIETE_NOM = "Fastlane Logistic"
 SOCIETE_DEVISE = "GNF"
 SOCIETE_ACTIVITE = "Transport de Bauxite"
+
+# ===================== SEO / Référencement =====================
+SEO_SITE_URL = os.environ.get(
+    "SEO_SITE_URL", "https://www.fastlanelogisticgn.com"
+).rstrip("/")
+SEO_SITE_NAME = "Fastlane Logistic"
+SEO_DEFAULT_TITLE = (
+    "Fastlane Logistic — Transport de bauxite & logistique minière en Guinée"
+)
+SEO_DEFAULT_DESCRIPTION = (
+    "Fastlane Logistic est une entreprise guinéenne spécialisée dans le "
+    "transport général de marchandises et le transport minier (bauxite) sur "
+    "les corridors Boké – Kamsar – Conakry. Flotte moderne, chauffeurs "
+    "qualifiés, traçabilité complète."
+)
+SEO_DEFAULT_KEYWORDS = (
+    "Fastlane Logistic, transport bauxite Guinée, logistique minière Guinée, "
+    "transport Conakry, transport Boké, transport Kamsar, camion bauxite, "
+    "transport marchandises Guinée, entreprise transport Guinée, Kolaboui, "
+    "corridor minier, Zonda, Auman, appel d'offres transport Guinée"
+)
+SEO_LOCALE = "fr_FR"
+SEO_TWITTER_HANDLE = os.environ.get("SEO_TWITTER_HANDLE", "")
+SEO_FB_APP_ID = os.environ.get("SEO_FB_APP_ID", "")
+SEO_DEFAULT_OG_IMAGE = "images/home2.png"  # relatif à STATIC_URL
+SEO_ORGANIZATION = {
+    "name": "Fastlane Logistic",
+    "legal_name": "Fastlane Logistic SARL",
+    "founding_year": "2020",
+    "phone": "+224 000 000 000",
+    "email": "contact@fastlanelogisticgn.com",
+    "street": "Kipé Centre Émetteur",
+    "locality": "Conakry",
+    "region": "Conakry",
+    "country": "GN",
+    "postal": "",
+    "areas_served": ["Guinée", "Conakry", "Boké", "Kamsar", "Kolaboui"],
+    "social": [
+        # Compléter si présence sur ces plateformes :
+        # "https://www.facebook.com/fastlanelogistic",
+        # "https://www.linkedin.com/company/fastlane-logistic",
+    ],
+}
 
 # Paramètres métier (modifiables en admin via SingletonParametres)
 DEFAULT_DUREE_AMORTISSEMENT = 5  # années

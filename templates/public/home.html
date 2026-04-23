@@ -1,7 +1,26 @@
 {% extends "public/base_public.html" %}
 {% load static humanize %}
 
-{% block title %}{{ SOCIETE_NOM }} — Transport de bauxite en Guinée{% endblock %}
+{% block title %}{{ SOCIETE_NOM }} — Transport de bauxite et logistique minière en Guinée{% endblock %}
+{% block meta_description %}{{ SOCIETE_NOM }} — entreprise guinéenne de transport général et minier. Flotte moderne, corridors Boké · Kamsar · Conakry, suivi en temps réel, chauffeurs qualifiés. Demandez un devis.{% endblock %}
+{% block meta_keywords %}Fastlane Logistic, transport bauxite Guinée, logistique minière, camion bauxite Conakry, Boké, Kamsar, Kolaboui, transport marchandises Guinée, devis transport minier{% endblock %}
+{% block og_image %}{{ SEO.site_url }}{% static 'images/home.png' %}{% endblock %}
+{% block tw_image %}{{ SEO.site_url }}{% static 'images/home.png' %}{% endblock %}
+
+{% block head_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Accueil — {{ SOCIETE_NOM }}",
+  "url": "{{ CANONICAL_URL }}",
+  "description": "{{ SEO.default_description }}",
+  "isPartOf": { "@id": "{{ SEO.site_url }}/#website" },
+  "about": { "@id": "{{ SEO.site_url }}/#organization" },
+  "inLanguage": "fr-GN"
+}
+</script>
+{% endblock %}
 
 {% block content %}
 

@@ -1,7 +1,22 @@
 {% extends "public/base_public.html" %}
 {% load static %}
 
-{% block title %}Appels d'offres — {{ SOCIETE_NOM }}{% endblock %}
+{% block title %}Appels d'offres {{ SOCIETE_NOM }} — Consultations fournisseurs Guinée{% endblock %}
+{% block meta_description %}Consultez les appels d'offres ouverts par {{ SOCIETE_NOM }} : consultations transport, logistique, maintenance et services en Guinée. Déposez votre dossier avant la date limite.{% endblock %}
+{% block meta_keywords %}appels d'offres Fastlane Logistic, consultations fournisseurs Guinée, appel offre transport Conakry, AO Boké, marché logistique Guinée{% endblock %}
+
+{% block head_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Appels d'offres — {{ SOCIETE_NOM }}",
+  "url": "{{ CANONICAL_URL }}",
+  "inLanguage": "fr-GN",
+  "isPartOf": { "@id": "{{ SEO.site_url }}/#website" }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <section class="page-cover-banner page-cover-banner--hero page-cover-banner--red">

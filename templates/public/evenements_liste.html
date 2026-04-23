@@ -1,7 +1,22 @@
 {% extends "public/base_public.html" %}
 {% load static %}
 
-{% block title %}Événements — {{ SOCIETE_NOM }}{% endblock %}
+{% block title %}Événements {{ SOCIETE_NOM }} — Actualités & manifestations{% endblock %}
+{% block meta_description %}Retrouvez les événements, actualités et manifestations de {{ SOCIETE_NOM }} en Guinée : journées sécurité, inaugurations, rencontres partenaires et moments forts.{% endblock %}
+{% block meta_keywords %}événements Fastlane Logistic, actualités transport Guinée, manifestations Conakry, journée sécurité, Fastlane Kolaboui{% endblock %}
+
+{% block head_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Événements — {{ SOCIETE_NOM }}",
+  "url": "{{ CANONICAL_URL }}",
+  "inLanguage": "fr-GN",
+  "isPartOf": { "@id": "{{ SEO.site_url }}/#website" }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <section class="page-cover-banner page-cover-banner--hero page-cover-banner--red">

@@ -1,8 +1,33 @@
 {% extends "public/base_public.html" %}
 {% load static %}
 
-{% block title %}Nous contacter — {{ SOCIETE_NOM }}{% endblock %}
-{% block description %}Contactez {{ SOCIETE_NOM }} pour une demande de devis, un partenariat ou toute information relative à nos prestations de transport et logistique en Guinée.{% endblock %}
+{% block title %}Nous contacter — {{ SOCIETE_NOM }} | Devis transport & logistique Guinée{% endblock %}
+{% block meta_description %}Contactez {{ SOCIETE_NOM }} pour une demande de devis, un partenariat ou toute information sur nos prestations de transport de bauxite et de logistique minière en Guinée. Réponse sous 24 h.{% endblock %}
+{% block meta_keywords %}contact Fastlane Logistic, devis transport bauxite, partenariat logistique Guinée, téléphone transport Conakry, e-mail Fastlane{% endblock %}
+{% block og_type %}website{% endblock %}
+
+{% block head_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "name": "Nous contacter — {{ SOCIETE_NOM }}",
+  "url": "{{ CANONICAL_URL }}",
+  "inLanguage": "fr-GN",
+  "mainEntity": { "@id": "{{ SEO.site_url }}/#organization" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Accueil", "item": "{{ SEO.site_url }}/"},
+    {"@type": "ListItem", "position": 2, "name": "Nous contacter", "item": "{{ CANONICAL_URL }}"}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <section class="page-cover-banner page-cover-banner--hero page-cover-banner--red">

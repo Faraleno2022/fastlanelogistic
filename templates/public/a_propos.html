@@ -1,7 +1,34 @@
 {% extends "public/base_public.html" %}
 {% load static %}
 
-{% block title %}À propos — {{ SOCIETE_NOM }}{% endblock %}
+{% block title %}À propos de {{ SOCIETE_NOM }} — Transport & logistique en Guinée{% endblock %}
+{% block meta_description %}Découvrez {{ SOCIETE_NOM }} : notre mission, notre flotte, notre bureau opérationnel de Kolaboui (Boké) et notre engagement long terme auprès des acteurs miniers guinéens.{% endblock %}
+{% block meta_keywords %}Fastlane Logistic, à propos, entreprise transport Guinée, Kolaboui, bureau Boké, transport bauxite, logistique minière{% endblock %}
+{% block og_type %}website{% endblock %}
+
+{% block head_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "À propos — {{ SOCIETE_NOM }}",
+  "url": "{{ CANONICAL_URL }}",
+  "description": "{{ SOCIETE_NOM }} — présentation, mission, vision, valeurs.",
+  "mainEntity": { "@id": "{{ SEO.site_url }}/#organization" },
+  "inLanguage": "fr-GN"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Accueil", "item": "{{ SEO.site_url }}/"},
+    {"@type": "ListItem", "position": 2, "name": "À propos", "item": "{{ CANONICAL_URL }}"}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <section class="page-cover-banner page-cover-banner--hero page-cover-banner--red">
