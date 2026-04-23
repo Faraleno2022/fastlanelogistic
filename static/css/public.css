@@ -1151,18 +1151,26 @@ body.public-site {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 2.5rem 3rem;               /* espacement généreux entre les cartes */
+  align-items: stretch;
+  gap: 1.75rem 2rem;              /* espacement correct entre les cartes */
+  width: 100%;
 }
 .services-gallery .service-photo {
   position: relative;
-  width: 240px;                   /* taille fixe beaucoup plus réduite */
-  max-width: 100%;
-  aspect-ratio: 4 / 3;            /* plus compact que 16:9 */
+  flex: 1 1 440px;                /* grandit pour occuper la largeur disponible */
+  max-width: 620px;               /* évite un agrandissement excessif */
+  aspect-ratio: 16 / 9;           /* format large, plus immersif */
   overflow: hidden;
   border-radius: var(--sv-radius);
   box-shadow: 0 10px 24px rgba(13, 42, 68, .12);
   background: #0d2a44;
   transition: transform .35s ease, box-shadow .35s ease;
+}
+@media (max-width: 575.98px) {
+  .services-gallery .service-photo {
+    flex: 1 1 100%;               /* 1 carte par ligne sur mobile */
+    aspect-ratio: 4 / 3;          /* plus lisible en portrait */
+  }
 }
 .services-gallery .service-photo:hover {
   transform: translateY(-3px);
