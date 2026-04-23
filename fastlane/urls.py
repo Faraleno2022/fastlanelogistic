@@ -6,7 +6,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from apps.public.sitemaps import sitemaps as public_sitemaps
-from apps.public.views import robots_txt
+from apps.public.views import robots_txt, google_site_verification
 
 admin.site.site_header = "Fastlane Logistic — Administration"
 admin.site.site_title = "Fastlane Logistic Admin"
@@ -39,6 +39,13 @@ urlpatterns = [
         name="django.contrib.sitemaps.views.sitemap",
     ),
     path("robots.txt", robots_txt, name="robots_txt"),
+
+    # Google Search Console — validation de propriété par fichier HTML
+    path(
+        "google10babad53f3eade7.html",
+        google_site_verification,
+        name="google_site_verification",
+    ),
 
     # Site public — racine en dernier
     path("", include("apps.public.urls")),

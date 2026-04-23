@@ -165,3 +165,16 @@ def robots_txt(request):
         "",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
+
+
+def google_site_verification(request):
+    """
+    Fichier de validation de propriété Google Search Console.
+    Doit répondre exactement :
+        google-site-verification: google10babad53f3eade7.html
+    à l'URL https://www.fastlanelogisticgn.com/google10babad53f3eade7.html
+    """
+    return HttpResponse(
+        "google-site-verification: google10babad53f3eade7.html",
+        content_type="text/html",
+    )
