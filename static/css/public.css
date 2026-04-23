@@ -1148,13 +1148,16 @@ body.public-site {
    ========================================================== */
 .services-gallery {
   --sv-radius: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.5rem 3rem;               /* espacement généreux entre les cartes */
 }
 .services-gallery .service-photo {
   position: relative;
-  width: 100%;
+  width: 240px;                   /* taille fixe beaucoup plus réduite */
+  max-width: 100%;
   aspect-ratio: 4 / 3;            /* plus compact que 16:9 */
-  max-width: 360px;               /* évite que la carte grossisse trop */
-  margin: 0 auto;                 /* centre dans la colonne */
   overflow: hidden;
   border-radius: var(--sv-radius);
   box-shadow: 0 10px 24px rgba(13, 42, 68, .12);
