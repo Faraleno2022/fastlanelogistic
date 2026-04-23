@@ -1,0 +1,207 @@
+{% extends "public/base_public.html" %}
+{% load static %}
+
+{% block title %}Nous contacter — {{ SOCIETE_NOM }}{% endblock %}
+{% block description %}Contactez {{ SOCIETE_NOM }} pour une demande de devis, un partenariat ou toute information relative à nos prestations de transport et logistique en Guinée.{% endblock %}
+
+{% block content %}
+<section class="page-cover-banner page-cover-banner--hero page-cover-banner--red">
+  <img src="{% static 'images/home2.png' %}" alt="{{ SOCIETE_NOM }} — Nous contacter" class="page-cover-banner-img">
+  <div class="page-cover-banner-overlay"></div>
+  <div class="page-cover-banner-content">
+    <div class="container">
+      <h1 class="page-cover-title">Nous contacter</h1>
+      <p class="page-cover-subtitle">
+        Une question, un projet, une demande de devis ? Notre équipe vous répond sous 24&nbsp;h ouvrées.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section-padded contact-section">
+  <div class="container">
+    <div class="row g-4 g-lg-5">
+
+      <!-- ==================== COLONNE GAUCHE : INFOS ==================== -->
+      <div class="col-lg-5">
+        <div class="contact-info-card">
+          <div class="contact-info-header">
+            <span class="kicker"><i class="bi bi-headset"></i> Assistance & projets</span>
+            <h2 class="mt-2 mb-2">Parlons de votre besoin en transport.</h2>
+            <p class="text-white-80 mb-0">
+              {{ SOCIETE_NOM }} accompagne opérateurs miniers, industriels et
+              collectivités sur toute la chaîne logistique — du chargement au
+              déchargement, avec traçabilité complète.
+            </p>
+          </div>
+
+          <ul class="contact-info-list">
+            {% if page.adresse or CONTACT_ADRESSE %}
+            <li>
+              <span class="ci-ico"><i class="bi bi-geo-alt-fill"></i></span>
+              <div>
+                <span class="ci-label">Adresse</span>
+                <span class="ci-value">{{ page.adresse|default:CONTACT_ADRESSE }}</span>
+              </div>
+            </li>
+            {% else %}
+            <li>
+              <span class="ci-ico"><i class="bi bi-geo-alt-fill"></i></span>
+              <div>
+                <span class="ci-label">Siège social</span>
+                <span class="ci-value">Conakry · Kipé Centre Émetteur — Guinée</span>
+                <span class="ci-value d-block mt-1">Bureau opérationnel · Kolaboui (Boké)</span>
+              </div>
+            </li>
+            {% endif %}
+
+            {% if page.telephone or CONTACT_TELEPHONE %}
+            <li>
+              <span class="ci-ico"><i class="bi bi-telephone-fill"></i></span>
+              <div>
+                <span class="ci-label">Téléphone</span>
+                <a class="ci-value" href="tel:{{ page.telephone|default:CONTACT_TELEPHONE }}">
+                  {{ page.telephone|default:CONTACT_TELEPHONE }}
+                </a>
+              </div>
+            </li>
+            {% endif %}
+
+            {% if page.email or CONTACT_EMAIL %}
+            <li>
+              <span class="ci-ico"><i class="bi bi-envelope-fill"></i></span>
+              <div>
+                <span class="ci-label">E-mail</span>
+                <a class="ci-value" href="mailto:{{ page.email|default:CONTACT_EMAIL }}">
+                  {{ page.email|default:CONTACT_EMAIL }}
+                </a>
+              </div>
+            </li>
+            {% endif %}
+
+            <li>
+              <span class="ci-ico"><i class="bi bi-clock-fill"></i></span>
+              <div>
+                <span class="ci-label">Horaires</span>
+                <span class="ci-value">Lundi – Vendredi · 08h00 – 18h00</span>
+                <span class="ci-value d-block mt-1">Samedi · 09h00 – 13h00</span>
+              </div>
+            </li>
+          </ul>
+
+          <div class="contact-info-footer">
+            <span class="me-3"><i class="bi bi-shield-check"></i> Réponse sous 24&nbsp;h ouvrées</span>
+            <span><i class="bi bi-lock"></i> Données confidentielles</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== COLONNE DROITE : FORMULAIRE ==================== -->
+      <div class="col-lg-7">
+        <div class="contact-form-card">
+          <div class="contact-form-head">
+            <h2 class="mb-1">Envoyer un message</h2>
+            <p class="text-muted mb-0">
+              Les champs marqués d'un <span class="text-danger">*</span> sont obligatoires.
+            </p>
+          </div>
+
+          {% if messages %}
+            {% for m in messages %}
+              {% if 'success' in m.tags %}
+              <div class="alert contact-alert-success d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-check-circle-fill fs-4"></i>
+                <div>{{ m }}</div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          <form method="post" novalidate class="contact-form">
+            {% csrf_token %}
+
+            {# Honeypot anti-spam : caché, ne doit jamais être rempli par un humain #}
+            <div style="position:absolute;left:-10000px;top:-10000px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+              {{ form.website }}
+            </div>
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="{{ form.nom.id_for_label }}" class="form-label">
+                  <i class="bi bi-person-fill"></i> {{ form.nom.label }}
+                </label>
+                {{ form.nom }}
+                {% for e in form.nom.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+              </div>
+
+              <div class="col-md-6">
+                <label for="{{ form.entreprise.id_for_label }}" class="form-label">
+                  <i class="bi bi-building"></i> {{ form.entreprise.label }}
+                </label>
+                {{ form.entreprise }}
+                {% for e in form.entreprise.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+              </div>
+
+              <div class="col-md-6">
+                <label for="{{ form.email.id_for_label }}" class="form-label">
+                  <i class="bi bi-envelope-fill"></i> {{ form.email.label }}
+                </label>
+                {{ form.email }}
+                {% for e in form.email.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+              </div>
+
+              <div class="col-md-6">
+                <label for="{{ form.telephone.id_for_label }}" class="form-label">
+                  <i class="bi bi-telephone-fill"></i> {{ form.telephone.label }}
+                </label>
+                {{ form.telephone }}
+                {% for e in form.telephone.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+              </div>
+
+              <div class="col-12">
+                <label for="{{ form.sujet.id_for_label }}" class="form-label">
+                  <i class="bi bi-tag-fill"></i> {{ form.sujet.label }}
+                </label>
+                {{ form.sujet }}
+                {% for e in form.sujet.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+              </div>
+
+              <div class="col-12">
+                <label for="{{ form.message.id_for_label }}" class="form-label">
+                  <i class="bi bi-chat-left-text-fill"></i> {{ form.message.label }}
+                </label>
+                {{ form.message }}
+                {% for e in form.message.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+                <div class="form-text">
+                  Précisez votre besoin (tonnage, itinéraire, échéance…) pour un devis plus rapide.
+                </div>
+              </div>
+
+              <div class="col-12 contact-form-actions">
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="consent" required>
+                  <label class="form-check-label small text-muted" for="consent">
+                    J'accepte que mes informations soient utilisées uniquement pour
+                    traiter ma demande, conformément à notre politique de confidentialité.
+                  </label>
+                </div>
+                <button type="submit" class="btn btn-accent btn-xl px-4">
+                  <i class="bi bi-send-fill me-2"></i> Envoyer le message
+                </button>
+                <a href="{% url 'public:home' %}" class="btn btn-link ms-2 text-muted">
+                  Annuler
+                </a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

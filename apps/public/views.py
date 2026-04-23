@@ -1,6 +1,10 @@
+from django.conf import settings
+from django.contrib import messages
+from django.core.mail import send_mail
 from django.db.models import Sum, Count, Q
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
+from .forms import ContactForm
 from .models import Evenement, AppelOffre, PageAPropos
 
 
@@ -78,3 +82,56 @@ def appel_offre_detail(request, slug):
         from django.http import Http404
         raise Http404
     return render(request, "public/appel_offre_detail.html", {"ao": ao})
+
+
+def _client_ip(request):
+    xff = request.META.get("HTTP_X_FORWARDED_FOR")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+def contact(request):
+    page = PageAPropos.load()
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            msg = form.save(commit=False)
+            msg.ip = _client_ip(request)
+            msg.user_agent = request.META.get("HTTP_USER_AGENT", "")[:300]
+            msg.save()
+
+            # Tentative d'envoi d'e-mail (silencieux si SMTP non configuré)
+            try:
+                dest = page.email or getattr(settings, "DEFAULT_FROM_EMAIL", "") \
+                       or "contact@fastlanelogisticgn.com"
+                from_addr = getattr(settings, "DEFAULT_FROM_EMAIL",
+                                    "no-reply@fastlanelogisticgn.com")
+                subject = f"[Contact site] {msg.get_sujet_display()} — {msg.nom}"
+                body = (
+                    f"Nouveau message depuis le site public.\n\n"
+                    f"Nom        : {msg.nom}\n"
+                    f"Entreprise : {msg.entreprise or '—'}\n"
+                    f"E-mail     : {msg.email}\n"
+                    f"Téléphone  : {msg.telephone or '—'}\n"
+                    f"Sujet      : {msg.get_sujet_display()}\n"
+                    f"Reçu le    : {msg.created_at:%d/%m/%Y %H:%M}\n\n"
+                    f"Message :\n{msg.message}\n"
+                )
+                send_mail(subject, body, from_addr, [dest], fail_silently=True)
+            except Exception:
+                pass
+
+            messages.success(
+                request,
+                "Votre message a bien été envoyé. Notre équipe vous recontactera "
+                "dans les meilleurs délais."
+            )
+            return redirect("public:contact")
+    else:
+        form = ContactForm()
+
+    return render(request, "public/contact.html", {
+        "form": form,
+        "page": page,
+    })

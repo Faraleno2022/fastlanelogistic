@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Evenement, AppelOffre, PageAPropos
+from .models import Evenement, AppelOffre, PageAPropos, ContactMessage
 
 
 @admin.register(Evenement)
@@ -48,3 +48,28 @@ class PageAProposAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "nom", "entreprise", "sujet", "email",
+                    "telephone", "traite")
+    list_filter = ("traite", "sujet", "created_at")
+    search_fields = ("nom", "entreprise", "email", "telephone", "message")
+    date_hierarchy = "created_at"
+    readonly_fields = ("created_at", "updated_at", "ip", "user_agent")
+    fieldsets = (
+        ("Expéditeur", {"fields": ("nom", "entreprise", "email", "telephone")}),
+        ("Demande", {"fields": ("sujet", "message")}),
+        ("Traitement interne", {"fields": ("traite", "reponse_interne")}),
+        ("Métadonnées", {
+            "classes": ("collapse",),
+            "fields": ("ip", "user_agent", "created_at", "updated_at"),
+        }),
+    )
+    actions = ["marquer_traites"]
+
+    def marquer_traites(self, request, queryset):
+        n = queryset.update(traite=True)
+        self.message_user(request, f"{n} message(s) marqué(s) comme traité(s).")
+    marquer_traites.short_description = "Marquer comme traités"

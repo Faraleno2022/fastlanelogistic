@@ -146,3 +146,38 @@ class PageAPropos(models.Model):
             v, lbl = line.split("|", 1)
             out.append((v.strip(), lbl.strip()))
         return out
+
+
+class ContactMessage(models.Model):
+    SUJET_CHOICES = [
+        ("devis", "Demande de devis"),
+        ("partenariat", "Proposition de partenariat"),
+        ("recrutement", "Recrutement / candidature"),
+        ("info", "Demande d'information"),
+        ("reclamation", "Réclamation"),
+        ("autre", "Autre"),
+    ]
+
+    nom = models.CharField("Nom complet", max_length=150)
+    entreprise = models.CharField("Entreprise / Organisation", max_length=180, blank=True)
+    email = models.EmailField("Adresse e-mail")
+    telephone = models.CharField("Téléphone", max_length=30, blank=True)
+    sujet = models.CharField("Sujet", max_length=30, choices=SUJET_CHOICES, default="info")
+    message = models.TextField("Message")
+
+    traite = models.BooleanField("Traité", default=False)
+    reponse_interne = models.TextField("Note interne / Réponse", blank=True)
+
+    ip = models.GenericIPAddressField("IP", blank=True, null=True)
+    user_agent = models.CharField("User-Agent", max_length=300, blank=True)
+
+    created_at = models.DateTimeField("Reçu le", auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Message de contact"
+        verbose_name_plural = "Messages de contact"
+
+    def __str__(self):
+        return f"{self.nom} — {self.get_sujet_display()} ({self.created_at:%d/%m/%Y})"

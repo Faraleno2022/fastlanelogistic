@@ -12,7 +12,7 @@
 </head>
 <body class="public-site">
 
-<nav class="navbar navbar-expand-lg navbar-dark public-navbar shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-dark public-navbar shadow-sm fixed-top">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'public:home' %}">
       <img src="{% static 'images/logo_fastlane.png' %}" alt="{{ SOCIETE_NOM }}" height="38" onerror="this.style.display='none'">
@@ -22,7 +22,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="publicNav">
-      <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
         <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
              href="{% url 'public:home' %}">Accueil</a>
@@ -39,10 +39,17 @@
           <a class="nav-link {% if 'appel' in request.resolver_match.url_name %}active{% endif %}"
              href="{% url 'public:appels_offres' %}">Appels d'offres</a>
         </li>
+        <li class="nav-item ms-lg-2">
+          <a class="nav-link nav-cta {% if request.resolver_match.url_name == 'contact' %}active{% endif %}"
+             href="{% url 'public:contact' %}">
+            <i class="bi bi-envelope-paper-fill me-1"></i>Nous contacter
+          </a>
+        </li>
       </ul>
     </div>
   </div>
 </nav>
+<div class="public-navbar-spacer"></div>
 
 {% if messages %}
 <div class="container mt-3">
@@ -73,6 +80,7 @@
           <li><a class="footer-link" href="{% url 'public:a_propos' %}">À propos</a></li>
           <li><a class="footer-link" href="{% url 'public:evenements' %}">Événements</a></li>
           <li><a class="footer-link" href="{% url 'public:appels_offres' %}">Appels d'offres</a></li>
+          <li><a class="footer-link" href="{% url 'public:contact' %}">Nous contacter</a></li>
         </ul>
       </div>
       <div class="col-md-4">
@@ -92,6 +100,19 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Ombre portée plus marquée sur la navbar lors du défilement
+  (function(){
+    var nav = document.querySelector('.public-navbar.fixed-top');
+    if (!nav) return;
+    function onScroll(){
+      if (window.scrollY > 12) nav.classList.add('is-scrolled');
+      else nav.classList.remove('is-scrolled');
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
