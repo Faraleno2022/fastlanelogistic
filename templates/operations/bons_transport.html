@@ -94,7 +94,8 @@
   padding:8px 14px; font-size:.78rem; font-weight:600;
 }
 
-/* Impression : ne montrer QUE le modèle */
+/* Impression : ne montrer QUE le modèle, en paysage */
+@page { size: A4 landscape; margin: 8mm; }
 @media print {
   body * { visibility: hidden !important; }
   .bon-modele-wrap, .bon-modele-wrap * { visibility: visible !important; }

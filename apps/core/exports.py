@@ -642,17 +642,17 @@ def build_bon_transport_pdf(bon, inline: bool = False) -> HttpResponse:
     """
     info = get_company_info()
     buf = io.BytesIO()
-    pagesize = A4
+    pagesize = landscape(A4)
     page_w, page_h = pagesize
     lm = rm = 12 * mm
-    tm = bm = 12 * mm
+    tm = bm = 10 * mm
     body_w = page_w - lm - rm
 
     doc = SimpleDocTemplate(
         buf, pagesize=pagesize,
         leftMargin=lm, rightMargin=rm,
         topMargin=tm, bottomMargin=bm,
-        title=f"Bon de transport {bon.num_bon}",
+        title=f"Bon de transport {bon.num_bon or 'vierge'}",
     )
 
     styles = getSampleStyleSheet()
