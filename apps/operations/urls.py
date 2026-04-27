@@ -39,6 +39,7 @@ urlpatterns = [
 
     # Bons de transport
     path("bons-transport/", views.bons_transport, name="bons_transport"),
+    path("bons-transport/modele-vierge/", views.bon_modele_vierge, name="bon_modele_vierge"),
     path("bons-transport/nouveau/", views.bon_create, name="bon_create"),
     path("bons-transport/<int:pk>/modifier/", views.bon_edit, name="bon_edit"),
     path("bons-transport/<int:pk>/supprimer/", views.bon_delete, name="bon_delete"),

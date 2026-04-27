@@ -216,3 +216,12 @@ def bon_imprimer(request, pk):
     bon = get_object_or_404(BonTransport, pk=pk)
     inline = request.GET.get("inline") == "1"
     return build_bon_transport_pdf(bon, inline=inline)
+
+
+@login_required
+def bon_modele_vierge(request):
+    """Génère le PDF du modèle vierge officiel du bon de transport bauxite,
+    à imprimer puis à remettre au chauffeur pour remplissage manuel."""
+    from apps.core.exports import build_bon_transport_blank_pdf
+    inline = request.GET.get("inline") == "1"
+    return build_bon_transport_blank_pdf(inline=inline)

@@ -744,12 +744,14 @@ def build_bon_transport_pdf(bon, inline: bool = False) -> HttpResponse:
         ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
     ]))
 
+    _num_bon_txt = bon.num_bon or ""
+    _date_txt = bon.date.strftime("%d/%m/%Y") if bon.date else ""
     header_row = [[
         company_cell,
         Paragraph("N° BON", st_hdr_label),
-        Paragraph(f"<b>{bon.num_bon}</b>", st_hdr_val),
+        Paragraph(f"<b>{_num_bon_txt}</b>", st_hdr_val),
         Paragraph("DATE", st_hdr_label),
-        Paragraph(bon.date.strftime("%d/%m/%Y"), st_hdr_val),
+        Paragraph(_date_txt, st_hdr_val),
     ]]
     # Largeurs : société (≈44%) | label | valeur | label | valeur
     col_w_company = body_w * 0.44
@@ -1052,7 +1054,23 @@ def build_bon_transport_pdf(bon, inline: bool = False) -> HttpResponse:
 
     response = HttpResponse(buf.getvalue(), content_type="application/pdf")
     disposition = "inline" if inline else "attachment"
+    _fname = bon.num_bon or "vierge"
     response["Content-Disposition"] = (
-        f'{disposition}; filename="bon_transport_{bon.num_bon}.pdf"'
+        f'{disposition}; filename="bon_transport_{_fname}.pdf"'
     )
     return response
+
+
+def build_bon_transport_blank_pdf(inline: bool = False) -> HttpResponse:
+    """Génère un PDF du modèle vierge du bon de transport bauxite,
+    identique au modèle officiel mais avec tous les champs à remplir."""
+    from types import SimpleNamespace
+    blank = SimpleNamespace(
+        num_bon="", date=None,
+        prenom="", nom="", telephone="",
+        plaque="", carte_entree="", lieu_chargement="",
+        heure_depart=None, heure_pesee_start=None, heure_pesee_end=None,
+        observation="", quantite=None,
+        camion=None, contrat=None,
+    )
+    return build_bon_transport_pdf(blank, inline=inline)
