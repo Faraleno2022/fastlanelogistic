@@ -220,8 +220,18 @@ def bon_imprimer(request, pk):
 
 @login_required
 def bon_modele_vierge(request):
-    """Génère le PDF du modèle vierge officiel du bon de transport bauxite,
-    à imprimer puis à remettre au chauffeur pour remplissage manuel."""
-    from apps.core.exports import build_bon_transport_blank_pdf
+    """Génère un lot de 100 bons vierges pré-numérotés.
+
+    Chaque clic réserve atomiquement 100 nouveaux numéros consécutifs
+    via ``BlankBonCounter`` : aucun numéro n'est jamais ré-émis. Le
+    paramètre ``?n=`` permet d'ajuster la taille du lot (1 à 500)."""
+    from apps.core.exports import build_bon_transport_blank_pdf_batch
+    from .models import BlankBonCounter
+    try:
+        nb_pages = int(request.GET.get("n", "100"))
+    except (TypeError, ValueError):
+        nb_pages = 100
+    nb_pages = max(1, min(500, nb_pages))
+    start, end = BlankBonCounter.reserve(nb_pages)
     inline = request.GET.get("inline") == "1"
-    return build_bon_transport_blank_pdf(inline=inline)
+    return build_bon_transport_blank_pdf_batch(start, end, inline=inline)

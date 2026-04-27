@@ -209,3 +209,31 @@ class BonTransport(TimeStampedModel):
         if not self.num_bon:
             self.num_bon = f"BT-{self.date.strftime('%Y-%m')}-{BonTransport.objects.filter(date__year=self.date.year, date__month=self.date.month).count()+1:03d}"
         super().save(*args, **kwargs)
+
+
+class BlankBonCounter(models.Model):
+    """Compteur global, monotone, des numéros de bons vierges pré-imprimés.
+
+    À chaque clic sur « Télécharger PDF » du modèle vierge, on réserve
+    atomiquement N numéros consécutifs (typiquement 100). Les numéros
+    déjà émis ne sont jamais ré-utilisés, même si le PDF est régénéré.
+    """
+    last_number = models.PositiveIntegerField("Dernier numéro émis", default=0)
+
+    class Meta:
+        verbose_name = "Compteur bons vierges"
+        verbose_name_plural = "Compteur bons vierges"
+
+    def __str__(self):
+        return f"Dernier BTV émis : {self.last_number:05d}"
+
+    @classmethod
+    def reserve(cls, count: int) -> tuple[int, int]:
+        """Réserve atomiquement ``count`` numéros, renvoie (start, end) inclus."""
+        from django.db import transaction
+        with transaction.atomic():
+            obj, _ = cls.objects.select_for_update().get_or_create(pk=1)
+            start = obj.last_number + 1
+            obj.last_number += count
+            obj.save(update_fields=["last_number"])
+            return start, obj.last_number

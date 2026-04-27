@@ -624,37 +624,13 @@ def build_blank_fiches(
 # Bon de transport individuel (imprimable — à remettre au chauffeur)
 # ---------------------------------------------------------------------------
 
-def build_bon_transport_pdf(bon, inline: bool = False) -> HttpResponse:
-    """Génère un PDF professionnel pour un bon de transport individuel.
+def _render_bon_transport_flowables(bon, body_w: float, info: dict) -> list:
+    """Construit la liste de flowables d'UNE page de bon de transport.
 
-    Mise en page calquée sur le modèle officiel FASTLANE LOGISTIC :
-      - En-tête 5 colonnes : société | N° BON | valeur | DATE | valeur
-      - Bandeau titre "BON DE TRANSPORT BAUXITE — FASTLANE LOGISTIC"
-      - Bloc principal sur 2 colonnes :
-          * gauche (étroite) : sous-sections CHAUFFEUR / VÉHICULE / CLIENT-PROJET
-          * droite (large)   : PESÉES ET QUANTITÉ + OBSERVATIONS + SIGNATURES
-      - Avertissement légal en bas
-      - Logo en filigrane sur toute la page
-
-    ``bon``   : instance ``apps.operations.models.BonTransport``.
-    ``inline``: si True, le PDF s'affiche dans le navigateur ; sinon il est
-                téléchargé.
+    Utilisé par ``build_bon_transport_pdf`` (1 page) et par
+    ``build_bon_transport_blank_pdf_batch`` (N pages avec numéros de bon
+    automatiques).
     """
-    info = get_company_info()
-    buf = io.BytesIO()
-    pagesize = landscape(A4)
-    page_w, page_h = pagesize
-    lm = rm = 12 * mm
-    tm = bm = 10 * mm
-    body_w = page_w - lm - rm
-
-    doc = SimpleDocTemplate(
-        buf, pagesize=pagesize,
-        leftMargin=lm, rightMargin=rm,
-        topMargin=tm, bottomMargin=bm,
-        title=f"Bon de transport {bon.num_bon or 'vierge'}",
-    )
-
     styles = getSampleStyleSheet()
     NAVY = colors.HexColor("#1F4E78")
     LIGHT = colors.HexColor("#F2F6FA")
@@ -1035,8 +1011,28 @@ def build_bon_transport_pdf(bon, inline: bool = False) -> HttpResponse:
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ]))
     flow.append(warn_tbl)
+    return flow
 
-    # ========= FILIGRANE + PIED DE PAGE =========
+
+def build_bon_transport_pdf(bon, inline: bool = False) -> HttpResponse:
+    """Génère un PDF professionnel pour un bon de transport individuel."""
+    info = get_company_info()
+    buf = io.BytesIO()
+    pagesize = landscape(A4)
+    page_w, page_h = pagesize
+    lm = rm = 12 * mm
+    tm = bm = 10 * mm
+    body_w = page_w - lm - rm
+
+    doc = SimpleDocTemplate(
+        buf, pagesize=pagesize,
+        leftMargin=lm, rightMargin=rm,
+        topMargin=tm, bottomMargin=bm,
+        title=f"Bon de transport {bon.num_bon or 'vierge'}",
+    )
+
+    flow = _render_bon_transport_flowables(bon, body_w, info)
+
     def _on_page(canvas, d):
         draw_watermark(canvas, pagesize)
         canvas.saveState()
@@ -1061,9 +1057,83 @@ def build_bon_transport_pdf(bon, inline: bool = False) -> HttpResponse:
     return response
 
 
+def build_bon_transport_blank_pdf_batch(
+    start_num: int,
+    end_num: int,
+    inline: bool = False,
+) -> HttpResponse:
+    """Génère un PDF multi-pages de bons vierges pré-imprimés.
+
+    Chaque page reproduit la mise en page officielle, avec :
+      - un N° BON automatique de la forme ``BTV-{NNNNN}``,
+      - un pied de page « Page X / N — N° BTV-{NNNNN} ».
+
+    Les numéros sont consécutifs de ``start_num`` à ``end_num`` inclus.
+    """
+    from types import SimpleNamespace
+    info = get_company_info()
+    buf = io.BytesIO()
+    pagesize = landscape(A4)
+    page_w, page_h = pagesize
+    lm = rm = 12 * mm
+    tm = bm = 10 * mm
+    body_w = page_w - lm - rm
+
+    nb_pages = end_num - start_num + 1
+    doc = SimpleDocTemplate(
+        buf, pagesize=pagesize,
+        leftMargin=lm, rightMargin=rm,
+        topMargin=tm, bottomMargin=bm,
+        title=f"Bons vierges BTV-{start_num:05d} à BTV-{end_num:05d}",
+    )
+
+    flow: list = []
+    for idx, n in enumerate(range(start_num, end_num + 1)):
+        blank = SimpleNamespace(
+            num_bon=f"BTV-{n:05d}", date=None,
+            prenom="", nom="", telephone="",
+            plaque="", carte_entree="", lieu_chargement="",
+            heure_depart=None, heure_pesee_start=None, heure_pesee_end=None,
+            observation="", quantite=None,
+            camion=None, contrat=None,
+        )
+        flow.extend(_render_bon_transport_flowables(blank, body_w, info))
+        if idx < nb_pages - 1:
+            flow.append(PageBreak())
+
+    def _on_page(canvas, d):
+        draw_watermark(canvas, pagesize)
+        page_num = canvas.getPageNumber()
+        bon_num = start_num + page_num - 1
+        canvas.saveState()
+        canvas.setFont("Helvetica", 7)
+        canvas.setFillColor(colors.HexColor("#888888"))
+        canvas.drawString(
+            lm, 5 * mm,
+            f"{info['nom']} — Bon vierge BTV-{bon_num:05d}",
+        )
+        canvas.drawCentredString(
+            page_w / 2, 5 * mm,
+            f"Page {page_num} / {nb_pages}",
+        )
+        canvas.drawRightString(
+            page_w - rm, 5 * mm,
+            f"Édité le {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+        )
+        canvas.restoreState()
+
+    doc.build(flow, onFirstPage=_on_page, onLaterPages=_on_page)
+
+    response = HttpResponse(buf.getvalue(), content_type="application/pdf")
+    disposition = "inline" if inline else "attachment"
+    response["Content-Disposition"] = (
+        f'{disposition}; filename="bons_vierges_BTV-{start_num:05d}_BTV-{end_num:05d}.pdf"'
+    )
+    return response
+
+
 def build_bon_transport_blank_pdf(inline: bool = False) -> HttpResponse:
-    """Génère un PDF du modèle vierge du bon de transport bauxite,
-    identique au modèle officiel mais avec tous les champs à remplir."""
+    """Compatibilité — un seul bon vierge sans numéro."""
     from types import SimpleNamespace
     blank = SimpleNamespace(
         num_bon="", date=None,
