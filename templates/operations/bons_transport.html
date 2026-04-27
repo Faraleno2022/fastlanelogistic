@@ -2,6 +2,110 @@
 {% load humanize %}
 {% block title %}Bons de transport — {{ mois }}/{{ annee }}{% endblock %}
 {% block content %}
+<style>
+/* === Modèle imprimable du Bon de Transport Bauxite === */
+.bon-modele-wrap { max-width: 1100px; margin: 0 auto; }
+.bon-modele {
+  background:#fff; border:1px solid #d6dee6; border-radius:6px;
+  font-family: 'Helvetica Neue', Arial, sans-serif; color:#1F2937;
+  box-shadow: 0 4px 18px rgba(0,0,0,.06); overflow:hidden;
+}
+.bon-flag-strip { display:flex; height:6px; }
+.bon-flag-strip > div { flex:1; }
+.bon-flag-strip .r { background:#CE1126; }
+.bon-flag-strip .y { background:#FCD116; }
+.bon-flag-strip .g { background:#009460; }
+
+.bon-header { display:grid; grid-template-columns: 2fr 1fr 1.4fr 1fr 1.4fr; align-items:stretch; }
+.bon-header .company {
+  background:#1F4E78; color:#fff; padding:14px 18px; display:flex; flex-direction:column; justify-content:center;
+}
+.bon-header .company .name { font-size:1.25rem; font-weight:800; letter-spacing:.3px; }
+.bon-header .company .sub { font-size:.78rem; color:#FCD116; font-style:italic; margin-top:2px; }
+.bon-header .label-cell {
+  background:#2C3E50; color:#fff; font-weight:700; font-size:.75rem; letter-spacing:.5px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+}
+.bon-header .value-cell {
+  background:#EAF1F8; border-left:1px solid #cfd9e3;
+  display:flex; align-items:center; justify-content:flex-start; padding:0 12px;
+  font-weight:700; color:#1F4E78; min-height:62px;
+}
+
+.bon-title {
+  background:#C00000; color:#fff; text-align:center; padding:10px 0;
+  font-size:1.15rem; font-weight:800; letter-spacing:.6px;
+}
+.bon-title .light { font-weight:400; font-style:italic; opacity:.92; }
+
+.bon-body { display:grid; grid-template-columns: 1fr 1fr; gap:0; }
+.bon-body .left, .bon-body .right { padding:0; }
+.bon-body .right { border-left:1px solid #e2e8f0; }
+
+.bon-row {
+  display:grid; grid-template-columns: 38% 62%;
+  border-top:1px solid #e2e8f0;
+}
+.bon-row:first-child { border-top:0; }
+.bon-row .lab {
+  background:#1F4E78; color:#fff; padding:10px 12px;
+  font-weight:700; font-size:.85rem;
+}
+.bon-row .val {
+  background:#EAF1F8; padding:10px 12px; min-height:42px;
+}
+.bon-row.alt .lab { background:#2C3E50; }
+
+.bon-section {
+  background:#1F4E78; color:#fff; padding:8px 12px;
+  font-weight:700; font-size:.85rem; letter-spacing:.4px;
+  border-left:4px solid #C00000;
+}
+.bon-pesees { display:grid; grid-template-columns: 1fr 1fr 1fr; }
+.bon-pesees .head {
+  background:#1F4E78; color:#fff; text-align:center; font-weight:700;
+  font-size:.78rem; padding:8px 4px; letter-spacing:.4px;
+}
+.bon-pesees .head.red { background:#C00000; }
+.bon-pesees .cell {
+  background:#FFF8E1; min-height:60px; border-right:1px solid #e2e8f0;
+}
+.bon-pesees .cell:last-child { border-right:0; background:#FFF3CD; }
+.bon-pesees .cell.netto { box-shadow: inset 0 0 0 2px #C00000; }
+
+.bon-sign-head { display:grid; grid-template-columns: 1fr 1fr 1fr; }
+.bon-sign-head > div {
+  text-align:center; color:#fff; font-weight:700; font-size:.85rem;
+  padding:8px 4px; letter-spacing:.3px;
+}
+.bon-sign-head .a { background:#1F4E78; }
+.bon-sign-head .b { background:#2E7D32; }
+.bon-sign-head .c { background:#C00000; }
+.bon-sign-body { display:grid; grid-template-columns: 1fr 1fr 1fr; }
+.bon-sign-body > div {
+  border-right:1px solid #e2e8f0; padding:6px 10px 4px;
+  min-height:90px; display:flex; align-items:flex-end;
+  font-size:.72rem; color:#6b7280; font-style:italic;
+}
+.bon-sign-body > div:last-child { border-right:0; }
+
+.bon-warn {
+  background:#FCE8E8; color:#7A1F1F; border-top:1px solid #C94B4B;
+  padding:8px 14px; font-size:.78rem; font-weight:600;
+}
+
+/* Impression : ne montrer QUE le modèle */
+@media print {
+  body * { visibility: hidden !important; }
+  .bon-modele-wrap, .bon-modele-wrap * { visibility: visible !important; }
+  .bon-modele-wrap {
+    position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0;
+  }
+  .no-print { display:none !important; }
+  .bon-modele { box-shadow:none; border:0; }
+}
+</style>
+
 
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3 class="mb-0"><i class="bi bi-card-checklist"></i> Bons de transport — {{ mois }}/{{ annee }}</h3>
@@ -148,6 +252,100 @@
         </tfoot>
         {% endif %}
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODÈLE VIERGE — BON DE TRANSPORT BAUXITE                      -->
+<!-- À imprimer puis remettre au chauffeur pour remplissage manuel -->
+<!-- ============================================================== -->
+<div class="card shadow-sm mt-4 no-print">
+  <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-file-earmark-ruled"></i> Modèle vierge — Bon de transport bauxite</span>
+    <div class="d-flex gap-2">
+      <a href="{% url 'operations:fiche_vierge' 'bon_transport' %}?n=1" class="btn btn-light btn-sm" title="Télécharger en PDF" target="_blank">
+        <i class="bi bi-file-earmark-pdf text-danger"></i> Télécharger PDF
+      </a>
+      <button type="button" onclick="window.print()" class="btn btn-warning btn-sm" title="Imprimer ce modèle">
+        <i class="bi bi-printer"></i> Imprimer le modèle
+      </button>
+    </div>
+  </div>
+  <div class="card-body bg-light">
+    <p class="text-muted small mb-3">
+      <i class="bi bi-info-circle"></i>
+      Ce modèle est destiné à être <strong>imprimé vierge</strong>, rempli à la main par le chauffeur sur le terrain,
+      puis déposé au bureau pour saisie. Les zones grisées sont les champs à compléter.
+    </p>
+  </div>
+</div>
+
+<div class="bon-modele-wrap mb-4">
+  <div class="bon-modele">
+    <!-- Bandeau drapeau Guinée -->
+    <div class="bon-flag-strip"><div class="r"></div><div class="y"></div><div class="g"></div></div>
+
+    <!-- En-tête : société + N° BON + DATE -->
+    <div class="bon-header">
+      <div class="company">
+        <div class="name">FASTLANE LOGISTIC</div>
+        <div class="sub">Transport &amp; Logistique — Conakry, Guinée</div>
+      </div>
+      <div class="label-cell">N° BON :</div>
+      <div class="value-cell">&nbsp;</div>
+      <div class="label-cell">DATE :</div>
+      <div class="value-cell">&nbsp;</div>
+    </div>
+
+    <!-- Bandeau titre rouge -->
+    <div class="bon-title">
+      BON DE TRANSPORT BAUXITE <span class="light">—— FASTLANE LOGISTIC</span>
+    </div>
+
+    <!-- Corps : 2 colonnes -->
+    <div class="bon-body">
+      <!-- Colonne gauche : identité chauffeur + véhicule + client -->
+      <div class="left">
+        <div class="bon-row"><div class="lab">Prénom</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row alt"><div class="lab">Nom</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row"><div class="lab">Téléphone</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row alt"><div class="lab">Plaque camion</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row"><div class="lab">Carte d'entrée</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row alt"><div class="lab">Lieu de chargement</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row"><div class="lab">Heure de départ</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row alt"><div class="lab">Client / Projet</div><div class="val">&nbsp;</div></div>
+      </div>
+
+      <!-- Colonne droite : pesées + signatures -->
+      <div class="right">
+        <div class="bon-section">▌ PESÉES ET QUANTITÉ TRANSPORTÉE</div>
+        <div class="bon-pesees">
+          <div class="head">PESÉE DÉBUT (T)</div>
+          <div class="head">PESÉE FIN (T)</div>
+          <div class="head red">QUANTITÉ NETTE (T)</div>
+          <div class="cell">&nbsp;</div>
+          <div class="cell">&nbsp;</div>
+          <div class="cell netto">&nbsp;</div>
+        </div>
+
+        <div class="bon-section mt-0" style="margin-top:0;">▌ SIGNATURES ET VALIDATIONS</div>
+        <div class="bon-sign-head">
+          <div class="a">Chauffeur</div>
+          <div class="b">Resp. site</div>
+          <div class="c">Validation FASTLANE</div>
+        </div>
+        <div class="bon-sign-body">
+          <div>Signature &amp; Date :</div>
+          <div>Signature &amp; Cachet :</div>
+          <div>Signature &amp; Cachet :</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avertissement légal -->
+    <div class="bon-warn">
+      ⚠ Document officiel FASTLANE LOGISTIC — Toute altération est passible de poursuites. Conserver l'original.
     </div>
   </div>
 </div>
