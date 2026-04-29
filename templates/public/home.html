@@ -24,11 +24,12 @@
 
 {% block content %}
 
+{# ============== HERO COMPACT ============== #}
 <section class="landing-hero">
   <img src="{% static 'images/home.jpeg' %}" alt="{{ SOCIETE_NOM }} - transport de bauxite et opérations logistiques" class="landing-hero-img">
   <div class="landing-hero-shade"></div>
   <div class="container landing-hero-content">
-    <div class="row align-items-center g-5">
+    <div class="row align-items-center g-4">
       <div class="col-lg-7">
         <div class="hero-badge landing-hero-badge">
           <span class="hero-pulse"></span>
@@ -36,14 +37,14 @@
         </div>
         <h1 class="landing-hero-title">{{ SOCIETE_NOM }}</h1>
         <p class="landing-hero-subtitle">
-          Une plateforme moderne pour piloter le transport de bauxite, suivre la flotte,
-          maîtriser les coûts et produire des rapports fiables pour chaque opération.
+          Plateforme moderne pour piloter le transport de bauxite, la flotte,
+          les coûts et le reporting de vos opérations minières.
         </p>
         <div class="landing-hero-actions">
-          <a href="{% url 'connexion' %}" class="btn btn-accent btn-xl">
+          <a href="{% url 'connexion' %}" class="btn btn-accent btn-lg">
             <i class="bi bi-box-arrow-in-right me-2"></i>Accéder à l'application
           </a>
-          <a href="{% url 'public:contact' %}" class="btn btn-light btn-xl">
+          <a href="{% url 'public:contact' %}" class="btn btn-outline-light btn-lg">
             <i class="bi bi-send-fill me-2"></i>Demander un devis
           </a>
         </div>
@@ -51,9 +52,10 @@
           <span><i class="bi bi-shield-check"></i> Suivi HSE</span>
           <span><i class="bi bi-clipboard-data"></i> Reporting mensuel</span>
           <span><i class="bi bi-truck-front-fill"></i> Flotte contrôlée</span>
+          <span><i class="bi bi-clock-history"></i> 24/7</span>
         </div>
       </div>
-      <div class="col-lg-5">
+      <div class="col-lg-5 d-none d-lg-block">
         <div class="landing-dashboard-card">
           <div class="dashboard-card-top">
             <div>
@@ -83,110 +85,20 @@
             <div class="route-line"></div>
             <div class="route-step"><i class="bi bi-building-check"></i><span>Port</span></div>
           </div>
-          <div class="dashboard-list">
-            <div><i class="bi bi-check2-circle"></i> Bons de transport numérisés</div>
-            <div><i class="bi bi-check2-circle"></i> Carburant, pannes et dépenses suivis</div>
-            <div><i class="bi bi-check2-circle"></i> Factures et bilans centralisés</div>
-          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="landing-kpi-strip">
-  <div class="container">
-    <div class="row g-3">
-      <div class="col-6 col-lg-3">
-        <div class="landing-kpi">
-          <i class="bi bi-truck-front"></i>
-          <strong>{{ stats_flotte.nb_total|default:"0" }}</strong>
-          <span>Véhicules gérés</span>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="landing-kpi">
-          <i class="bi bi-box-seam"></i>
-          <strong>{{ stats_flotte.capacite_totale|default:"0"|intcomma }}</strong>
-          <span>Tonnes de capacité</span>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="landing-kpi">
-          <i class="bi bi-compass"></i>
-          <strong>3</strong>
-          <span>Corridors prioritaires</span>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="landing-kpi">
-          <i class="bi bi-clock-history"></i>
-          <strong>24/7</strong>
-          <span>Disponibilité terrain</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section-padded landing-platform">
-  <div class="container">
-    <div class="row g-5 align-items-center">
-      <div class="col-lg-6">
-        <div class="section-kicker">L'application</div>
-        <h2 class="section-title">Un centre de commande pour vos opérations logistiques.</h2>
-        <p class="lead text-muted">
-          L'application FASTLANE rassemble les données essentielles dans un espace clair :
-          flotte, bons de transport, carburant, maintenance, RH, contrats, facturation et bilans.
-          Les équipes gagnent du temps, les responsables gardent la visibilité, les clients reçoivent des rapports propres.
-        </p>
-        <div class="landing-feature-list">
-          <div><i class="bi bi-check-circle-fill"></i> Saisie rapide des opérations terrain</div>
-          <div><i class="bi bi-check-circle-fill"></i> Contrôle des coûts et des consommations</div>
-          <div><i class="bi bi-check-circle-fill"></i> Rapports mensuels prêts pour la direction</div>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="landing-app-preview">
-          <div class="preview-sidebar">
-            <span></span><span></span><span></span><span></span>
-          </div>
-          <div class="preview-main">
-            <div class="preview-toolbar">
-              <div></div>
-              <span></span>
-            </div>
-            <div class="preview-grid">
-              <div class="preview-tile preview-tile-lg">
-                <span>Transport bauxite</span>
-                <strong>Rotations suivies</strong>
-              </div>
-              <div class="preview-tile">
-                <span>Carburant</span>
-                <strong>Contrôle</strong>
-              </div>
-              <div class="preview-tile">
-                <span>Factures</span>
-                <strong>A jour</strong>
-              </div>
-            </div>
-            <div class="preview-table">
-              <span></span><span></span><span></span><span></span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section-padded bg-subtle">
+{# ============== MODULES (fusion plateforme + modules) ============== #}
+<section class="section-padded">
   <div class="container">
     <div class="text-center mb-5">
-      <div class="section-kicker">Modules métier</div>
-      <h2 class="section-title">Tout ce qu'il faut pour une logistique maîtrisée.</h2>
-      <p class="text-muted lead mx-auto" style="max-width:760px;">
-        Une présentation professionnelle pour les clients, et un outil solide pour les équipes internes.
+      <div class="section-kicker">L'application FASTLANE</div>
+      <h2 class="section-title">Un centre de commande pour vos opérations.</h2>
+      <p class="text-muted lead mx-auto" style="max-width:720px;">
+        Flotte, bons, carburant, maintenance, RH, facturation et bilans réunis dans un seul espace clair.
       </p>
     </div>
     <div class="row g-4">
@@ -194,49 +106,50 @@
         <div class="landing-module-card">
           <div class="module-icon module-red"><i class="bi bi-minecart-loaded"></i></div>
           <h3>Opérations minières</h3>
-          <p>Bons de transport, contrats, tonnage, rotations et suivi des livraisons sur les axes miniers.</p>
+          <p>Bons de transport, contrats, tonnage et rotations sur les axes miniers.</p>
         </div>
       </div>
       <div class="col-md-6 col-lg-4">
         <div class="landing-module-card">
           <div class="module-icon module-blue"><i class="bi bi-truck-front-fill"></i></div>
           <h3>Gestion de flotte</h3>
-          <p>Camions, capacités, statuts, amortissements, maintenance préventive et disponibilité.</p>
+          <p>Camions, capacités, statuts, maintenance préventive et disponibilité.</p>
         </div>
       </div>
       <div class="col-md-6 col-lg-4">
         <div class="landing-module-card">
           <div class="module-icon module-green"><i class="bi bi-fuel-pump-fill"></i></div>
           <h3>Carburant & dépenses</h3>
-          <p>Consommation, pannes, frais administratifs et contrôles financiers par période.</p>
+          <p>Consommation, pannes et frais administratifs par période.</p>
         </div>
       </div>
       <div class="col-md-6 col-lg-4">
         <div class="landing-module-card">
           <div class="module-icon module-gold"><i class="bi bi-receipt-cutoff"></i></div>
           <h3>Facturation</h3>
-          <p>Contrats, factures, détails de prestations et situation commerciale centralisée.</p>
+          <p>Contrats, factures et situation commerciale centralisée.</p>
         </div>
       </div>
       <div class="col-md-6 col-lg-4">
         <div class="landing-module-card">
           <div class="module-icon module-purple"><i class="bi bi-people-fill"></i></div>
           <h3>Ressources humaines</h3>
-          <p>Employés, chauffeurs, présences, heures supplémentaires et affectations opérationnelles.</p>
+          <p>Employés, chauffeurs, présences et affectations opérationnelles.</p>
         </div>
       </div>
       <div class="col-md-6 col-lg-4">
         <div class="landing-module-card">
           <div class="module-icon module-dark"><i class="bi bi-graph-up-arrow"></i></div>
           <h3>Bilans & rapports</h3>
-          <p>Indicateurs de performance, exports, synthèses mensuelles et pilotage de direction.</p>
+          <p>Indicateurs, exports et synthèses mensuelles pour la direction.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section-padded landing-about">
+{# ============== ENTREPRISE + BUREAU (fusion) ============== #}
+<section class="section-padded bg-subtle landing-about">
   <div class="container">
     <div class="row g-5 align-items-center">
       <div class="col-lg-6">
@@ -244,101 +157,79 @@
           <img src="{% static 'images/home2.png' %}" alt="Flotte FASTLANE - camions pour transport de bauxite">
           <div class="image-stack-card">
             <i class="bi bi-shield-lock-fill"></i>
-            <span>Transport securise, suivi et documente</span>
+            <span>Transport sécurisé, suivi et documenté</span>
           </div>
         </div>
       </div>
       <div class="col-lg-6">
         <div class="section-kicker">Notre valeur</div>
-        <h2 class="section-title">Une image professionnelle, adossée à des opérations réelles.</h2>
+        <h2 class="section-title">Une équipe au plus près du terrain.</h2>
         <p class="lead text-muted">
-          Basée à Conakry avec une présence opérationnelle à Kolaboui, l'équipe intervient
-          au plus près des sites pour coordonner les chauffeurs, réduire les délais et fiabiliser chaque mission.
+          Basée à Conakry avec une présence opérationnelle à Kolaboui, FASTLANE coordonne
+          les chauffeurs, réduit les délais et fiabilise chaque mission sur le corridor Boké - Kamsar.
         </p>
         <div class="row g-3">
           <div class="col-sm-6">
             <div class="check-item">
               <i class="bi bi-check-circle-fill"></i>
-              <div>
-                <strong>Flotte spécialisée</strong>
-                <p class="small text-muted mb-0">Camions adaptés aux pistes minières</p>
-              </div>
+              <div><strong>Flotte spécialisée</strong><p class="small text-muted mb-0">Camions adaptés aux pistes minières</p></div>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="check-item">
               <i class="bi bi-check-circle-fill"></i>
-              <div>
-                <strong>Équipes qualifiées</strong>
-                <p class="small text-muted mb-0">Chauffeurs et techniciens formés</p>
-              </div>
+              <div><strong>Équipes qualifiées</strong><p class="small text-muted mb-0">Chauffeurs et techniciens formés</p></div>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="check-item">
               <i class="bi bi-check-circle-fill"></i>
-              <div>
-                <strong>Maintenance préventive</strong>
-                <p class="small text-muted mb-0">Disponibilité maximale</p>
-              </div>
+              <div><strong>Maintenance préventive</strong><p class="small text-muted mb-0">Disponibilité maximale</p></div>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="check-item">
               <i class="bi bi-check-circle-fill"></i>
-              <div>
-                <strong>Traçabilité complète</strong>
-                <p class="small text-muted mb-0">Bons, tonnage et reporting</p>
-              </div>
+              <div><strong>Traçabilité complète</strong><p class="small text-muted mb-0">Bons, tonnage et reporting</p></div>
             </div>
           </div>
         </div>
-        <a href="{% url 'public:a_propos' %}" class="btn btn-primary btn-lg mt-4">
+        <a href="{% url 'public:a_propos' %}" class="btn btn-primary mt-4">
           Découvrir l'entreprise <i class="bi bi-arrow-right"></i>
         </a>
       </div>
     </div>
-  </div>
-</section>
 
-<section class="section-padded landing-office">
-  <div class="container">
-    <div class="text-center mb-5">
-      <div class="section-kicker">Présence opérationnelle</div>
-      <h2 class="section-title">Bureau de Kolaboui, au coeur du corridor minier.</h2>
-      <p class="text-muted lead mx-auto" style="max-width: 820px;">
-        Un point d'appui terrain pour les réunions, les briefings sécurité, la formation
-        des équipes et le suivi rapide des contrats sur l'axe Boké - Kamsar - Conakry.
-      </p>
-    </div>
-    <div class="row g-4">
+    {# Bureau Kolaboui en bandeau plus compact #}
+    <div class="row g-4 mt-4 pt-4 border-top">
+      <div class="col-12 text-center mb-2">
+        <div class="section-kicker">Présence opérationnelle</div>
+        <h3 class="h4 mb-0">Bureau de Kolaboui, au cœur du corridor minier</h3>
+      </div>
       <div class="col-md-6">
         <div class="office-photo">
           <img src="{% static 'images/bureau2.png' %}" alt="Bureau FASTLANE LOGISTIC à Kolaboui">
-          <div class="office-photo-caption">
-            <i class="bi bi-geo-alt-fill"></i> Bureau FASTLANE - Kolaboui
-          </div>
+          <div class="office-photo-caption"><i class="bi bi-geo-alt-fill"></i> Bureau FASTLANE - Kolaboui</div>
         </div>
       </div>
       <div class="col-md-6">
         <div class="office-photo">
           <img src="{% static 'images/bureau1.png' %}" alt="Salle de réunion et formation du bureau de Kolaboui">
-          <div class="office-photo-caption">
-            <i class="bi bi-mortarboard-fill"></i> Réunions, formation et coordination
-          </div>
+          <div class="office-photo-caption"><i class="bi bi-mortarboard-fill"></i> Réunions, formation et coordination</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
+{# ============== FLOTTE (conditionnel) ============== #}
 {% if camions %}
 <section class="section-padded">
   <div class="container">
-    <div class="d-flex flex-wrap justify-content-between align-items-end mb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
       <div>
         <div class="section-kicker">Notre flotte</div>
-        <h2 class="section-title mb-0">Des camions modernes, entretenus et suivis.</h2>
+        <h2 class="section-title mb-0">Des camions modernes et suivis.</h2>
       </div>
       <p class="text-muted mb-0 mt-3">Capacité cumulée : <strong class="text-primary">{{ stats_flotte.capacite_totale|intcomma }} tonnes</strong></p>
     </div>
@@ -356,9 +247,7 @@
               <span class="truck-status status-off"><span class="status-dot"></span> {{ c.get_statut_display }}</span>
             {% endif %}
           </div>
-          <div class="truck-visual-premium">
-            <i class="bi bi-truck-front-fill"></i>
-          </div>
+          <div class="truck-visual-premium"><i class="bi bi-truck-front-fill"></i></div>
           <div class="truck-body">
             <h6 class="truck-model">{{ c.marque_modele }}</h6>
             <div class="truck-specs">
@@ -374,11 +263,12 @@
 </section>
 {% endif %}
 
+{# ============== POURQUOI FASTLANE ============== #}
 <section class="section-padded section-dark landing-reasons">
   <div class="container">
     <div class="text-center mb-5">
       <div class="section-kicker text-accent">Pourquoi choisir FASTLANE</div>
-      <h2 class="section-title text-white">Une exécution claire, mesurable et professionnelle.</h2>
+      <h2 class="section-title text-white">Une exécution claire et mesurable.</h2>
     </div>
     <div class="row g-4">
       <div class="col-md-4">
@@ -386,7 +276,7 @@
           <div class="reason-number">01</div>
           <i class="bi bi-shield-check reason-icon"></i>
           <h4 class="text-white">Sécurité d'abord</h4>
-          <p class="text-white-70 mb-0">Chauffeurs formés, contrôles réguliers et respect des exigences HSE des sites miniers.</p>
+          <p class="text-white-70 mb-0">Chauffeurs formés, contrôles réguliers, exigences HSE respectées.</p>
         </div>
       </div>
       <div class="col-md-4">
@@ -394,7 +284,7 @@
           <div class="reason-number">02</div>
           <i class="bi bi-speedometer2 reason-icon"></i>
           <h4 class="text-white">Ponctualité</h4>
-          <p class="text-white-70 mb-0">Rotations planifiées, supervision terrain et réaction rapide sur les corridors prioritaires.</p>
+          <p class="text-white-70 mb-0">Rotations planifiées et réactivité sur les corridors prioritaires.</p>
         </div>
       </div>
       <div class="col-md-4">
@@ -402,105 +292,84 @@
           <div class="reason-number">03</div>
           <i class="bi bi-graph-up-arrow reason-icon"></i>
           <h4 class="text-white">Transparence</h4>
-          <p class="text-white-70 mb-0">Bons numérisés, tonnage suivi et rapports clairs pour chaque client et chaque période.</p>
+          <p class="text-white-70 mb-0">Bons numérisés, tonnage suivi, rapports clairs par période.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-{% if appels_ouverts %}
+{# ============== AO + EVENTS (conditionnels, fusionnés en un seul écran) ============== #}
+{% if appels_ouverts or prochains_events or derniers_events %}
 <section class="section-padded bg-subtle">
   <div class="container">
-    <div class="d-flex flex-wrap justify-content-between align-items-end mb-5">
-      <div>
-        <div class="section-kicker">Opportunités</div>
-        <h2 class="section-title mb-0">Appels d'offres en cours</h2>
-      </div>
-      <a href="{% url 'public:appels_offres' %}" class="btn btn-outline-primary mt-3">
-        Tout voir <i class="bi bi-arrow-right"></i>
-      </a>
-    </div>
-    <div class="row g-4">
-      {% for ao in appels_ouverts %}
-      <div class="col-md-6 col-lg-4">
-        <div class="ao-card">
-          <div class="ao-head">
-            <span class="ao-badge"><i class="bi bi-unlock-fill"></i> Ouvert</span>
-            <span class="ao-ref">{{ ao.reference }}</span>
+    <div class="row g-5">
+      {% if appels_ouverts %}
+      <div class="col-lg-6">
+        <div class="d-flex justify-content-between align-items-end mb-3">
+          <div>
+            <div class="section-kicker">Opportunités</div>
+            <h3 class="h4 mb-0">Appels d'offres en cours</h3>
           </div>
-          <h5 class="ao-title">{{ ao.titre }}</h5>
-          <p class="text-muted">{{ ao.objet|truncatechars:110 }}</p>
-          <div class="ao-meta">
-            <div><i class="bi bi-calendar-event"></i> Clôture {{ ao.date_limite|date:"d/m/Y" }}</div>
-            {% if ao.jours_restants >= 0 %}
-              <div class="ao-deadline">{% if ao.jours_restants == 0 %}Dernier jour{% else %}J-{{ ao.jours_restants }}{% endif %}</div>
-            {% endif %}
+          <a href="{% url 'public:appels_offres' %}" class="btn btn-sm btn-outline-primary">Tout voir</a>
+        </div>
+        <div class="d-grid gap-3">
+          {% for ao in appels_ouverts|slice:":3" %}
+          <div class="ao-card">
+            <div class="ao-head">
+              <span class="ao-badge"><i class="bi bi-unlock-fill"></i> Ouvert</span>
+              <span class="ao-ref">{{ ao.reference }}</span>
+            </div>
+            <h5 class="ao-title">{{ ao.titre }}</h5>
+            <div class="ao-meta">
+              <div><i class="bi bi-calendar-event"></i> Clôture {{ ao.date_limite|date:"d/m/Y" }}</div>
+              {% if ao.jours_restants >= 0 %}
+                <div class="ao-deadline">{% if ao.jours_restants == 0 %}Dernier jour{% else %}J-{{ ao.jours_restants }}{% endif %}</div>
+              {% endif %}
+            </div>
+            <a href="{{ ao.get_absolute_url }}" class="ao-link">Voir le détail <i class="bi bi-arrow-right"></i></a>
           </div>
-          <a href="{{ ao.get_absolute_url }}" class="ao-link">
-            Voir le détail <i class="bi bi-arrow-right"></i>
-          </a>
+          {% endfor %}
         </div>
       </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
+      {% endif %}
 
-{% if prochains_events or derniers_events %}
-<section class="section-padded">
-  <div class="container">
-    <div class="d-flex flex-wrap justify-content-between align-items-end mb-5">
-      <div>
-        <div class="section-kicker">Actualités</div>
-        <h2 class="section-title mb-0">Événements et annonces</h2>
-      </div>
-      <a href="{% url 'public:evenements' %}" class="btn btn-outline-primary mt-3">
-        Tout voir <i class="bi bi-arrow-right"></i>
-      </a>
-    </div>
-    <div class="row g-4">
-      {% for evt in prochains_events|default:derniers_events %}
-      <div class="col-md-6 col-lg-4">
-        <article class="event-card">
-          <div class="event-media">
-            {% if evt.image %}
-              <img src="{{ evt.image.url }}" alt="{{ evt.titre }}">
-            {% else %}
-              <div class="event-placeholder"><i class="bi bi-calendar-event"></i></div>
-            {% endif %}
-            <div class="event-date">
-              <div class="event-day">{{ evt.date_evenement|date:"d" }}</div>
-              <div class="event-month">{{ evt.date_evenement|date:"M"|upper }}</div>
+      {% if prochains_events or derniers_events %}
+      <div class="col-lg-6">
+        <div class="d-flex justify-content-between align-items-end mb-3">
+          <div>
+            <div class="section-kicker">Actualités</div>
+            <h3 class="h4 mb-0">Événements et annonces</h3>
+          </div>
+          <a href="{% url 'public:evenements' %}" class="btn btn-sm btn-outline-primary">Tout voir</a>
+        </div>
+        <div class="d-grid gap-3">
+          {% for evt in prochains_events|default:derniers_events|slice:":3" %}
+          <article class="event-card event-card-compact">
+            <div class="event-body">
+              {% if evt.lieu %}<span class="event-location"><i class="bi bi-geo-alt"></i> {{ evt.lieu }}</span>{% endif %}
+              <h5 class="event-title">{{ evt.titre }}</h5>
+              <p class="text-muted small mb-2">{{ evt.resume|default:evt.contenu|truncatechars:120 }}</p>
+              <small class="text-muted"><i class="bi bi-calendar-event"></i> {{ evt.date_evenement|date:"d M Y" }}</small>
+              <a href="{{ evt.get_absolute_url }}" class="stretched-link"></a>
             </div>
-          </div>
-          <div class="event-body">
-            {% if evt.lieu %}<span class="event-location"><i class="bi bi-geo-alt"></i> {{ evt.lieu }}</span>{% endif %}
-            <h5 class="event-title">{{ evt.titre }}</h5>
-            <p class="text-muted">{{ evt.resume|default:evt.contenu|truncatechars:110 }}</p>
-            <a href="{{ evt.get_absolute_url }}" class="stretched-link text-decoration-none">
-              Lire la suite <i class="bi bi-arrow-right"></i>
-            </a>
-          </div>
-        </article>
+          </article>
+          {% endfor %}
+        </div>
       </div>
-      {% endfor %}
+      {% endif %}
     </div>
   </div>
 </section>
 {% endif %}
 
+{# ============== CTA FINAL ============== #}
 <section class="contact-premium landing-final-cta">
   <div class="container">
     <div class="row g-4 align-items-center">
       <div class="col-lg-7">
         <div class="section-kicker text-accent">Contact</div>
         <h2 class="section-title text-white">Prêt à professionnaliser votre suivi logistique ?</h2>
-        <p class="lead text-white-70 mb-4">
-          Contactez FASTLANE pour vos opérations de transport, vos contrats miniers
-          ou votre besoin de suivi fiable sur le terrain.
-        </p>
         <div class="landing-contact-lines">
           <span><i class="bi bi-geo-alt-fill"></i> Conakry, Kipé Centre Émetteur</span>
           <span><i class="bi bi-envelope-fill"></i> {{ CONTACT_EMAIL|default:"contact@fastlanelogistic.com" }}</span>
@@ -508,10 +377,10 @@
         </div>
       </div>
       <div class="col-lg-5 text-lg-end">
-        <a href="{% url 'public:contact' %}" class="btn btn-accent btn-xl">
+        <a href="{% url 'public:contact' %}" class="btn btn-accent btn-lg">
           <i class="bi bi-chat-dots-fill me-2"></i>Nous contacter
         </a>
-        <a href="{% url 'connexion' %}" class="btn btn-outline-light btn-xl ms-lg-2 mt-3 mt-lg-0">
+        <a href="{% url 'connexion' %}" class="btn btn-outline-light btn-lg ms-lg-2 mt-2 mt-lg-0">
           <i class="bi bi-lock-fill me-2"></i>Espace équipe
         </a>
       </div>
