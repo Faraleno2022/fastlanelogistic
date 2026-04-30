@@ -1956,6 +1956,30 @@ body.public-site {
 .landing-reasons .reason-card {
   border-radius: 8px;
 }
+/* Variante claire (fond blanc) */
+.landing-reasons-light { background: #fff; }
+.landing-reasons-light .reason-card {
+  background: #ffffff;
+  border: 1px solid var(--fl-border, #e5e7eb);
+  color: var(--fl-text, #1f2937);
+  box-shadow: 0 4px 18px rgba(15, 44, 71, .06);
+}
+.landing-reasons-light .reason-card:hover {
+  background: #ffffff;
+  border-color: var(--fl-accent, #f6b93b);
+  box-shadow: 0 10px 30px rgba(15, 44, 71, .10);
+}
+.landing-reasons-light .reason-card h4 { color: var(--fl-navy, #0f2c47); }
+.landing-reasons-light .reason-number { color: rgba(15, 44, 71, .12); }
+
+/* CTA final variante claire */
+.landing-final-cta-light { background: #fff; }
+.landing-final-cta-light .section-title { color: var(--fl-navy, #0f2c47); }
+.landing-contact-lines-light span {
+  background: #f6f8fb;
+  color: var(--fl-text, #1f2937);
+  border: 1px solid var(--fl-border, #e5e7eb);
+}
 .landing-final-cta {
   margin-top: 0;
   padding: 4.5rem 0;

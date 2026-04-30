@@ -202,35 +202,35 @@
 {% endif %}
 
 {# ============== POURQUOI FASTLANE ============== #}
-<section class="section-padded section-dark landing-reasons">
+<section class="section-padded landing-reasons landing-reasons-light">
   <div class="container">
     <div class="text-center mb-5">
-      <div class="section-kicker text-accent">Pourquoi choisir FASTLANE</div>
-      <h2 class="section-title text-white">Une exécution claire et mesurable.</h2>
+      <div class="section-kicker">Pourquoi choisir FASTLANE</div>
+      <h2 class="section-title">Une exécution claire et mesurable.</h2>
     </div>
     <div class="row g-4">
       <div class="col-md-4">
         <div class="reason-card">
           <div class="reason-number">01</div>
           <i class="bi bi-shield-check reason-icon"></i>
-          <h4 class="text-white">Sécurité d'abord</h4>
-          <p class="text-white-70 mb-0">Chauffeurs formés, contrôles réguliers, exigences HSE respectées.</p>
+          <h4>Sécurité d'abord</h4>
+          <p class="text-muted mb-0">Chauffeurs formés, contrôles réguliers, exigences HSE respectées.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="reason-card">
           <div class="reason-number">02</div>
           <i class="bi bi-speedometer2 reason-icon"></i>
-          <h4 class="text-white">Ponctualité</h4>
-          <p class="text-white-70 mb-0">Rotations planifiées et réactivité sur les corridors prioritaires.</p>
+          <h4>Ponctualité</h4>
+          <p class="text-muted mb-0">Rotations planifiées et réactivité sur les corridors prioritaires.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="reason-card">
           <div class="reason-number">03</div>
           <i class="bi bi-graph-up-arrow reason-icon"></i>
-          <h4 class="text-white">Transparence</h4>
-          <p class="text-white-70 mb-0">Bons numérisés, tonnage suivi, rapports clairs par période.</p>
+          <h4>Transparence</h4>
+          <p class="text-muted mb-0">Bons numérisés, tonnage suivi, rapports clairs par période.</p>
         </div>
       </div>
     </div>
@@ -302,13 +302,13 @@
 {% endif %}
 
 {# ============== CTA FINAL ============== #}
-<section class="contact-premium landing-final-cta">
+<section class="section-padded landing-final-cta-light">
   <div class="container">
     <div class="row g-4 align-items-center">
       <div class="col-lg-7">
-        <div class="section-kicker text-accent">Contact</div>
-        <h2 class="section-title text-white">Prêt à professionnaliser votre suivi logistique ?</h2>
-        <div class="landing-contact-lines">
+        <div class="section-kicker">Contact</div>
+        <h2 class="section-title">Prêt à professionnaliser votre suivi logistique ?</h2>
+        <div class="landing-contact-lines landing-contact-lines-light">
           <span><i class="bi bi-geo-alt-fill"></i> Conakry, Kipé Centre Émetteur</span>
           <span><i class="bi bi-envelope-fill"></i> {{ CONTACT_EMAIL|default:"contact@fastlanelogistic.com" }}</span>
           <span><i class="bi bi-telephone-fill"></i> {{ CONTACT_TELEPHONE|default:"+224 000 000 000" }}</span>
@@ -318,7 +318,7 @@
         <a href="{% url 'public:contact' %}" class="btn btn-accent btn-lg">
           <i class="bi bi-chat-dots-fill me-2"></i>Nous contacter
         </a>
-        <a href="{% url 'connexion' %}" class="btn btn-outline-light btn-lg ms-lg-2 mt-2 mt-lg-0">
+        <a href="{% url 'connexion' %}" class="btn btn-outline-primary btn-lg ms-lg-2 mt-2 mt-lg-0">
           <i class="bi bi-lock-fill me-2"></i>Espace équipe
         </a>
       </div>
