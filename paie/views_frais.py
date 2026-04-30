@@ -47,8 +47,7 @@ def liste_notes_frais(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'paie/frais/liste.html', {
         'notes': notes[:100],
@@ -94,8 +93,7 @@ def creer_note_frais(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'paie/frais/creer.html', {
         'employes': employes,

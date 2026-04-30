@@ -48,8 +48,7 @@ def liste_reclamations(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     categories = CategorieReclamation.objects.filter(actif=True)
     
@@ -103,8 +102,7 @@ def creer_reclamation(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     categories = CategorieReclamation.objects.filter(actif=True)
     
@@ -130,8 +128,7 @@ def detail_reclamation(request, pk):
     # Responsables potentiels
     responsables = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'employes/reclamations/detail.html', {
         'reclamation': reclamation,
@@ -376,8 +373,7 @@ def gestion_categories_reclamations(request):
     
     responsables = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     if request.method == 'POST':
         action = request.POST.get('action')

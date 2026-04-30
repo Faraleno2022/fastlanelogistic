@@ -153,7 +153,7 @@ def creer_contrat(request):
             messages.error(request, f'Erreur lors de la création : {str(e)}')
     
     # Données pour le formulaire
-    employes = Employe.objects.filter(entreprise=entreprise, actif=True)
+    employes = Employe.objects.filter(entreprise=entreprise).order_by('nom', 'prenoms')
     types_contrats = TypeContrat.objects.filter(entreprise=entreprise, actif=True)
     
     context = {
@@ -437,7 +437,7 @@ def creer_disponibilite(request):
         except Exception as e:
             messages.error(request, f'Erreur lors de la création : {str(e)}')
     
-    employes = Employe.objects.filter(entreprise=entreprise, actif=True)
+    employes = Employe.objects.filter(entreprise=entreprise).order_by('nom', 'prenoms')
     
     context = {
         'employes': employes,

@@ -40,7 +40,7 @@ def liste_conges(request):
     # Config entreprise pour afficher les règles
     config = ConfigurationPaieEntreprise.get_ou_creer(entreprise)
     
-    employes = Employe.objects.filter(entreprise=entreprise, statut_employe='actif')
+    employes = Employe.objects.filter(entreprise=entreprise).order_by('nom', 'prenoms')
     
     return render(request, 'conges/liste.html', {
         'conges': conges,
@@ -105,7 +105,7 @@ def demander_conge(request):
         except Exception as e:
             messages.error(request, f'Erreur: {str(e)}')
     
-    employes = Employe.objects.filter(entreprise=entreprise, statut_employe='actif')
+    employes = Employe.objects.filter(entreprise=entreprise).order_by('nom', 'prenoms')
     config = ConfigurationPaieEntreprise.get_ou_creer(entreprise)
     
     return render(request, 'conges/demander.html', {

@@ -96,9 +96,7 @@ def liste_missions(request):
 
         entreprise=request.user.entreprise,
 
-        statut_employe='actif'
-
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
 
     
 
@@ -225,9 +223,7 @@ def creer_mission(request):
 
         entreprise=request.user.entreprise,
 
-        statut_employe='actif'
-
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
 
     
 

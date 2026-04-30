@@ -414,8 +414,7 @@ def inscrire_employe(request, session_id):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    )
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'formation/inscriptions/inscrire.html', {
         'session': session,

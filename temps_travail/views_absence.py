@@ -51,8 +51,7 @@ def liste_absences(request):
     # Employés pour le filtre
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'temps_travail/absences/liste.html', {
         'absences': absences[:100],
@@ -102,8 +101,7 @@ def declarer_absence(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'temps_travail/absences/declarer.html', {
         'employes': employes,
@@ -226,8 +224,7 @@ def recap_absences(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     recap = []
     for employe in employes:

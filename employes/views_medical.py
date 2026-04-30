@@ -43,8 +43,7 @@ def liste_visites_medicales(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'employes/medical/liste.html', {
         'visites': visites[:100],
@@ -85,8 +84,7 @@ def planifier_visite(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    ).order_by('nom')
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'employes/medical/planifier.html', {
         'employes': employes,

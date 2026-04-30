@@ -179,8 +179,7 @@ def creer_offre(request):
     )
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    )
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'recrutement/offres/creer.html', {
         'postes': postes,
@@ -259,7 +258,7 @@ def modifier_offre(request, offre_uuid):
     
     postes = Poste.objects.filter(entreprise=request.user.entreprise, actif=True)
     services = Service.objects.filter(entreprise=request.user.entreprise, actif=True)
-    employes = Employe.objects.filter(entreprise=request.user.entreprise, statut_employe='actif')
+    employes = Employe.objects.filter(entreprise=request.user.entreprise).order_by('nom', 'prenoms')
     
     return render(request, 'recrutement/offres/modifier.html', {
         'offre': offre,

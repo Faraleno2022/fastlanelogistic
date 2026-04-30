@@ -94,8 +94,7 @@ def creer_decision(request, candidature_id):
     )
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    )
+    ).order_by('nom', 'prenoms')
     
     context = {
         'candidature': candidature,
@@ -245,8 +244,7 @@ def demarrer_integration(request, pk):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    )
+    ).order_by('nom', 'prenoms')
     
     context = {
         'decision': decision,

@@ -125,7 +125,7 @@ def liste_pointages(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise
-    ).exclude(statut_employe__in=['demissionnaire', 'licencie', 'retraite'])
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'temps_travail/pointages/liste.html', {
         'pointages': pointages_page,
@@ -194,7 +194,7 @@ def creer_pointage(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise
-    ).exclude(statut_employe__in=['demissionnaire', 'licencie', 'retraite'])
+    ).order_by('nom', 'prenoms')
     return render(request, 'temps_travail/pointages/creer.html', {
         'employes': employes,
         'date_defaut': date.today().isoformat()
@@ -398,7 +398,7 @@ def liste_conges(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise
-    ).exclude(statut_employe__in=['demissionnaire', 'licencie', 'retraite'])
+    ).order_by('nom', 'prenoms')
     annees = range(date.today().year - 2, date.today().year + 2)
     
     return render(request, 'temps_travail/conges/liste.html', {
@@ -463,7 +463,7 @@ def creer_conge(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise
-    ).exclude(statut_employe__in=['demissionnaire', 'licencie', 'retraite'])
+    ).order_by('nom', 'prenoms')
     return render(request, 'temps_travail/conges/creer.html', {
         'employes': employes
     })
@@ -612,7 +612,7 @@ def liste_absences(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise
-    ).exclude(statut_employe__in=['demissionnaire', 'licencie', 'retraite'])
+    ).order_by('nom', 'prenoms')
     
     return render(request, 'temps_travail/absences/liste.html', {
         'absences': absences_page,
@@ -666,7 +666,7 @@ def creer_absence(request):
     
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise
-    ).exclude(statut_employe__in=['demissionnaire', 'licencie', 'retraite'])
+    ).order_by('nom', 'prenoms')
     return render(request, 'temps_travail/absences/creer.html', {
         'employes': employes
     })
@@ -752,8 +752,7 @@ def rapport_presence(request):
     stats_employes = []
     employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
-    )
+    ).order_by('nom', 'prenoms')
     
     if employe_id:
         employes = employes.filter(pk=employe_id)
@@ -801,8 +800,7 @@ def rapport_presence(request):
         'annees': annees,
         'employes': Employe.objects.filter(
             entreprise=request.user.entreprise,
-            statut_employe='actif'
-        )
+        ).order_by('nom', 'prenoms')
     })
 
 
@@ -889,8 +887,7 @@ def rapport_presence_pdf(request):
     
     employes = Employe.objects.filter(
         entreprise=entreprise,
-        statut_employe='actif'
-    )
+    ).order_by('nom', 'prenoms')
     
     # Créer le PDF
     buffer = BytesIO()

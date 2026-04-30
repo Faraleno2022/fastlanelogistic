@@ -116,7 +116,7 @@ def simulation_comparative(request):
     """
     entreprise   = request.user.entreprise
     employes     = Employe.objects.filter(
-        entreprise=entreprise, statut_employe='actif'
+        entreprise=entreprise
     ).order_by('nom', 'prenoms')
     baremes_dispo = get_baremes_disponibles()
 

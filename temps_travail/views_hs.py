@@ -73,7 +73,6 @@ def liste_heures_supplementaires(request):
     # Listes pour les filtres
     employes = Employe.objects.filter(
         entreprise=entreprise,
-        statut_employe='actif'
     ).order_by('nom', 'prenoms')
     
     return render(request, 'temps_travail/heures_supplementaires/liste.html', {
@@ -97,7 +96,6 @@ def ajouter_heure_supplementaire(request):
     
     employes = Employe.objects.filter(
         entreprise=entreprise,
-        statut_employe='actif'
     ).order_by('nom', 'prenoms')
     
     if request.method == 'POST':

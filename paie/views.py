@@ -2295,7 +2295,6 @@ def liste_elements_salaire(request):
     # Liste complète pour filtre dropdown
     tous_employes = Employe.objects.filter(
         entreprise=request.user.entreprise,
-        statut_employe='actif'
     ).order_by('nom', 'prenoms')
 
     return render(request, 'paie/elements_salaire/liste.html', {
@@ -2897,7 +2896,6 @@ def historique_bulletins(request):
     
     employes = Employe.objects.filter(
         entreprise=entreprise,
-        statut_employe='actif'
     ).order_by('nom', 'prenoms')
     
     return render(request, 'paie/historique_bulletins.html', {
@@ -3006,10 +3004,9 @@ def simulation_paie(request):
     resultat = None
     employe_selectionne = None
     
-    # Liste des employés actifs
+    # Liste des employés
     employes = Employe.objects.filter(
         entreprise=entreprise,
-        statut_employe='actif'
     ).order_by('nom', 'prenoms')
     
     if request.method == 'POST':

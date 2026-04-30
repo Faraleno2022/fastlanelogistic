@@ -51,7 +51,6 @@ def liste_prets(request):
     # Listes pour les filtres
     employes = Employe.objects.filter(
         entreprise=entreprise,
-        statut_employe='actif'
     ).order_by('nom', 'prenoms')
     
     return render(request, 'paie/prets/liste.html', {
@@ -74,7 +73,6 @@ def creer_pret(request):
     
     employes = Employe.objects.filter(
         entreprise=entreprise,
-        statut_employe='actif'
     ).order_by('nom', 'prenoms')
     
     if request.method == 'POST':
