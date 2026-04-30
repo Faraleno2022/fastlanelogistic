@@ -42,8 +42,8 @@ body.public-site {
   background: rgba(15, 44, 71, .96);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  padding-top: .7rem;
-  padding-bottom: .7rem;
+  padding-top: .35rem;
+  padding-bottom: .35rem;
   border-bottom: 1px solid rgba(255,255,255,.06);
   z-index: 1040;
 }
@@ -55,12 +55,12 @@ body.public-site {
   background: rgba(15, 44, 71, .99);
   box-shadow: 0 8px 24px rgba(15,44,71,.18);
 }
-/* Spacer pour compenser la navbar fixe (hauteur ~72px) */
+/* Spacer pour compenser la navbar fixe */
 .public-navbar-spacer {
-  height: 72px;
+  height: 60px;
 }
 @media (max-width: 991.98px) {
-  .public-navbar-spacer { height: 64px; }
+  .public-navbar-spacer { height: 56px; }
 }
 /* Bouton CTA "Nous contacter" dans la navbar */
 .public-navbar .nav-link.nav-cta {
@@ -80,7 +80,8 @@ body.public-site {
   background: var(--fl-accent-2);
   color: var(--fl-navy) !important;
 }
-.public-navbar .navbar-brand { font-size: 1.2rem; letter-spacing: .3px; }
+.public-navbar .navbar-brand { font-size: 1.1rem; letter-spacing: .3px; padding-top: .15rem; padding-bottom: .15rem; }
+.public-navbar .navbar-brand img { height: 34px !important; }
 .public-navbar .nav-link {
   color: rgba(255,255,255,.82) !important;
   font-weight: 500;
