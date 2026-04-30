@@ -5,19 +5,46 @@
 {% block meta_description %}{{ SOCIETE_NOM }} pilote le transport de bauxite, la flotte, les bons, le carburant, la facturation et les rapports depuis une plateforme professionnelle adaptée aux opérations minières en Guinée.{% endblock %}
 {% block meta_keywords %}Fastlane Logistic, application logistique Guinée, gestion flotte, transport bauxite, bons transport, facturation transport, logistique minière{% endblock %}
 {% block og_image %}{{ SEO.site_url }}{% static 'images/home.jpeg' %}{% endblock %}
+{% block og_image_secure %}{{ SEO.site_url }}{% static 'images/home.jpeg' %}{% endblock %}
+{% block og_image_type %}image/jpeg{% endblock %}
+{% block og_image_alt %}{{ SOCIETE_NOM }} — Transport de bauxite et logistique minière en Guinée{% endblock %}
+{% block og_image_width %}1280{% endblock %}
+{% block og_image_height %}576{% endblock %}
 {% block tw_image %}{{ SEO.site_url }}{% static 'images/home.jpeg' %}{% endblock %}
+{% block image_src %}{{ SEO.site_url }}{% static 'images/home.jpeg' %}{% endblock %}
 
 {% block head_extra %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
+  "@id": "{{ CANONICAL_URL }}#webpage",
   "name": "Accueil - {{ SOCIETE_NOM }}",
   "url": "{{ CANONICAL_URL }}",
   "description": "{{ SEO.default_description }}",
   "isPartOf": { "@id": "{{ SEO.site_url }}/#website" },
   "about": { "@id": "{{ SEO.site_url }}/#organization" },
-  "inLanguage": "fr-GN"
+  "inLanguage": "fr-GN",
+  "primaryImageOfPage": { "@id": "{{ SEO.site_url }}{% static 'images/home.jpeg' %}#primaryimage" },
+  "image": { "@id": "{{ SEO.site_url }}{% static 'images/home.jpeg' %}#primaryimage" },
+  "thumbnailUrl": "{{ SEO.site_url }}{% static 'images/home.jpeg' %}"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ImageObject",
+  "@id": "{{ SEO.site_url }}{% static 'images/home.jpeg' %}#primaryimage",
+  "url": "{{ SEO.site_url }}{% static 'images/home.jpeg' %}",
+  "contentUrl": "{{ SEO.site_url }}{% static 'images/home.jpeg' %}",
+  "width": 1280,
+  "height": 576,
+  "caption": "{{ SOCIETE_NOM }} — Transport de bauxite et logistique minière en Guinée",
+  "license": "{{ SEO.site_url }}/",
+  "acquireLicensePage": "{{ SEO.site_url }}/contact/",
+  "creditText": "{{ SOCIETE_NOM }}",
+  "creator": { "@id": "{{ SEO.site_url }}/#organization" },
+  "copyrightNotice": "© {{ SOCIETE_NOM }}"
 }
 </script>
 {% endblock %}
@@ -26,7 +53,12 @@
 
 {# ============== BANNIERE IMAGE EN HAUT ============== #}
 <section class="home-cover">
-  <img src="{% static 'images/home.jpeg' %}" alt="{{ SOCIETE_NOM }} - transport de bauxite et opérations logistiques" class="home-cover-img">
+  <img src="{% static 'images/home.jpeg' %}"
+       alt="{{ SOCIETE_NOM }} — Transport de bauxite et logistique minière en Guinée"
+       class="home-cover-img"
+       width="1280" height="576"
+       fetchpriority="high"
+       itemprop="primaryImageOfPage">
 </section>
 
 {# ============== QUI SOMMES-NOUS ? (sous la banniere) ============== #}
