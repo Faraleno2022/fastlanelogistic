@@ -29,6 +29,110 @@
   <img src="{% static 'images/home.jpeg' %}" alt="{{ SOCIETE_NOM }} - transport de bauxite et opérations logistiques" class="home-cover-img">
 </section>
 
+{# ============== QUI SOMMES-NOUS ? (sous la banniere) ============== #}
+<section class="section-padded apropos-intro">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-7">
+        <div class="section-kicker">Qui sommes-nous ?</div>
+        <h2 class="section-title">
+          {{ SOCIETE_NOM }} — Votre partenaire
+          <span class="text-accent">transport &amp; logistique</span>
+          en Guinée.
+        </h2>
+        <p class="lead text-muted mb-4">
+          {{ SOCIETE_NOM }} est une entreprise guinéenne spécialisée dans
+          le <strong>transport sous toutes ses formes</strong>. Nous opérons
+          aussi bien dans le <strong>transport général de marchandises</strong>
+          que dans le <strong>transport minier</strong>, avec une expertise
+          reconnue sur les opérations de <strong>bauxite</strong> et de
+          matières premières.
+        </p>
+        <p class="text-muted mb-4">
+          Nous accompagnons nos <strong>partenaires</strong> sur des
+          <strong>projets de grande envergure</strong>, s'étendant sur
+          plusieurs centaines de kilomètres de corridors miniers et
+          logistiques. Ces missions exigent <strong>patience, rigueur et
+          engagement de long terme</strong> — autant de qualités qui
+          caractérisent nos équipes depuis le premier jour.
+        </p>
+        <p class="text-muted mb-4">
+          Basés à Conakry, avec un bureau opérationnel déployé à
+          <strong>Kolaboui, dans la préfecture de Boké</strong>, nous
+          mettons à disposition une flotte moderne, des chauffeurs
+          qualifiés et une organisation rodée pour garantir à nos clients
+          <strong>sécurité, ponctualité et traçabilité</strong> sur
+          l'ensemble de leurs flux.
+        </p>
+
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Transport général</strong>
+                <p class="small text-muted mb-0">Marchandises &amp; matériaux</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Transport minier</strong>
+                <p class="small text-muted mb-0">Bauxite &amp; matières premières</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Projets partenaires</strong>
+                <p class="small text-muted mb-0">Corridors de plusieurs km</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="check-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>Engagement long terme</strong>
+                <p class="small text-muted mb-0">Patience &amp; rigueur</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a href="{% url 'public:contact' %}" class="btn btn-accent btn-lg">
+          <i class="bi bi-chat-dots-fill me-2"></i>Nous contacter
+        </a>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="apropos-gallery">
+          <div class="office-photo">
+            <img src="{% static 'images/bureau1.png' %}"
+                 alt="Bureau FASTLANE LOGISTIC à Kolaboui">
+            <div class="office-photo-caption">
+              <i class="bi bi-building"></i>
+              Bureau opérationnel — Kolaboui (Boké)
+            </div>
+          </div>
+          <div class="office-photo">
+            <img src="{% static 'images/bureau2.png' %}"
+                 alt="Salle de réunion et formation — Kolaboui">
+            <div class="office-photo-caption">
+              <i class="bi bi-mortarboard-fill"></i>
+              Salle de réunion &amp; formation
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 {# ============== MODULES (fusion plateforme + modules) ============== #}
 <section class="section-padded">
   <div class="container">
@@ -86,79 +190,6 @@
   </div>
 </section>
 
-{# ============== ENTREPRISE + BUREAU (fusion) ============== #}
-<section class="section-padded bg-subtle landing-about">
-  <div class="container">
-    <div class="row g-5 align-items-center">
-      <div class="col-lg-6">
-        <div class="landing-image-stack">
-          <img src="{% static 'images/home2.png' %}" alt="Flotte FASTLANE - camions pour transport de bauxite">
-          <div class="image-stack-card">
-            <i class="bi bi-shield-lock-fill"></i>
-            <span>Transport sécurisé, suivi et documenté</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="section-kicker">Notre valeur</div>
-        <h2 class="section-title">Une équipe au plus près du terrain.</h2>
-        <p class="lead text-muted">
-          Basée à Conakry avec une présence opérationnelle à Kolaboui, FASTLANE coordonne
-          les chauffeurs, réduit les délais et fiabilise chaque mission sur le corridor Boké - Kamsar.
-        </p>
-        <div class="row g-3">
-          <div class="col-sm-6">
-            <div class="check-item">
-              <i class="bi bi-check-circle-fill"></i>
-              <div><strong>Flotte spécialisée</strong><p class="small text-muted mb-0">Camions adaptés aux pistes minières</p></div>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="check-item">
-              <i class="bi bi-check-circle-fill"></i>
-              <div><strong>Équipes qualifiées</strong><p class="small text-muted mb-0">Chauffeurs et techniciens formés</p></div>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="check-item">
-              <i class="bi bi-check-circle-fill"></i>
-              <div><strong>Maintenance préventive</strong><p class="small text-muted mb-0">Disponibilité maximale</p></div>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="check-item">
-              <i class="bi bi-check-circle-fill"></i>
-              <div><strong>Traçabilité complète</strong><p class="small text-muted mb-0">Bons, tonnage et reporting</p></div>
-            </div>
-          </div>
-        </div>
-        <a href="{% url 'public:a_propos' %}" class="btn btn-primary mt-4">
-          Découvrir l'entreprise <i class="bi bi-arrow-right"></i>
-        </a>
-      </div>
-    </div>
-
-    {# Bureau Kolaboui en bandeau plus compact #}
-    <div class="row g-4 mt-4 pt-4 border-top">
-      <div class="col-12 text-center mb-2">
-        <div class="section-kicker">Présence opérationnelle</div>
-        <h3 class="h4 mb-0">Bureau de Kolaboui, au cœur du corridor minier</h3>
-      </div>
-      <div class="col-md-6">
-        <div class="office-photo">
-          <img src="{% static 'images/bureau2.png' %}" alt="Bureau FASTLANE LOGISTIC à Kolaboui">
-          <div class="office-photo-caption"><i class="bi bi-geo-alt-fill"></i> Bureau FASTLANE - Kolaboui</div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="office-photo">
-          <img src="{% static 'images/bureau1.png' %}" alt="Salle de réunion et formation du bureau de Kolaboui">
-          <div class="office-photo-caption"><i class="bi bi-mortarboard-fill"></i> Réunions, formation et coordination</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 {# ============== FLOTTE (conditionnel) ============== #}
 {% if camions %}
