@@ -116,6 +116,12 @@
             </div>
           </div>
         </div>
+
+        <div class="mt-4">
+          <a href="{% url 'public:contact' %}" class="btn btn-accent btn-lg">
+            <i class="bi bi-chat-dots-fill me-2"></i>Nous contacter
+          </a>
+        </div>
       </div>
 
       <div class="col-lg-5">
@@ -147,13 +153,6 @@
   <div class="container">
     <div class="row g-5">
       <div class="col-lg-8">
-        {% if page.presentation %}
-        <div class="mb-4">
-          <h3 class="fw-bold">Présentation détaillée</h3>
-          <p class="lead">{{ page.presentation|linebreaksbr }}</p>
-        </div>
-        {% endif %}
-
         {% if page.mission %}
         <div class="mb-4">
           <h4 class="fw-bold"><i class="bi bi-bullseye text-primary"></i> Notre mission</h4>
