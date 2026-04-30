@@ -153,17 +153,17 @@ class Command(BaseCommand):
             code='SEUIL_TA_ONFPP',
             defaults={
                 'libelle': 'Seuil TA / ONFPP',
-                'valeur': Decimal('25.00'),
+                'valeur': Decimal('30.00'),
                 'type_valeur': 'nombre',
                 'categorie': 'general',
                 'unite': 'salariés',
-                'description': 'TA si effectif < 25 salariés ; contribution ONFPP si effectif >= 25 salariés',
+                'description': 'TA si effectif < 30 salariés ; contribution ONFPP si effectif >= 30 salariés',
                 'date_debut_validite': date_validite,
                 'actif': True,
             }
         )
         status = '✅ Créé' if created else '🔄 Mis à jour'
-        self.stdout.write(self.style.SUCCESS(f'  {status}: SEUIL_TA_ONFPP = 25 salariés'))
+        self.stdout.write(self.style.SUCCESS(f'  {status}: SEUIL_TA_ONFPP = 30 salariés'))
         
         # ============================================
         # 4. CONSTANTES CONGÉS PAYÉS

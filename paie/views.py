@@ -3061,12 +3061,15 @@ def simulation_paie(request):
         taux_vf = Decimal('6')
         taux_ta = Decimal('2')
         taux_onfpp = Decimal('1.5')
+        seuil_ta_onfpp = 30
         
         try:
             const = Constante.objects.filter(code='PLANCHER_CNSS', actif=True).first()
             if const: plancher_cnss = const.valeur
             const = Constante.objects.filter(code='PLAFOND_CNSS', actif=True).first()
             if const: plafond_cnss = const.valeur
+            const = Constante.objects.filter(code='SEUIL_TA_ONFPP', actif=True).first()
+            if const: seuil_ta_onfpp = int(const.valeur)
         except:
             pass
         
@@ -3152,8 +3155,8 @@ def simulation_paie(request):
         base_vf = max(Decimal('0'), salaire_brut - deduction_vf)
         vf = (base_vf * taux_vf / Decimal('100')).quantize(Decimal('1'))
         
-        # TA et ONFPP mutuellement exclusifs : < 25 → TA 2%, ≥ 25 → ONFPP 1,5% (CGI Guinée)
-        if nb_salaries < 25:
+        # TA et ONFPP mutuellement exclusifs selon le seuil configure.
+        if nb_salaries < seuil_ta_onfpp:
             ta = (base_vf * taux_ta / Decimal('100')).quantize(Decimal('1'))
             onfpp = Decimal('0')
         else:
@@ -3206,6 +3209,7 @@ def simulation_paie(request):
             'ta': ta,
             'onfpp': onfpp,
             'nb_salaries': nb_salaries,
+            'seuil_ta_onfpp': seuil_ta_onfpp,
             'total_retenues': total_retenues,
             'net_a_payer': net_a_payer,
             'total_charges_patronales': total_charges_patronales,

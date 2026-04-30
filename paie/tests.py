@@ -6,7 +6,13 @@ Exécution: python manage.py test paie.tests
 Référence: CGI 2022 + Code du Travail Guinée
 """
 from decimal import Decimal
+from types import SimpleNamespace
+from unittest.mock import patch
 from django.test import SimpleTestCase
+
+from paie.services_retropaie import calculer_charges_patronales
+from paie.services_simulation import calculer_un_bareme as calculer_un_bareme_simulation
+from paie.views_rapports import _charges_patronales_bulletin
 
 
 class CNSSCalculTests(SimpleTestCase):
@@ -117,6 +123,81 @@ class ChargesPatronalesTests(SimpleTestCase):
         total = cnss_employeur + vf + ta
 
         self.assertEqual(total, Decimal('726000'))
+
+    def test_charges_patronales_onfpp_a_partir_de_30_salaries(self):
+        """ONFPP = 1,5% de la base VF/ONFPP quand l'effectif atteint le seuil."""
+        constantes = {
+            'PLANCHER_CNSS': Decimal('550000'),
+            'PLAFOND_CNSS': Decimal('2500000'),
+            'TAUX_CNSS_EMPLOYEUR': Decimal('18'),
+            'TAUX_VF': Decimal('6'),
+            'TAUX_TA': Decimal('2'),
+            'TAUX_ONFPP': Decimal('1.5'),
+            'SEUIL_TA_ONFPP': Decimal('30'),
+        }
+
+        with patch('paie.cache_service.PayrollCacheService.get_constantes', return_value=constantes):
+            charges = calculer_charges_patronales(Decimal('3600000'), nb_salaries=30)
+
+        self.assertEqual(charges['libelle_ta'], 'ONFPP')
+        self.assertEqual(charges['base_vf'], 3450000)
+        self.assertEqual(charges['vf'], 207000)
+        self.assertEqual(charges['ta'], 51750)
+        self.assertEqual(charges['total'], 708750)
+
+    def test_charges_patronales_ta_sous_30_salaries(self):
+        """TA = 2% de la base VF/ONFPP tant que l'effectif reste sous le seuil."""
+        constantes = {
+            'PLANCHER_CNSS': Decimal('550000'),
+            'PLAFOND_CNSS': Decimal('2500000'),
+            'TAUX_CNSS_EMPLOYEUR': Decimal('18'),
+            'TAUX_VF': Decimal('6'),
+            'TAUX_TA': Decimal('2'),
+            'TAUX_ONFPP': Decimal('1.5'),
+            'SEUIL_TA_ONFPP': Decimal('30'),
+        }
+
+        with patch('paie.cache_service.PayrollCacheService.get_constantes', return_value=constantes):
+            charges = calculer_charges_patronales(Decimal('3600000'), nb_salaries=29)
+
+        self.assertEqual(charges['libelle_ta'], 'TA')
+        self.assertEqual(charges['ta'], 69000)
+        self.assertEqual(charges['total'], 726000)
+
+    def test_rapport_inclut_onfpp_dans_charges_patronales(self):
+        """Les rapports doivent additionner CNSS patronale, VF, TA et ONFPP."""
+        bulletin = SimpleNamespace(
+            cnss_employeur=Decimal('450000'),
+            versement_forfaitaire=Decimal('207000'),
+            taxe_apprentissage=Decimal('0'),
+            contribution_onfpp=Decimal('51750'),
+        )
+
+        self.assertEqual(_charges_patronales_bulletin(bulletin), Decimal('708750'))
+
+    def test_simulation_bascule_ta_onfpp_au_seuil_de_30(self):
+        """La simulation applique TA sous 30 salariés et ONFPP à partir de 30."""
+        constantes = {
+            'PLANCHER_CNSS': Decimal('550000'),
+            'PLAFOND_CNSS': Decimal('2500000'),
+            'TAUX_CNSS_EMPLOYE': Decimal('5'),
+            'TAUX_CNSS_EMPLOYEUR': Decimal('18'),
+            'TAUX_VF': Decimal('6'),
+            'SEUIL_TA_ONFPP': Decimal('30'),
+        }
+        tranches = [{'borne_inf': 0, 'borne_sup': None, 'taux': 0}]
+
+        sous_seuil = calculer_un_bareme_simulation(
+            Decimal('3600000'), Decimal('0'), tranches, constantes, nb_salaries=29
+        )
+        au_seuil = calculer_un_bareme_simulation(
+            Decimal('3600000'), Decimal('0'), tranches, constantes, nb_salaries=30
+        )
+
+        self.assertEqual(sous_seuil['ta'], 69000)
+        self.assertEqual(sous_seuil['onfpp'], 0)
+        self.assertEqual(au_seuil['ta'], 0)
+        self.assertEqual(au_seuil['onfpp'], 51750)
 
 
 class IRGCalculTests(SimpleTestCase):

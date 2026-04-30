@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("core", "0018_licence_licencelocale"),
+        ("core", "0017_regle_indemnite_conformite"),
         ("paie", "0129_regle_indemnite_conformite"),
     ]
 

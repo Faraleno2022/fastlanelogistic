@@ -352,14 +352,16 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0):
     constantes.setdefault('TAUX_VF',             Decimal('6'))
     constantes.setdefault('TAUX_TA',             Decimal('2'))
     constantes.setdefault('TAUX_ONFPP',          Decimal('1.5'))
+    constantes.setdefault('SEUIL_TA_ONFPP',      Decimal('30'))
 
     brut = _arrondir(_d(brut))
     plancher     = constantes['PLANCHER_CNSS']
     plafond      = constantes['PLAFOND_CNSS']
     taux_cnss_pat = constantes['TAUX_CNSS_EMPLOYEUR']
     taux_vf       = constantes['TAUX_VF']
-    libelle_ta    = 'ONFPP' if nb_salaries >= 25 else 'TA'
-    taux_ta       = constantes['TAUX_ONFPP'] if nb_salaries >= 25 else constantes['TAUX_TA']
+    seuil_ta_onfpp = int(constantes['SEUIL_TA_ONFPP'])
+    libelle_ta    = 'ONFPP' if nb_salaries >= seuil_ta_onfpp else 'TA'
+    taux_ta       = constantes['TAUX_ONFPP'] if nb_salaries >= seuil_ta_onfpp else constantes['TAUX_TA']
 
     seuil = _arrondir(plancher * Decimal('0.10'))
     if brut < seuil:
@@ -400,7 +402,7 @@ def cout_total_vers_brut(
     Paramètres
     ----------
     cout_total : montant total que l'entreprise paie pour l'employé
-    nb_salaries : nombre de salariés (>= 25 → ONFPP 1.5%, sinon TA 2%)
+    nb_salaries : nombre de salariés (>= 30 -> ONFPP 1.5%, sinon TA 2%)
 
     Retourne
     --------
@@ -424,13 +426,15 @@ def cout_total_vers_brut(
     constantes.setdefault('TAUX_VF',           Decimal('6'))
     constantes.setdefault('TAUX_TA',           Decimal('2'))
     constantes.setdefault('TAUX_ONFPP',        Decimal('1.5'))
+    constantes.setdefault('SEUIL_TA_ONFPP',    Decimal('30'))
 
     plancher     = constantes['PLANCHER_CNSS']
     plafond      = constantes['PLAFOND_CNSS']
     taux_cnss_pat = constantes['TAUX_CNSS_EMPLOYEUR']
     taux_vf       = constantes['TAUX_VF']
-    taux_ta_onfpp = constantes['TAUX_ONFPP'] if nb_salaries >= 25 else constantes['TAUX_TA']
-    libelle_ta    = 'ONFPP' if nb_salaries >= 25 else 'TA'
+    seuil_ta_onfpp = int(constantes['SEUIL_TA_ONFPP'])
+    taux_ta_onfpp = constantes['TAUX_ONFPP'] if nb_salaries >= seuil_ta_onfpp else constantes['TAUX_TA']
+    libelle_ta    = 'ONFPP' if nb_salaries >= seuil_ta_onfpp else 'TA'
 
     def _charges_pat(brut):
         seuil = _arrondir(plancher * Decimal('0.10'))

@@ -80,6 +80,7 @@ def _calcul_rapport(bulletins_qs):
         net=Sum('net_a_payer'),
         vf=Sum('versement_forfaitaire'),
         ta=Sum('taxe_apprentissage'),
+        onfpp=Sum('contribution_onfpp'),
     )
     nb = agg['nb'] or 0
     brut = agg['brut'] or Decimal('0')
@@ -89,7 +90,8 @@ def _calcul_rapport(bulletins_qs):
     net = agg['net'] or Decimal('0')
     vf = agg['vf'] or Decimal('0')
     ta = agg['ta'] or Decimal('0')
-    charges_totales = cnss_sal + cnss_emp + rts + vf + ta
+    onfpp = agg['onfpp'] or Decimal('0')
+    charges_totales = cnss_sal + cnss_emp + rts + vf + ta + onfpp
     ratio_charges = (charges_totales / brut * 100) if brut else Decimal('0')
     cout_moyen = (brut / nb) if nb else Decimal('0')
     return {
@@ -101,10 +103,21 @@ def _calcul_rapport(bulletins_qs):
         'net': net,
         'vf': vf,
         'ta': ta,
+        'onfpp': onfpp,
         'charges_totales': charges_totales,
         'ratio_charges': ratio_charges,
         'cout_moyen': cout_moyen,
     }
+
+
+def _charges_patronales_bulletin(bulletin):
+    """Total des charges patronales stockees sur un bulletin."""
+    return (
+        (bulletin.cnss_employeur or Decimal('0')) +
+        (bulletin.versement_forfaitaire or Decimal('0')) +
+        (bulletin.taxe_apprentissage or Decimal('0')) +
+        (bulletin.contribution_onfpp or Decimal('0'))
+    )
 
 
 @login_required
@@ -420,6 +433,11 @@ def rapport_masse_salariale_pdf(request):
         ['Masse salariale brute', f"{indicateurs['brut']:,.0f} GNF"],
         ['CNSS salarié total', f"{indicateurs['cnss_sal']:,.0f} GNF"],
         ['RTS total', f"{indicateurs['rts']:,.0f} GNF"],
+        ['CNSS patronal total', f"{indicateurs['cnss_emp']:,.0f} GNF"],
+        ['Versement forfaitaire total', f"{indicateurs['vf']:,.0f} GNF"],
+        ['Taxe apprentissage total', f"{indicateurs['ta']:,.0f} GNF"],
+        ['ONFPP total', f"{indicateurs['onfpp']:,.0f} GNF"],
+        ['Total charges sociales et fiscales', f"{indicateurs['charges_totales']:,.0f} GNF"],
         ['Masse salariale nette', f"{indicateurs['net']:,.0f} GNF"],
         ['Coût moyen / employé', f"{indicateurs['cout_moyen']:,.0f} GNF"],
         ['Ratio charges / brut', f"{indicateurs['ratio_charges']:.1f}%"],
@@ -1773,10 +1791,7 @@ def recapitulatif_entreprise(request):
         cnss_emp = b.cnss_employe or Decimal('0')
         rts_val = b.irg or Decimal('0')
         net_val = b.net_a_payer or Decimal('0')
-        cnss_employeur = b.cnss_employeur or Decimal('0')
-        vf = b.versement_forfaitaire or Decimal('0')
-        ta = b.taxe_apprentissage or Decimal('0')
-        charges_pat = cnss_employeur + vf + ta
+        charges_pat = _charges_patronales_bulletin(b)
 
         # Calculer le scénario sans optimisation (0% indemnités)
         ref = calculer_un_bareme(brut, Decimal('0'), tranches, constantes, nb_salaries)
@@ -1891,7 +1906,7 @@ def recapitulatif_entreprise_pdf(request):
         rts_val = int(b.irg or 0)
         net_val = int(b.net_a_payer or 0)
         cnss_emp = int(b.cnss_employe or 0)
-        charges = int((b.cnss_employeur or 0) + (b.versement_forfaitaire or 0) + (b.taxe_apprentissage or 0))
+        charges = int(_charges_patronales_bulletin(b))
 
         ref = calculer_un_bareme(Decimal(str(brut)), Decimal('0'), tranches, constantes, nb_salaries)
         gain = ref['rts'] - rts_val

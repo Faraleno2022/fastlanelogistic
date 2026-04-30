@@ -163,7 +163,7 @@
                         <li><strong>CNSS:</strong> 5% employé, 18% employeur (plancher 550K, plafond 2,5M)</li>
                         <li><strong>RTS:</strong> Barème progressif (0% à 20%)</li>
                         <li><strong>VF:</strong> 6% de la base VF/ONFPP</li>
-                        <li><strong>TA/ONFPP:</strong> Mutuellement exclusifs (&lt;25 salariés = TA 2%, &ge;25 = ONFPP 1,5%)</li>
+                        <li><strong>TA/ONFPP:</strong> Mutuellement exclusifs (&lt;{{ resultat.seuil_ta_onfpp|default:30 }} salariés = TA 2%, &ge;{{ resultat.seuil_ta_onfpp|default:30 }} = ONFPP 1,5%)</li>
                         <li><strong>Primes exonérées CNSS:</strong> Transport, logement, cherté de vie</li>
                         <li><strong>Indemnités:</strong> Plafond 25% du brut</li>
                         <li><strong>Rappels/Manquements:</strong> Hors base (non soumis CNSS, RTS, VF, TA, ONFPP)</li>
@@ -343,13 +343,13 @@
                             </tr>
                             {% if resultat.ta > 0 %}
                             <tr>
-                                <td>Taxe d'Apprentissage TA ({{ resultat.taux_ta }}%) <span class="badge bg-secondary">&lt;25 salariés</span></td>
+                                <td>Taxe d'Apprentissage TA ({{ resultat.taux_ta }}%) <span class="badge bg-secondary">&lt;{{ resultat.seuil_ta_onfpp|default:30 }} salariés</span></td>
                                 <td class="text-end">{{ resultat.ta|floatformat:0|intcomma }} GNF</td>
                             </tr>
                             {% endif %}
                             {% if resultat.onfpp > 0 %}
                             <tr>
-                                <td>Contribution ONFPP ({{ resultat.taux_onfpp }}%) <span class="badge bg-secondary">&ge;25 salariés</span></td>
+                                <td>Contribution ONFPP ({{ resultat.taux_onfpp }}%) <span class="badge bg-secondary">&ge;{{ resultat.seuil_ta_onfpp|default:30 }} salariés</span></td>
                                 <td class="text-end">{{ resultat.onfpp|floatformat:0|intcomma }} GNF</td>
                             </tr>
                             {% endif %}

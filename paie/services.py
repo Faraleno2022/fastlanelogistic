@@ -1051,12 +1051,12 @@ class MoteurCalculPaie:
         )
 
         # TA et ONFPP sont mutuellement exclusifs selon le nombre de salariés:
-        # - Moins de 25 salariés: TA (2%) sur la base VF/ONFPP
-        # - 25 salariés ou plus: ONFPP (1,5%) sur la base VF/ONFPP
+        # - Moins de 30 salariés: TA (2%) sur la base VF/ONFPP
+        # - 30 salariés ou plus: ONFPP (1,5%) sur la base VF/ONFPP
         # Les taux sont FIXES par la loi guinéenne, non configurables.
         TAUX_TA_LEGAL = Decimal('2.00')       # Taxe d'Apprentissage: 2% (loi)
         TAUX_ONFPP_LEGAL = Decimal('1.50')    # ONFPP: 1,5% (loi)
-        seuil_ta_onfpp = int(self.constantes.get('SEUIL_TA_ONFPP', Decimal('25')))
+        seuil_ta_onfpp = int(self.constantes.get('SEUIL_TA_ONFPP', Decimal('30')))
         if self.nb_salaries < seuil_ta_onfpp:
             self.montants['base_ta'] = base_vf_nette
             self.montants['taux_ta'] = TAUX_TA_LEGAL
