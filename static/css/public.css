@@ -1447,6 +1447,31 @@ body.public-site {
 }
 
 /* ==========================================================
+   BANNIERE IMAGE PAGE D'ACCUEIL
+   ========================================================== */
+.home-cover {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  line-height: 0;
+}
+.home-cover-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  object-fit: cover;
+  object-position: center;
+}
+@media (min-width: 992px) {
+  .home-cover-img { max-height: 460px; }
+}
+@media (max-width: 575px) {
+  .home-cover-img { max-height: 240px; }
+}
+
+/* ==========================================================
    LANDING PAGE APPLICATION FASTLANE
    ========================================================== */
 .landing-hero {
