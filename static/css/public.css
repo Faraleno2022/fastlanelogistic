@@ -2160,3 +2160,144 @@ body.public-site {
     min-height: 300px;
   }
 }
+
+/* ==========================================================
+   RESPONSIVE GLOBAL POLISH (toutes pages publiques)
+   ========================================================== */
+
+/* Safety filets */
+.public-site img,
+.public-site video,
+.public-site iframe {
+  max-width: 100%;
+  height: auto;
+}
+.public-site .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.public-site pre,
+.public-site code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.public-site h1,
+.public-site h2,
+.public-site h3,
+.public-site .section-title,
+.public-site .page-cover-title {
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* ===== Tablette (≤ 991.98px) ===== */
+@media (max-width: 991.98px) {
+  .section-padded { padding: 3.5rem 0; }
+  .public-site .container { padding-left: 1rem; padding-right: 1rem; }
+
+  .section-title { font-size: clamp(1.5rem, 4.5vw, 2.2rem); }
+  .page-cover-title { font-size: clamp(1.7rem, 5vw, 2.4rem); }
+  .page-cover-subtitle { font-size: 1rem; }
+
+  /* À propos / Qui sommes-nous */
+  .apropos-intro .row { row-gap: 2rem !important; }
+  .apropos-gallery { display: grid; gap: 1rem; }
+  .apropos-gallery .office-photo img { width: 100%; max-height: 320px; object-fit: cover; }
+
+  /* Bannière home */
+  .home-cover-img { max-height: 320px; }
+
+  /* Cartes modules */
+  .landing-module-card { padding: 1.5rem; }
+}
+
+/* ===== Mobile (≤ 767.98px) ===== */
+@media (max-width: 767.98px) {
+  .section-padded { padding: 2.5rem 0; }
+  .public-site .container { padding-left: .9rem; padding-right: .9rem; }
+
+  .section-title { font-size: clamp(1.4rem, 6vw, 1.9rem); }
+  .section-kicker { font-size: .72rem; padding-left: 1.6rem; }
+  .section-kicker::before { width: 18px; }
+
+  /* Boutons larges sur mobile */
+  .apropos-intro .btn,
+  .why-choose-card .btn,
+  .landing-final-cta-light .btn { width: 100%; }
+  .text-lg-end .btn + .btn { margin-left: 0 !important; margin-top: .5rem; }
+
+  /* Lignes de contact en colonne */
+  .landing-contact-lines { flex-direction: column; align-items: stretch; }
+  .landing-contact-lines span { justify-content: flex-start; }
+
+  /* Cartes camions / flotte */
+  .truck-premium { padding: 1.2rem; }
+  .truck-visual-premium i { font-size: 2.5rem; }
+
+  /* Bannières internes (À propos, Contact, AO, Events) */
+  .page-cover-banner--hero .page-cover-banner-img {
+    max-height: 200px;
+    min-height: 160px;
+  }
+  .page-cover-banner-content { padding: 0 0 1rem 0; }
+
+  /* Office photos plus compactes */
+  .office-photo img { max-height: 240px; }
+
+  /* Pourquoi nous choisir : empilement vertical */
+  .why-choose-card { max-width: 520px; margin: 0 auto; }
+
+  /* Reasons / cartes raisons */
+  .reason-card { padding: 1.5rem; }
+  .reason-number { font-size: 2.2rem; top: .9rem; right: 1.1rem; }
+
+  /* Image stack */
+  .landing-image-stack { max-width: 480px; margin: 0 auto; }
+}
+
+/* ===== Petit mobile (≤ 575.98px) ===== */
+@media (max-width: 575.98px) {
+  .section-padded { padding: 2rem 0; }
+
+  .section-title { font-size: 1.35rem; line-height: 1.25; }
+  .public-site .lead { font-size: 1rem; }
+  .home-cover-img { max-height: 200px; }
+
+  /* Logo navbar plus compact */
+  .public-navbar .navbar-brand img { max-height: 36px !important; }
+  .public-navbar { padding-top: .35rem; padding-bottom: .35rem; }
+
+  /* Photos bureau */
+  .office-photo img { max-height: 200px; }
+  .office-photo-caption { font-size: .85rem; padding: .55rem .75rem; }
+
+  /* Module cards */
+  .landing-module-card h3 { font-size: 1.05rem; }
+  .landing-module-card p { font-size: .92rem; }
+  .module-icon { width: 48px; height: 48px; font-size: 1.4rem; }
+
+  /* Why choose */
+  .why-choose-tag { font-size: .7rem; padding: .3rem .55rem; }
+  .why-choose-body h3 { font-size: 1.05rem; }
+  .why-choose-body p { font-size: .9rem; }
+
+  /* AO / Events compacts */
+  .ao-card { padding: 1.2rem; }
+  .ao-title { font-size: 1rem; }
+  .event-card .event-body { padding: 1rem; }
+
+  /* Footer wrap */
+  footer .row { row-gap: 1.5rem !important; }
+
+  /* Force la pile pour les éléments flex en ligne */
+  .d-flex.flex-wrap.justify-content-between { gap: .75rem; }
+}
+
+/* ===== Très petit mobile (≤ 380px) ===== */
+@media (max-width: 380px) {
+  .section-title { font-size: 1.2rem; }
+  .home-cover-img { max-height: 170px; }
+  .btn-lg { padding: .55rem 1rem; font-size: .95rem; }
+  .public-navbar .navbar-brand { font-size: 1rem; }
+}
+
+/* Évite tout débordement horizontal sur mobile */
+html, body { overflow-x: hidden; }
+
