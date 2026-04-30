@@ -1447,6 +1447,86 @@ body.public-site {
 }
 
 /* ==========================================================
+   POURQUOI NOUS CHOISIR — cartes avec image
+   ========================================================== */
+.why-choose-section {
+  background: var(--fl-subtle, #f5f7fb);
+}
+.why-choose-card {
+  background: #fff;
+  border-radius: var(--fl-radius, 14px);
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 22px rgba(15, 44, 71, .08);
+  border: 1px solid var(--fl-border, #e6ebf2);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.why-choose-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(15, 44, 71, .14);
+}
+.why-choose-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #0f2c47;
+}
+.why-choose-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform .5s ease;
+}
+.why-choose-card:hover .why-choose-media img {
+  transform: scale(1.05);
+}
+.why-choose-tag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .4rem .75rem;
+  background: var(--fl-accent, #E63946);
+  color: #fff;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  box-shadow: 0 4px 12px rgba(230, 57, 70, .35);
+}
+.why-choose-tag i { font-size: .9rem; }
+.why-choose-body {
+  padding: 1.5rem 1.4rem 1.6rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.why-choose-body h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--fl-navy, #0F2C47);
+  margin-bottom: .65rem;
+  line-height: 1.3;
+}
+.why-choose-body p {
+  font-size: .95rem;
+  line-height: 1.6;
+}
+@media (max-width: 575px) {
+  .why-choose-media { aspect-ratio: 16 / 9; }
+  .why-choose-body { padding: 1.2rem 1.1rem 1.3rem; }
+  .why-choose-body h3 { font-size: 1.1rem; }
+}
+
+/* ==========================================================
    BANNIERE IMAGE PAGE D'ACCUEIL
    ========================================================== */
 .home-cover {
