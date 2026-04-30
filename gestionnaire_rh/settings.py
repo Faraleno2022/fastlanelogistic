@@ -141,17 +141,22 @@ DB_ENGINE = config('DB_ENGINE', default='sqlite')
 if DB_ENGINE == 'postgresql':
     DATABASES = {
         'default': {
+        'CONN_MAX_AGE': 0,
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': config('DB_NAME', default='gestionnaire_rh_guinee'),
             'USER': config('DB_USER', default='postgres'),
             'PASSWORD': config('DB_PASSWORD', default=''),
             'HOST': config('DB_HOST', default='localhost'),
             'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
         }
     }
 elif DB_ENGINE == 'mysql':
     DATABASES = {
         'default': {
+        'CONN_MAX_AGE': 0,
             'ENGINE': 'django.db.backends.mysql',
             'NAME': config('DB_NAME'),
             'USER': config('DB_USER'),
@@ -167,6 +172,7 @@ elif DB_ENGINE == 'mysql':
 else:
     DATABASES = {
         'default': {
+        'CONN_MAX_AGE': 0,
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
             'OPTIONS': {
@@ -436,9 +442,9 @@ ALLOWED_UPLOAD_EXTENSIONS = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx']
 # Database Performance & Security
 if PYINSTALLER_MODE:
     # Mode offline : connexion persistante (un seul utilisateur local)
-    DATABASES['default']['CONN_MAX_AGE'] = None  # Connexion persistante
+    DATABASES['default']['CONN_MAX_AGE'] = 0  # Pas de connexion persistante
 elif not DEBUG:
-    DATABASES['default']['CONN_MAX_AGE'] = 600  # Connexions persistantes 10 min
+    DATABASES['default']['CONN_MAX_AGE'] = 0  # Pas de connexion persistante
     DATABASES['default']['OPTIONS'] = {
         'connect_timeout': 10,
     }
@@ -561,6 +567,7 @@ if PYINSTALLER_MODE:
 # Cache Configuration
 CACHES = {
     'default': {
+
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'gestionnaire-rh-cache',
         'TIMEOUT': 3600,  # 1 heure par défaut
@@ -571,10 +578,11 @@ CACHES = {
     }
 }
 
-# Pour production avec Redis (décommenter si Redis disponible)
+
 # if not DEBUG:
-#     CACHES = {
+
 #         'default': {
+
 #             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
 #             'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
 #             'TIMEOUT': 3600,
