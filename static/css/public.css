@@ -100,6 +100,42 @@ body.public-site {
   font-weight: 600;
 }
 
+/* === Compacification navbar pour ecrans 992-1199px (lg) === */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .public-navbar .navbar-brand span { font-size: 1rem; }
+  .public-navbar .navbar-brand img { height: 32px !important; }
+  .public-navbar .nav-link {
+    padding: .45rem .65rem !important;
+    font-size: .88rem;
+    margin: 0 1px;
+  }
+  .public-navbar .nav-link.nav-cta {
+    padding: .45rem .85rem !important;
+    margin-left: .35rem;
+  }
+}
+
+/* === Navbar mobile/tablette : menu deroulant propre === */
+@media (max-width: 991.98px) {
+  .public-navbar .navbar-collapse {
+    background: rgba(15, 44, 71, .98);
+    margin-top: .5rem;
+    padding: .75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .public-navbar .navbar-nav { gap: .15rem; }
+  .public-navbar .nav-link {
+    padding: .65rem .9rem !important;
+    margin: 0;
+  }
+  .public-navbar .nav-link.nav-cta {
+    margin-left: 0;
+    margin-top: .25rem;
+    text-align: center;
+  }
+}
+
 /* --------- Boutons --------- */
 .btn-accent {
   background: var(--fl-accent);
