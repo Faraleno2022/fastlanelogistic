@@ -2190,7 +2190,6 @@ body.public-site {
 /* ===== Tablette (≤ 991.98px) ===== */
 @media (max-width: 991.98px) {
   .section-padded { padding: 3.5rem 0; }
-  .public-site .container { padding-left: 1rem; padding-right: 1rem; }
 
   .section-title { font-size: clamp(1.5rem, 4.5vw, 2.2rem); }
   .page-cover-title { font-size: clamp(1.7rem, 5vw, 2.4rem); }
@@ -2211,7 +2210,6 @@ body.public-site {
 /* ===== Mobile (≤ 767.98px) ===== */
 @media (max-width: 767.98px) {
   .section-padded { padding: 2.5rem 0; }
-  .public-site .container { padding-left: .9rem; padding-right: .9rem; }
 
   .section-title { font-size: clamp(1.4rem, 6vw, 1.9rem); }
   .section-kicker { font-size: .72rem; padding-left: 1.6rem; }
@@ -2260,10 +2258,6 @@ body.public-site {
   .public-site .lead { font-size: 1rem; }
   .home-cover-img { max-height: 200px; }
 
-  /* Logo navbar plus compact */
-  .public-navbar .navbar-brand img { max-height: 36px !important; }
-  .public-navbar { padding-top: .35rem; padding-bottom: .35rem; }
-
   /* Photos bureau */
   .office-photo img { max-height: 200px; }
   .office-photo-caption { font-size: .85rem; padding: .55rem .75rem; }
@@ -2295,7 +2289,6 @@ body.public-site {
   .section-title { font-size: 1.2rem; }
   .home-cover-img { max-height: 170px; }
   .btn-lg { padding: .55rem 1rem; font-size: .95rem; }
-  .public-navbar .navbar-brand { font-size: 1rem; }
 }
 
 /* Évite tout débordement horizontal sur mobile */
