@@ -55,13 +55,17 @@ body.public-site {
   background: rgba(15, 44, 71, .99);
   box-shadow: 0 8px 24px rgba(15,44,71,.18);
 }
-/* Spacer pour compenser la navbar fixe */
+/* Spacer pour compenser la navbar fixe (collé au plus près) */
 .public-navbar-spacer {
-  height: 60px;
+  height: 48px;
 }
 @media (max-width: 991.98px) {
-  .public-navbar-spacer { height: 56px; }
+  .public-navbar-spacer { height: 46px; }
 }
+/* Premiere section juste apres la navbar : pas de marge superieure */
+.public-navbar-spacer + section,
+.public-navbar-spacer + .home-cover { margin-top: 0; }
+.home-cover { margin-top: 0; padding-top: 0; }
 /* Bouton CTA "Nous contacter" dans la navbar */
 .public-navbar .nav-link.nav-cta {
   background: var(--fl-accent);
