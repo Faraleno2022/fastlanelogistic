@@ -1975,10 +1975,17 @@ body.public-site {
 /* CTA final variante claire */
 .landing-final-cta-light { background: #fff; }
 .landing-final-cta-light .section-title { color: var(--fl-navy, #0f2c47); }
-.landing-contact-lines-light span {
+.landing-contact-lines.landing-contact-lines-light span {
   background: #f6f8fb;
-  color: var(--fl-text, #1f2937);
+  color: #000 !important;
   border: 1px solid var(--fl-border, #e5e7eb);
+}
+.landing-contact-lines.landing-contact-lines-light a {
+  color: #000 !important;
+  text-decoration: none;
+}
+.landing-contact-lines.landing-contact-lines-light i {
+  color: var(--fl-accent);
 }
 .landing-final-cta {
   margin-top: 0;
