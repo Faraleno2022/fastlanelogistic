@@ -17,6 +17,7 @@ from .models import (
     AccidentTravail, VisiteMedicale
 )
 from .forms import EmployeForm, ContratForm, EvaluationEmployeForm, SanctionDisciplinaireForm
+from .services_contrats import PremierBulletinManquant, generer_contrat_employe_docx
 from core.views import log_activity
 
 
@@ -1032,6 +1033,39 @@ def telecharger_modele_contrat_cdi(request):
         open(chemin, 'rb'),
         as_attachment=True,
         filename='Contrat_CDI_GestionRH_v2.docx',
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    )
+
+
+@reauth_required
+@login_required
+def generer_contrat_employe(request, contrat_id):
+    """Generer un contrat Word personnalise depuis les donnees RH et paie."""
+    contrat = get_object_or_404(
+        ContratEmploye.objects.select_related(
+            'employe',
+            'employe__entreprise',
+            'employe__poste',
+            'employe__service',
+            'employe__etablissement',
+        ),
+        pk=contrat_id,
+        employe__entreprise=request.user.entreprise,
+    )
+    try:
+        fichier = generer_contrat_employe_docx(contrat)
+    except PremierBulletinManquant as exc:
+        messages.warning(request, str(exc))
+        return redirect('employes:detail', pk=contrat.employe_id)
+    nom_fichier = (
+        f"Contrat_{contrat.type_contrat}_{contrat.employe.matricule}_{contrat.num_contrat}.docx"
+        .replace(' ', '_')
+        .replace('/', '-')
+    )
+    return FileResponse(
+        fichier,
+        as_attachment=True,
+        filename=nom_fichier,
         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     )
 

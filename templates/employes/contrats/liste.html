@@ -108,6 +108,9 @@
                         <a href="{% url 'employes:detail' contrat.employe.pk %}" class="btn btn-sm btn-outline-primary" title="Voir employé">
                             <i class="bi bi-eye"></i>
                         </a>
+                        <a href="{% url 'employes:generer_contrat_employe' contrat.pk %}" class="btn btn-sm btn-outline-success" title="Générer le contrat après premier bulletin">
+                            <i class="bi bi-file-earmark-word"></i>
+                        </a>
                     </td>
                 </tr>
                 {% empty %}
