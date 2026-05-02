@@ -198,7 +198,7 @@ def calculer_un_bareme(
       base_rts = brut − CNSS − exon + depasse
       RTS    = calcul progressif (ROUND_HALF_UP sur montants partiels)
       net    = brut − CNSS − RTS
-      VF/TA = base VF nette × taux  ;  ONFPP = brut × 1,5%  (>= seuil)
+      VF/TA/ONFPP = base VF nette × taux (TA et ONFPP mutuellement exclusifs)
     """
     brut = Decimal(str(brut))
     total_indemnites = Decimal(str(max(Decimal('0'), total_indemnites)))
@@ -249,14 +249,14 @@ def calculer_un_bareme(
     deduction_vf = _half_up(min(brut, plafond_cnss) * taux_vf / Decimal('100'))
     base_vf = max(Decimal('0'), brut - Decimal(str(deduction_vf)))
     vf = _half_up(base_vf * taux_vf / Decimal('100'))
-    # Seuil TA/ONFPP : < seuil -> TA 2% sur base VF nette, >= seuil -> ONFPP 1,5% sur brut (CGI Guinee)
+    # Seuil TA/ONFPP : < seuil -> TA 2%, >= seuil -> ONFPP 1,5% (tous deux sur base VF nette, CGI Guinee)
     seuil_ta_onfpp = int(constantes.get('SEUIL_TA_ONFPP', Decimal('30')))
     if nb_salaries < seuil_ta_onfpp:
         ta    = _half_up(base_vf * TAUX_TA_LEGAL / Decimal('100'))
         onfpp = 0
     else:
         ta    = 0
-        onfpp = _half_up(brut * TAUX_ONFPP_LEGAL / Decimal('100'))
+        onfpp = _half_up(base_vf * TAUX_ONFPP_LEGAL / Decimal('100'))
 
     return {
         'brut':                  int(brut),

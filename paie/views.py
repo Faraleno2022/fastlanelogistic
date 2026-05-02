@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST, require_GET
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, date
 import json
+import re
 
 
 def parse_montant(valeur):
@@ -1097,22 +1098,19 @@ def telecharger_bulletin_pdf(request, pk):
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
         p.setFont(_FI, 6)
         p.setFillColor(colors.HexColor("#666666"))
-        if onfpp > 0:
-            note_base = f"Base VF = {base_vf_f:,.0f} GNF"
-            charge_note = f"ONFPP = Brut {brut_gnf:,.0f} × 1,5%"
-        elif abs(base_vf_f - brut_gnf) < 1:
+        if abs(base_vf_f - brut_gnf) < 1:
             note_base = f"Base VF/{ta_ou_onfpp} = Brut {base_vf_f:,.0f} GNF"
-            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
+            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
         else:
             deduction = brut_gnf - base_vf_f
             note_base = (
                 f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} − déduction CGI {deduction:,.0f} "
-                f"(min(brut; 2 500 000) × 6%) = {base_vf_f:,.0f} GNF"
+                f"(min(brut; 2 500 000) × 6 %) = {base_vf_f:,.0f} GNF"
             )
-            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
+            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
         p.drawString(1.5*cm, y,
-            f"{note_base}  |  VF = {base_vf_f:,.0f} × 6%  |  {charge_note}"
-            .replace(",", "\u00A0"))
+            re.sub(r"(\d),(?=\d{3}\b)", "\\1\u00A0",
+                   f"{note_base}  |  VF = {base_vf_f:,.0f} × 6 %  |  {charge_note}"))
         y -= 0.20*cm
         # Référence légale (justification en cas de contrôle fiscal)
         p.setFont(_FI, 5.5)
@@ -1730,22 +1728,19 @@ def telecharger_bulletin_public(request, token):
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
         p.setFont(_FI, 6)
         p.setFillColor(colors.HexColor("#666666"))
-        if onfpp > 0:
-            note_base = f"Base VF = {base_vf_f:,.0f} GNF"
-            charge_note = f"ONFPP = Brut {brut_gnf:,.0f} × 1,5%"
-        elif abs(base_vf_f - brut_gnf) < 1:
+        if abs(base_vf_f - brut_gnf) < 1:
             note_base = f"Base VF/{ta_ou_onfpp} = Brut {base_vf_f:,.0f} GNF"
-            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
+            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
         else:
             deduction = brut_gnf - base_vf_f
             note_base = (
                 f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} − déduction CGI {deduction:,.0f} "
-                f"(min(brut; 2 500 000) × 6%) = {base_vf_f:,.0f} GNF"
+                f"(min(brut; 2 500 000) × 6 %) = {base_vf_f:,.0f} GNF"
             )
-            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
+            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
         p.drawString(1.5*cm, y,
-            f"{note_base}  |  VF = {base_vf_f:,.0f} × 6%  |  {charge_note}"
-            .replace(",", "\u00A0"))
+            re.sub(r"(\d),(?=\d{3}\b)", "\\1\u00A0",
+                   f"{note_base}  |  VF = {base_vf_f:,.0f} × 6 %  |  {charge_note}"))
         y -= 0.20*cm
         # Référence légale (justification en cas de contrôle fiscal)
         p.setFont(_FI, 5.5)
@@ -3243,7 +3238,7 @@ def simulation_paie(request):
             onfpp = Decimal('0')
         else:
             ta = Decimal('0')
-            onfpp = (salaire_brut * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
+            onfpp = (base_vf * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
         
         # Totaux (rappels et retenues trop-perçu hors base)
         total_retenues = cnss_employe + rts

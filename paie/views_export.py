@@ -521,7 +521,7 @@ def export_dmu_excel(request):
     recap_data = [
         ["RTS (Retenue sur Traitements et Salaires)", float(data['masse_salariale']), "Barème", float(data['total_rts'])],
         ["VF (Versement Forfaitaire)", float(data['total_base_vf']), f"{data['taux_vf']}%", float(data['total_vf'])],
-        ["ONFPP", float(data['masse_salariale']), f"{data['taux_onfpp']}%", float(data['total_onfpp'])],
+        ["ONFPP", float(data['total_base_vf']), f"{data['taux_onfpp']}%", float(data['total_onfpp'])],
         ["TA (Taxe d'Apprentissage)", float(data['total_base_vf']), f"{data['taux_ta']}%", float(data['total_ta'])],
     ]
     
