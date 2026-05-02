@@ -360,8 +360,8 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0):
     taux_cnss_pat = constantes['TAUX_CNSS_EMPLOYEUR']
     taux_vf       = constantes['TAUX_VF']
     seuil_ta_onfpp = int(constantes['SEUIL_TA_ONFPP'])
-    libelle_ta    = 'ONFPP' if nb_salaries >= seuil_ta_onfpp else 'TA'
-    taux_ta       = constantes['TAUX_ONFPP'] if nb_salaries >= seuil_ta_onfpp else constantes['TAUX_TA']
+    onfpp_actif   = nb_salaries >= seuil_ta_onfpp
+    libelle_ta    = 'ONFPP' if onfpp_actif else 'TA'
 
     seuil = _arrondir(plancher * Decimal('0.10'))
     if brut < seuil:
@@ -373,7 +373,11 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0):
     deduction_vf = _arrondir(min(brut, plafond) * taux_vf / Decimal('100'))
     base_vf = max(Decimal('0'), brut - deduction_vf)
     vf = _arrondir(base_vf * taux_vf / Decimal('100'))
-    ta = _arrondir(base_vf * taux_ta / Decimal('100'))
+    # TA sur base VF nette ; ONFPP sur le brut (alignement moteur principal CGI Guinée)
+    if onfpp_actif:
+        ta = _arrondir(brut * constantes['TAUX_ONFPP'] / Decimal('100'))
+    else:
+        ta = _arrondir(base_vf * constantes['TAUX_TA'] / Decimal('100'))
     total = cnss_pat + vf + ta
 
     return {
@@ -433,8 +437,8 @@ def cout_total_vers_brut(
     taux_cnss_pat = constantes['TAUX_CNSS_EMPLOYEUR']
     taux_vf       = constantes['TAUX_VF']
     seuil_ta_onfpp = int(constantes['SEUIL_TA_ONFPP'])
-    taux_ta_onfpp = constantes['TAUX_ONFPP'] if nb_salaries >= seuil_ta_onfpp else constantes['TAUX_TA']
-    libelle_ta    = 'ONFPP' if nb_salaries >= seuil_ta_onfpp else 'TA'
+    onfpp_actif   = nb_salaries >= seuil_ta_onfpp
+    libelle_ta    = 'ONFPP' if onfpp_actif else 'TA'
 
     def _charges_pat(brut):
         seuil = _arrondir(plancher * Decimal('0.10'))
@@ -446,7 +450,11 @@ def cout_total_vers_brut(
         deduction_vf = _arrondir(min(brut, plafond) * taux_vf / Decimal('100'))
         base_vf = max(Decimal('0'), brut - deduction_vf)
         vf = _arrondir(base_vf * taux_vf / Decimal('100'))
-        ta = _arrondir(base_vf * taux_ta_onfpp / Decimal('100'))
+        # TA sur base VF nette ; ONFPP sur le brut (alignement moteur principal CGI Guinée)
+        if onfpp_actif:
+            ta = _arrondir(brut * constantes['TAUX_ONFPP'] / Decimal('100'))
+        else:
+            ta = _arrondir(base_vf * constantes['TAUX_TA'] / Decimal('100'))
         return cnss_pat, vf, ta
 
     def _cout(brut):
