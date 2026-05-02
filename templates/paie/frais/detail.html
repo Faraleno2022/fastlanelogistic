@@ -282,12 +282,26 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Catégorie *</label>
-                        <select class="form-select" name="categorie" required>
+                        <label class="form-label">Catégorie</label>
+                        <select class="form-select" name="categorie" id="categorieFraisSelect">
+                            <option value="">Saisir une nouvelle catégorie</option>
                             {% for cat in categories %}
                             <option value="{{ cat.id }}">{{ cat.libelle }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                    <div class="mb-3" id="nouvelleCategorieFraisBloc">
+                        <label class="form-label">Nouvelle catégorie</label>
+                        <input type="text" class="form-control" name="nouvelle_categorie" id="nouvelleCategorieFrais"
+                               maxlength="100" placeholder="Ex: Carburant, Parking, Internet">
+                        <div class="form-text">Renseigner ce champ crée la catégorie et l'utilise pour cette ligne.</div>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" name="nouvelle_categorie_justificatif_obligatoire"
+                                   id="nouvelleCategorieJustif" checked>
+                            <label class="form-check-label" for="nouvelleCategorieJustif">
+                                Justificatif obligatoire pour cette catégorie
+                            </label>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Date de la dépense *</label>
@@ -319,4 +333,25 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const select = document.getElementById('categorieFraisSelect');
+    const bloc = document.getElementById('nouvelleCategorieFraisBloc');
+    const input = document.getElementById('nouvelleCategorieFrais');
+
+    function toggleNouvelleCategorie() {
+        const saisieLibre = !select.value;
+        bloc.style.display = saisieLibre ? '' : 'none';
+        input.required = saisieLibre;
+        if (!saisieLibre) {
+            input.value = '';
+        }
+    }
+
+    if (select && bloc && input) {
+        select.addEventListener('change', toggleNouvelleCategorie);
+        toggleNouvelleCategorie();
+    }
+});
+</script>
 {% endblock %}

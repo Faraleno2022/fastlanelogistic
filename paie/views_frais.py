@@ -7,12 +7,51 @@ from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.http import JsonResponse
 from django.utils import timezone
+from django.utils.text import slugify
 from datetime import date
 from decimal import Decimal
 
 from .views import parse_montant
 from employes.models import Employe
 from .models_frais import CategoriesFrais, NoteFrais, LigneFrais, BaremeFrais
+
+
+def _normaliser_libelle_categorie(libelle):
+    """Nettoie un libelle saisi librement."""
+    return ' '.join((libelle or '').split())
+
+
+def _generer_code_categorie_frais(libelle):
+    """Genere un code unique de 20 caracteres max pour une categorie de frais."""
+    base = slugify(libelle).upper().replace('-', '_')[:20] or 'FRAIS'
+    code = base
+    suffixe = 1
+    while CategoriesFrais.objects.filter(code=code).exists():
+        suffixe += 1
+        suffixe_txt = f"_{suffixe}"
+        code = f"{base[:20 - len(suffixe_txt)]}{suffixe_txt}"
+    return code
+
+
+def _obtenir_ou_creer_categorie_frais(libelle, justificatif_obligatoire=True):
+    """Retourne une categorie existante par libelle ou en cree une nouvelle."""
+    libelle = _normaliser_libelle_categorie(libelle)
+    if not libelle:
+        return None
+
+    categorie = CategoriesFrais.objects.filter(libelle__iexact=libelle).first()
+    if categorie:
+        if not categorie.actif:
+            categorie.actif = True
+            categorie.save(update_fields=['actif'])
+        return categorie
+
+    return CategoriesFrais.objects.create(
+        code=_generer_code_categorie_frais(libelle),
+        libelle=libelle,
+        justificatif_obligatoire=justificatif_obligatoire,
+        actif=True,
+    )
 
 
 @login_required
@@ -110,7 +149,7 @@ def detail_note_frais(request, pk):
     )
     
     lignes = note.lignes.select_related('categorie').all()
-    categories = CategoriesFrais.objects.filter(actif=True)
+    categories = CategoriesFrais.objects.filter(actif=True).order_by('libelle')
     
     # Totaux par catégorie
     totaux_categories = lignes.values('categorie__libelle').annotate(
@@ -140,13 +179,24 @@ def ajouter_ligne_frais(request, pk):
     
     if request.method == 'POST':
         categorie_id = request.POST.get('categorie')
+        nouvelle_categorie = request.POST.get('nouvelle_categorie', '')
+        nouvelle_categorie_justif = request.POST.get('nouvelle_categorie_justificatif_obligatoire') == 'on'
         date_depense = request.POST.get('date_depense')
         description = request.POST.get('description')
         montant = request.POST.get('montant')
         numero_facture = request.POST.get('numero_facture', '')
         justificatif = request.FILES.get('justificatif')
-        
-        categorie = get_object_or_404(CategoriesFrais, pk=categorie_id)
+
+        if _normaliser_libelle_categorie(nouvelle_categorie):
+            categorie = _obtenir_ou_creer_categorie_frais(
+                nouvelle_categorie,
+                justificatif_obligatoire=nouvelle_categorie_justif,
+            )
+        elif categorie_id:
+            categorie = get_object_or_404(CategoriesFrais, pk=categorie_id, actif=True)
+        else:
+            messages.error(request, "Choisissez une catégorie ou saisissez une nouvelle catégorie.")
+            return redirect('paie:detail_note_frais', pk=pk)
         
         ligne = LigneFrais.objects.create(
             note_frais=note,
