@@ -99,6 +99,75 @@
     </div>
 </div>
 
+<!-- Base de donnees des participants formes au cabinet -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-database"></i> Base des attestations cabinet</h5>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#participantCabinetModal">
+                    <i class="bi bi-plus-circle"></i> Ajouter
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 h-100">
+                            <div class="text-muted small">Participants enregistres</div>
+                            <div class="h4 mb-0">{{ stats.participants_cabinet }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="text-muted small">
+                            Registre des etudiants et participants ayant suivi une formation au cabinet, avec le numero d'identite de leur attestation.
+                        </div>
+                    </div>
+                </div>
+
+                {% if participants_cabinet %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nom du participant</th>
+                                <th>Titre de la formation</th>
+                                <th>Date</th>
+                                <th>Numero attestation</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for participant in participants_cabinet %}
+                            <tr>
+                                <td class="fw-semibold">{{ participant.nom_participant }}</td>
+                                <td>{{ participant.titre_formation }}</td>
+                                <td>{{ participant.date_formation|date:"d/m/Y" }}</td>
+                                <td><span class="badge bg-secondary">{{ participant.numero_identite_attestation }}</span></td>
+                                <td class="text-end">
+                                    <form method="post" action="{% url 'formation:supprimer_participant_cabinet' participant.pk %}" class="d-inline"
+                                          onsubmit="return confirm('Supprimer ce participant de la base ?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-database fs-1 d-block mb-2"></i>
+                    Aucun participant cabinet enregistre.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Plan de Formation -->
 {% if plan_actuel %}
 <div class="row mb-4">
@@ -249,6 +318,48 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal participant cabinet -->
+<div class="modal fade" id="participantCabinetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'formation:home' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="ajouter_participant_cabinet">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter un participant cabinet</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nom du participant *</label>
+                        <input type="text" class="form-control" name="nom_participant" maxlength="200" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Titre de la formation *</label>
+                        <input type="text" class="form-control" name="titre_formation" maxlength="255" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date de la formation *</label>
+                        <input type="date" class="form-control" name="date_formation" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Numero d'identite de l'attestation *</label>
+                        <input type="text" class="form-control" name="numero_identite_attestation" maxlength="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observations</label>
+                        <textarea class="form-control" name="observations" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

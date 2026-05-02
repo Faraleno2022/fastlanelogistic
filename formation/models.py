@@ -84,6 +84,35 @@ class InscriptionFormationPublic(models.Model):
         return f"{self.prenom} {self.nom} - {self.formation.intitule}"
 
 
+class ParticipantFormationCabinet(models.Model):
+    """Registre des participants formes au cabinet avec attestation."""
+    entreprise = models.ForeignKey(
+        Entreprise,
+        on_delete=models.CASCADE,
+        related_name='participants_formations_cabinet'
+    )
+    nom_participant = models.CharField(max_length=200)
+    titre_formation = models.CharField(max_length=255)
+    date_formation = models.DateField()
+    numero_identite_attestation = models.CharField(max_length=100)
+    date_enregistrement = models.DateTimeField(auto_now_add=True)
+    observations = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'participants_formations_cabinet'
+        verbose_name = 'Participant formation cabinet'
+        verbose_name_plural = 'Participants formations cabinet'
+        ordering = ['-date_formation', 'nom_participant']
+        unique_together = ['entreprise', 'numero_identite_attestation']
+        indexes = [
+            models.Index(fields=['entreprise', 'date_formation'], name='idx_part_form_cab_date'),
+            models.Index(fields=['entreprise', 'numero_identite_attestation'], name='idx_part_form_cab_att'),
+        ]
+
+    def __str__(self):
+        return f"{self.nom_participant} - {self.titre_formation}"
+
+
 class SessionFormation(models.Model):
     """Sessions de formation planifiées"""
     STATUTS = (

@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import IntegrityError
 from django.db.models import Count, Sum, Avg, Q
 from django.utils import timezone
 from datetime import datetime, date
 import random
 import string
 
-from .models import CatalogueFormation, SessionFormation, InscriptionFormation, EvaluationFormation, PlanFormation, InscriptionFormationPublic
+from .models import CatalogueFormation, SessionFormation, InscriptionFormation, EvaluationFormation, PlanFormation, InscriptionFormationPublic, ParticipantFormationCabinet
 from employes.models import Employe
 from core.decorators import entreprise_active_required
 
@@ -17,6 +18,33 @@ from core.decorators import entreprise_active_required
 def formation_home(request):
     """Vue d'accueil du module formation"""
     entreprise = request.user.entreprise
+
+    if request.method == 'POST' and request.POST.get('action') == 'ajouter_participant_cabinet':
+        nom_participant = (request.POST.get('nom_participant') or '').strip()
+        titre_formation = (request.POST.get('titre_formation') or '').strip()
+        date_formation = request.POST.get('date_formation')
+        numero_attestation = (request.POST.get('numero_identite_attestation') or '').strip()
+        observations = (request.POST.get('observations') or '').strip()
+
+        if not all([nom_participant, titre_formation, date_formation, numero_attestation]):
+            messages.error(request, "Nom, formation, date et numero d'attestation sont obligatoires.")
+            return redirect('formation:home')
+
+        try:
+            ParticipantFormationCabinet.objects.create(
+                entreprise=entreprise,
+                nom_participant=nom_participant,
+                titre_formation=titre_formation,
+                date_formation=date.fromisoformat(date_formation),
+                numero_identite_attestation=numero_attestation,
+                observations=observations,
+            )
+            messages.success(request, "Participant ajoute dans la base des attestations.")
+        except ValueError:
+            messages.error(request, "La date de formation est invalide.")
+        except IntegrityError:
+            messages.error(request, "Ce numero d'attestation existe deja dans la base.")
+        return redirect('formation:home')
 
     # Sessions agrégées en 1 requête au lieu de 2
     session_stats = SessionFormation.objects.filter(
@@ -35,6 +63,9 @@ def formation_home(request):
         'total_participants': InscriptionFormation.objects.filter(
             session__formation__entreprise=entreprise,
             statut__in=['inscrit', 'confirme', 'present']
+        ).count(),
+        'participants_cabinet': ParticipantFormationCabinet.objects.filter(
+            entreprise=entreprise
         ).count(),
     }
     
@@ -59,13 +90,33 @@ def formation_home(request):
         entreprise=request.user.entreprise,
         actif=True
     ).order_by('-nb_sessions')[:5]
+
+    participants_cabinet = ParticipantFormationCabinet.objects.filter(
+        entreprise=entreprise
+    ).order_by('-date_formation', 'nom_participant')
     
     return render(request, 'formation/home.html', {
         'stats': stats,
         'plan_actuel': plan_actuel,
         'prochaines_sessions': prochaines_sessions,
-        'formations_populaires': formations_populaires
+        'formations_populaires': formations_populaires,
+        'participants_cabinet': participants_cabinet,
     })
+
+
+@login_required
+@entreprise_active_required
+def supprimer_participant_cabinet(request, pk):
+    """Supprime une entree du registre cabinet."""
+    participant = get_object_or_404(
+        ParticipantFormationCabinet,
+        pk=pk,
+        entreprise=request.user.entreprise,
+    )
+    if request.method == 'POST':
+        participant.delete()
+        messages.success(request, "Participant supprime de la base des attestations.")
+    return redirect('formation:home')
 
 
 # ============= CATALOGUE =============

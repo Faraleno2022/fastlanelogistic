@@ -7,6 +7,7 @@ app_name = 'formation'
 urlpatterns = [
     # Accueil
     path('', views.formation_home, name='home'),
+    path('participants-cabinet/<int:pk>/supprimer/', views.supprimer_participant_cabinet, name='supprimer_participant_cabinet'),
     
     # Redirection ancienne URL
     path('list/', RedirectView.as_view(pattern_name='formation:catalogue', permanent=True)),
