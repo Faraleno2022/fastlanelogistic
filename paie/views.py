@@ -3072,6 +3072,16 @@ def simulation_paie(request):
             if const: seuil_ta_onfpp = int(const.valeur)
         except:
             pass
+
+        try:
+            config_paie = entreprise.config_paie
+            taux_cnss_employe = config_paie.taux_cnss_employe
+            taux_cnss_employeur = config_paie.taux_cnss_employeur
+            plancher_cnss = config_paie.plancher_cnss
+            plafond_cnss = config_paie.plafond_cnss
+            taux_vf = config_paie.taux_versement_forfaitaire
+        except Exception:
+            pass
         
         # Calcul CNSS avec vérification du seuil minimum
         # IMPORTANT: Base CNSS = Brut complet (pas de primes exonérées à soustraire)
@@ -3328,7 +3338,6 @@ def verifier_integrite_archive(request, pk):
 def config_paie_entreprise(request):
     """Configuration des paramètres de paie par entreprise (HS, Congés, CNSS)"""
     from .models import ConfigurationPaieEntreprise
-    from decimal import Decimal
     
     entreprise = request.user.entreprise
     config = ConfigurationPaieEntreprise.get_ou_creer(entreprise)
@@ -3338,55 +3347,93 @@ def config_paie_entreprise(request):
         
         if action == 'code_travail':
             config.appliquer_mode_code_travail()
+            config.modifie_par = request.user
+            config.save(update_fields=[
+                'mode_heures_sup', 'taux_hs_4_premieres', 'taux_hs_au_dela',
+                'taux_hs_nuit', 'mode_conges', 'jours_conges_par_mois',
+                'modifie_par', 'date_modification',
+            ])
             messages.success(request, 'Configuration Code du Travail appliquée.')
         elif action == 'convention':
             config.appliquer_mode_convention()
+            config.modifie_par = request.user
+            config.save(update_fields=[
+                'mode_heures_sup', 'taux_hs_4_premieres', 'taux_hs_au_dela',
+                'taux_hs_nuit', 'taux_hs_dimanche', 'taux_hs_ferie_nuit',
+                'mode_conges', 'jours_conges_par_mois',
+                'modifie_par', 'date_modification',
+            ])
             messages.success(request, 'Configuration Convention Collective appliquée.')
         elif action == 'save':
             # Fonction helper pour convertir en Decimal avec valeur par défaut
             def to_decimal(value, default):
-                if value is None or value.strip() == '':
+                if value is None or str(value).strip() == '':
                     return Decimal(default)
-                return Decimal(value)
+                montant = parse_montant(value)
+                if montant is None:
+                    raise ValueError(f"Montant invalide: {value}")
+                return montant
             
             def to_int(value, default):
-                if value is None or value.strip() == '':
+                if value is None or str(value).strip() == '':
                     return int(default)
                 return int(value)
             
             # Heures supplémentaires
-            config.mode_heures_sup = request.POST.get('mode_heures_sup', 'code_travail')
-            config.taux_hs_4_premieres = to_decimal(request.POST.get('taux_hs_4_premieres'), '30')
-            config.taux_hs_au_dela = to_decimal(request.POST.get('taux_hs_au_dela'), '60')
-            config.taux_hs_nuit = to_decimal(request.POST.get('taux_hs_nuit'), '50')
-            config.taux_hs_dimanche = to_decimal(request.POST.get('taux_hs_dimanche'), '100')
-            config.taux_hs_ferie_nuit = to_decimal(request.POST.get('taux_hs_ferie_nuit'), '100')
-            
-            # Congés
-            config.mode_conges = request.POST.get('mode_conges', 'code_travail')
-            config.jours_conges_par_mois = to_decimal(request.POST.get('jours_conges_par_mois'), '1.5')
-            config.jours_conges_anciennete = to_decimal(request.POST.get('jours_conges_anciennete'), '2')
-            config.tranche_anciennete_annees = to_int(request.POST.get('tranche_anciennete_annees'), '5')
-            
-            # CNSS
-            config.taux_cnss_employe = to_decimal(request.POST.get('taux_cnss_employe'), '5')
-            config.taux_cnss_employeur = to_decimal(request.POST.get('taux_cnss_employeur'), '18')
-            config.plancher_cnss = to_decimal(request.POST.get('plancher_cnss'), '550000')
-            config.plafond_cnss = to_decimal(request.POST.get('plafond_cnss'), '2500000')
-            
-            # Charges patronales
-            config.taux_versement_forfaitaire = to_decimal(request.POST.get('taux_versement_forfaitaire'), '6')
-            config.taux_taxe_apprentissage = to_decimal(request.POST.get('taux_taxe_apprentissage'), '2')
-            config.taux_onfpp = to_decimal(request.POST.get('taux_onfpp'), '1.5')
+            try:
+                mode_heures_sup = request.POST.get('mode_heures_sup', 'code_travail')
+                mode_conges = request.POST.get('mode_conges', 'code_travail')
+                if mode_heures_sup not in dict(ConfigurationPaieEntreprise.MODES_HS):
+                    raise ValueError("Mode heures supplementaires invalide.")
+                if mode_conges not in dict(ConfigurationPaieEntreprise.MODES_CONGES):
+                    raise ValueError("Mode conges invalide.")
 
-            # Arrondi du net à payer
-            arrondi_val = to_int(request.POST.get('arrondi_net'), '0')
-            if arrondi_val in (0, 100, 500, 1000):
+                config.mode_heures_sup = mode_heures_sup
+                config.taux_hs_4_premieres = to_decimal(request.POST.get('taux_hs_4_premieres'), '30')
+                config.taux_hs_au_dela = to_decimal(request.POST.get('taux_hs_au_dela'), '60')
+                config.taux_hs_nuit = to_decimal(request.POST.get('taux_hs_nuit'), '50')
+                config.taux_hs_dimanche = to_decimal(request.POST.get('taux_hs_dimanche'), '100')
+                config.taux_hs_ferie_nuit = to_decimal(request.POST.get('taux_hs_ferie_nuit'), '100')
+
+                config.mode_conges = mode_conges
+                config.jours_conges_par_mois = to_decimal(request.POST.get('jours_conges_par_mois'), '1.5')
+                config.jours_conges_anciennete = to_decimal(request.POST.get('jours_conges_anciennete'), '2')
+                config.tranche_anciennete_annees = to_int(request.POST.get('tranche_anciennete_annees'), '5')
+
+                config.taux_cnss_employe = to_decimal(request.POST.get('taux_cnss_employe'), '5')
+                config.taux_cnss_employeur = to_decimal(request.POST.get('taux_cnss_employeur'), '18')
+                config.plancher_cnss = to_decimal(request.POST.get('plancher_cnss'), '550000')
+                config.plafond_cnss = to_decimal(request.POST.get('plafond_cnss'), '2500000')
+
+                config.taux_versement_forfaitaire = to_decimal(request.POST.get('taux_versement_forfaitaire'), '6')
+                config.taux_taxe_apprentissage = Decimal('2.00')
+                config.taux_onfpp = Decimal('1.50')
+
+                arrondi_val = to_int(request.POST.get('arrondi_net'), '0')
+                if arrondi_val not in (0, 100, 500, 1000):
+                    raise ValueError("Arrondi du net invalide.")
                 config.arrondi_net = arrondi_val
 
-            config.modifie_par = request.user
-            config.save()
-            messages.success(request, 'Configuration enregistrée avec succès.')
+                valeurs_non_negatives = [
+                    config.taux_hs_4_premieres, config.taux_hs_au_dela,
+                    config.taux_hs_nuit, config.taux_hs_dimanche,
+                    config.taux_hs_ferie_nuit, config.jours_conges_par_mois,
+                    config.jours_conges_anciennete, config.taux_cnss_employe,
+                    config.taux_cnss_employeur, config.plancher_cnss,
+                    config.plafond_cnss, config.taux_versement_forfaitaire,
+                ]
+                if any(valeur < 0 for valeur in valeurs_non_negatives):
+                    raise ValueError("Les valeurs de configuration doivent etre positives.")
+                if config.tranche_anciennete_annees < 1:
+                    raise ValueError("La tranche d'anciennete doit etre superieure ou egale a 1.")
+                if config.plafond_cnss < config.plancher_cnss:
+                    raise ValueError("Le plafond CNSS doit etre superieur ou egal au plancher CNSS.")
+
+                config.modifie_par = request.user
+                config.save()
+                messages.success(request, 'Configuration enregistrée avec succès.')
+            except (InvalidOperation, ValueError) as exc:
+                messages.error(request, f"Configuration non enregistrée: {exc}")
         
         return redirect('paie:config_entreprise')
     

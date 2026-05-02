@@ -179,14 +179,16 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Taxe Apprentissage TA (%)</label>
                                 <input type="number" name="taux_taxe_apprentissage" class="form-control" 
-                                       value="{{ config.taux_taxe_apprentissage }}" step="0.01">
+                                       value="2.00" step="0.01" readonly>
+                                <small class="text-muted">Taux legal fixe utilise par le calcul de paie.</small>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Contribution ONFPP (%)</label>
                                 <input type="number" name="taux_onfpp" class="form-control"
-                                       value="{{ config.taux_onfpp }}" step="0.01">
+                                       value="1.50" step="0.01" readonly>
+                                <small class="text-muted">Taux legal fixe utilise par le calcul de paie.</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Arrondi du net à payer</label>
