@@ -126,6 +126,8 @@ class MoteurCalculPaie:
             # RTS détail (base, taux effectif)
             'base_rts': Decimal('0'),
             'taux_effectif_rts': Decimal('0'),
+            # Audit des bases taxables réellement utilisées avant calcul
+            'bases_taxables': {},
         }
         # Nombre de salariés actifs de l'entreprise (pour TA vs ONFPP)
         self.nb_salaries = Employe.objects.filter(
@@ -285,6 +287,46 @@ class MoteurCalculPaie:
             'nb_conjoints': int(getattr(employe, 'nombre_femmes', 0) or 0),
             'plafond_cnss': float(self.constantes.get('PLAFOND_CNSS', Decimal('2500000'))),
         }
+
+    def _ajouter_alerte_calcul(self, type_alerte, message):
+        self.montants.setdefault('alertes', []).append({
+            'type': type_alerte,
+            'message': message,
+        })
+
+    def _normaliser_base_taxable(self, code, libelle, valeur, formule, fallback=None):
+        """Valide et trace une base taxable avant application du calcul."""
+        trouvee = valeur is not None
+        try:
+            if valeur is None:
+                raise ValueError("base absente")
+            base = Decimal(str(valeur))
+            if not base.is_finite():
+                raise ValueError("base non finie")
+        except Exception:
+            base = Decimal(str(fallback)) if fallback is not None else Decimal('0')
+            niveau = 'avertissement' if fallback is not None else 'critique'
+            self._ajouter_alerte_calcul(
+                niveau,
+                f"Base taxable {libelle} introuvable ou invalide. "
+                f"Base retenue: {base:,.0f} GNF."
+            )
+
+        if base < 0:
+            self._ajouter_alerte_calcul(
+                'avertissement',
+                f"Base taxable {libelle} négative ({base:,.0f} GNF). Base ramenée à 0 GNF."
+            )
+            base = Decimal('0')
+
+        base = self._arrondir(base)
+        self.montants.setdefault('bases_taxables', {})[code] = {
+            'libelle': libelle,
+            'base': base,
+            'formule': formule,
+            'trouvee': trouvee,
+        }
+        return base
 
     def _obtenir_taux_anciennete(self, annees):
         """Obtenir le taux d'ancienneté selon le barème"""
@@ -921,6 +963,13 @@ class MoteurCalculPaie:
             base_raw = max(Decimal('0'), self.montants['cnss_base'] - retenue_absence)
         else:
             base_raw = self.montants['brut']
+        base_raw = self._normaliser_base_taxable(
+            'cnss_brut',
+            'CNSS brute',
+            base_raw,
+            'cnss_base - retenue_absence ou salaire brut',
+            fallback=self.montants.get('brut', Decimal('0')),
+        )
 
         if self.devise_employe != self.devise_base:
             base_cnss_gnf = DeviseService.convertir_vers_gnf(
@@ -950,6 +999,12 @@ class MoteurCalculPaie:
             base_cnss_plafonnee = Decimal('0')
         else:
             base_cnss_plafonnee = self._arrondir(max(min(base_cnss_gnf, plafond_cnss), plancher_cnss))
+        base_cnss_plafonnee = self._normaliser_base_taxable(
+            'cnss',
+            'CNSS plafonnée',
+            base_cnss_plafonnee,
+            'base CNSS brute encadrée par plancher/plafond',
+        )
         
         # Mettre à jour cnss_base avec la valeur réelle utilisée (pour affichage résumé)
         self.montants['cnss_base'] = base_cnss_plafonnee
@@ -1000,6 +1055,13 @@ class MoteurCalculPaie:
                 self.devise_employe,
                 self.date_conversion
             )
+        base_vf_ta = self._normaliser_base_taxable(
+            'vf_brut',
+            'VF/ONFPP brute',
+            base_vf_ta,
+            'salaire brut converti en GNF',
+            fallback=self.montants.get('brut', Decimal('0')),
+        )
         
         # Versement Forfaitaire (VF) - charge patronale
         # Règle CGI Guinée :
@@ -1024,6 +1086,10 @@ class MoteurCalculPaie:
                 base_vf_nette = _evaluer_vf(params_vf.formule_base_vf, variables_vf)
                 deduction_vf = base_vf_ta - base_vf_nette
             except ValueError:
+                self._ajouter_alerte_calcul(
+                    'avertissement',
+                    "Formule personnalisée de base VF invalide. Calcul standard appliqué."
+                )
                 deduction_vf = self._arrondir(
                     min(base_vf_ta, plafond_deduction_vf) * taux_vf / Decimal('100')
                 )
@@ -1039,9 +1105,21 @@ class MoteurCalculPaie:
             )
             base_vf_nette = base_vf_ta - deduction_vf
 
-        base_vf_calculee = Decimal(str(base_vf_nette))
+        base_vf_calculee = self._normaliser_base_taxable(
+            'vf_calculee',
+            'VF calculée',
+            base_vf_nette,
+            'formule VF ou calcul standard',
+            fallback=base_vf_ta,
+        )
         base_vf_nette = self._arrondir(max(Decimal('0'), min(base_vf_calculee, base_vf_ta)))
         deduction_vf = self._arrondir(base_vf_ta - base_vf_nette)
+        base_vf_nette = self._normaliser_base_taxable(
+            'vf',
+            'VF',
+            base_vf_nette,
+            'salaire brut - déduction VF',
+        )
 
         self.montants['base_vf'] = base_vf_nette
         self.montants['deduction_vf'] = deduction_vf
@@ -1058,16 +1136,27 @@ class MoteurCalculPaie:
         TAUX_ONFPP_LEGAL = Decimal('1.50')    # ONFPP: 1,5% (loi)
         seuil_ta_onfpp = int(self.constantes.get('SEUIL_TA_ONFPP', Decimal('30')))
         if self.nb_salaries < seuil_ta_onfpp:
-            self.montants['base_ta'] = base_vf_nette
+            self.montants['base_ta'] = self._normaliser_base_taxable(
+                'ta',
+                'TA',
+                base_vf_nette,
+                'base VF nette',
+            )
             self.montants['taux_ta'] = TAUX_TA_LEGAL
             self.montants['taxe_apprentissage'] = self._arrondir(
-                base_vf_nette * TAUX_TA_LEGAL / Decimal('100')
+                self.montants['base_ta'] * TAUX_TA_LEGAL / Decimal('100')
             )
             self.montants['contribution_onfpp'] = Decimal('0')
         else:
             self.montants['taxe_apprentissage'] = Decimal('0')
+            base_onfpp = self._normaliser_base_taxable(
+                'onfpp',
+                'ONFPP',
+                base_vf_ta,
+                'salaire brut',
+            )
             self.montants['contribution_onfpp'] = self._arrondir(
-                base_vf_ta * TAUX_ONFPP_LEGAL / Decimal('100')
+                base_onfpp * TAUX_ONFPP_LEGAL / Decimal('100')
             )
         
         # Total charges patronales (arrondi à l'unité GNF)
@@ -1142,6 +1231,10 @@ class MoteurCalculPaie:
             try:
                 base_imposable = _evaluer_rts(params_rts.formule_base_rts, variables_rts)
             except ValueError:
+                self._ajouter_alerte_calcul(
+                    'avertissement',
+                    "Formule personnalisée de base RTS invalide. Calcul standard appliqué."
+                )
                 base_imposable = base_imposable_defaut  # fallback calcul standard
         else:
             base_imposable = base_imposable_defaut
@@ -1157,6 +1250,13 @@ class MoteurCalculPaie:
                 self.devise_employe, 
                 self.date_conversion
             )
+        base_imposable = self._normaliser_base_taxable(
+            'rts',
+            'RTS',
+            base_imposable,
+            'brut imposable - CNSS salarié + réintégrations',
+            fallback=base_imposable_defaut,
+        )
         
         # Vérifier exonération RTS pour stagiaires/apprentis
         exoneration_rts, raison_exoneration = self._verifier_exoneration_rts_stagiaire()
@@ -1628,6 +1728,7 @@ class MoteurCalculPaie:
             'constantes': constantes_snapshot,
             'bareme_rts': bareme_rts,
             'audit_calcul': self._construire_audit_calcul(),
+            'bases_taxables': self.montants.get('bases_taxables', {}),
             'verrou_cgi': {
                 'plafond_indemnites_pct': str(plafond_pct_applique),
                 'plafond_applique': True,
