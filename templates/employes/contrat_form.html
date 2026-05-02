@@ -10,6 +10,9 @@
         <i class="bi bi-file-earmark-text"></i> Nouveau contrat
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'employes:telecharger_modele_contrat_cdi' %}" class="btn btn-sm btn-outline-primary me-2">
+            <i class="bi bi-download"></i> Modèle CDI
+        </a>
         <a href="{% url 'employes:detail' employe.pk %}" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Retour
         </a>
@@ -83,6 +86,9 @@
                     Assurez-vous que le contrat est conforme au Code du Travail de Guinée (Loi L/2014/072/CNT).
                     Le fichier PDF du contrat signé doit être uploadé.
                 </p>
+                <a href="{% url 'employes:telecharger_modele_contrat_cdi' %}" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                    <i class="bi bi-file-earmark-word"></i> Télécharger le modèle CDI
+                </a>
             </div>
         </div>
     </div>

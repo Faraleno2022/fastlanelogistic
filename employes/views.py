@@ -5,9 +5,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.conf import settings
 from django.db.models import Q
 from django.db import transaction, IntegrityError
-from django.http import HttpResponse, Http404
+from django.http import FileResponse, HttpResponse, Http404
 from datetime import datetime
 
 from .models import (
@@ -17,6 +18,9 @@ from .models import (
 )
 from .forms import EmployeForm, ContratForm, EvaluationEmployeForm, SanctionDisciplinaireForm
 from core.views import log_activity
+
+
+MODELE_CONTRAT_CDI_PATH = 'documents/contrats/contrat_cdi_gestionrh_v2.docx'
 
 
 class EntrepriseEmployeQuerysetMixin(LoginRequiredMixin):
@@ -1014,6 +1018,22 @@ def liste_contrats(request):
         'total': contrats.count(),
         'en_cours': contrats.filter(statut_contrat='en_cours').count(),
     })
+
+
+@reauth_required
+@login_required
+def telecharger_modele_contrat_cdi(request):
+    """Telecharger le modele Word de contrat CDI."""
+    chemin = settings.BASE_DIR / 'static' / MODELE_CONTRAT_CDI_PATH
+    if not chemin.exists():
+        raise Http404("Modele de contrat CDI introuvable")
+
+    return FileResponse(
+        open(chemin, 'rb'),
+        as_attachment=True,
+        filename='Contrat_CDI_GestionRH_v2.docx',
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    )
 
 
 @reauth_required

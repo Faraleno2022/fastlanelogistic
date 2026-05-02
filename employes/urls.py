@@ -29,6 +29,7 @@ urlpatterns = [
     
     # Contrats
     path('<int:employe_id>/contrat/create/', views.employe_contrat_create, name='contrat_create'),
+    path('contrats/modele-cdi/', views.telecharger_modele_contrat_cdi, name='telecharger_modele_contrat_cdi'),
     
     # Documents
     path('<int:employe_id>/document/upload/', views.employe_document_upload, name='document_upload'),
