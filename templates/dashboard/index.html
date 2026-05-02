@@ -114,12 +114,33 @@
     </div>
 
     <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Salaire Brut
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ salaire_brut|floatformat:0|intcomma }} GNF
+                        </div>
+                        <small class="text-muted">{{ periode_label }}</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-currency-exchange fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-success shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Masse Salariale Brute
+                            Masse Salariale
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ masse_salariale|floatformat:0|intcomma }} GNF
@@ -200,26 +221,6 @@
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-secondary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                            Base VF / ONFPP
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ total_base_vf|floatformat:0|intcomma }} GNF
-                        </div>
-                        <small class="text-muted">{{ periode_label }}</small>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-calculator fs-2 text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Cotisations & Taxes du mois -->
@@ -255,9 +256,9 @@
     <div class="col-xl-3 col-md-6 mb-3">
         <div class="card border-left-success shadow-sm h-100 py-2">
             <div class="card-body">
-                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">CNSS 23% (Total)</div>
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Déclaration sociale (CNSS 23%)</div>
                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                    {{ total_cnss_23|floatformat:0|intcomma }} GNF
+                    {{ total_declaration_sociale|floatformat:0|intcomma }} GNF
                 </div>
                 <small class="text-muted">Employé + Employeur</small>
             </div>
@@ -300,6 +301,7 @@
         </div>
     </div>
 
+    {% if total_employes < 30 %}
     <div class="col-xl-3 col-md-6 mb-3">
         <div class="card border-left-danger shadow-sm h-100 py-2">
             <div class="card-body">
@@ -311,15 +313,28 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
-    <div class="col-xl-6 col-md-12 mb-3">
+    <div class="col-xl-3 col-md-6 mb-3">
         <div class="card border-left-dark shadow-sm h-100 py-2">
             <div class="card-body">
                 <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">DMU - Déclaration Mensuelle Unique</div>
                 <div class="h4 mb-0 font-weight-bold text-gray-800">
                     {{ total_dmu|floatformat:0|intcomma }} GNF
                 </div>
-                <small class="text-muted">Total CNSS (23%) + RTS + VF + ONFPP + TA</small>
+                <small class="text-muted">RTS + VF</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-primary shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">eTax</div>
+                <div class="h4 mb-0 font-weight-bold text-gray-800">
+                    {{ total_etax|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">RTS + VF</small>
             </div>
         </div>
     </div>

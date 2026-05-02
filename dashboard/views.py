@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from datetime import timedelta
+from decimal import Decimal
 
 from employes.models import Employe
 from paie.models import BulletinPaie, PeriodePaie
@@ -14,6 +15,7 @@ from temps_travail.models import Conge, Pointage
 
 def _build_paie_totaux_context(totaux):
     """Construit les totaux paie affichés sur le tableau de bord."""
+    salaire_brut = totaux.get('brut') or 0
     total_cnss_5 = totaux.get('cnss_5') or 0
     total_cnss_18 = totaux.get('cnss_18') or 0
     total_cnss_23 = total_cnss_5 + total_cnss_18
@@ -23,7 +25,8 @@ def _build_paie_totaux_context(totaux):
     total_onfpp = totaux.get('onfpp') or 0
 
     return {
-        'masse_salariale': totaux.get('brut') or 0,
+        'salaire_brut': salaire_brut,
+        'masse_salariale': salaire_brut + total_cnss_18 + total_onfpp + total_vf,
         'total_net_a_payer': totaux.get('net') or 0,
         'total_base_vf': totaux.get('base_vf') or 0,
         'total_trs': total_trs,
@@ -33,7 +36,9 @@ def _build_paie_totaux_context(totaux):
         'total_cnss_5': total_cnss_5,
         'total_cnss_18': total_cnss_18,
         'total_cnss_23': total_cnss_23,
-        'total_dmu': total_cnss_23 + total_trs + total_vf + total_onfpp + total_ta,
+        'total_declaration_sociale': total_cnss_23,
+        'total_dmu': total_trs + total_vf,
+        'total_etax': total_trs + total_vf,
     }
 
 
@@ -85,10 +90,11 @@ def index(request):
             'contrats_detail': [], 'contrats_actifs': [], 'contrats_sans': 0,
             'conges_en_cours': 0, 'employes_en_conge': [],
             'conges_en_attente': 0, 'bulletins_calcules': 0,
-            'bulletins_valides': 0, 'masse_salariale': 0, 'pointages_jour': 0,
+            'bulletins_valides': 0, 'salaire_brut': 0, 'masse_salariale': 0, 'pointages_jour': 0,
             'total_net_a_payer': 0, 'total_base_vf': 0,
             'total_trs': 0, 'total_vf': 0, 'total_ta': 0, 'total_onfpp': 0,
-            'total_cnss_5': 0, 'total_cnss_18': 0, 'total_cnss_23': 0, 'total_dmu': 0,
+            'total_cnss_5': 0, 'total_cnss_18': 0, 'total_cnss_23': 0,
+            'total_declaration_sociale': 0, 'total_dmu': 0, 'total_etax': 0,
             'alertes': [{
                 'type': 'warning',
                 'icon': 'bi-exclamation-triangle',
@@ -98,7 +104,7 @@ def index(request):
         }
         return render(request, 'dashboard/index.html', context)
 
-    cache_key = f'dashboard_stats_{entreprise_id}_{annee_filtre}_{mois_filtre}'
+    cache_key = f'dashboard_stats_v2_{entreprise_id}_{annee_filtre}_{mois_filtre}'
 
     # Essayer de récupérer du cache
     cached_data = cache.get(cache_key)
@@ -201,6 +207,9 @@ def index(request):
             cnss_5=Sum('cnss_employe'),
             cnss_18=Sum('cnss_employeur'),
         )
+        if context.get('total_employes', 0) >= 30:
+            totaux['ta'] = Decimal('0')
+            totaux['onfpp'] = ((totaux.get('brut') or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
         context.update(_build_paie_totaux_context(totaux))
     except PeriodePaie.DoesNotExist:
         context['bulletins_calcules'] = 0

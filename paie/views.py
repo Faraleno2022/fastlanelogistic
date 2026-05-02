@@ -1056,13 +1056,13 @@ def telecharger_bulletin_pdf(request, pk):
         "6%",
         f"{vf:,.0f}".replace(",", " ")])
     if ta > 0:
-        charges_data.append([f"TA (applicable si effectif < 25 sal. \u2014 effectif actuel : {nb_sal})",
+        charges_data.append([f"TA (applicable si effectif < 30 sal. \u2014 effectif actuel : {nb_sal})",
             f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
             f"{taux_ta_label}%",
             f"{ta:,.0f}".replace(",", " ")])
     elif onfpp > 0:
-        charges_data.append([f"ONFPP (applicable si effectif \u2265 25 sal. \u2014 effectif actuel : {nb_sal})",
-            f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
+        charges_data.append([f"ONFPP (applicable si effectif \u2265 30 sal. \u2014 effectif actuel : {nb_sal})",
+            f"{bulletin.salaire_brut:,.0f}".replace(",", " "),
             "1,5%",
             f"{onfpp:,.0f}".replace(",", " ")])
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
@@ -1097,16 +1097,21 @@ def telecharger_bulletin_pdf(request, pk):
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
         p.setFont(_FI, 6)
         p.setFillColor(colors.HexColor("#666666"))
-        if abs(base_vf_f - brut_gnf) < 1:
+        if onfpp > 0:
+            note_base = f"Base VF = {base_vf_f:,.0f} GNF"
+            charge_note = f"ONFPP = Brut {brut_gnf:,.0f} × 1,5%"
+        elif abs(base_vf_f - brut_gnf) < 1:
             note_base = f"Base VF/{ta_ou_onfpp} = Brut {base_vf_f:,.0f} GNF"
+            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
         else:
             deduction = brut_gnf - base_vf_f
             note_base = (
                 f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} − déduction CGI {deduction:,.0f} "
                 f"(min(brut; 2 500 000) × 6%) = {base_vf_f:,.0f} GNF"
             )
+            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
         p.drawString(1.5*cm, y,
-            f"{note_base}  |  VF = {base_vf_f:,.0f} × 6%  |  {ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
+            f"{note_base}  |  VF = {base_vf_f:,.0f} × 6%  |  {charge_note}"
             .replace(",", "\u00A0"))
         y -= 0.20*cm
         # Référence légale (justification en cas de contrôle fiscal)
@@ -1684,13 +1689,13 @@ def telecharger_bulletin_public(request, token):
         "6%",
         f"{vf:,.0f}".replace(",", " ")])
     if ta > 0:
-        charges_data.append([f"TA (applicable si effectif < 25 sal. \u2014 effectif actuel : {nb_sal})",
+        charges_data.append([f"TA (applicable si effectif < 30 sal. \u2014 effectif actuel : {nb_sal})",
             f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
             f"{taux_ta_label}%",
             f"{ta:,.0f}".replace(",", " ")])
     elif onfpp > 0:
-        charges_data.append([f"ONFPP (applicable si effectif \u2265 25 sal. \u2014 effectif actuel : {nb_sal})",
-            f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
+        charges_data.append([f"ONFPP (applicable si effectif \u2265 30 sal. \u2014 effectif actuel : {nb_sal})",
+            f"{bulletin.salaire_brut:,.0f}".replace(",", " "),
             "1,5%",
             f"{onfpp:,.0f}".replace(",", " ")])
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
@@ -1725,16 +1730,21 @@ def telecharger_bulletin_public(request, token):
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
         p.setFont(_FI, 6)
         p.setFillColor(colors.HexColor("#666666"))
-        if abs(base_vf_f - brut_gnf) < 1:
+        if onfpp > 0:
+            note_base = f"Base VF = {base_vf_f:,.0f} GNF"
+            charge_note = f"ONFPP = Brut {brut_gnf:,.0f} × 1,5%"
+        elif abs(base_vf_f - brut_gnf) < 1:
             note_base = f"Base VF/{ta_ou_onfpp} = Brut {base_vf_f:,.0f} GNF"
+            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
         else:
             deduction = brut_gnf - base_vf_f
             note_base = (
                 f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} − déduction CGI {deduction:,.0f} "
                 f"(min(brut; 2 500 000) × 6%) = {base_vf_f:,.0f} GNF"
             )
+            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
         p.drawString(1.5*cm, y,
-            f"{note_base}  |  VF = {base_vf_f:,.0f} × 6%  |  {ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note}%"
+            f"{note_base}  |  VF = {base_vf_f:,.0f} × 6%  |  {charge_note}"
             .replace(",", "\u00A0"))
         y -= 0.20*cm
         # Référence légale (justification en cas de contrôle fiscal)
@@ -2025,7 +2035,7 @@ def telecharger_livre_paie_pdf(request):
 @entreprise_active_required
 @reauth_required
 def declarations_sociales(request):
-    """Déclarations sociales (CNSS, RTS, INAM)"""
+    """Déclarations sociales (CNSS, RTS, VF, ONFPP)"""
     # Filtres
     annee = request.GET.get('annee', timezone.now().year)
     mois = request.GET.get('mois')
@@ -2051,12 +2061,29 @@ def declarations_sociales(request):
     taux_cnss_employe = Constante.objects.filter(code='TAUX_CNSS_EMPLOYE', actif=True).first()
     taux_cnss_employeur = Constante.objects.filter(code='TAUX_CNSS_EMPLOYEUR', actif=True).first()
     
+    total_salaries = bulletins.values('employe').distinct().count()
+    totaux = bulletins.aggregate(
+        total_brut=Sum('salaire_brut'),
+        total_cnss_employe=Sum('cnss_employe'),
+        total_cnss_employeur=Sum('cnss_employeur'),
+        total_rts=Sum('irg'),
+        total_vf=Sum('versement_forfaitaire'),
+        total_ta=Sum('taxe_apprentissage'),
+        total_onfpp=Sum('contribution_onfpp'),
+    )
+    salaire_brut_total = totaux['total_brut'] or Decimal('0')
+    total_onfpp = totaux['total_onfpp'] or Decimal('0')
+    total_ta = totaux['total_ta'] or Decimal('0')
+    if total_salaries >= 30:
+        total_ta = Decimal('0')
+        total_onfpp = (salaire_brut_total * Decimal('0.015')).quantize(Decimal('1'))
+
     # Calculs pour CNSS
     declaration_cnss = {
-        'total_salaries': bulletins.values('employe').distinct().count(),
-        'masse_salariale': bulletins.aggregate(Sum('salaire_brut'))['salaire_brut__sum'] or 0,
-        'cotisation_employe': bulletins.aggregate(Sum('cnss_employe'))['cnss_employe__sum'] or 0,
-        'cotisation_employeur': bulletins.aggregate(Sum('cnss_employeur'))['cnss_employeur__sum'] or 0,
+        'total_salaries': total_salaries,
+        'masse_salariale': salaire_brut_total,
+        'cotisation_employe': totaux['total_cnss_employe'] or Decimal('0'),
+        'cotisation_employeur': totaux['total_cnss_employeur'] or Decimal('0'),
         # Informations sur plancher et plafond
         'plancher': plancher_cnss.valeur if plancher_cnss else Decimal('550000'),
         'plafond': plafond_cnss.valeur if plafond_cnss else Decimal('2500000'),
@@ -2069,24 +2096,23 @@ def declarations_sociales(request):
     
     # Calculs pour RTS
     declaration_irg = {
-        'total_salaries': bulletins.values('employe').distinct().count(),
-        'masse_imposable': bulletins.aggregate(Sum('salaire_brut'))['salaire_brut__sum'] or 0,
-        'total_irg': bulletins.aggregate(Sum('irg'))['irg__sum'] or 0,
+        'total_salaries': total_salaries,
+        'masse_imposable': salaire_brut_total,
+        'total_irg': totaux['total_rts'] or Decimal('0'),
     }
-    
-    # Calculs pour INAM (2.5% de la masse salariale)
-    taux_inam = Decimal('2.5')
-    declaration_inam = {
-        'masse_salariale': declaration_cnss['masse_salariale'],
-        'taux': taux_inam,
-        'montant': (declaration_cnss['masse_salariale'] * taux_inam / Decimal('100')).quantize(Decimal('0.01'))
+
+    declaration_charges = {
+        'vf': totaux['total_vf'] or Decimal('0'),
+        'ta': total_ta,
+        'onfpp': total_onfpp,
     }
     
     # Total général des charges
     total_general = (
         declaration_cnss['total_cotisation'] +
         declaration_irg['total_irg'] +
-        declaration_inam['montant']
+        declaration_charges['vf'] +
+        declaration_charges['onfpp']
     )
     
     # Détail par employé
@@ -2110,7 +2136,7 @@ def declarations_sociales(request):
     return render(request, 'paie/declarations_sociales.html', {
         'declaration_cnss': declaration_cnss,
         'declaration_irg': declaration_irg,
-        'declaration_inam': declaration_inam,
+        'declaration_charges': declaration_charges,
         'total_general': total_general,
         'detail_employes': detail_employes,
         'annee': int(annee),
@@ -2153,18 +2179,42 @@ def declarations_sociales_pdf(request):
     ).select_related('employe', 'periode')
     
     # Calculs
+    total_salaries = bulletins.values('employe').distinct().count()
+    totaux = bulletins.aggregate(
+        total_brut=Sum('salaire_brut'),
+        total_cnss_employe=Sum('cnss_employe'),
+        total_cnss_employeur=Sum('cnss_employeur'),
+        total_rts=Sum('irg'),
+        total_vf=Sum('versement_forfaitaire'),
+        total_onfpp=Sum('contribution_onfpp'),
+    )
+    salaire_brut_total = totaux['total_brut'] or Decimal('0')
+    total_onfpp = totaux['total_onfpp'] or Decimal('0')
+    if total_salaries >= 30:
+        total_onfpp = (salaire_brut_total * Decimal('0.015')).quantize(Decimal('1'))
+
     declaration_cnss = {
-        'total_salaries': bulletins.values('employe').distinct().count(),
-        'masse_salariale': bulletins.aggregate(Sum('salaire_brut'))['salaire_brut__sum'] or 0,
-        'cotisation_employe': bulletins.aggregate(Sum('cnss_employe'))['cnss_employe__sum'] or 0,
-        'cotisation_employeur': bulletins.aggregate(Sum('cnss_employeur'))['cnss_employeur__sum'] or 0,
+        'total_salaries': total_salaries,
+        'masse_salariale': salaire_brut_total,
+        'cotisation_employe': totaux['total_cnss_employe'] or Decimal('0'),
+        'cotisation_employeur': totaux['total_cnss_employeur'] or Decimal('0'),
     }
     declaration_cnss['total_cotisation'] = declaration_cnss['cotisation_employe'] + declaration_cnss['cotisation_employeur']
     
     declaration_irg = {
-        'total_salaries': bulletins.values('employe').distinct().count(),
-        'total_irg': bulletins.aggregate(Sum('irg'))['irg__sum'] or 0,
+        'total_salaries': total_salaries,
+        'total_irg': totaux['total_rts'] or Decimal('0'),
     }
+    declaration_charges = {
+        'vf': totaux['total_vf'] or Decimal('0'),
+        'onfpp': total_onfpp,
+    }
+    total_general = (
+        declaration_cnss['total_cotisation'] +
+        declaration_irg['total_irg'] +
+        declaration_charges['vf'] +
+        declaration_charges['onfpp']
+    )
     
     # Créer le PDF
     buffer = BytesIO()
@@ -2184,7 +2234,7 @@ def declarations_sociales_pdf(request):
     cnss_data = [
         ['Libellé', 'Montant (GNF)'],
         ['Nombre de salariés', str(declaration_cnss['total_salaries'])],
-        ['Masse salariale', f"{declaration_cnss['masse_salariale']:,.0f}"],
+        ['Salaire brut', f"{declaration_cnss['masse_salariale']:,.0f}"],
         ['Cotisation employé (5%)', f"{declaration_cnss['cotisation_employe']:,.0f}"],
         ['Cotisation employeur (18%)', f"{declaration_cnss['cotisation_employeur']:,.0f}"],
         ['Total cotisations', f"{declaration_cnss['total_cotisation']:,.0f}"],
@@ -2218,6 +2268,28 @@ def declarations_sociales_pdf(request):
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
     ]))
     elements.append(irg_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    elements.append(Paragraph("Récapitulatif total des charges", styles['Heading2']))
+    recap_data = [
+        ['Organisme', 'Montant (GNF)'],
+        ['CNSS (Total)', f"{declaration_cnss['total_cotisation']:,.0f}"],
+        ['RTS (Trésor Public)', f"{declaration_irg['total_irg']:,.0f}"],
+        ['VF', f"{declaration_charges['vf']:,.0f}"],
+        ['ONFPP', f"{declaration_charges['onfpp']:,.0f}"],
+        ['TOTAL GÉNÉRAL', f"{total_general:,.0f}"],
+    ]
+    recap_table = Table(recap_data, colWidths=[10*cm, 6*cm])
+    recap_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#EF7707')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f5f5f5')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+    ]))
+    elements.append(recap_table)
     
     doc.build(elements)
     buffer.seek(0)
@@ -3171,7 +3243,7 @@ def simulation_paie(request):
             onfpp = Decimal('0')
         else:
             ta = Decimal('0')
-            onfpp = (base_vf * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
+            onfpp = (salaire_brut * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
         
         # Totaux (rappels et retenues trop-perçu hors base)
         total_retenues = cnss_employe + rts

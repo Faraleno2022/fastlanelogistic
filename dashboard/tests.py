@@ -19,7 +19,10 @@ class DashboardPaieTotauxTests(SimpleTestCase):
             'cnss_18': Decimal('11250000'),
         })
 
-        self.assertEqual(context['masse_salariale'], Decimal('247628100'))
+        self.assertEqual(context['salaire_brut'], Decimal('247628100'))
+        self.assertEqual(context['masse_salariale'], Decimal('277450208'))
         self.assertEqual(context['total_net_a_payer'], Decimal('201392500'))
         self.assertEqual(context['total_cnss_23'], Decimal('14375000'))
-        self.assertEqual(context['total_dmu'], Decimal('53361096'))
+        self.assertEqual(context['total_declaration_sociale'], Decimal('14375000'))
+        self.assertEqual(context['total_dmu'], Decimal('35271674'))
+        self.assertEqual(context['total_etax'], Decimal('35271674'))

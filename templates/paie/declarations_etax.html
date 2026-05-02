@@ -54,20 +54,20 @@
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="p-3 bg-light border rounded">
-                <div class="small text-muted">Masse salariale brute</div>
+                <div class="small text-muted">Salaire brut</div>
                 <div class="h5 mb-0">{{ data.total_brut|floatformat:0|intcomma }} GNF</div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="p-3 bg-light border rounded">
-                <div class="small text-muted">Total fiscal eTax</div>
-                <div class="h5 mb-0 text-primary">{{ data.total_fiscal|floatformat:0|intcomma }} GNF</div>
+                <div class="small text-muted">RTS</div>
+                <div class="h5 mb-0 text-primary">{{ data.total_rts|floatformat:0|intcomma }} GNF</div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="p-3 bg-light border rounded">
-                <div class="small text-muted">CNSS à suivre</div>
-                <div class="h5 mb-0">{{ data.total_cnss|floatformat:0|intcomma }} GNF</div>
+                <div class="small text-muted">eTax (RTS + VF)</div>
+                <div class="h5 mb-0">{{ data.total_fiscal|floatformat:0|intcomma }} GNF</div>
             </div>
         </div>
     </div>
@@ -84,12 +84,7 @@
                             <tr><th>Base imposable RTS</th><td class="text-end">{{ data.total_base_rts|floatformat:0|intcomma }} GNF</td></tr>
                             <tr><th>RTS</th><td class="text-end">{{ data.total_rts|floatformat:0|intcomma }} GNF</td></tr>
                             <tr><th>Versement forfaitaire</th><td class="text-end">{{ data.total_vf|floatformat:0|intcomma }} GNF</td></tr>
-                            <tr><th>Taxe d'apprentissage</th><td class="text-end">{{ data.total_ta|floatformat:0|intcomma }} GNF</td></tr>
-                            <tr><th>ONFPP</th><td class="text-end">{{ data.total_onfpp|floatformat:0|intcomma }} GNF</td></tr>
-                            <tr class="table-primary"><th>Total fiscal eTax</th><th class="text-end">{{ data.total_fiscal|floatformat:0|intcomma }} GNF</th></tr>
-                            <tr><th>CNSS employé</th><td class="text-end">{{ data.total_cnss_employe|floatformat:0|intcomma }} GNF</td></tr>
-                            <tr><th>CNSS employeur</th><td class="text-end">{{ data.total_cnss_employeur|floatformat:0|intcomma }} GNF</td></tr>
-                            <tr class="table-light"><th>Total général suivi</th><th class="text-end">{{ data.total_general|floatformat:0|intcomma }} GNF</th></tr>
+                            <tr class="table-primary"><th>Total eTax (RTS + VF)</th><th class="text-end">{{ data.total_fiscal|floatformat:0|intcomma }} GNF</th></tr>
                         </tbody>
                     </table>
                 </div>

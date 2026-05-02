@@ -83,11 +83,12 @@ def get_etax_data(entreprise, annee, mois):
 
     data = {key: _to_decimal(value) for key, value in totaux.items()}
     data['effectif'] = bulletins.values('employe').distinct().count()
-    data['total_fiscal'] = (
-        data['total_rts'] + data['total_vf'] + data['total_ta'] + data['total_onfpp']
-    )
+    if data['effectif'] >= 30:
+        data['total_ta'] = Decimal('0')
+        data['total_onfpp'] = (data['total_brut'] * Decimal('0.015')).quantize(Decimal('1'))
+    data['total_fiscal'] = data['total_rts'] + data['total_vf']
     data['total_cnss'] = data['total_cnss_employe'] + data['total_cnss_employeur']
-    data['total_general'] = data['total_fiscal'] + data['total_cnss']
+    data['total_general'] = data['total_fiscal']
     data['mois_label'] = MOIS_LABELS.get(mois, str(mois))
     data['detail_employes'] = []
 
@@ -257,17 +258,11 @@ def declaration_etax_excel(request):
     ws.cell(row=row, column=1, value="RÉCAPITULATIF").font = title
     row += 1
     recap = [
-        ("Masse salariale brute", data['total_brut']),
+        ("Salaire brut", data['total_brut']),
         ("Base imposable RTS", data['total_base_rts']),
         ("RTS", data['total_rts']),
         ("VF", data['total_vf']),
-        ("TA", data['total_ta']),
-        ("ONFPP", data['total_onfpp']),
-        ("Total fiscal eTax", data['total_fiscal']),
-        ("CNSS employé", data['total_cnss_employe']),
-        ("CNSS employeur", data['total_cnss_employeur']),
-        ("Total CNSS", data['total_cnss']),
-        ("Total général", data['total_general']),
+        ("Total eTax (RTS + VF)", data['total_fiscal']),
     ]
     for label, amount in recap:
         ws.cell(row=row, column=1, value=label).border = border
@@ -332,15 +327,11 @@ def declaration_etax_pdf(request):
 
     recap = [
         ["Indicateur", "Montant"],
-        ["Masse salariale brute", f"{data['total_brut']:,.0f} GNF"],
+        ["Salaire brut", f"{data['total_brut']:,.0f} GNF"],
         ["Base imposable RTS", f"{data['total_base_rts']:,.0f} GNF"],
         ["RTS", f"{data['total_rts']:,.0f} GNF"],
         ["VF", f"{data['total_vf']:,.0f} GNF"],
-        ["TA", f"{data['total_ta']:,.0f} GNF"],
-        ["ONFPP", f"{data['total_onfpp']:,.0f} GNF"],
-        ["Total fiscal eTax", f"{data['total_fiscal']:,.0f} GNF"],
-        ["Total CNSS", f"{data['total_cnss']:,.0f} GNF"],
-        ["Total général", f"{data['total_general']:,.0f} GNF"],
+        ["Total eTax (RTS + VF)", f"{data['total_fiscal']:,.0f} GNF"],
     ]
     recap_table = Table(recap, colWidths=[7*cm, 5*cm])
     recap_table.setStyle(TableStyle([

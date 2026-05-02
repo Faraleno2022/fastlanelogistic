@@ -98,7 +98,7 @@ class MoteurCalculPaie:
             # Charges patronales supplémentaires
             'versement_forfaitaire': Decimal('0'),  # VF 6%
             'base_vf': Decimal('0'),                # Base nette VF
-            'taxe_apprentissage': Decimal('0'),     # TA 1,5%
+            'taxe_apprentissage': Decimal('0'),     # TA 2%
             'base_ta': Decimal('0'),                # Base TA
             'taux_vf': Decimal('0'),                # Taux VF appliqué
             'taux_ta': Decimal('0'),                # Taux TA appliqué
@@ -1052,7 +1052,7 @@ class MoteurCalculPaie:
 
         # TA et ONFPP sont mutuellement exclusifs selon le nombre de salariés:
         # - Moins de 30 salariés: TA (2%) sur la base VF/ONFPP
-        # - 30 salariés ou plus: ONFPP (1,5%) sur la base VF/ONFPP
+        # - 30 salariés ou plus: ONFPP (1,5%) sur le salaire brut
         # Les taux sont FIXES par la loi guinéenne, non configurables.
         TAUX_TA_LEGAL = Decimal('2.00')       # Taxe d'Apprentissage: 2% (loi)
         TAUX_ONFPP_LEGAL = Decimal('1.50')    # ONFPP: 1,5% (loi)
@@ -1067,7 +1067,7 @@ class MoteurCalculPaie:
         else:
             self.montants['taxe_apprentissage'] = Decimal('0')
             self.montants['contribution_onfpp'] = self._arrondir(
-                base_vf_nette * TAUX_ONFPP_LEGAL / Decimal('100')
+                base_vf_ta * TAUX_ONFPP_LEGAL / Decimal('100')
             )
         
         # Total charges patronales (arrondi à l'unité GNF)
