@@ -93,11 +93,20 @@ def get_declarations_data(entreprise, annee, mois=None):
     total_vf = totaux['total_vf'] or Decimal('0')
     total_ta = totaux['total_ta'] or Decimal('0')
     total_onfpp = totaux['total_onfpp'] or Decimal('0')
+    nb_salaries = bulletins.values('employe').distinct().count()
+    if nb_salaries >= 30:
+        total_ta = Decimal('0')
+        total_onfpp = (masse_salariale * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
     
     # Détail par employé
     detail_employes = []
     for bulletin in bulletins:
         emp = bulletin.employe
+        onfpp = (
+            (bulletin.salaire_brut * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
+            if nb_salaries >= 30
+            else bulletin.contribution_onfpp
+        )
         detail_employes.append({
             'matricule': emp.matricule,
             'num_cnss': emp.num_cnss_individuel or '',
@@ -113,7 +122,7 @@ def get_declarations_data(entreprise, annee, mois=None):
             'base_vf': bulletin.base_vf,
             'vf': bulletin.versement_forfaitaire,
             'ta': bulletin.taxe_apprentissage,
-            'onfpp': bulletin.contribution_onfpp,
+            'onfpp': onfpp,
             'periode': str(bulletin.periode),
         })
     
@@ -121,7 +130,7 @@ def get_declarations_data(entreprise, annee, mois=None):
         'entreprise': entreprise,
         'annee': annee,
         'mois': mois,
-        'nb_salaries': bulletins.values('employe').distinct().count(),
+        'nb_salaries': nb_salaries,
         'masse_salariale': masse_salariale,
         'total_base_vf': total_base_vf,
         'plancher_cnss': plancher_cnss,

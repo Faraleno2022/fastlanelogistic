@@ -1,12 +1,11 @@
 """
-Recalcule la contribution ONFPP des bulletins historiques suite au changement
-de convention : ONFPP est désormais calculée sur la base VF nette (= brut −
-déduction VF), et non plus sur le brut.
+Recalcule la contribution ONFPP des bulletins historiques.
+
+Convention retenue : ONFPP = salaire brut × 1,5%.
 
 Ne touche QUE le champ `contribution_onfpp`. Le `net_a_payer` n'est pas affecté
 car l'ONFPP est une charge patronale (côté employeur), pas une retenue salariée.
-Aucune autre rubrique du bulletin n'est recalculée — on lit la `base_vf` déjà
-stockée pour le bulletin et on applique 1,5 %.
+Aucune autre rubrique du bulletin n'est recalculée.
 
 Usage:
     # Aperçu sur tout l'historique (RECOMMANDÉ AVANT TOUT)
@@ -25,6 +24,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.models import Q
 
 from paie.models import BulletinPaie
 
@@ -33,7 +33,7 @@ TAUX_ONFPP = Decimal('1.5')
 
 
 class Command(BaseCommand):
-    help = "Recalcule la contribution ONFPP sur la base VF nette pour les bulletins historiques"
+    help = "Recalcule la contribution ONFPP sur le salaire brut pour les bulletins historiques"
 
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true',
@@ -51,9 +51,11 @@ class Command(BaseCommand):
         qs = BulletinPaie.objects.filter(contribution_onfpp__gt=0)
 
         if options.get('annee'):
-            qs = qs.filter(annee_paie=options['annee'])
+            annee = options['annee']
+            qs = qs.filter(Q(annee_paie=annee) | Q(periode__annee=annee))
         if options.get('mois'):
-            qs = qs.filter(mois_paie=options['mois'])
+            mois = options['mois']
+            qs = qs.filter(Q(mois_paie=mois) | Q(periode__mois=mois))
         if options.get('entreprise'):
             qs = qs.filter(employe__entreprise_id=options['entreprise'])
 
@@ -66,7 +68,7 @@ class Command(BaseCommand):
 
         total = qs.count()
         self.stdout.write(self.style.NOTICE('=' * 78))
-        self.stdout.write(self.style.NOTICE('RECALCUL ONFPP HISTORIQUE — convention : base VF nette × 1,5 %'))
+        self.stdout.write(self.style.NOTICE('RECALCUL ONFPP HISTORIQUE — convention : salaire brut × 1,5 %'))
         self.stdout.write(self.style.NOTICE('=' * 78))
         self.stdout.write(f"Bulletins ciblés (ONFPP > 0) : {total}")
         if dry_run:
@@ -83,8 +85,8 @@ class Command(BaseCommand):
 
         for b in qs.iterator(chunk_size=200):
             ancien = b.contribution_onfpp or Decimal('0')
-            base_vf = b.base_vf or Decimal('0')
-            nouveau = (base_vf * TAUX_ONFPP / Decimal('100')).quantize(
+            brut = b.salaire_brut or Decimal('0')
+            nouveau = (brut * TAUX_ONFPP / Decimal('100')).quantize(
                 Decimal('1'), rounding=ROUND_HALF_UP
             )
             ecart = nouveau - ancien

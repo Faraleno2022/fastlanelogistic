@@ -90,7 +90,7 @@ class ChargesPatronalesTests(SimpleTestCase):
     TAUX_TA = Decimal('0.02')    # 2%
 
     def _calculer_vf_ta(self, salaire_brut):
-        """Calcule VF et TA sur base VF/ONFPP."""
+        """Calcule VF et TA sur base VF."""
         deduction_vf = round(min(salaire_brut, Decimal('2500000')) * self.TAUX_VF)
         base_vf = salaire_brut - deduction_vf
         vf = round(base_vf * self.TAUX_VF)
@@ -98,7 +98,7 @@ class ChargesPatronalesTests(SimpleTestCase):
         return base_vf, vf, ta
 
     def test_tu04_vf_6_pourcent(self):
-        """TU-04: Versement Forfaitaire = 6% de la base VF/ONFPP"""
+        """TU-04: Versement Forfaitaire = 6% de la base VF"""
         salaire = Decimal('3600000')
         base_vf, vf, _ = self._calculer_vf_ta(salaire)
 
@@ -106,7 +106,7 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(vf, Decimal('207000'))
 
     def test_tu05_ta_2_pourcent(self):
-        """TU-05: Taxe Apprentissage = 2% de la base VF/ONFPP"""
+        """TU-05: Taxe Apprentissage = 2% de la base VF"""
         salaire = Decimal('3600000')
         _, _, ta = self._calculer_vf_ta(salaire)
 
@@ -146,7 +146,7 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(charges['total'], 711000)
 
     def test_charges_patronales_ta_sous_30_salaries(self):
-        """TA = 2% de la base VF/ONFPP tant que l'effectif reste sous le seuil."""
+        """TA = 2% de la base VF tant que l'effectif reste sous le seuil."""
         constantes = {
             'PLANCHER_CNSS': Decimal('550000'),
             'PLAFOND_CNSS': Decimal('2500000'),

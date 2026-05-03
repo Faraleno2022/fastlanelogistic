@@ -250,7 +250,7 @@ def calculer_un_bareme(
     deduction_vf = _half_up(min(brut, plafond_cnss) * taux_vf / Decimal('100'))
     base_vf = max(Decimal('0'), brut - Decimal(str(deduction_vf)))
     vf = _half_up(base_vf * taux_vf / Decimal('100'))
-    # Seuil TA/ONFPP : < seuil -> TA 2%, >= seuil -> ONFPP 1,5% (tous deux sur base VF nette, CGI Guinee)
+    # Seuil TA/ONFPP : < seuil -> TA 2%, >= seuil -> ONFPP 1,5% sur le brut
     seuil_ta_onfpp = int(constantes.get('SEUIL_TA_ONFPP', Decimal('30')))
     if nb_salaries < seuil_ta_onfpp:
         ta    = _half_up(base_vf * TAUX_TA_LEGAL / Decimal('100'))

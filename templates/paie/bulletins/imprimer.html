@@ -510,7 +510,7 @@
         </tr>
         {% if bulletin.taxe_apprentissage and bulletin.taxe_apprentissage > 0 %}
         <tr>
-            <td>TA (applicable si effectif &lt; 25 sal. &mdash; effectif actuel : {{ bulletin.nombre_salaries }})</td>
+            <td>TA (applicable si effectif &lt; 30 sal. &mdash; effectif actuel : {{ bulletin.nombre_salaries }})</td>
             <td class="text-right">{{ bulletin.base_vf|default:bulletin.salaire_brut|floatformat:0|intcomma }}</td>
             <td class="text-center">{{ bulletin.taux_ta|default:"2" }}%</td>
             <td class="text-right"><strong>{{ bulletin.taxe_apprentissage|floatformat:0|intcomma }} GNF</strong></td>

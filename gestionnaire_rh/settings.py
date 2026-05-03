@@ -445,9 +445,10 @@ if PYINSTALLER_MODE:
     DATABASES['default']['CONN_MAX_AGE'] = 0  # Pas de connexion persistante
 elif not DEBUG:
     DATABASES['default']['CONN_MAX_AGE'] = 0  # Pas de connexion persistante
-    DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 10,
-    }
+    if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+        DATABASES['default'].setdefault('OPTIONS', {})['timeout'] = 20
+    else:
+        DATABASES['default'].setdefault('OPTIONS', {})['connect_timeout'] = 10
 else:
     DATABASES['default']['CONN_MAX_AGE'] = 0  # Pas de persistence en dev
 

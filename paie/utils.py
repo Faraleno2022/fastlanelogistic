@@ -771,13 +771,13 @@ def generer_bulletin_pdf(bulletin):
         "6%",
         f"{vf:,.0f}".replace(",", " ")])
     if ta > 0:
-        charges_data.append([f"TA (applicable si effectif < 25 sal. \u2014 effectif actuel : {nb_sal})",
+        charges_data.append([f"TA (applicable si effectif < 30 sal. \u2014 effectif actuel : {nb_sal})",
             f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
             f"{taux_ta_label}%",
             f"{ta:,.0f}".replace(",", " ")])
     elif onfpp > 0:
-        charges_data.append([f"ONFPP (applicable si effectif \u2265 25 sal. \u2014 effectif actuel : {nb_sal})",
-            f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
+        charges_data.append([f"ONFPP (applicable si effectif \u2265 30 sal. \u2014 effectif actuel : {nb_sal})",
+            f"{bulletin.salaire_brut:,.0f}".replace(",", " "),
             "1,5%",
             f"{onfpp:,.0f}".replace(",", " ")])
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
@@ -810,7 +810,7 @@ def generer_bulletin_pdf(bulletin):
         p.setFont(_FONT_ITALIC, 5.5)
         p.setFillColor(colors.HexColor("#666666"))
         p.drawString(margin_left, y,
-            f"Base VF/TA = {base_vf:,.0f} GNF  |  VF = {base_vf:,.0f} x 6%  |  TA/ONFPP sur cette base"
+            f"Base VF/TA = {base_vf:,.0f} GNF  |  VF = {base_vf:,.0f} x 6%  |  ONFPP = brut x 1,5%"
             .replace(",", " "))
         y -= 0.20*cm
     p.setFillColor(colors.black)

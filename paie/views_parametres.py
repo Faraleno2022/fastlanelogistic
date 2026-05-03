@@ -82,7 +82,7 @@ def parametres_calcul_paie(request):
             messages.success(
                 request,
                 "Modèle standard GuinéeRH appliqué : indemnités plafonnées à 25 %, "
-                "base VF/ONFPP avec déduction CGI, base RTS standard."
+                "base VF avec déduction CGI, ONFPP sur brut, base RTS standard."
             )
             return redirect('paie:parametres_calcul')
 
