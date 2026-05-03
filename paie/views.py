@@ -748,7 +748,6 @@ def telecharger_bulletin_pdf(request, pk):
             if is_indem:
                 libelle = 'Indemnité' + libelle[5:]
         if ('HS' in code_rub or 'HEURE' in libelle.upper()) and 'SUP' in libelle.upper():
-            import re
             libelle = re.sub(r'\s*\+?\d+\s*%', '', libelle).strip()
         # Transparence du calcul : pour un montant mensuel fixe (base == montant, sans nombre>1
         # ni taux), afficher explicitement Nbre = 1 pour signaler la formule "1 × montant".
@@ -1371,7 +1370,6 @@ def telecharger_bulletin_public(request, token):
             if is_indem:
                 libelle = 'Indemnité' + libelle[5:]
         if ('HS' in code_rub or 'HEURE' in libelle.upper()) and 'SUP' in libelle.upper():
-            import re
             libelle = re.sub(r'\s*\+?\d+\s*%', '', libelle).strip()
         # Transparence du calcul : pour un montant mensuel fixe (base == montant, sans nombre>1
         # ni taux), afficher explicitement Nbre = 1 pour signaler la formule "1 × montant".
