@@ -6,11 +6,53 @@ from django.http import HttpResponse
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from datetime import timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from employes.models import Employe
 from paie.models import BulletinPaie, PeriodePaie
 from temps_travail.models import Conge, Pointage
+
+
+def _arrondir_gnf(montant):
+    return Decimal(str(montant or 0)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+
+
+def _base_cnss_attendue(brut):
+    brut = Decimal(str(brut or 0))
+    plancher = Decimal('550000')
+    plafond = Decimal('2500000')
+    if brut < plancher * Decimal('0.10'):
+        return Decimal('0')
+    return _arrondir_gnf(max(min(brut, plafond), plancher))
+
+
+def _charges_attendues_bulletin(bulletin, effectif):
+    brut = Decimal(str(bulletin.salaire_brut or 0))
+    base_cnss = _base_cnss_attendue(brut)
+    cnss_5 = _arrondir_gnf(base_cnss * Decimal('0.05'))
+    cnss_18 = _arrondir_gnf(base_cnss * Decimal('0.18'))
+    deduction_vf = _arrondir_gnf(min(brut, Decimal('2500000')) * Decimal('0.06'))
+    base_vf = max(Decimal('0'), brut - deduction_vf)
+    vf = _arrondir_gnf(base_vf * Decimal('0.06'))
+    if effectif >= 30:
+        ta = Decimal('0')
+        onfpp = _arrondir_gnf(brut * Decimal('0.015'))
+    else:
+        ta = _arrondir_gnf(base_vf * Decimal('0.02'))
+        onfpp = Decimal('0')
+    return {
+        'base_cnss': base_cnss,
+        'cnss_5': cnss_5,
+        'cnss_18': cnss_18,
+        'base_vf': base_vf,
+        'vf': vf,
+        'ta': ta,
+        'onfpp': onfpp,
+    }
+
+
+def _ecart_significatif(valeur, attendu, tolerance=Decimal('2')):
+    return abs(Decimal(str(valeur or 0)) - Decimal(str(attendu or 0))) > tolerance
 
 
 def _build_paie_totaux_context(totaux):
@@ -39,6 +81,163 @@ def _build_paie_totaux_context(totaux):
         'total_declaration_sociale': total_cnss_23,
         'total_dmu': total_trs + total_vf,
         'total_etax': total_trs + total_vf,
+    }
+
+
+def _build_repartition_service_paie(bulletins, effectif_total):
+    """Répartition mensuelle réelle des coûts paie par service."""
+    services = {}
+    iterable = bulletins.select_related('employe__service', 'employe') if hasattr(bulletins, 'select_related') else bulletins
+    for bulletin in iterable:
+        service = bulletin.employe.service
+        key = service.pk if service else 0
+        nom = service.nom_service if service else 'Sans service'
+        if key not in services:
+            services[key] = {
+                'nom': nom,
+                'effectif': 0,
+                'hommes': 0,
+                'femmes': 0,
+                'brut': Decimal('0'),
+                'net': Decimal('0'),
+                'cnss_23': Decimal('0'),
+                'rts': Decimal('0'),
+                'vf': Decimal('0'),
+                'ta': Decimal('0'),
+                'onfpp': Decimal('0'),
+                'masse_salariale': Decimal('0'),
+            }
+        row = services[key]
+        attendu = _charges_attendues_bulletin(bulletin, effectif_total)
+        brut = Decimal(str(bulletin.salaire_brut or 0))
+        cnss_18 = Decimal(str(bulletin.cnss_employeur or attendu['cnss_18']))
+        vf = Decimal(str(bulletin.versement_forfaitaire or attendu['vf']))
+        ta = attendu['ta'] if effectif_total < 30 else Decimal('0')
+        onfpp = attendu['onfpp'] if effectif_total >= 30 else Decimal('0')
+
+        row['effectif'] += 1
+        if bulletin.employe.sexe == 'M':
+            row['hommes'] += 1
+        elif bulletin.employe.sexe == 'F':
+            row['femmes'] += 1
+        row['brut'] += brut
+        row['net'] += Decimal(str(bulletin.net_a_payer or 0))
+        row['cnss_23'] += Decimal(str(bulletin.cnss_employe or attendu['cnss_5'])) + cnss_18
+        row['rts'] += Decimal(str(bulletin.irg or 0))
+        row['vf'] += vf
+        row['ta'] += ta
+        row['onfpp'] += onfpp
+        row['masse_salariale'] += brut + cnss_18 + vf + onfpp + ta
+
+    return sorted(services.values(), key=lambda item: item['brut'], reverse=True)
+
+
+def _build_risque_fiscal_paie(bulletins, effectif_total):
+    """Score synthétique de risque fiscal pour la période paie affichée."""
+    compteurs = {
+        'bulletins': 0,
+        'bases_manquantes': 0,
+        'indemnites_surveillees': 0,
+        'indemnites_plafond': 0,
+        'ecarts_cnss': 0,
+        'ecarts_vf': 0,
+        'ecarts_ta_onfpp': 0,
+        'mode_ta_onfpp': 0,
+    }
+
+    for bulletin in bulletins:
+        compteurs['bulletins'] += 1
+        brut = Decimal(str(bulletin.salaire_brut or 0))
+        if brut <= 0:
+            compteurs['bases_manquantes'] += 1
+            continue
+
+        base_rts = Decimal(str(getattr(bulletin, 'base_rts', 0) or 0))
+        base_vf = Decimal(str(getattr(bulletin, 'base_vf', 0) or 0))
+        if base_rts <= 0 or base_vf <= 0:
+            compteurs['bases_manquantes'] += 1
+
+        abattement = Decimal(str(getattr(bulletin, 'abattement_forfaitaire', 0) or 0))
+        ratio_indemnites = (abattement / brut * Decimal('100')) if brut else Decimal('0')
+        if ratio_indemnites >= Decimal('25'):
+            compteurs['indemnites_plafond'] += 1
+        elif ratio_indemnites >= Decimal('23'):
+            compteurs['indemnites_surveillees'] += 1
+
+        attendu = _charges_attendues_bulletin(bulletin, effectif_total)
+        if (
+            _ecart_significatif(getattr(bulletin, 'cnss_employe', 0), attendu['cnss_5'])
+            or _ecart_significatif(getattr(bulletin, 'cnss_employeur', 0), attendu['cnss_18'])
+        ):
+            compteurs['ecarts_cnss'] += 1
+        if (
+            _ecart_significatif(getattr(bulletin, 'base_vf', 0), attendu['base_vf'])
+            or _ecart_significatif(getattr(bulletin, 'versement_forfaitaire', 0), attendu['vf'])
+        ):
+            compteurs['ecarts_vf'] += 1
+        if (
+            _ecart_significatif(getattr(bulletin, 'taxe_apprentissage', 0), attendu['ta'])
+            or _ecart_significatif(getattr(bulletin, 'contribution_onfpp', 0), attendu['onfpp'])
+        ):
+            compteurs['ecarts_ta_onfpp'] += 1
+
+        if effectif_total >= 30 and Decimal(str(getattr(bulletin, 'taxe_apprentissage', 0) or 0)) > 0:
+            compteurs['mode_ta_onfpp'] += 1
+        if effectif_total < 30 and Decimal(str(getattr(bulletin, 'contribution_onfpp', 0) or 0)) > 0:
+            compteurs['mode_ta_onfpp'] += 1
+
+    score = 0
+    score += compteurs['bases_manquantes'] * 12
+    score += compteurs['indemnites_surveillees'] * 4
+    score += compteurs['indemnites_plafond'] * 10
+    score += compteurs['ecarts_cnss'] * 10
+    score += compteurs['ecarts_vf'] * 8
+    score += compteurs['ecarts_ta_onfpp'] * 12
+    score += compteurs['mode_ta_onfpp'] * 15
+    score = min(score, 100)
+
+    if compteurs['bulletins'] == 0:
+        niveau = 'Aucun bulletin'
+        badge = 'secondary'
+        icon = 'bi-info-circle'
+        statut = 'Aucune période calculée'
+    elif score >= 70:
+        niveau = 'Rouge'
+        badge = 'danger'
+        icon = 'bi-shield-exclamation'
+        statut = 'Risque fiscal élevé'
+    elif score >= 35:
+        niveau = 'Orange'
+        badge = 'warning'
+        icon = 'bi-exclamation-triangle'
+        statut = 'Points à surveiller'
+    else:
+        niveau = 'Vert'
+        badge = 'success'
+        icon = 'bi-shield-check'
+        statut = 'Contrôles cohérents'
+
+    controles = [
+        ('Bases taxables', compteurs['bases_manquantes'], 'Base RTS/VF absente ou nulle'),
+        ('Indemnités ≥ 23%', compteurs['indemnites_surveillees'], 'Profil proche du plafond'),
+        ('Indemnités ≥ 25%', compteurs['indemnites_plafond'], 'Plafond fiscal atteint'),
+        ('Écarts CNSS', compteurs['ecarts_cnss'], 'Plancher/plafond/taux à vérifier'),
+        ('Écarts VF', compteurs['ecarts_vf'], 'Base VF ou montant VF incohérent'),
+        ('Écarts TA/ONFPP', compteurs['ecarts_ta_onfpp'], 'Seuil 30 ou base ONFPP à vérifier'),
+        ('Mode TA/ONFPP', compteurs['mode_ta_onfpp'], 'TA/ONFPP incompatible avec l’effectif'),
+    ]
+
+    return {
+        'score': score,
+        'niveau': niveau,
+        'badge': badge,
+        'icon': icon,
+        'statut': statut,
+        'bulletins': compteurs['bulletins'],
+        'controles': [
+            {'nom': nom, 'valeur': valeur, 'detail': detail, 'ok': valeur == 0}
+            for nom, valeur, detail in controles
+        ],
     }
 
 
@@ -95,6 +294,8 @@ def index(request):
             'total_trs': 0, 'total_vf': 0, 'total_ta': 0, 'total_onfpp': 0,
             'total_cnss_5': 0, 'total_cnss_18': 0, 'total_cnss_23': 0,
             'total_declaration_sociale': 0, 'total_dmu': 0, 'total_etax': 0,
+            'risque_fiscal': _build_risque_fiscal_paie([], 0),
+            'repartition_service_paie': [],
             'alertes': [{
                 'type': 'warning',
                 'icon': 'bi-exclamation-triangle',
@@ -104,7 +305,7 @@ def index(request):
         }
         return render(request, 'dashboard/index.html', context)
 
-    cache_key = f'dashboard_stats_v3_{entreprise_id}_{annee_filtre}_{mois_filtre}'
+    cache_key = f'dashboard_stats_v4_{entreprise_id}_{annee_filtre}_{mois_filtre}'
 
     # Essayer de récupérer du cache
     cached_data = cache.get(cache_key)
@@ -211,10 +412,17 @@ def index(request):
             totaux['ta'] = Decimal('0')
             totaux['onfpp'] = ((totaux.get('brut') or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
         context.update(_build_paie_totaux_context(totaux))
+        context['risque_fiscal'] = _build_risque_fiscal_paie(bulletins_mois, context.get('total_employes', 0))
+        context['repartition_service_paie'] = _build_repartition_service_paie(
+            bulletins_mois,
+            context.get('total_employes', 0),
+        )
     except PeriodePaie.DoesNotExist:
         context['bulletins_calcules'] = 0
         context['bulletins_valides'] = 0
         context.update(_build_paie_totaux_context({}))
+        context['risque_fiscal'] = _build_risque_fiscal_paie([], context.get('total_employes', 0))
+        context['repartition_service_paie'] = []
     
     # Pointages du jour
     context['pointages_jour'] = Pointage.objects.filter(

@@ -340,6 +340,117 @@
     </div>
 </div>
 
+<!-- Risque fiscal + Répartition service -->
+<div class="row mb-4">
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="card shadow h-100 border-left-{{ risque_fiscal.badge }}">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-{{ risque_fiscal.badge }}">
+                    <i class="bi {{ risque_fiscal.icon }}"></i> Risque fiscal
+                </h6>
+                <span class="badge bg-{{ risque_fiscal.badge }}">{{ risque_fiscal.niveau }}</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div>
+                        <div class="h3 mb-0 font-weight-bold">{{ risque_fiscal.score }}/100</div>
+                        <small class="text-muted">{{ risque_fiscal.statut }} · {{ risque_fiscal.bulletins }} bulletin{{ risque_fiscal.bulletins|pluralize }}</small>
+                    </div>
+                    <i class="bi {{ risque_fiscal.icon }} fs-1 text-{{ risque_fiscal.badge }}"></i>
+                </div>
+                <div class="progress progress-thin mb-3">
+                    <div class="progress-bar bg-{{ risque_fiscal.badge }}" role="progressbar"
+                         style="width: {{ risque_fiscal.score }}%;"
+                         aria-valuenow="{{ risque_fiscal.score }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            {% for controle in risque_fiscal.controles %}
+                            <tr>
+                                <td>
+                                    {% if controle.ok %}
+                                        <i class="bi bi-check-circle text-success"></i>
+                                    {% else %}
+                                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                                    {% endif %}
+                                    {{ controle.nom }}
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-{% if controle.ok %}success{% else %}warning text-dark{% endif %}">
+                                        {{ controle.valeur }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-building"></i> Répartition paie par service
+                </h6>
+                <small class="text-muted">{{ periode_label }}</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm detail-table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Service</th>
+                                <th class="text-center">Eff.</th>
+                                <th class="text-end">Brut</th>
+                                <th class="text-end">Net</th>
+                                <th class="text-end">CNSS 23%</th>
+                                <th class="text-end">RTS</th>
+                                <th class="text-end">VF</th>
+                                <th class="text-end">ONFPP/TA</th>
+                                <th class="text-end">Masse</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for service in repartition_service_paie %}
+                            <tr>
+                                <td>
+                                    <strong>{{ service.nom }}</strong>
+                                    <div class="small text-muted">{{ service.hommes }} H · {{ service.femmes }} F</div>
+                                </td>
+                                <td class="text-center">{{ service.effectif }}</td>
+                                <td class="text-end">{{ service.brut|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ service.net|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ service.cnss_23|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ service.rts|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ service.vf|floatformat:0|intcomma }}</td>
+                                <td class="text-end">
+                                    {% if total_employes >= 30 %}
+                                        {{ service.onfpp|floatformat:0|intcomma }}
+                                    {% else %}
+                                        {{ service.ta|floatformat:0|intcomma }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end"><strong>{{ service.masse_salariale|floatformat:0|intcomma }}</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">
+                                    Aucun bulletin calculé pour cette période.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Alertes -->
 {% if alertes %}
 <div class="row mb-4">
