@@ -176,12 +176,12 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Masse Salariale
+                            Coût Employeur
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ masse_salariale|floatformat:0|intcomma }} GNF
                         </div>
-                        <small class="text-muted">{{ periode_label }}</small>
+                        <small class="text-muted">Brut + charges patronales · {{ periode_label }}</small>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-cash-stack fs-2 text-gray-300"></i>
@@ -447,7 +447,7 @@
                                 <th>RTS</th>
                                 <th>VF</th>
                                 <th>ONFPP/TA</th>
-                                <th>Masse</th>
+                                <th>Coût</th>
                             </tr>
                         </thead>
                         <tbody>

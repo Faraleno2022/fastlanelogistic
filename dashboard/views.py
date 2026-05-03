@@ -223,7 +223,7 @@ def _build_risque_fiscal_paie(bulletins, effectif_total):
         statut = 'Contrôles cohérents'
 
     controles = [
-        ('Bases taxables', compteurs['bases_manquantes'], 'Base RTS/VF absente ou nulle'),
+        ('Bases taxables manquantes', compteurs['bases_manquantes'], 'Base RTS/VF absente ou nulle'),
         ('Indemnités ≥ 23%', compteurs['indemnites_surveillees'], 'Profil proche du plafond'),
         ('Indemnités ≥ 25%', compteurs['indemnites_plafond'], 'Plafond fiscal atteint'),
         ('Écarts CNSS', compteurs['ecarts_cnss'], 'Plancher/plafond/taux à vérifier'),
@@ -310,7 +310,7 @@ def index(request):
         }
         return render(request, 'dashboard/index.html', context)
 
-    cache_key = f'dashboard_stats_v4_{entreprise_id}_{annee_filtre}_{mois_filtre}'
+    cache_key = f'dashboard_stats_v5_{entreprise_id}_{annee_filtre}_{mois_filtre}'
 
     # Essayer de récupérer du cache
     cached_data = cache.get(cache_key)
@@ -400,8 +400,15 @@ def index(request):
             periode=periode_actuelle,
             employe__entreprise=request.user.entreprise,
         )
-        context['bulletins_calcules'] = bulletins_mois.filter(statut_bulletin='calcule').count()
-        context['bulletins_valides'] = bulletins_mois.filter(statut_bulletin='valide').count()
+        # Un bulletin "calculé" recouvre tous ceux dont les calculs ont été figés
+        # (calcule, valide, paye). Un bulletin "validé" inclut les bulletins payés
+        # (un paiement implique nécessairement validation préalable).
+        context['bulletins_calcules'] = bulletins_mois.filter(
+            statut_bulletin__in=('calcule', 'valide', 'paye')
+        ).count()
+        context['bulletins_valides'] = bulletins_mois.filter(
+            statut_bulletin__in=('valide', 'paye')
+        ).count()
         totaux = bulletins_mois.aggregate(
             brut=Sum('salaire_brut'),
             net=Sum('net_a_payer'),
