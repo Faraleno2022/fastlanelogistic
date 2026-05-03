@@ -294,7 +294,8 @@ def index(request):
             'contrats_detail': [], 'contrats_actifs': [], 'contrats_sans': 0,
             'conges_en_cours': 0, 'employes_en_conge': [],
             'conges_en_attente': 0, 'bulletins_calcules': 0,
-            'bulletins_valides': 0, 'salaire_brut': 0, 'masse_salariale': 0, 'pointages_jour': 0,
+            'bulletins_valides': 0, 'bulletins_en_attente': 0,
+            'salaire_brut': 0, 'masse_salariale': 0, 'pointages_jour': 0,
             'total_net_a_payer': 0, 'total_base_vf': 0,
             'total_trs': 0, 'total_vf': 0, 'total_ta': 0, 'total_onfpp': 0,
             'total_cnss_5': 0, 'total_cnss_18': 0, 'total_cnss_23': 0,
@@ -336,6 +337,7 @@ def index(request):
         apprentissage=Count('id', filter=Q(type_contrat='apprentissage')),
         temporaire=Count('id', filter=Q(type_contrat='temporaire')),
         sans_contrat=Count('id', filter=Q(type_contrat__isnull=True) | Q(type_contrat='')),
+        sans_service=Count('id', filter=Q(service__isnull=True)),
     )
 
     context['total_employes'] = employes_stats['total']
@@ -371,6 +373,7 @@ def index(request):
     context['contrats_detail'] = contrats_detail
     context['contrats_actifs'] = [c for c in contrats_detail if c['count'] > 0]
     context['contrats_sans'] = employes_stats['sans_contrat']
+    context['employes_sans_service'] = employes_stats['sans_service']
     
     # Congés en cours
     aujourd_hui = timezone.now().date()
@@ -409,6 +412,9 @@ def index(request):
         context['bulletins_valides'] = bulletins_mois.filter(
             statut_bulletin__in=('valide', 'paye')
         ).count()
+        context['bulletins_en_attente'] = max(
+            0, context['bulletins_calcules'] - context['bulletins_valides']
+        )
         totaux = bulletins_mois.aggregate(
             brut=Sum('salaire_brut'),
             net=Sum('net_a_payer'),
@@ -432,6 +438,7 @@ def index(request):
     except PeriodePaie.DoesNotExist:
         context['bulletins_calcules'] = 0
         context['bulletins_valides'] = 0
+        context['bulletins_en_attente'] = 0
         context.update(_build_paie_totaux_context({}))
         context['risque_fiscal'] = _build_risque_fiscal_paie([], context.get('total_employes', 0))
         context['repartition_service_paie'] = []
@@ -488,7 +495,24 @@ def index(request):
             'icon': 'bi-file-earmark-x',
             'message': f'{context["contrats_sans"]} employé(s) actif(s) sans type de contrat défini'
         })
-    
+
+    # Employés sans service — bloque le pilotage par département
+    sans_service = context.get('employes_sans_service', 0)
+    if sans_service > 0:
+        total_emp = context.get('total_employes') or 1
+        ratio = sans_service * 100 // total_emp
+        # warning au-dessus de 10% des effectifs, info en-dessous
+        type_alerte = 'warning' if ratio >= 10 else 'info'
+        context['alertes'].append({
+            'type': type_alerte,
+            'icon': 'bi-diagram-3',
+            'message': (
+                f'{sans_service} employé(s) actif(s) sans service affecté '
+                f'({ratio}% de l\'effectif) — pilotage par département impossible '
+                f'tant que ces employés ne sont pas rattachés.'
+            )
+        })
+
     # Congés en attente de validation
     if context['conges_en_attente'] > 0:
         context['alertes'].append({

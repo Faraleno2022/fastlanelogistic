@@ -220,9 +220,13 @@
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                             Bulletins de paie
                         </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ bulletins_valides }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ bulletins_calcules }}</div>
                         <small class="text-muted">
-                            <i class="bi bi-check-circle"></i> {{ periode_label }} · Validés / {{ bulletins_calcules }} calculés
+                            <i class="bi bi-check-circle text-success"></i> {{ bulletins_valides }} validé{{ bulletins_valides|pluralize }}
+                            {% if bulletins_en_attente > 0 %}
+                                · <span class="text-warning">{{ bulletins_en_attente }} en attente</span>
+                            {% endif %}
+                            · {{ periode_label }}
                         </small>
                     </div>
                     <div class="col-auto">
