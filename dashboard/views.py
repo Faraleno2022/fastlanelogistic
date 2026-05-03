@@ -186,14 +186,19 @@ def _build_risque_fiscal_paie(bulletins, effectif_total):
         if effectif_total < 30 and Decimal(str(getattr(bulletin, 'contribution_onfpp', 0) or 0)) > 0:
             compteurs['mode_ta_onfpp'] += 1
 
+    nb_bulletins = max(compteurs['bulletins'], 1)
+    anomalies_critiques = (
+        compteurs['bases_manquantes'] +
+        compteurs['ecarts_cnss'] +
+        compteurs['ecarts_vf'] +
+        compteurs['ecarts_ta_onfpp'] +
+        compteurs['mode_ta_onfpp']
+    )
+    profil_surveille = compteurs['indemnites_surveillees'] + compteurs['indemnites_plafond']
     score = 0
-    score += compteurs['bases_manquantes'] * 12
-    score += compteurs['indemnites_surveillees'] * 4
-    score += compteurs['indemnites_plafond'] * 10
-    score += compteurs['ecarts_cnss'] * 10
-    score += compteurs['ecarts_vf'] * 8
-    score += compteurs['ecarts_ta_onfpp'] * 12
-    score += compteurs['mode_ta_onfpp'] * 15
+    score += min(85, int((anomalies_critiques / nb_bulletins) * 85))
+    score += min(30, int((profil_surveille / nb_bulletins) * 30))
+    score += min(10, int((compteurs['indemnites_plafond'] / nb_bulletins) * 10))
     score = min(score, 100)
 
     if compteurs['bulletins'] == 0:
