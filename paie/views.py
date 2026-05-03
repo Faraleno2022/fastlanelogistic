@@ -2057,6 +2057,7 @@ def declarations_sociales(request):
     total_salaries = bulletins.values('employe').distinct().count()
     totaux = bulletins.aggregate(
         total_brut=Sum('salaire_brut'),
+        total_base_vf=Sum('base_vf'),
         total_cnss_employe=Sum('cnss_employe'),
         total_cnss_employeur=Sum('cnss_employeur'),
         total_rts=Sum('irg'),
@@ -2065,11 +2066,12 @@ def declarations_sociales(request):
         total_onfpp=Sum('contribution_onfpp'),
     )
     salaire_brut_total = totaux['total_brut'] or Decimal('0')
+    total_base_vf = totaux['total_base_vf'] or Decimal('0')
     total_onfpp = totaux['total_onfpp'] or Decimal('0')
     total_ta = totaux['total_ta'] or Decimal('0')
     if total_salaries >= 30:
         total_ta = Decimal('0')
-        total_onfpp = (salaire_brut_total * Decimal('0.015')).quantize(Decimal('1'))
+        total_onfpp = (total_base_vf * Decimal('0.015')).quantize(Decimal('1'))
 
     # Calculs pour CNSS
     declaration_cnss = {
@@ -2175,6 +2177,7 @@ def declarations_sociales_pdf(request):
     total_salaries = bulletins.values('employe').distinct().count()
     totaux = bulletins.aggregate(
         total_brut=Sum('salaire_brut'),
+        total_base_vf=Sum('base_vf'),
         total_cnss_employe=Sum('cnss_employe'),
         total_cnss_employeur=Sum('cnss_employeur'),
         total_rts=Sum('irg'),
@@ -2182,9 +2185,10 @@ def declarations_sociales_pdf(request):
         total_onfpp=Sum('contribution_onfpp'),
     )
     salaire_brut_total = totaux['total_brut'] or Decimal('0')
+    total_base_vf = totaux['total_base_vf'] or Decimal('0')
     total_onfpp = totaux['total_onfpp'] or Decimal('0')
     if total_salaries >= 30:
-        total_onfpp = (salaire_brut_total * Decimal('0.015')).quantize(Decimal('1'))
+        total_onfpp = (total_base_vf * Decimal('0.015')).quantize(Decimal('1'))
 
     declaration_cnss = {
         'total_salaries': total_salaries,
