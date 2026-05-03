@@ -1063,7 +1063,7 @@ def telecharger_bulletin_pdf(request, pk):
             f"{ta:,.0f}".replace(",", " ")])
     elif onfpp > 0:
         charges_data.append([f"ONFPP (applicable si effectif \u2265 30 sal. \u2014 effectif actuel : {nb_sal})",
-            f"{bulletin.salaire_brut:,.0f}".replace(",", " "),
+            f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
             "1,5%",
             f"{onfpp:,.0f}".replace(",", " ")])
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
@@ -1693,7 +1693,7 @@ def telecharger_bulletin_public(request, token):
             f"{ta:,.0f}".replace(",", " ")])
     elif onfpp > 0:
         charges_data.append([f"ONFPP (applicable si effectif \u2265 30 sal. \u2014 effectif actuel : {nb_sal})",
-            f"{bulletin.salaire_brut:,.0f}".replace(",", " "),
+            f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
             "1,5%",
             f"{onfpp:,.0f}".replace(",", " ")])
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
