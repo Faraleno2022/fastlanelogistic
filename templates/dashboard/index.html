@@ -39,6 +39,42 @@
         font-size: 0.8rem;
         padding: 0.35em 0.65em;
     }
+    .service-payroll-table {
+        border: 1px solid #cbd5e1;
+        border-collapse: collapse;
+        min-width: 980px;
+    }
+    .service-payroll-table th,
+    .service-payroll-table td {
+        border: 1px solid #cbd5e1 !important;
+        vertical-align: middle;
+        padding: 0.65rem 0.75rem;
+    }
+    .service-payroll-table thead th {
+        background-color: #f1f5f9;
+        color: #1f2937;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-align: center;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .service-payroll-table tbody td {
+        text-align: center;
+        white-space: nowrap;
+    }
+    .service-payroll-table .service-name {
+        text-align: left;
+        min-width: 180px;
+        white-space: normal;
+    }
+    .service-payroll-table .amount-cell {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+    .service-payroll-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
 </style>
 {% endblock %}
 
@@ -400,41 +436,41 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover table-sm detail-table mb-0">
-                        <thead class="table-light">
+                    <table class="table table-hover table-sm table-bordered detail-table service-payroll-table mb-0">
+                        <thead>
                             <tr>
                                 <th>Service</th>
-                                <th class="text-center">Eff.</th>
-                                <th class="text-end">Brut</th>
-                                <th class="text-end">Net</th>
-                                <th class="text-end">CNSS 23%</th>
-                                <th class="text-end">RTS</th>
-                                <th class="text-end">VF</th>
-                                <th class="text-end">ONFPP/TA</th>
-                                <th class="text-end">Masse</th>
+                                <th>Eff.</th>
+                                <th>Brut</th>
+                                <th>Net</th>
+                                <th>CNSS 23%</th>
+                                <th>RTS</th>
+                                <th>VF</th>
+                                <th>ONFPP/TA</th>
+                                <th>Masse</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for service in repartition_service_paie %}
                             <tr>
-                                <td>
+                                <td class="service-name">
                                     <strong>{{ service.nom }}</strong>
                                     <div class="small text-muted">{{ service.hommes }} H · {{ service.femmes }} F</div>
                                 </td>
-                                <td class="text-center">{{ service.effectif }}</td>
-                                <td class="text-end">{{ service.brut|floatformat:0|intcomma }}</td>
-                                <td class="text-end">{{ service.net|floatformat:0|intcomma }}</td>
-                                <td class="text-end">{{ service.cnss_23|floatformat:0|intcomma }}</td>
-                                <td class="text-end">{{ service.rts|floatformat:0|intcomma }}</td>
-                                <td class="text-end">{{ service.vf|floatformat:0|intcomma }}</td>
-                                <td class="text-end">
+                                <td>{{ service.effectif }}</td>
+                                <td class="amount-cell">{{ service.brut|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">{{ service.net|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">{{ service.cnss_23|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">{{ service.rts|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">{{ service.vf|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">
                                     {% if total_employes >= 30 %}
                                         {{ service.onfpp|floatformat:0|intcomma }}
                                     {% else %}
                                         {{ service.ta|floatformat:0|intcomma }}
                                     {% endif %}
                                 </td>
-                                <td class="text-end"><strong>{{ service.masse_salariale|floatformat:0|intcomma }}</strong></td>
+                                <td class="amount-cell"><strong>{{ service.masse_salariale|floatformat:0|intcomma }}</strong></td>
                             </tr>
                             {% empty %}
                             <tr>
