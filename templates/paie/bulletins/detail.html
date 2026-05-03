@@ -295,11 +295,11 @@
                         {% endif %}
                         {% if bulletin.contribution_onfpp and bulletin.contribution_onfpp > 0 %}
                         <tr>
-                            <td>Contribution ONFPP (1,5%) <span class="badge bg-secondary">&ge;25 sal.</span></td>
+                            <td>Contribution ONFPP (1,5%) <span class="badge bg-secondary">&ge;30 sal.</span></td>
                             <td class="text-end"><strong>{{ bulletin.contribution_onfpp|floatformat:0|intcomma }} GNF</strong></td>
                         </tr>
                         <tr class="small text-muted">
-                            <td colspan="2" class="pt-0">Base ONFPP: {{ bulletin.base_vf|floatformat:0|intcomma }} GNF</td>
+                            <td colspan="2" class="pt-0">Base ONFPP: {{ bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
                         </tr>
                         {% endif %}
                         <tr class="border-top">

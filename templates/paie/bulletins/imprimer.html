@@ -518,8 +518,8 @@
         {% endif %}
         {% if bulletin.contribution_onfpp and bulletin.contribution_onfpp > 0 %}
         <tr>
-            <td>ONFPP (applicable si effectif &ge; 25 sal. &mdash; effectif actuel : {{ bulletin.nombre_salaries }})</td>
-            <td class="text-right">{{ bulletin.base_vf|default:bulletin.salaire_brut|floatformat:0|intcomma }}</td>
+            <td>ONFPP (applicable si effectif &ge; 30 sal. &mdash; effectif actuel : {{ bulletin.nombre_salaries }})</td>
+            <td class="text-right">{{ bulletin.salaire_brut|floatformat:0|intcomma }}</td>
             <td class="text-center">1.5%</td>
             <td class="text-right"><strong>{{ bulletin.contribution_onfpp|floatformat:0|intcomma }} GNF</strong></td>
         </tr>

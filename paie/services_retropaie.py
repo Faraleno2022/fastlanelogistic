@@ -373,14 +373,15 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0):
     deduction_vf = _arrondir(min(brut, plafond) * taux_vf / Decimal('100'))
     base_vf = max(Decimal('0'), brut - deduction_vf)
     vf = _arrondir(base_vf * taux_vf / Decimal('100'))
-    # TA et ONFPP : tous deux sur la base VF nette (alignement moteur principal CGI Guinée)
-    taux = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
-    ta = _arrondir(base_vf * taux / Decimal('100'))
+    taux_ta = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
+    base_ta_onfpp = brut if nb_salaries >= seuil_ta_onfpp else base_vf
+    ta = _arrondir(base_ta_onfpp * taux_ta / Decimal('100'))
     total = cnss_pat + vf + ta
 
     return {
         'cnss_employeur':      int(cnss_pat),
         'base_vf':             int(base_vf),
+        'base_ta_onfpp':       int(base_ta_onfpp),
         'vf':                  int(vf),
         'ta':                  int(ta),
         'libelle_ta':          libelle_ta,
@@ -448,9 +449,9 @@ def cout_total_vers_brut(
         deduction_vf = _arrondir(min(brut, plafond) * taux_vf / Decimal('100'))
         base_vf = max(Decimal('0'), brut - deduction_vf)
         vf = _arrondir(base_vf * taux_vf / Decimal('100'))
-        # TA et ONFPP : tous deux sur la base VF nette (alignement moteur principal CGI Guinée)
-        taux = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
-        ta = _arrondir(base_vf * taux / Decimal('100'))
+        taux_ta_onfpp = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
+        base_ta_onfpp = brut if nb_salaries >= seuil_ta_onfpp else base_vf
+        ta = _arrondir(base_ta_onfpp * taux_ta_onfpp / Decimal('100'))
         return cnss_pat, vf, ta
 
     def _cout(brut):

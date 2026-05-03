@@ -25,21 +25,22 @@ def _floor_gnf(x) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Barème RTS officiel Guinée – fallback intégré (5 tranches, en vigueur depuis 2019)
+# Barème RTS officiel Guinée – fallback intégré (6 tranches)
 # Source : Code général des impôts (CGI) guinéen, art. relatifs à l'IRG/RTS
-# Tranches : 0 %, 5 %, 10 %, 15 %, 20 %
+# Tranches : 0 %, 5 %, 8 %, 10 %, 15 %, 20 %
 # ---------------------------------------------------------------------------
 
 BAREME_CGI_REFERENCE = [
     {'borne_inf': 0,          'borne_sup': 1_000_000,  'taux': Decimal('0')},
-    {'borne_inf': 1_000_000,  'borne_sup': 5_000_000,  'taux': Decimal('5')},
+    {'borne_inf': 1_000_000,  'borne_sup': 3_000_000,  'taux': Decimal('5')},
+    {'borne_inf': 3_000_000,  'borne_sup': 5_000_000,  'taux': Decimal('8')},
     {'borne_inf': 5_000_000,  'borne_sup': 10_000_000, 'taux': Decimal('10')},
     {'borne_inf': 10_000_000, 'borne_sup': 20_000_000, 'taux': Decimal('15')},
     {'borne_inf': 20_000_000, 'borne_sup': None,        'taux': Decimal('20')},
 ]
 
 # Label affiché pour le fallback
-BAREME_CGI_LABEL = 'Barème RTS officiel Guinée 2019+ (0 %/5 %/10 %/15 %/20 %)'
+BAREME_CGI_LABEL = 'Barème RTS officiel Guinée 2022+ (0 %/5 %/8 %/10 %/15 %/20 %)'
 BAREME_FALLBACK_ID = 'fallback'
 
 # Version du barème pour traçabilité / reproductibilité
@@ -198,7 +199,7 @@ def calculer_un_bareme(
       base_rts = brut − CNSS − exon + depasse
       RTS    = calcul progressif (ROUND_HALF_UP sur montants partiels)
       net    = brut − CNSS − RTS
-      VF/TA/ONFPP = base VF nette × taux (TA et ONFPP mutuellement exclusifs)
+      VF/TA = base VF × taux ; ONFPP = brut × 1,5%
     """
     brut = Decimal(str(brut))
     total_indemnites = Decimal(str(max(Decimal('0'), total_indemnites)))
@@ -254,9 +255,11 @@ def calculer_un_bareme(
     if nb_salaries < seuil_ta_onfpp:
         ta    = _half_up(base_vf * TAUX_TA_LEGAL / Decimal('100'))
         onfpp = 0
+        base_onfpp = Decimal('0')
     else:
         ta    = 0
-        onfpp = _half_up(base_vf * TAUX_ONFPP_LEGAL / Decimal('100'))
+        base_onfpp = brut
+        onfpp = _half_up(base_onfpp * TAUX_ONFPP_LEGAL / Decimal('100'))
 
     return {
         'brut':                  int(brut),
@@ -275,6 +278,7 @@ def calculer_un_bareme(
         'base_vf':               int(base_vf),
         'ta':                    ta,
         'onfpp':                 onfpp,
+        'base_onfpp':            int(base_onfpp),
         'total_charges_pat':     cnss_employeur + vf + ta + onfpp,
         'detail_tranches':       detail_tranches,
     }

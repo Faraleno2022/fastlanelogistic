@@ -125,7 +125,7 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(total, Decimal('726000'))
 
     def test_charges_patronales_onfpp_a_partir_de_30_salaries(self):
-        """ONFPP = 1,5% de la base VF/ONFPP quand l'effectif atteint le seuil."""
+        """ONFPP = 1,5% du brut quand l'effectif atteint le seuil."""
         constantes = {
             'PLANCHER_CNSS': Decimal('550000'),
             'PLAFOND_CNSS': Decimal('2500000'),
@@ -142,8 +142,8 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(charges['libelle_ta'], 'ONFPP')
         self.assertEqual(charges['base_vf'], 3450000)
         self.assertEqual(charges['vf'], 207000)
-        self.assertEqual(charges['ta'], 51750)
-        self.assertEqual(charges['total'], 708750)
+        self.assertEqual(charges['ta'], 54000)
+        self.assertEqual(charges['total'], 711000)
 
     def test_charges_patronales_ta_sous_30_salaries(self):
         """TA = 2% de la base VF/ONFPP tant que l'effectif reste sous le seuil."""
@@ -170,10 +170,10 @@ class ChargesPatronalesTests(SimpleTestCase):
             cnss_employeur=Decimal('450000'),
             versement_forfaitaire=Decimal('207000'),
             taxe_apprentissage=Decimal('0'),
-            contribution_onfpp=Decimal('51750'),
+            contribution_onfpp=Decimal('54000'),
         )
 
-        self.assertEqual(_charges_patronales_bulletin(bulletin), Decimal('708750'))
+        self.assertEqual(_charges_patronales_bulletin(bulletin), Decimal('711000'))
 
     def test_simulation_bascule_ta_onfpp_au_seuil_de_30(self):
         """La simulation applique TA sous 30 salariés et ONFPP à partir de 30."""
@@ -197,7 +197,8 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(sous_seuil['ta'], 69000)
         self.assertEqual(sous_seuil['onfpp'], 0)
         self.assertEqual(au_seuil['ta'], 0)
-        self.assertEqual(au_seuil['onfpp'], 51750)
+        self.assertEqual(au_seuil['base_onfpp'], 3600000)
+        self.assertEqual(au_seuil['onfpp'], 54000)
 
 
 class IRGCalculTests(SimpleTestCase):
