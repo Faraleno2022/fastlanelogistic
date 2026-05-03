@@ -209,7 +209,7 @@ def index(request):
         )
         if context.get('total_employes', 0) >= 30:
             totaux['ta'] = Decimal('0')
-            totaux['onfpp'] = ((totaux.get('brut') or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
+            totaux['onfpp'] = ((totaux.get('base_vf') or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
         context.update(_build_paie_totaux_context(totaux))
     except PeriodePaie.DoesNotExist:
         context['bulletins_calcules'] = 0

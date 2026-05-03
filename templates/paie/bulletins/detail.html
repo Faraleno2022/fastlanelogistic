@@ -299,7 +299,7 @@
                             <td class="text-end"><strong>{{ bulletin.contribution_onfpp|floatformat:0|intcomma }} GNF</strong></td>
                         </tr>
                         <tr class="small text-muted">
-                            <td colspan="2" class="pt-0">Base ONFPP: {{ bulletin.base_vf|default:bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
+                            <td colspan="2" class="pt-0">Base ONFPP: {{ bulletin.base_vf|floatformat:0|intcomma }} GNF</td>
                         </tr>
                         {% endif %}
                         <tr class="border-top">
