@@ -55,14 +55,10 @@
                 <div class="col-md-2" id="filtre_mois" {% if periode_type != 'mois' %}style="display:none"{% endif %}>
                     <label class="form-label">Mois</label>
                     <select name="mois" class="form-select">
-                        <option value="">--</option>
-                        {% for m in mois_liste %}
-                        <option value="{{ m }}" {% if mois == m|stringformat:"s" %}selected{% endif %}>
-                            {{ mois_fr|slice:m }}{{ m }}
-                            {% if m == 1 %}Janvier{% elif m == 2 %}Février{% elif m == 3 %}Mars
-                            {% elif m == 4 %}Avril{% elif m == 5 %}Mai{% elif m == 6 %}Juin
-                            {% elif m == 7 %}Juillet{% elif m == 8 %}Août{% elif m == 9 %}Septembre
-                            {% elif m == 10 %}Octobre{% elif m == 11 %}Novembre{% else %}Décembre{% endif %}
+                        <option value="">-- Sélectionner --</option>
+                        {% for num, libelle in mois_choices %}
+                        <option value="{{ num }}" {% if mois == num|stringformat:"s" %}selected{% endif %}>
+                            {{ libelle }}
                         </option>
                         {% endfor %}
                     </select>

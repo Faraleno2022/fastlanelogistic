@@ -256,6 +256,8 @@ def rapport_masse_salariale(request):
         'mois_fr': MOIS_FR,
         'trimestres': [1, 2, 3, 4],
         'mois_liste': list(range(1, 13)),
+        # Couples (numero, libelle) pour un select propre Janvier..Décembre.
+        'mois_choices': [(i, MOIS_FR[i]) for i in range(1, 13)],
     }
     return render(request, 'paie/rapport_masse_salariale.html', context)
 
