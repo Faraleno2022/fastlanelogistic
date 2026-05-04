@@ -49,6 +49,26 @@ MOIS_FR = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
 
+def _format_profession(poste):
+    """Renvoie 'CODE - Intitulé' pour un Poste, en garantissant un préfixe code.
+
+    Si code_poste est renseigné en base : on l'utilise tel quel.
+    Sinon, on dérive un code court de l'intitulé (ex. 'Chauffeur PL' -> 'CHAU')
+    pour que le rapport affiche toujours un préfixe de type code.
+    """
+    if not poste:
+        return '-'
+    code = (poste.code_poste or '').strip()
+    intitule = (poste.intitule_poste or '').strip()
+    if not intitule and not code:
+        return '-'
+    if not code:
+        # Code dérivé : 4 premiers caractères alphabétiques de l'intitulé en MAJUSCULES.
+        alpha = ''.join(c for c in intitule if c.isalpha())
+        code = (alpha[:4] or 'POST').upper()
+    return f"{code} - {intitule}" if intitule else code
+
+
 def _get_bulletins_filtrés(entreprise, annee, periode_type, mois=None, trimestre=None, service_id=None):
     """Retourne un queryset de bulletins selon les filtres."""
     qs = BulletinPaie.objects.filter(
@@ -982,7 +1002,7 @@ def _construire_donnees_etat_paie(bulletins_qs, annee, mois, entreprise):
 
         row = {
             'num': idx,
-            'profession': str(emp.poste) if emp.poste else '-',
+            'profession': _format_profession(emp.poste),
             'prenom': emp.prenoms,
             'nom': emp.nom,
             'matricule': emp.matricule,
@@ -1439,7 +1459,7 @@ def _construire_donnees_feuille_presence(entreprise, annee, mois, service_id=Non
             'nom': emp.nom,
             'prenom': emp.prenoms,
             'matricule': emp.matricule,
-            'profession': str(emp.poste) if emp.poste else '-',
+            'profession': _format_profession(emp.poste),
             'grille': grille,
             'count_p': count_p,
             'count_am': count_am,
