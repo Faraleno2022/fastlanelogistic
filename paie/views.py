@@ -2005,7 +2005,7 @@ def telecharger_livre_paie_pdf(request):
         periode__in=periodes,
         employe__entreprise=request.user.entreprise,
     ).select_related('employe', 'employe__poste', 'periode').annotate(
-        total_retenues=F('cnss_employe') + F('irg')
+        total_retenues_livre=F('cnss_employe') + F('irg')
     ).order_by('periode__mois', 'employe__matricule')
 
     totaux = bulletins.aggregate(
@@ -2201,7 +2201,7 @@ def telecharger_livre_paie_pdf(request):
             fmt(b.base_rts),
             fmt(b.cnss_employe),
             fmt(b.irg),
-            fmt(getattr(b, 'total_retenues', (b.cnss_employe or 0) + (b.irg or 0))),
+            fmt(getattr(b, 'total_retenues_livre', (b.cnss_employe or 0) + (b.irg or 0))),
             fmt(b.net_a_payer),
         ])
 

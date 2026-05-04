@@ -10,10 +10,11 @@ from datetime import date
 from types import SimpleNamespace
 from unittest.mock import patch
 from django.test import SimpleTestCase, TestCase
+from django.urls import reverse
 
-from core.models import Entreprise
+from core.models import Entreprise, Utilisateur
 from employes.models import Employe
-from paie.models import ElementSalaire, RubriquePaie
+from paie.models import BulletinPaie, ElementSalaire, PeriodePaie, RubriquePaie
 from paie.services import MoteurCalculPaie, appliquer_constantes_cnss_legales
 from paie.services_retropaie import calculer_charges_patronales
 from paie.services_simulation import calculer_un_bareme as calculer_un_bareme_simulation
@@ -95,6 +96,73 @@ class HeuresSupplementairesBaseTests(TestCase):
         self.assertGreater(moteur.montants['montant_heures_sup'], Decimal('0'))
         self.assertGreater(moteur.montants['total_gains'], Decimal('0'))
         self.assertEqual(moteur.lignes[0]['nombre'], Decimal('1.03'))
+
+
+class LivrePaiePdfTests(TestCase):
+    """Controle que le livre annuel reste telechargeable sans mois obligatoire."""
+
+    def setUp(self):
+        from core import middleware_licence
+        middleware_licence._license_cache = {
+            'valid': True,
+            'trial': False,
+            'days_left': 999,
+            'checked_at': 9999999999,
+        }
+        self.entreprise = Entreprise.objects.create(
+            nom_entreprise='Livre Paie SARL',
+            slug='livre-paie-test',
+            email='livre@example.com',
+            actif=True,
+        )
+        self.user = Utilisateur.objects.create_user(
+            username='livre-paie',
+            email='livre-user@example.com',
+            password='pass-test',
+            entreprise=self.entreprise,
+        )
+        self.employe = Employe.objects.create(
+            entreprise=self.entreprise,
+            matricule='EMP-LIVRE-001',
+            nom='Camara',
+            prenoms='Test',
+            statut_employe='actif',
+        )
+
+        for mois in (1, 2):
+            periode = PeriodePaie.objects.create(
+                entreprise=self.entreprise,
+                annee=2026,
+                mois=mois,
+                libelle=f'Mois {mois}',
+                date_debut=date(2026, mois, 1),
+                date_fin=date(2026, mois, 28),
+                statut_periode='validee',
+            )
+            BulletinPaie.objects.create(
+                employe=self.employe,
+                periode=periode,
+                numero_bulletin=f'BUL-LIVRE-{mois:02d}',
+                mois_paie=mois,
+                annee_paie=2026,
+                salaire_brut=Decimal('3000000'),
+                abattement_forfaitaire=Decimal('750000'),
+                base_rts=Decimal('2125000'),
+                cnss_employe=Decimal('125000'),
+                cnss_employeur=Decimal('450000'),
+                irg=Decimal('56250'),
+                net_a_payer=Decimal('2818750'),
+                statut_bulletin='valide',
+            )
+
+    def test_pdf_annuel_livre_paie_sans_mois(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('paie:telecharger_livre_paie_pdf'), {'annee': '2026'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('livre_paie_2026.pdf', response['Content-Disposition'])
 
 
 class CNSSCalculTests(SimpleTestCase):
