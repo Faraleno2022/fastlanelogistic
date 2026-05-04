@@ -267,6 +267,7 @@ def calculer_un_bareme(
         'cnss':                  cnss,
         'cnss_employeur':        cnss_employeur,
         'assiette_cnss':         int(assiette_cnss),
+        'deduction_vf':          int(deduction_vf),
         'plafond_exon':          plafond_exon,
         'exon':                  exon,
         'depasse':               depasse,

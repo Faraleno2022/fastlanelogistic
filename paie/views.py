@@ -4850,6 +4850,8 @@ def api_impact_fiscal(request):
         'taux_charge_interpretation': taux_charge_interpretation,
         'charges_employeur': {
             'cnss_employeur': result['cnss_employeur'],
+            'base_vf': result['base_vf'],
+            'deduction_vf': result.get('deduction_vf', 0),
             'vf': result['vf'],
             'ta': result['ta'],
             'onfpp': result['onfpp'],
@@ -4871,8 +4873,11 @@ def api_impact_fiscal(request):
             'cnss_formule': f"min({result['brut']:,}, {int(constantes.get('PLAFOND_CNSS', 2500000)):,}) × {float(constantes.get('TAUX_CNSS_EMPLOYE', 5))}%",
             'exon_formule': f"min({indem_val:,}, {result['plafond_exon']:,}) → plafond 25% × {result['brut']:,}",
             'base_rts_formule': f"{result['brut']:,} − {result['cnss']:,} − {result['exon']:,} + {result['depasse']:,} = {result['base_rts']:,}",
+            'base_vf_formule': f"{result['brut']:,} - {result.get('deduction_vf', 0):,} = {result['base_vf']:,} ; deduction CGI = min(brut, {int(constantes.get('PLAFOND_CNSS', 2500000)):,}) x {float(constantes.get('TAUX_VF', 6))}%",
+            'vf_formule': f"{result['base_vf']:,} x {float(constantes.get('TAUX_VF', 6))}% = {result['vf']:,}",
             'net_formule': f"{result['brut']:,} − {result['cnss']:,} − {result['rts']:,} = {result['net']:,}",
             'reference': 'CGI Guinée – Art. 196 (exonération 25%) / Art. 197 (barème RTS progressif)',
+            'reference_vf': 'VF: base = brut - min(brut, plafond CNSS) x 6%; VF = base x 6% (deduction CGI plafonnee a 150 000 GNF avec plafond CNSS 2 500 000 GNF).',
         },
     })
 
