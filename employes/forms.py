@@ -95,7 +95,7 @@ class EmployeForm(forms.ModelForm):
         optional_fields = [
             'matricule', 'sexe', 'date_naissance', 'nationalite',
             'date_embauche', 'type_contrat', 'nombre_enfants',
-            'etablissement', 'service', 'poste'
+            'etablissement', 'service'
         ]
         for field_name in optional_fields:
             if field_name in self.fields:
@@ -115,6 +115,8 @@ class EmployeForm(forms.ModelForm):
                 entreprise=entreprise)
             self.fields['superieur_hierarchique'].queryset = Employe.objects.filter(
                 entreprise=entreprise)
+        self.fields['poste'].required = True
+        self.fields['poste'].empty_label = "Choisir un poste (obligatoire)"
         
         # Helper Crispy Forms
         self.helper = FormHelper()

@@ -90,7 +90,7 @@
         <div class="col-md-2">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
-                    <h6 class="text-muted">IRG Total</h6>
+                    <h6 class="text-muted">RTS Total</h6>
                     <h5>{{ totaux.total_irg|floatformat:0|intcomma }} GNF</h5>
                 </div>
             </div>
@@ -133,7 +133,7 @@
                                     <th class="text-end" title="Indemnités exonérées (abattement forfaitaire 25%)">Exonéré</th>
                                     <th class="text-end" title="Base imposable RTS = Brut − Exonéré">Imposable</th>
                                     <th class="text-end">CNSS (5%)</th>
-                                    <th class="text-end">IRG</th>
+                                    <th class="text-end">RTS</th>
                                     <th class="text-end">Total</th>
                                 </tr>
                             </thead>
@@ -143,7 +143,15 @@
                                     <td>{{ bulletin.periode }}</td>
                                     <td>{{ bulletin.employe.matricule }}</td>
                                     <td>{{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}</td>
-                                    <td>{{ bulletin.employe.poste.intitule_poste|default:bulletin.employe.departement|default:"-" }}</td>
+                                    <td class="{% if not bulletin.employe.poste and not bulletin.employe.departement %}table-warning text-danger fw-semibold{% endif %}">
+                                        {% if bulletin.employe.poste and bulletin.employe.poste.intitule_poste %}
+                                            {{ bulletin.employe.poste.intitule_poste }}
+                                        {% elif bulletin.employe.departement %}
+                                            {{ bulletin.employe.departement }}
+                                        {% else %}
+                                            Poste à renseigner
+                                        {% endif %}
+                                    </td>
                                     <td class="text-end">{{ bulletin.salaire_brut|floatformat:0|intcomma }}</td>
                                     <td class="text-end text-muted">{{ bulletin.abattement_forfaitaire|floatformat:0|intcomma }}</td>
                                     <td class="text-end fw-semibold">{{ bulletin.base_rts|floatformat:0|intcomma }}</td>
@@ -191,7 +199,7 @@
                         <strong>Taux CNSS:</strong> Employé 5% - Employeur 18%
                     </p>
                     <p class="mb-1 small">
-                        <strong>IRG:</strong> Calculé selon le barème progressif guinéen avec déductions familiales
+                        <strong>RTS:</strong> Calculée selon le barème progressif guinéen sur la base imposable RTS
                     </p>
                     <p class="mb-0 small">
                         <strong>Conservation:</strong> Ce livre de paie doit être conservé pendant 10 ans minimum

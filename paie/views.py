@@ -1967,11 +1967,11 @@ def telecharger_livre_paie_pdf(request):
         nom_complet = f"{emp.nom} {emp.prenoms}"
         if len(nom_complet) > 22:
             nom_complet = nom_complet[:20] + '..'
-        # Fonction : intitulé du poste, fallback sur le département texte
+        # Fonction : intitulé du poste, fallback sur le département texte, jamais vide en audit.
         fonction = (
             (emp.poste.intitule_poste if emp.poste and emp.poste.intitule_poste else None)
             or (emp.departement or '').strip()
-            or '-'
+            or 'Poste à renseigner'
         )
         if len(fonction) > 16:
             fonction = fonction[:14] + '..'
@@ -4085,7 +4085,7 @@ def retropaie_pdf(request):
         ['CNSS salarié (5 %)', fmt(resultat['cnss'])],
         ['Base CNSS (plafonnée)', fmt(resultat['base_cnss'])],
         ['Base imposable RTS', fmt(resultat['base_rts'])],
-        ['RTS / IRG', fmt(resultat['rts'])],
+        ['RTS', fmt(resultat['rts'])],
         ['NET réel calculé', fmt(resultat['net_calcule'])],
         ['Net cible demandé', fmt(resultat['net_cible'])],
         [f"Écart (mode : {mode_key})", fmt(resultat['ecart'])],

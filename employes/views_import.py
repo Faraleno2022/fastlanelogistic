@@ -60,7 +60,7 @@ IMPORT_COLUMNS = [
     # --- PROFESSIONNEL ---
     ('Établissement', 'etablissement', False, 'Nom de l\'établissement (doit exister)', 'Siège Conakry'),
     ('Service', 'service', False, 'Nom du service (doit exister)', 'Ressources Humaines'),
-    ('Poste', 'poste', False, 'Intitulé du poste (doit exister)', 'Responsable RH'),
+    ('Poste*', 'poste', True, 'Intitulé du poste (obligatoire, doit exister)', 'Responsable RH'),
     ('Type contrat', 'type_contrat', False, 'CDI / CDD / Stage / etc.', 'CDI'),
     # --- FORMATION TRANSPORT / SÉCURITÉ ---
     ('Date formation APTH', 'date_formation_apth', False, 'Format JJ/MM/AAAA', '15/06/2023'),
@@ -270,7 +270,7 @@ def telecharger_template_import(request):
         ("INSTRUCTIONS D'IMPORTATION - GuineeRH", ""),
         ("", ""),
         ("RÈGLES GÉNÉRALES", ""),
-        ("1.", "Les colonnes marquées avec * sont obligatoires (Nom, Prénoms)"),
+        ("1.", "Les colonnes marquées avec * sont obligatoires (Nom, Prénoms, Poste)"),
         ("2.", "Commencez à saisir vos données à partir de la ligne 4 (après l'en-tête, la description et l'exemple)"),
         ("3.", "La ligne 3 (grisée) est un exemple - supprimez-la avant l'importation"),
         ("4.", "Le matricule est généré automatiquement si laissé vide"),
@@ -279,7 +279,7 @@ def telecharger_template_import(request):
         ("DONNÉES DE RÉFÉRENCE", ""),
         ("6.", "Les Établissements, Services et Postes doivent exister dans le système"),
         ("7.", "Consultez l'onglet 'Données de référence' pour les valeurs acceptées"),
-        ("8.", "Si un établissement/service/poste n'existe pas, il sera ignoré (l'employé sera créé sans)"),
+        ("8.", "Si le poste est absent ou introuvable, la ligne est rejetée. Un établissement/service introuvable reste signalé en avertissement."),
         ("", ""),
         ("VALEURS ACCEPTÉES", ""),
         ("Civilité:", "M. / Mme / Mlle"),
@@ -462,9 +462,11 @@ def import_employes_preview(request):
         if serv and serv.lower() not in services_cache:
             line['avertissements'].append(f'Service "{serv}" introuvable')
 
-        poste = _clean_str(row.get('poste', row.get('Poste', '')))
-        if poste and poste.lower() not in postes_cache:
-            line['avertissements'].append(f'Poste "{poste}" introuvable')
+        poste = _clean_str(row.get('poste', row.get('Poste*', row.get('Poste', ''))))
+        if not poste:
+            line['erreurs'].append('Poste obligatoire')
+        elif poste.lower() not in postes_cache:
+            line['erreurs'].append(f'Poste "{poste}" introuvable')
 
         # Validation valeurs autorisées
         sexe = _clean_str(row.get('sexe', row.get('Sexe', '')))
@@ -678,15 +680,19 @@ def import_employes_execute(request):
         serv_nom = _clean_str(row.get('service', row.get('Service', '')))
         serv = services_cache.get(serv_nom.lower()) if serv_nom else None
 
-        poste_nom = _clean_str(row.get('poste', row.get('Poste', '')))
+        poste_nom = _clean_str(row.get('poste', row.get('Poste*', row.get('Poste', ''))))
         poste = postes_cache.get(poste_nom.lower()) if poste_nom else None
 
         if etab_nom and not etab:
             warnings.append(f'Ligne {idx}: Établissement "{etab_nom}" introuvable')
         if serv_nom and not serv:
             warnings.append(f'Ligne {idx}: Service "{serv_nom}" introuvable')
-        if poste_nom and not poste:
-            warnings.append(f'Ligne {idx}: Poste "{poste_nom}" introuvable')
+        if not poste_nom:
+            errors.append(f'Ligne {idx}: Poste obligatoire - ignorée')
+            continue
+        if not poste:
+            errors.append(f'Ligne {idx}: Poste "{poste_nom}" introuvable - ignorée')
+            continue
 
         try:
             with transaction.atomic():
