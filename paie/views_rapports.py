@@ -50,23 +50,18 @@ MOIS_FR = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
 
 
 def _format_profession(poste):
-    """Renvoie 'CODE - Intitulé' pour un Poste, en garantissant un préfixe code.
+    """Renvoie uniquement l'intitulé du poste (ex. 'Chauffeur', 'Comptable').
 
-    Si code_poste est renseigné en base : on l'utilise tel quel.
-    Sinon, on dérive un code court de l'intitulé (ex. 'Chauffeur PL' -> 'CHAU')
-    pour que le rapport affiche toujours un préfixe de type code.
+    Pas de code devant, pas de préfixe : le rapport affiche un libellé propre.
+    Fallback sur le code si l'intitulé est vide, puis '-' si rien n'est défini.
     """
     if not poste:
         return '-'
-    code = (poste.code_poste or '').strip()
     intitule = (poste.intitule_poste or '').strip()
-    if not intitule and not code:
-        return '-'
-    if not code:
-        # Code dérivé : 4 premiers caractères alphabétiques de l'intitulé en MAJUSCULES.
-        alpha = ''.join(c for c in intitule if c.isalpha())
-        code = (alpha[:4] or 'POST').upper()
-    return f"{code} - {intitule}" if intitule else code
+    if intitule:
+        return intitule
+    code = (poste.code_poste or '').strip()
+    return code or '-'
 
 
 def _get_bulletins_filtrés(entreprise, annee, periode_type, mois=None, trimestre=None, service_id=None):
