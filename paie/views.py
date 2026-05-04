@@ -1876,11 +1876,14 @@ def telecharger_livre_paie_pdf(request):
     """Télécharger le livre de paie en PDF"""
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.units import cm
-    from reportlab.pdfgen import canvas
     from reportlab.lib import colors
-    from reportlab.platypus import Table, TableStyle
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.utils import ImageReader
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
     from django.db.models import F
     import io
+    import os
 
     # Polices
     try:
@@ -1928,23 +1931,100 @@ def telecharger_livre_paie_pdf(request):
 
     buffer = io.BytesIO()
     page_size = landscape(A4)
-    p = canvas.Canvas(buffer, pagesize=page_size)
     width, height = page_size
+    entreprise = request.user.entreprise
 
-    y = height - 1.2 * cm
-    p.setFont(_FB, 12)
+    def _logo_path():
+        logo = getattr(entreprise, 'logo', None)
+        if not logo:
+            return None
+        try:
+            path = logo.path
+        except Exception:
+            return None
+        return path if path and os.path.exists(path) else None
+
+    logo_file = _logo_path()
+
+    def _draw_header_footer(canvas_obj, doc):
+        canvas_obj.saveState()
+        x_left = 1.0 * cm
+        y_top = height - 0.8 * cm
+        text_x = x_left
+        if logo_file:
+            try:
+                img = ImageReader(logo_file)
+                img_w, img_h = img.getSize()
+                logo_h = 1.2 * cm
+                logo_w = logo_h * (img_w / img_h) if img_h else logo_h
+                logo_w = min(logo_w, 3.0 * cm)
+                canvas_obj.drawImage(
+                    img, x_left, y_top - logo_h + 0.08 * cm,
+                    width=logo_w, height=logo_h, preserveAspectRatio=True, mask='auto'
+                )
+                text_x = x_left + logo_w + 0.35 * cm
+            except Exception:
+                text_x = x_left
+
+        canvas_obj.setFont(_FB, 9)
+        canvas_obj.drawString(text_x, y_top, (entreprise.nom_entreprise if entreprise else 'Entreprise')[:65])
+        canvas_obj.setFont(_FN, 6.8)
+        infos = [
+            f"NIF: {getattr(entreprise, 'nif', '') or '-'}",
+            f"CNSS: {getattr(entreprise, 'num_cnss', '') or '-'}",
+            f"Tél: {getattr(entreprise, 'telephone', '') or '-'}",
+        ]
+        canvas_obj.drawString(text_x, y_top - 0.32 * cm, " | ".join(infos))
+        if entreprise and entreprise.adresse:
+            canvas_obj.drawString(text_x, y_top - 0.62 * cm, str(entreprise.adresse)[:100])
+
+        canvas_obj.setStrokeColor(colors.HexColor('#0d6efd'))
+        canvas_obj.setLineWidth(1.2)
+        canvas_obj.line(1.0 * cm, height - 2.0 * cm, width - 1.0 * cm, height - 2.0 * cm)
+
+        canvas_obj.setFont(_FN, 6.5)
+        canvas_obj.setFillColor(colors.HexColor('#666666'))
+        canvas_obj.drawString(1.0 * cm, 0.65 * cm, f"Document généré le {timezone.now().strftime('%d/%m/%Y à %H:%M')}")
+        canvas_obj.drawCentredString(width / 2, 0.65 * cm, "Livre de paie officiel - à conserver 10 ans")
+        canvas_obj.drawRightString(width - 1.0 * cm, 0.65 * cm, f"Page {doc.page}")
+        canvas_obj.restoreState()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=page_size,
+        leftMargin=1.0 * cm,
+        rightMargin=1.0 * cm,
+        topMargin=2.25 * cm,
+        bottomMargin=1.0 * cm,
+        title="Livre de paie officiel",
+    )
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(
+        name='LivreTitre',
+        parent=styles['Title'],
+        fontName=_FB,
+        fontSize=13,
+        leading=15,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#0d47a1'),
+        spaceAfter=8,
+    ))
+    styles.add(ParagraphStyle(
+        name='LivreSmall',
+        parent=styles['Normal'],
+        fontName=_FN,
+        fontSize=7,
+        leading=9,
+        alignment=TA_LEFT,
+    ))
+
+    story = []
+
     titre = f"Livre de Paie - Année {int(annee)}"
     if mois:
         titre += f" - Mois {int(mois)}"
-    p.drawCentredString(width / 2, y, titre)
-    y -= 0.6 * cm
+    story.append(Paragraph(titre, styles['LivreTitre']))
 
-    p.setStrokeColor(colors.HexColor('#0d6efd'))
-    p.setLineWidth(2)
-    p.line(1.2 * cm, y, width - 1.2 * cm, y)
-    y -= 0.7 * cm
-
-    p.setFont(_FN, 8)
     tot_line = (
         f"Brut: {fmt(totaux.get('total_brut'))} GNF   "
         f"Exonéré: {fmt(totaux.get('total_abattement'))}   "
@@ -1954,8 +2034,28 @@ def telecharger_livre_paie_pdf(request):
         f"RTS: {fmt(totaux.get('total_irg'))}   "
         f"Net: {fmt(totaux.get('total_net'))}"
     )
-    p.drawString(1.2 * cm, y, tot_line)
-    y -= 0.6 * cm
+
+    resume_data = [
+        ['Brut', f"{fmt(totaux.get('total_brut'))} GNF", 'Exonéré', f"{fmt(totaux.get('total_abattement'))} GNF", 'Imposable', f"{fmt(totaux.get('total_base_rts'))} GNF"],
+        ['CNSS employé', f"{fmt(totaux.get('total_cnss_employe'))} GNF", 'RTS', f"{fmt(totaux.get('total_irg'))} GNF", 'Net', f"{fmt(totaux.get('total_net'))} GNF"],
+    ]
+    resume = Table(resume_data, colWidths=[2.3 * cm, 3.0 * cm, 2.3 * cm, 3.0 * cm, 2.3 * cm, 3.0 * cm])
+    resume.setStyle(TableStyle([
+        ('FONT', (0, 0), (-1, -1), _FN, 7),
+        ('FONT', (0, 0), (0, -1), _FB, 7),
+        ('FONT', (2, 0), (2, -1), _FB, 7),
+        ('FONT', (4, 0), (4, -1), _FB, 7),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f4f7fb')),
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#ced4da')),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+        ('ALIGN', (5, 0), (5, -1), 'RIGHT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    story.append(resume)
+    story.append(Spacer(1, 0.25 * cm))
 
     data = [[
         'Période', 'Matr.', 'Nom et Prénoms', 'Fonction',
@@ -2024,11 +2124,25 @@ def telecharger_livre_paie_pdf(request):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
     ]))
 
-    table_w, table_h = table.wrapOn(p, width - 2.4 * cm, y)
-    table.drawOn(p, 1.2 * cm, max(1.2 * cm, y - table_h))
+    story.append(table)
+    story.append(Spacer(1, 0.35 * cm))
 
-    p.showPage()
-    p.save()
+    signature_data = [[
+        Paragraph("<b>Préparé par</b><br/>Service RH<br/><br/><br/>Nom, signature et date", styles['LivreSmall']),
+        Paragraph("<b>Contrôlé par</b><br/>Responsable paie<br/><br/><br/>Nom, signature et date", styles['LivreSmall']),
+        Paragraph("<b>Validé par</b><br/>Direction<br/><br/><br/>Nom, cachet et date", styles['LivreSmall']),
+    ]]
+    signatures = Table(signature_data, colWidths=[8.7 * cm, 8.7 * cm, 8.7 * cm], rowHeights=[2.2 * cm])
+    signatures.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#6c757d')),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fafafa')),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    story.append(signatures)
+
+    doc.build(story, onFirstPage=_draw_header_footer, onLaterPages=_draw_header_footer)
 
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
