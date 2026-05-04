@@ -164,6 +164,21 @@ class LivrePaiePdfTests(TestCase):
         self.assertEqual(response['Content-Type'], 'application/pdf')
         self.assertIn('livre_paie_2026.pdf', response['Content-Disposition'])
 
+    def test_pdf_livre_paie_bloque_si_cnss_incoherente(self):
+        bulletin = BulletinPaie.objects.get(numero_bulletin='BUL-LIVRE-01')
+        BulletinPaie.objects.filter(pk=bulletin.pk).update(
+            cnss_employe=Decimal('100081'),
+            cnss_employeur=Decimal('360292'),
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('paie:telecharger_livre_paie_pdf'), {'annee': '2026'})
+
+        self.assertEqual(response.status_code, 409)
+        self.assertContains(response, 'Livre de paie non conforme', status_code=409)
+        self.assertContains(response, 'Anomalies CNSS', status_code=409)
+        self.assertContains(response, 'Generation du PDF officiel bloquee', status_code=409)
+
 
 class CNSSCalculTests(SimpleTestCase):
     """TU-01 à TU-03: Tests CNSS salarié et employeur"""

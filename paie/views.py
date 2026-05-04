@@ -1878,12 +1878,13 @@ def _cnss_attendue_livre(brut):
 def _controles_livre_paie(bulletins, totaux):
     """Controle macro et lignes CNSS du livre de paie."""
     anomalies = []
+    tolerance_cnss = Decimal('1')
     for bulletin in bulletins:
         brut = Decimal(str(bulletin.salaire_brut or 0))
         attendu = _cnss_attendue_livre(brut)
         cnss_emp = Decimal(str(bulletin.cnss_employe or 0))
         cnss_pat = Decimal(str(bulletin.cnss_employeur or 0))
-        if abs(cnss_emp - attendu['employe']) > Decimal('2') or abs(cnss_pat - attendu['employeur']) > Decimal('2'):
+        if abs(cnss_emp - attendu['employe']) > tolerance_cnss or abs(cnss_pat - attendu['employeur']) > tolerance_cnss:
             anomalies.append({
                 'numero': bulletin.numero_bulletin,
                 'matricule': bulletin.employe.matricule,
@@ -1904,13 +1905,70 @@ def _controles_livre_paie(bulletins, totaux):
     total_net = Decimal(str(totaux.get('total_net') or 0))
     net_attendu = total_brut - total_retenues
     ecart_net = total_net - net_attendu
+    macro_ok = ecart_net == Decimal('0')
+    conforme = macro_ok and not anomalies
     return {
         'anomalies_cnss': anomalies,
         'nb_anomalies_cnss': len(anomalies),
         'net_attendu': net_attendu,
         'ecart_net': ecart_net,
-        'macro_ok': abs(ecart_net) <= Decimal('2'),
+        'macro_ok': macro_ok,
+        'conforme': conforme,
+        'statut': 'CONFORME' if conforme else 'NON CONFORME',
     }
+
+
+def _bloquer_pdf_livre_paie(controles_livre, fmt):
+    """Refuse le PDF officiel si les controles du livre de paie echouent."""
+    from django.utils.html import escape
+
+    anomalies = controles_livre.get('anomalies_cnss', [])[:10]
+    lignes = ''.join(
+        '<li>{numero} - {matricule} - CNSS salariee {actuelle} GNF, attendue {attendue} GNF</li>'.format(
+            numero=escape(a.get('numero') or '-'),
+            matricule=escape(a.get('matricule') or '-'),
+            actuelle=fmt(a.get('cnss_employe')),
+            attendue=fmt(a.get('cnss_employe_attendu')),
+        )
+        for a in anomalies
+    )
+    if controles_livre.get('nb_anomalies_cnss', 0) > len(anomalies):
+        lignes += '<li>... autres anomalies CNSS non affichees</li>'
+
+    html = """
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Livre de paie non conforme</title>
+  <style>
+    body {{ font-family: Arial, sans-serif; margin: 32px; color: #212529; }}
+    .box {{ border: 1px solid #dc3545; border-radius: 8px; padding: 20px; max-width: 820px; }}
+    h1 {{ color: #dc3545; margin-top: 0; }}
+    .metric {{ margin: 8px 0; }}
+    .hint {{ margin-top: 18px; padding: 12px; background: #fff3cd; border: 1px solid #ffe69c; }}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Livre de paie non conforme</h1>
+    <p>Generation du PDF officiel bloquee. Corrigez les bulletins puis relancez l'export.</p>
+    <div class="metric"><strong>Statut :</strong> NON CONFORME</div>
+    <div class="metric"><strong>Net attendu :</strong> {net_attendu} GNF</div>
+    <div class="metric"><strong>Ecart net :</strong> {ecart_net} GNF</div>
+    <div class="metric"><strong>Anomalies CNSS :</strong> {nb_anomalies}</div>
+    <ul>{lignes}</ul>
+    <div class="hint">Action recommandee : recalculer les bulletins de la periode concernee pour appliquer le plafond CNSS legal.</div>
+  </div>
+</body>
+</html>
+""".format(
+        net_attendu=fmt(controles_livre.get('net_attendu')),
+        ecart_net=fmt(controles_livre.get('ecart_net')),
+        nb_anomalies=controles_livre.get('nb_anomalies_cnss', 0),
+        lignes=lignes or '<li>Aucune anomalie CNSS detaillee.</li>',
+    )
+    return HttpResponse(html, status=409, content_type='text/html; charset=utf-8')
 
 
 @login_required
@@ -2027,6 +2085,9 @@ def telecharger_livre_paie_pdf(request):
             n = 0
         return f"{n:,.0f}".replace(",", " ")
 
+    if not controles_livre['conforme']:
+        return _bloquer_pdf_livre_paie(controles_livre, fmt)
+
     buffer = io.BytesIO()
     page_size = landscape(A4)
     width, height = page_size
@@ -2122,6 +2183,24 @@ def telecharger_livre_paie_pdf(request):
     if mois:
         titre += f" - Mois {int(mois)}"
     story.append(Paragraph(titre, styles['LivreTitre']))
+
+    statut_table = Table([
+        ['STATUT', controles_livre['statut']],
+        ['Controle', 'Net = brut - CNSS - RTS | CNSS plafonnee OK'],
+    ], colWidths=[2.5 * cm, 10.5 * cm])
+    statut_table.setStyle(TableStyle([
+        ('FONT', (0, 0), (-1, -1), _FN, 8),
+        ('FONT', (0, 0), (0, -1), _FB, 8),
+        ('FONT', (1, 0), (1, 0), _FB, 8),
+        ('TEXTCOLOR', (1, 0), (1, 0), colors.HexColor('#198754')),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#eaf7ef')),
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#75b798')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    story.append(statut_table)
+    story.append(Spacer(1, 0.20 * cm))
 
     tot_line = (
         f"Brut: {fmt(totaux.get('total_brut'))} GNF   "
