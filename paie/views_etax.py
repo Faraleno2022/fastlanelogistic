@@ -84,13 +84,22 @@ def get_etax_data(entreprise, annee, mois):
 
     data = {key: _to_decimal(value) for key, value in totaux.items()}
     data['effectif'] = bulletins.values('employe').distinct().count()
-    if data['effectif'] >= 30:
+    mode_onfpp = data['effectif'] >= 30
+    if mode_onfpp:
         data['total_ta'] = Decimal('0')
         data['total_onfpp'] = (data['total_base_vf'] * Decimal('0.015')).quantize(Decimal('1'))
     data['total_fiscal'] = data['total_rts'] + data['total_vf']
     data['total_cnss'] = data['total_cnss_employe'] + data['total_cnss_employeur']
     data['total_general'] = data['total_fiscal']
     data['mois_label'] = MOIS_LABELS.get(mois, str(mois))
+    data['periode_label'] = f"{data['mois_label']} {annee}"
+    data['portee_label'] = "Mensuelle"
+    data['mode_ta_onfpp'] = "ONFPP" if mode_onfpp else "TA"
+    data['mode_ta_onfpp_note'] = (
+        "Effectif >= 30: TA neutralisee, ONFPP appliquee sur la base VF."
+        if mode_onfpp
+        else "Effectif < 30: TA appliquee, ONFPP neutralisee."
+    )
     data['detail_employes'] = []
 
     for bulletin in bulletins:
@@ -105,10 +114,10 @@ def get_etax_data(entreprise, annee, mois):
             'cnss_employe': bulletin.cnss_employe,
             'cnss_employeur': bulletin.cnss_employeur,
             'vf': getattr(bulletin, 'versement_forfaitaire', Decimal('0')) or Decimal('0'),
-            'ta': getattr(bulletin, 'taxe_apprentissage', Decimal('0')) or Decimal('0'),
+            'ta': Decimal('0') if mode_onfpp else (getattr(bulletin, 'taxe_apprentissage', Decimal('0')) or Decimal('0')),
             'onfpp': (
                 ((getattr(bulletin, 'base_vf', Decimal('0')) or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
-                if data['effectif'] >= 30
+                if mode_onfpp
                 else (getattr(bulletin, 'contribution_onfpp', Decimal('0')) or Decimal('0'))
             ),
             'net': bulletin.net_a_payer,
@@ -244,8 +253,11 @@ def declaration_etax_excel(request):
     ws['A1'].font = title
     ws['A1'].alignment = Alignment(horizontal='center')
     ws.merge_cells('A2:J2')
-    ws['A2'] = f"Période: {data['mois_label']} {annee}"
+    ws['A2'] = f"Portee mensuelle: {data['periode_label']} - eTax = RTS + VF"
     ws['A2'].alignment = Alignment(horizontal='center')
+    ws.merge_cells('A3:J3')
+    ws['A3'] = data['mode_ta_onfpp_note']
+    ws['A3'].alignment = Alignment(horizontal='center')
 
     rows = [
         ("Entreprise", entreprise.nom_entreprise),
@@ -253,7 +265,7 @@ def declaration_etax_excel(request):
         ("N° CNSS", getattr(entreprise, 'num_cnss', '') or ''),
         ("Effectif déclaré", data['effectif']),
     ]
-    row = 4
+    row = 5
     for label, value in rows:
         ws.cell(row=row, column=1, value=label).font = bold
         ws.cell(row=row, column=2, value=value)
@@ -326,7 +338,8 @@ def declaration_etax_pdf(request):
     title_style = ParagraphStyle('EtaxTitle', parent=styles['Heading1'], alignment=TA_CENTER, fontSize=15)
     elements = [
         Paragraph("DÉCLARATION eTax - RÉCAPITULATIF MENSUEL", title_style),
-        Paragraph(f"{entreprise.nom_entreprise} - {data['mois_label']} {annee}", styles['Normal']),
+        Paragraph(f"{entreprise.nom_entreprise} - {data['periode_label']}", styles['Normal']),
+        Paragraph(f"Portee mensuelle - eTax = RTS + VF. {data['mode_ta_onfpp_note']}", styles['Normal']),
         Spacer(1, 10),
     ]
 

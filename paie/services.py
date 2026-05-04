@@ -22,7 +22,7 @@ from .models import (
 )
 from .cache_service import PayrollCacheService
 from employes.models import Employe
-from temps_travail.models import Pointage, Absence, Conge
+from temps_travail.models import Pointage, Absence, Conge, HeureSupplementaire
 from core.services.devises import DeviseService
 from core.models import Devise
 import calendar
@@ -187,6 +187,7 @@ class MoteurCalculPaie:
         self.devise_employe = employe.devise_paie if employe.devise_paie else DeviseService.get_devise_base()
         self.devise_base = DeviseService.get_devise_base()
         self.date_conversion = date(self.periode.annee, self.periode.mois, 1)
+        self._heures_sup_detail_ids = []
     
     def _charger_constantes(self):
         """Charger les constantes actives à la date de la période (avec cache)."""
@@ -534,6 +535,68 @@ class MoteurCalculPaie:
         for total_hs_semaine in semaine_map.values():
             hs_30 += min(total_hs_semaine, Decimal('4'))
             hs_60 += max(Decimal('0'), total_hs_semaine - Decimal('4'))
+
+        hs_detaillees = HeureSupplementaire.objects.filter(
+            employe=self.employe,
+            date_hs__gte=debut_effectif,
+            date_hs__lte=dernier_jour,
+        ).filter(
+            models.Q(statut='valide') |
+            models.Q(statut='paye', bulletin__periode=self.periode)
+        )
+        if hs_detaillees.exists():
+            hs_30 = Decimal('0')
+            hs_60 = Decimal('0')
+            hs_nuit = Decimal('0')
+            hs_ferie_jour = Decimal('0')
+            hs_ferie_nuit = Decimal('0')
+            montant_hs_30 = Decimal('0')
+            montant_hs_60 = Decimal('0')
+            montant_hs_nuit = Decimal('0')
+            montant_hs_ferie_jour = Decimal('0')
+            montant_hs_ferie_nuit = Decimal('0')
+            self._heures_sup_detail_ids = []
+
+            for hs in hs_detaillees:
+                nombre = Decimal(str(hs.nombre_heures or 0))
+                montant = Decimal(str(hs.montant_hs or 0))
+                type_hs = (hs.type_hs or '').lower()
+                self._heures_sup_detail_ids.append(hs.pk)
+
+                if type_hs in ('jour_15', 'jour_25', 'jour_30'):
+                    hs_30 += nombre
+                    montant_hs_30 += montant
+                elif type_hs in ('jour_50', 'jour_60'):
+                    hs_60 += nombre
+                    montant_hs_60 += montant
+                elif type_hs in ('nuit_20', 'nuit_50'):
+                    hs_nuit += nombre
+                    montant_hs_nuit += montant
+                elif type_hs in ('dimanche_75', 'ferie_60'):
+                    hs_ferie_jour += nombre
+                    montant_hs_ferie_jour += montant
+                elif type_hs in ('dimanche_nuit_100', 'ferie_nuit_100'):
+                    hs_ferie_nuit += nombre
+                    montant_hs_ferie_nuit += montant
+                else:
+                    hs_60 += nombre
+                    montant_hs_60 += montant
+
+            self.montants['heures_supplementaires'] = (
+                hs_30 + hs_60 + hs_nuit + hs_ferie_jour + hs_ferie_nuit
+            )
+            self.montants['heures_sup_nuit'] = hs_nuit
+            self.montants['heures_sup_ferie_jour'] = hs_ferie_jour
+            self.montants['heures_sup_ferie_nuit'] = hs_ferie_nuit
+            self.montants['montant_hs_30_detail'] = montant_hs_30
+            self.montants['montant_hs_60_detail'] = montant_hs_60
+            self.montants['montant_hs_nuit_detail'] = montant_hs_nuit
+            self.montants['montant_hs_ferie_jour_detail'] = montant_hs_ferie_jour
+            self.montants['montant_hs_ferie_nuit_detail'] = montant_hs_ferie_nuit
+            self.montants['montant_heures_sup_detail'] = (
+                montant_hs_30 + montant_hs_60 + montant_hs_nuit +
+                montant_hs_ferie_jour + montant_hs_ferie_nuit
+            )
         self.montants['heures_sup_30'] = hs_30
         self.montants['heures_sup_60'] = hs_60
         
@@ -795,11 +858,19 @@ class MoteurCalculPaie:
         TAUX_HS_FERIE_N = self.constantes.get('TAUX_HS_FERIE_NUIT', Decimal('200'))  # Férié nuit: +100% (200%)
         
         # Calculer le montant pour chaque type — arrondi money() en sortie finale uniquement
-        montant_hs_30 = money(salaire_horaire_exact * precise(heures_sup_30) * TAUX_HS_30 / precise(100))
-        montant_hs_60 = money(salaire_horaire_exact * precise(heures_sup_60) * TAUX_HS_60 / precise(100))
-        montant_hs_nuit = money(salaire_horaire_exact * precise(heures_sup_nuit) * TAUX_HS_NUIT / precise(100))
-        montant_hs_ferie_j = money(salaire_horaire_exact * precise(heures_sup_ferie_jour) * TAUX_HS_FERIE_J / precise(100))
-        montant_hs_ferie_n = money(salaire_horaire_exact * precise(heures_sup_ferie_nuit) * TAUX_HS_FERIE_N / precise(100))
+        montant_detail = self.montants.get('montant_heures_sup_detail', Decimal('0'))
+        if montant_detail > 0:
+            montant_hs_30 = self.montants.get('montant_hs_30_detail', Decimal('0'))
+            montant_hs_60 = self.montants.get('montant_hs_60_detail', Decimal('0'))
+            montant_hs_nuit = self.montants.get('montant_hs_nuit_detail', Decimal('0'))
+            montant_hs_ferie_j = self.montants.get('montant_hs_ferie_jour_detail', Decimal('0'))
+            montant_hs_ferie_n = self.montants.get('montant_hs_ferie_nuit_detail', Decimal('0'))
+        else:
+            montant_hs_30 = money(salaire_horaire_exact * precise(heures_sup_30) * TAUX_HS_30 / precise(100))
+            montant_hs_60 = money(salaire_horaire_exact * precise(heures_sup_60) * TAUX_HS_60 / precise(100))
+            montant_hs_nuit = money(salaire_horaire_exact * precise(heures_sup_nuit) * TAUX_HS_NUIT / precise(100))
+            montant_hs_ferie_j = money(salaire_horaire_exact * precise(heures_sup_ferie_jour) * TAUX_HS_FERIE_J / precise(100))
+            montant_hs_ferie_n = money(salaire_horaire_exact * precise(heures_sup_ferie_nuit) * TAUX_HS_FERIE_N / precise(100))
         
         montant_hs_total = montant_hs_30 + montant_hs_60 + montant_hs_nuit + montant_hs_ferie_j + montant_hs_ferie_n
         
@@ -1899,6 +1970,11 @@ class MoteurCalculPaie:
             )
         
         # Mettre à jour les cumuls
+        if self._heures_sup_detail_ids:
+            HeureSupplementaire.objects.filter(
+                pk__in=self._heures_sup_detail_ids
+            ).update(statut='paye', bulletin=bulletin)
+
         self._mettre_a_jour_cumuls(bulletin)
         
         # Historique

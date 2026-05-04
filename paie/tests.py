@@ -20,6 +20,8 @@ from paie.services_retropaie import calculer_charges_patronales
 from paie.services_simulation import calculer_un_bareme as calculer_un_bareme_simulation
 from paie.views import _controles_livre_paie
 from paie.views_rapports import _charges_patronales_bulletin
+from paie.views_etax import get_etax_data
+from temps_travail.models import HeureSupplementaire
 
 
 class HeuresSupplementairesBaseTests(TestCase):
@@ -57,6 +59,15 @@ class HeuresSupplementairesBaseTests(TestCase):
             date_debut=date(2026, 5, 1),
             actif=True,
             recurrent=True,
+        )
+        self.periode = PeriodePaie.objects.create(
+            entreprise=self.entreprise,
+            annee=2026,
+            mois=5,
+            libelle='Mai 2026',
+            date_debut=date(2026, 5, 1),
+            date_fin=date(2026, 5, 31),
+            statut_periode='ouverte',
         )
 
     def _moteur_minimal(self):
@@ -96,6 +107,27 @@ class HeuresSupplementairesBaseTests(TestCase):
         self.assertGreater(moteur.montants['montant_heures_sup'], Decimal('0'))
         self.assertGreater(moteur.montants['total_gains'], Decimal('0'))
         self.assertEqual(moteur.lignes[0]['nombre'], Decimal('1.03'))
+
+    def test_heures_sup_validees_sont_injectees_dans_le_bulletin(self):
+        HeureSupplementaire.objects.create(
+            employe=self.employe,
+            date_hs=date(2026, 5, 8),
+            type_hs='jour_25',
+            nombre_heures=Decimal('1.03'),
+            taux_majoration=Decimal('25'),
+            taux_horaire_base=Decimal('40000'),
+            montant_hs=Decimal('51500'),
+            statut='valide',
+        )
+
+        moteur = MoteurCalculPaie(self.employe, self.periode)
+        moteur._calculer_temps_travail()
+        moteur._calculer_gains()
+
+        self.assertEqual(moteur.montants['heures_supplementaires'], Decimal('1.03'))
+        self.assertEqual(moteur.montants['montant_heures_sup'], Decimal('51500'))
+        self.assertGreaterEqual(moteur.montants['total_gains'], Decimal('7245419'))
+        self.assertEqual(moteur.lignes[-1]['nombre'], Decimal('1.03'))
 
 
 class LivrePaiePdfTests(TestCase):
@@ -179,6 +211,60 @@ class LivrePaiePdfTests(TestCase):
         self.assertContains(response, 'Anomalies CNSS', status_code=409)
         self.assertContains(response, 'Generation du PDF officiel bloquee', status_code=409)
 
+
+class EtaxModeTaOnfppTests(TestCase):
+    """Controle la bascule TA/ONFPP dans les donnees eTax."""
+
+    def setUp(self):
+        self.entreprise = Entreprise.objects.create(
+            nom_entreprise='Etax SARL',
+            slug='etax-test',
+            email='etax@example.com',
+        )
+        self.periode = PeriodePaie.objects.create(
+            entreprise=self.entreprise,
+            annee=2026,
+            mois=5,
+            libelle='Mai 2026',
+            date_debut=date(2026, 5, 1),
+            date_fin=date(2026, 5, 31),
+            statut_periode='validee',
+        )
+        for index in range(30):
+            employe = Employe.objects.create(
+                entreprise=self.entreprise,
+                matricule=f'EMP-ETAX-{index:03d}',
+                nom='Nom',
+                prenoms=str(index),
+                statut_employe='actif',
+            )
+            BulletinPaie.objects.create(
+                employe=employe,
+                periode=self.periode,
+                numero_bulletin=f'BUL-ETAX-{index:03d}',
+                mois_paie=5,
+                annee_paie=2026,
+                salaire_brut=Decimal('1000000'),
+                base_rts=Decimal('800000'),
+                cnss_employe=Decimal('50000'),
+                cnss_employeur=Decimal('180000'),
+                irg=Decimal('0'),
+                net_a_payer=Decimal('950000'),
+                versement_forfaitaire=Decimal('51000'),
+                base_vf=Decimal('850000'),
+                taxe_apprentissage=Decimal('17000'),
+                contribution_onfpp=Decimal('0'),
+                statut_bulletin='valide',
+            )
+
+    def test_etax_neutralise_ta_a_partir_de_30_employes(self):
+        data = get_etax_data(self.entreprise, 2026, 5)
+
+        self.assertEqual(data['effectif'], 30)
+        self.assertEqual(data['mode_ta_onfpp'], 'ONFPP')
+        self.assertEqual(data['total_ta'], Decimal('0'))
+        self.assertEqual(data['detail_employes'][0]['ta'], Decimal('0'))
+        self.assertEqual(data['total_onfpp'], Decimal('382500'))
 
 class CNSSCalculTests(SimpleTestCase):
     """TU-01 à TU-03: Tests CNSS salarié et employeur"""
