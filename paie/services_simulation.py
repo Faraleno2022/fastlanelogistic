@@ -204,10 +204,11 @@ def calculer_un_bareme(
     brut = Decimal(str(brut))
     total_indemnites = Decimal(str(max(Decimal('0'), total_indemnites)))
 
-    plancher_cnss   = constantes.get('PLANCHER_CNSS',       Decimal('550000'))
-    plafond_cnss    = constantes.get('PLAFOND_CNSS',        Decimal('2500000'))
-    taux_cnss_emp   = constantes.get('TAUX_CNSS_EMPLOYE',   Decimal('5'))
-    taux_cnss_pat   = constantes.get('TAUX_CNSS_EMPLOYEUR', Decimal('18'))
+    # CNSS Guinee: parametres legaux fixes, sans surcharge flottante.
+    plancher_cnss   = Decimal('550000')
+    plafond_cnss    = Decimal('2500000')
+    taux_cnss_emp   = Decimal('5')
+    taux_cnss_pat   = Decimal('18')
     taux_vf         = constantes.get('TAUX_VF',             Decimal('6'))
     # Les taux TA et ONFPP sont FIXES par la loi guinéenne (non configurables)
     TAUX_TA_LEGAL    = Decimal('2')      # Taxe d'Apprentissage: 2% (loi)

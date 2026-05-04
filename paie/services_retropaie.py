@@ -29,6 +29,15 @@ def _arrondir(montant):
     return _d(montant).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
 
 
+def _verrouiller_cnss_legale(constantes):
+    """CNSS Guinee: base et taux fixes, sans surcharge flottante."""
+    constantes['PLANCHER_CNSS'] = Decimal('550000')
+    constantes['PLAFOND_CNSS'] = Decimal('2500000')
+    constantes['TAUX_CNSS_EMPLOYE'] = Decimal('5')
+    constantes['TAUX_CNSS_EMPLOYEUR'] = Decimal('18')
+    return constantes
+
+
 # ---------------------------------------------------------------------------
 # Calcul CNSS employé
 # ---------------------------------------------------------------------------
@@ -184,7 +193,7 @@ def retropaie_net_vers_brut(
         annee = date.today().year
 
     # ---- Chargement des paramètres de paie --------------------------------
-    constantes = PayrollCacheService.get_constantes(date_reference=date(annee, 1, 1))
+    constantes = _verrouiller_cnss_legale(PayrollCacheService.get_constantes(date_reference=date(annee, 1, 1)))
     tranches   = PayrollCacheService.get_tranches_rts(annee)
 
     # Valeurs par défaut si base vide
@@ -307,7 +316,7 @@ def verifier_monotonie(annee=None, pct_indemnites_forfaitaires=0, pas=500_000,
     if annee is None:
         annee = date.today().year
 
-    constantes = PayrollCacheService.get_constantes(date_reference=date(annee, 1, 1))
+    constantes = _verrouiller_cnss_legale(PayrollCacheService.get_constantes(date_reference=date(annee, 1, 1)))
     tranches   = PayrollCacheService.get_tranches_rts(annee)
     constantes.setdefault('PLANCHER_CNSS',     Decimal('550000'))
     constantes.setdefault('PLAFOND_CNSS',      Decimal('2500000'))
@@ -345,7 +354,7 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0):
     if annee is None:
         annee = date.today().year
 
-    constantes = PayrollCacheService.get_constantes(date_reference=date(annee, 1, 1))
+    constantes = _verrouiller_cnss_legale(PayrollCacheService.get_constantes(date_reference=date(annee, 1, 1)))
     constantes.setdefault('PLANCHER_CNSS',       Decimal('550000'))
     constantes.setdefault('PLAFOND_CNSS',        Decimal('2500000'))
     constantes.setdefault('TAUX_CNSS_EMPLOYEUR', Decimal('18'))
@@ -419,7 +428,7 @@ def cout_total_vers_brut(
     if annee is None:
         annee = date.today().year
 
-    constantes = PayrollCacheService.get_constantes(date_reference=date(annee, 1, 1))
+    constantes = _verrouiller_cnss_legale(PayrollCacheService.get_constantes(date_reference=date(annee, 1, 1)))
     tranches = PayrollCacheService.get_tranches_rts(annee)
 
     constantes.setdefault('PLANCHER_CNSS',     Decimal('550000'))

@@ -3314,13 +3314,15 @@ def simulation_paie(request):
 
         try:
             config_paie = entreprise.config_paie
-            taux_cnss_employe = config_paie.taux_cnss_employe
-            taux_cnss_employeur = config_paie.taux_cnss_employeur
-            plancher_cnss = config_paie.plancher_cnss
-            plafond_cnss = config_paie.plafond_cnss
             taux_vf = config_paie.taux_versement_forfaitaire
         except Exception:
             pass
+
+        # CNSS Guinee: base et taux legaux fixes, sans surcharge flottante.
+        plancher_cnss = Decimal('550000')
+        plafond_cnss = Decimal('2500000')
+        taux_cnss_employe = Decimal('5')
+        taux_cnss_employeur = Decimal('18')
         
         # Calcul CNSS avec vérification du seuil minimum
         # IMPORTANT: Base CNSS = Brut complet (pas de primes exonérées à soustraire)

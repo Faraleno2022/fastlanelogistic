@@ -73,3 +73,22 @@ La reponse du moteur de simulation expose maintenant :
 - `regles.reference_vf`
 
 Ces informations sont affichees dans les details techniques de la structuration salariale pour rendre la base VF auditable.
+
+## Verrou CNSS
+
+Le moteur verrouille aussi les parametres CNSS legaux afin d'eviter les erreurs de taux ou d'arrondi :
+
+```text
+base_cnss = min(max(brut, plancher_cnss), plafond_cnss)
+plancher_cnss = 550 000 GNF
+plafond_cnss = 2 500 000 GNF
+cnss_employe = base_cnss x 5%
+cnss_employeur = base_cnss x 18%
+```
+
+Pour tout brut superieur au plafond CNSS, les montants attendus sont donc :
+
+```text
+cnss_employe = 2 500 000 x 5% = 125 000 GNF
+cnss_employeur = 2 500 000 x 18% = 450 000 GNF
+```

@@ -14,7 +14,7 @@ from django.test import SimpleTestCase, TestCase
 from core.models import Entreprise
 from employes.models import Employe
 from paie.models import ElementSalaire, RubriquePaie
-from paie.services import MoteurCalculPaie
+from paie.services import MoteurCalculPaie, appliquer_constantes_cnss_legales
 from paie.services_retropaie import calculer_charges_patronales
 from paie.services_simulation import calculer_un_bareme as calculer_un_bareme_simulation
 from paie.views_rapports import _charges_patronales_bulletin
@@ -162,6 +162,39 @@ class CNSSCalculTests(SimpleTestCase):
         
         self.assertEqual(assiette, Decimal('550000'))  # Plancher appliqué
         self.assertEqual(cnss_salarie, Decimal('27500'))
+
+    def test_constantes_cnss_legales_ecrasent_taux_flottants(self):
+        """Les taux CNSS doivent rester 5% / 18% meme si une config est polluee."""
+        constantes = appliquer_constantes_cnss_legales({
+            'PLANCHER_CNSS': Decimal('550000'),
+            'PLAFOND_CNSS': Decimal('2500000'),
+            'TAUX_CNSS_EMPLOYE': Decimal('4.00324'),
+            'TAUX_CNSS_EMPLOYEUR': Decimal('14.41168'),
+        })
+
+        self.assertEqual(constantes['PLAFOND_CNSS'], Decimal('2500000'))
+        self.assertEqual(constantes['TAUX_CNSS_EMPLOYE'], Decimal('5'))
+        self.assertEqual(constantes['TAUX_CNSS_EMPLOYEUR'], Decimal('18'))
+
+    def test_simulation_cnss_plafond_ignore_taux_flottants(self):
+        """Cas EMP-039: brut > plafond => CNSS 125 000 / 450 000."""
+        resultat = calculer_un_bareme_simulation(
+            Decimal('2668831'),
+            Decimal('0'),
+            [{'borne_inf': 0, 'borne_sup': None, 'taux': 0}],
+            {
+                'PLANCHER_CNSS': Decimal('550000'),
+                'PLAFOND_CNSS': Decimal('2500000'),
+                'TAUX_CNSS_EMPLOYE': Decimal('4.00324'),
+                'TAUX_CNSS_EMPLOYEUR': Decimal('14.41168'),
+                'TAUX_VF': Decimal('6'),
+            },
+            nb_salaries=30,
+        )
+
+        self.assertEqual(resultat['assiette_cnss'], 2500000)
+        self.assertEqual(resultat['cnss'], 125000)
+        self.assertEqual(resultat['cnss_employeur'], 450000)
 
 
 class ChargesPatronalesTests(SimpleTestCase):

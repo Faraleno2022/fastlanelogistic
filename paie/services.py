@@ -74,6 +74,20 @@ def salaire_base_priority_annotation(prefix='rubrique__'):
     )
 
 
+CNSS_LEGALE = {
+    'PLANCHER_CNSS': Decimal('550000'),
+    'PLAFOND_CNSS': Decimal('2500000'),
+    'TAUX_CNSS_EMPLOYE': Decimal('5'),
+    'TAUX_CNSS_EMPLOYEUR': Decimal('18'),
+}
+
+
+def appliquer_constantes_cnss_legales(constantes):
+    """Verrouille les parametres CNSS guineens pour eviter les taux flottants."""
+    constantes.update(CNSS_LEGALE)
+    return constantes
+
+
 # ============================================================================
 # DÉTECTION INTELLIGENTE DES INDEMNITÉS FORFAITAIRES EXONÉRÉES DE RTS
 # Législation guinéenne (CGI): les indemnités forfaitaires (transport, logement,
@@ -166,6 +180,7 @@ class MoteurCalculPaie:
         ).count() if employe.entreprise else 0
         self.constantes = self._charger_constantes()
         self._appliquer_config_entreprise()
+        appliquer_constantes_cnss_legales(self.constantes)
         self.tranches_irg = self._charger_tranches_irg()
         
         # Devise de paie de l'employé et service de conversion
@@ -193,10 +208,6 @@ class MoteurCalculPaie:
         # Mapping champ ConfigurationPaieEntreprise -> clé Constante
         # NB: taux_taxe_apprentissage et taux_onfpp sont EXCLUS car fixés par la loi
         mapping = {
-            'taux_cnss_employe': 'TAUX_CNSS_EMPLOYE',
-            'taux_cnss_employeur': 'TAUX_CNSS_EMPLOYEUR',
-            'plafond_cnss': 'PLAFOND_CNSS',
-            'plancher_cnss': 'PLANCHER_CNSS',
             'taux_versement_forfaitaire': 'TAUX_VF',
         }
         # HS : ConfigPaie stocke la majoration (30%), le moteur attend le coefficient (130%)
