@@ -311,7 +311,7 @@ def index(request):
         }
         return render(request, 'dashboard/index.html', context)
 
-    cache_key = f'dashboard_stats_v5_{entreprise_id}_{annee_filtre}_{mois_filtre}'
+    cache_key = f'dashboard_stats_v6_{entreprise_id}_{annee_filtre}_{mois_filtre}'
 
     # Essayer de récupérer du cache
     cached_data = cache.get(cache_key)
