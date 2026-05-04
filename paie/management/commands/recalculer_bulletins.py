@@ -18,6 +18,7 @@ Usage:
 from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.models import Q
 from paie.models import BulletinPaie, PeriodePaie, Constante
 from paie.services import MoteurCalculPaie
 
@@ -121,8 +122,8 @@ class Command(BaseCommand):
             bulletins = bulletins.filter(numero_bulletin=options['bulletin'])
         elif options.get('periode') and options.get('annee'):
             bulletins = bulletins.filter(
-                periode__mois=options['periode'],
-                periode__annee=options['annee']
+                Q(periode__mois=options['periode'], periode__annee=options['annee']) |
+                Q(mois_paie=options['periode'], annee_paie=options['annee'])
             )
         elif options.get('non_clotures'):
             bulletins = bulletins.filter(
@@ -188,11 +189,19 @@ class Command(BaseCommand):
                     bulletin.irg = nouveaux_montants['irg']
                     bulletin.net_a_payer = nouveaux_montants['net']
                     bulletin.total_retenues = nouveaux_montants['total_retenues']
+                    bulletin.base_rts = nouveaux_montants.get('base_rts', bulletin.base_rts)
+                    bulletin.taux_effectif_rts = nouveaux_montants.get('taux_effectif_rts', bulletin.taux_effectif_rts)
+                    bulletin.abattement_forfaitaire = nouveaux_montants.get(
+                        'abattement_forfaitaire',
+                        bulletin.abattement_forfaitaire,
+                    )
                     bulletin.base_vf = nouveaux_montants['base_vf']
                     bulletin.versement_forfaitaire = nouveaux_montants['versement_forfaitaire']
                     bulletin.taxe_apprentissage = nouveaux_montants['taxe_apprentissage']
                     bulletin.taux_ta = nouveaux_montants['taux_ta']
                     bulletin.contribution_onfpp = nouveaux_montants['contribution_onfpp']
+                    bulletin.total_charges_patronales = nouveaux_montants['total_charges_patronales']
+                    bulletin.snapshot_parametres = moteur._construire_snapshot()
                     bulletin.save()
                 self.stdout.write(self.style.SUCCESS('     Mis a jour'))
             else:
