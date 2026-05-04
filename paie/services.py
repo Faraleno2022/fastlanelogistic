@@ -44,6 +44,36 @@ def _to_json_safe(value):
     return value
 
 
+def salaire_base_rubrique_q(prefix='rubrique__'):
+    """Critere commun pour identifier une rubrique de salaire de base."""
+    p = prefix
+    return (
+        models.Q(**{f'{p}categorie_rubrique': 'salaire_base'}) |
+        models.Q(**{f'{p}code_rubrique__iexact': 'SAL_BASE'}) |
+        models.Q(**{f'{p}code_rubrique__icontains': 'SAL_BASE'}) |
+        models.Q(**{f'{p}code_rubrique__iexact': 'SALAIRE_BASE'}) |
+        models.Q(**{f'{p}code_rubrique__iexact': 'BASE'}) |
+        models.Q(**{f'{p}libelle_rubrique__icontains': 'Salaire de base'}) |
+        (
+            models.Q(**{f'{p}code_rubrique__icontains': 'BASE'}) &
+            models.Q(**{f'{p}libelle_rubrique__icontains': 'salaire'})
+        )
+    )
+
+
+def salaire_base_priority_annotation(prefix='rubrique__'):
+    """Priorite de choix quand plusieurs rubriques peuvent representer la base."""
+    p = prefix
+    return models.Case(
+        models.When(**{f'{p}categorie_rubrique': 'salaire_base'}, then=models.Value(0)),
+        models.When(**{f'{p}code_rubrique__icontains': 'SAL_BASE'}, then=models.Value(1)),
+        models.When(**{f'{p}code_rubrique__iexact': 'BASE'}, then=models.Value(2)),
+        models.When(**{f'{p}libelle_rubrique__icontains': 'Salaire de base'}, then=models.Value(3)),
+        default=models.Value(9),
+        output_field=models.IntegerField(),
+    )
+
+
 # ============================================================================
 # DÉTECTION INTELLIGENTE DES INDEMNITÉS FORFAITAIRES EXONÉRÉES DE RTS
 # Législation guinéenne (CGI): les indemnités forfaitaires (transport, logement,
@@ -661,10 +691,25 @@ class MoteurCalculPaie:
             # Chercher le salaire de base
             element_base = ElementSalaire.objects.filter(
                 employe=self.employe,
-                rubrique__code_rubrique__icontains='SAL_BASE',
-                actif=True
+                actif=True,
+                rubrique__type_rubrique='gain',
+            ).filter(
+                salaire_base_rubrique_q()
+            ).select_related('rubrique').annotate(
+                _base_priority=salaire_base_priority_annotation()
+            ).order_by(
+                '_base_priority',
+                'rubrique__ordre_calcul',
+                'rubrique__ordre_affichage',
+                '-date_debut',
+                'id',
             ).first()
-            return element_base.montant if element_base else Decimal('0')
+            if element_base and element_base.montant:
+                return element_base.montant
+
+            # Dernier secours pour anciens dossiers sans element structure.
+            salaire_employe = getattr(self.employe, 'salaire_base', None)
+            return salaire_employe or Decimal('0')
         elif code_base == 'BRUT':
             return self.montants['brut']
         elif code_base == 'CNSS_BASE':
@@ -2329,10 +2374,22 @@ class AnalyseurConformiteIndemnites:
         """Récupère le salaire de base depuis les éléments."""
         base = ElementSalaire.objects.filter(
             employe=self.employe,
-            rubrique__code_rubrique__icontains='SAL_BASE',
-            actif=True
+            actif=True,
+            rubrique__type_rubrique='gain',
+        ).filter(
+            salaire_base_rubrique_q()
+        ).select_related('rubrique').annotate(
+            _base_priority=salaire_base_priority_annotation()
+        ).order_by(
+            '_base_priority',
+            'rubrique__ordre_calcul',
+            'rubrique__ordre_affichage',
+            '-date_debut',
+            'id',
         ).first()
-        return base.montant if base and base.montant else Decimal('0')
+        if base and base.montant:
+            return base.montant
+        return getattr(self.employe, 'salaire_base', None) or Decimal('0')
 
     def _categorie_employe(self):
         """Retourne la catégorie professionnelle de l'employé."""

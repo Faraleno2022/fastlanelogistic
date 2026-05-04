@@ -6,13 +6,94 @@ Exécution: python manage.py test paie.tests
 Référence: CGI 2022 + Code du Travail Guinée
 """
 from decimal import Decimal
+from datetime import date
 from types import SimpleNamespace
 from unittest.mock import patch
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 
+from core.models import Entreprise
+from employes.models import Employe
+from paie.models import ElementSalaire, RubriquePaie
+from paie.services import MoteurCalculPaie
 from paie.services_retropaie import calculer_charges_patronales
 from paie.services_simulation import calculer_un_bareme as calculer_un_bareme_simulation
 from paie.views_rapports import _charges_patronales_bulletin
+
+
+class HeuresSupplementairesBaseTests(TestCase):
+    """Controle que les HS utilisent bien la vraie rubrique de salaire de base."""
+
+    def setUp(self):
+        self.entreprise = Entreprise.objects.create(
+            nom_entreprise='Test SARL',
+            slug='test-hs-base',
+            email='test@example.com',
+        )
+        self.employe = Employe.objects.create(
+            entreprise=self.entreprise,
+            matricule='EMP-HS-001',
+            nom='Test',
+            prenoms='HS',
+            statut_employe='actif',
+        )
+        self.rubrique_base = RubriquePaie.objects.create(
+            entreprise=self.entreprise,
+            code_rubrique='BASE',
+            libelle_rubrique='Salaire de base',
+            type_rubrique='gain',
+            categorie_rubrique='salaire_base',
+            soumis_cnss=True,
+            soumis_irg=True,
+            ordre_calcul=10,
+            ordre_affichage=10,
+            actif=True,
+        )
+        ElementSalaire.objects.create(
+            employe=self.employe,
+            rubrique=self.rubrique_base,
+            montant=Decimal('7193919'),
+            date_debut=date(2026, 5, 1),
+            actif=True,
+            recurrent=True,
+        )
+
+    def _moteur_minimal(self):
+        moteur = MoteurCalculPaie.__new__(MoteurCalculPaie)
+        moteur.employe = self.employe
+        moteur.lignes = []
+        moteur.constantes = {
+            'HEURES_MENSUELLES': Decimal('173.33'),
+            'TAUX_HS_4PREM': Decimal('130'),
+            'TAUX_HS_AUDELA': Decimal('160'),
+            'TAUX_HS_NUIT': Decimal('120'),
+            'TAUX_HS_FERIE_JOUR': Decimal('160'),
+            'TAUX_HS_FERIE_NUIT': Decimal('200'),
+        }
+        moteur.montants = {
+            'total_gains': Decimal('0'),
+            'cnss_base': Decimal('0'),
+            'imposable': Decimal('0'),
+            'heures_sup_30': Decimal('1.03'),
+            'heures_sup_60': Decimal('0'),
+            'heures_sup_nuit': Decimal('0'),
+            'heures_sup_ferie_jour': Decimal('0'),
+            'heures_sup_ferie_nuit': Decimal('0'),
+            'heures_supplementaires': Decimal('1.03'),
+        }
+        return moteur
+
+    def test_salaire_base_detecte_meme_si_code_base(self):
+        moteur = self._moteur_minimal()
+
+        self.assertEqual(moteur._obtenir_base_calcul('SALAIRE_BASE'), Decimal('7193919'))
+
+    def test_heures_sup_sont_valorisees_quand_base_detectee(self):
+        moteur = self._moteur_minimal()
+        moteur._calculer_heures_supplementaires()
+
+        self.assertGreater(moteur.montants['montant_heures_sup'], Decimal('0'))
+        self.assertGreater(moteur.montants['total_gains'], Decimal('0'))
+        self.assertEqual(moteur.lignes[0]['nombre'], Decimal('1.03'))
 
 
 class CNSSCalculTests(SimpleTestCase):

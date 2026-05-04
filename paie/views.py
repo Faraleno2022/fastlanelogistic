@@ -2,7 +2,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, Case, When, Value, IntegerField
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.db import transaction
@@ -822,8 +822,21 @@ def telecharger_bulletin_pdf(request, pk):
             try:
                 ligne_base = LigneBulletin.objects.filter(
                     bulletin=bulletin,
-                    rubrique__code_rubrique__icontains='SAL_BASE'
-                ).first()
+                    rubrique__type_rubrique='gain',
+                ).filter(
+                    Q(rubrique__categorie_rubrique='salaire_base') |
+                    Q(rubrique__code_rubrique__icontains='SAL_BASE') |
+                    Q(rubrique__code_rubrique__iexact='BASE') |
+                    Q(rubrique__libelle_rubrique__icontains='Salaire de base')
+                ).annotate(
+                    _base_priority=Case(
+                        When(rubrique__categorie_rubrique='salaire_base', then=Value(0)),
+                        When(rubrique__code_rubrique__icontains='SAL_BASE', then=Value(1)),
+                        When(rubrique__code_rubrique__iexact='BASE', then=Value(2)),
+                        default=Value(9),
+                        output_field=IntegerField(),
+                    )
+                ).order_by('_base_priority', 'ordre', 'id').first()
                 if ligne_base:
                     _sal_base = Decimal(str(ligne_base.montant or 0))
             except Exception:
@@ -834,6 +847,16 @@ def telecharger_bulletin_pdf(request, pk):
         _montant_nuit = round(_sal_h * Decimal(str(hs_nuit)) * Decimal('1.20')) if float(hs_nuit) > 0 else 0
         _montant_feries = round(_sal_h * Decimal(str(hs_feries)) * Decimal('1.60')) if float(hs_feries) > 0 else 0
         _montant_feries_nuit = round(_sal_h * Decimal(str(hs_feries_nuit)) * Decimal('2.00')) if float(hs_feries_nuit) > 0 else 0
+        _total_hs_calcule = (
+            Decimal(str(_montant_30)) + Decimal(str(_montant_60)) +
+            Decimal(str(_montant_nuit)) + Decimal(str(_montant_feries)) +
+            Decimal(str(_montant_feries_nuit))
+        )
+        _total_hs_calcule = (
+            Decimal(str(_montant_30)) + Decimal(str(_montant_60)) +
+            Decimal(str(_montant_nuit)) + Decimal(str(_montant_feries)) +
+            Decimal(str(_montant_feries_nuit))
+        )
 
         hs_detail_data = [["Type", "Heures", "Majoration", "Montant"]]
         if float(hs_30) > 0:
@@ -853,6 +876,8 @@ def telecharger_bulletin_pdf(request, pk):
                                     f"{_montant_feries_nuit:,.0f}".replace(",", " ")])
 
         total_prime = float(prime_hs) + float(prime_nuit) + float(prime_feries) + float(prime_feries_nuit)
+        if total_prime <= 0 and _total_hs_calcule > 0:
+            total_prime = float(_total_hs_calcule)
         hs_detail_data.append(["", f"{total_hs_heures:g}h", "Total HS:",
                                 f"{total_prime:,.0f} GNF".replace(",", " ")])
         
@@ -1444,8 +1469,21 @@ def telecharger_bulletin_public(request, token):
             try:
                 ligne_base = LigneBulletin.objects.filter(
                     bulletin=bulletin,
-                    rubrique__code_rubrique__icontains='SAL_BASE'
-                ).first()
+                    rubrique__type_rubrique='gain',
+                ).filter(
+                    Q(rubrique__categorie_rubrique='salaire_base') |
+                    Q(rubrique__code_rubrique__icontains='SAL_BASE') |
+                    Q(rubrique__code_rubrique__iexact='BASE') |
+                    Q(rubrique__libelle_rubrique__icontains='Salaire de base')
+                ).annotate(
+                    _base_priority=Case(
+                        When(rubrique__categorie_rubrique='salaire_base', then=Value(0)),
+                        When(rubrique__code_rubrique__icontains='SAL_BASE', then=Value(1)),
+                        When(rubrique__code_rubrique__iexact='BASE', then=Value(2)),
+                        default=Value(9),
+                        output_field=IntegerField(),
+                    )
+                ).order_by('_base_priority', 'ordre', 'id').first()
                 if ligne_base:
                     _sal_base = Decimal(str(ligne_base.montant or 0))
             except Exception:
@@ -1475,6 +1513,8 @@ def telecharger_bulletin_public(request, token):
                                     f"{_montant_feries_nuit:,.0f}".replace(",", " ")])
 
         total_prime = float(prime_hs) + float(prime_nuit) + float(prime_feries) + float(prime_feries_nuit)
+        if total_prime <= 0 and _total_hs_calcule > 0:
+            total_prime = float(_total_hs_calcule)
         hs_detail_data.append(["", f"{total_hs_heures:g}h", "Total HS:",
                                 f"{total_prime:,.0f} GNF".replace(",", " ")])
         
