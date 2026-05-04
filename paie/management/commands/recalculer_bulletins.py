@@ -188,7 +188,6 @@ class Command(BaseCommand):
                     bulletin.cnss_employeur = nouveaux_montants['cnss_employeur']
                     bulletin.irg = nouveaux_montants['irg']
                     bulletin.net_a_payer = nouveaux_montants['net']
-                    bulletin.total_retenues = nouveaux_montants['total_retenues']
                     bulletin.base_rts = nouveaux_montants.get('base_rts', bulletin.base_rts)
                     bulletin.taux_effectif_rts = nouveaux_montants.get('taux_effectif_rts', bulletin.taux_effectif_rts)
                     bulletin.abattement_forfaitaire = nouveaux_montants.get(
@@ -200,7 +199,6 @@ class Command(BaseCommand):
                     bulletin.taxe_apprentissage = nouveaux_montants['taxe_apprentissage']
                     bulletin.taux_ta = nouveaux_montants['taux_ta']
                     bulletin.contribution_onfpp = nouveaux_montants['contribution_onfpp']
-                    bulletin.total_charges_patronales = nouveaux_montants['total_charges_patronales']
                     bulletin.snapshot_parametres = moteur._construire_snapshot()
                     bulletin.save()
                 self.stdout.write(self.style.SUCCESS('     Mis a jour'))
