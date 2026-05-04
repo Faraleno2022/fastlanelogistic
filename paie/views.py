@@ -3619,8 +3619,9 @@ def simulation_paie(request):
         else:
             taux_effectif_rts = Decimal('0')
         
-        # Charges patronales
-        deduction_vf = (min(salaire_brut, plafond_cnss) * taux_vf / Decimal('100')).quantize(Decimal('1'))
+        # Charges patronales: base VF/ONFPP optimisee = brut - indemnites exonerees plafonnees.
+        plafond_indemnites_vf = (salaire_brut * Decimal('25') / Decimal('100')).quantize(Decimal('1'))
+        deduction_vf = min(total_indemnites_forfaitaires, plafond_indemnites_vf, salaire_brut)
         base_vf = max(Decimal('0'), salaire_brut - deduction_vf)
         vf = (base_vf * taux_vf / Decimal('100')).quantize(Decimal('1'))
         
@@ -4215,7 +4216,10 @@ def api_retropaie(request):
         statut_employe='actif'
     ).count()
     try:
-        cp = calculer_charges_patronales(resultat['brut'], annee=annee, nb_salaries=nb_salaries)
+        cp = calculer_charges_patronales(
+            resultat['brut'], annee=annee, nb_salaries=nb_salaries,
+            pct_indemnites_forfaitaires=pct_indem,
+        )
     except Exception:
         cp = {'cnss_employeur': 0, 'vf': 0, 'ta': 0, 'libelle_ta': 'TA', 'total': 0,
               'cout_total_employeur': int(resultat['brut'])}
@@ -5134,12 +5138,12 @@ def api_impact_fiscal(request):
             'cnss_formule': f"min({result['brut']:,}, {int(constantes.get('PLAFOND_CNSS', 2500000)):,}) × {float(constantes.get('TAUX_CNSS_EMPLOYE', 5))}%",
             'exon_formule': f"min({indem_val:,}, {result['plafond_exon']:,}) → plafond 25% × {result['brut']:,}",
             'base_rts_formule': f"{result['brut']:,} − {result['cnss']:,} − {result['exon']:,} + {result['depasse']:,} = {result['base_rts']:,}",
-            'base_vf_formule': f"{result['brut']:,} - {result.get('deduction_vf', 0):,} = {result['base_vf']:,} ; deduction CGI = min(brut, {int(constantes.get('PLAFOND_CNSS', 2500000)):,}) x {float(constantes.get('TAUX_VF', 6))}%",
+            'base_vf_formule': f"{result['brut']:,} - {result.get('deduction_vf', 0):,} = {result['base_vf']:,} ; base VF = brut - indemnites exonerees plafonnees",
             'vf_formule': f"{result['base_vf']:,} x {float(constantes.get('TAUX_VF', 6))}% = {result['vf']:,}",
             'onfpp_formule': f"{result.get('base_onfpp', 0):,} x 1.5% = {result['onfpp']:,}",
             'net_formule': f"{result['brut']:,} − {result['cnss']:,} − {result['rts']:,} = {result['net']:,}",
             'reference': 'CGI Guinée – Art. 196 (exonération 25%) / Art. 197 (barème RTS progressif)',
-            'reference_vf': 'VF: base = brut - min(brut, plafond CNSS) x 6%; VF = base x 6% (deduction CGI plafonnee a 150 000 GNF avec plafond CNSS 2 500 000 GNF).',
+            'reference_vf': 'VF/ONFPP: base = brut - indemnites exonerees plafonnees; VF = base x 6%; ONFPP = base x 1,5% si effectif >= 30.',
         },
     })
 
@@ -5521,13 +5525,19 @@ def api_proposition_complete(request):
         statut_employe='actif'
     ).count()
     try:
-        cp = calculer_charges_patronales(retro['brut'], annee=annee, nb_salaries=nb_salaries)
+        cp = calculer_charges_patronales(
+            retro['brut'], annee=annee, nb_salaries=nb_salaries,
+            pct_indemnites_forfaitaires=taux_max,
+        )
     except Exception:
         cp = {'cnss_employeur': 0, 'vf': 0, 'ta': 0, 'libelle_ta': 'TA',
               'total': 0, 'cout_total_employeur': brut_calcule}
 
     try:
-        cp_ref = calculer_charges_patronales(retro_ref['brut'], annee=annee, nb_salaries=nb_salaries)
+        cp_ref = calculer_charges_patronales(
+            retro_ref['brut'], annee=annee, nb_salaries=nb_salaries,
+            pct_indemnites_forfaitaires=0,
+        )
     except Exception:
         cp_ref = cp
 

@@ -1191,16 +1191,11 @@ class MoteurCalculPaie:
         )
         
         # Versement Forfaitaire (VF) - charge patronale
-        # Règle CGI Guinée :
-        #   Déduction VF = min(brut, 2 500 000) × 6%  (donc plafonnée à 150 000)
-        #   Base VF      = Brut − Déduction VF
-        #   VF final     = Base VF × 6%
-        # Exemples :
-        #   brut 2 000 000 → déduction = 120 000 → base 1 880 000 → VF 112 800
-        #   brut 2 500 000 → déduction = 150 000 → base 2 350 000 → VF 141 000
-        #   brut 4 229 834 → déduction = 150 000 (plafond) → base 4 079 834 → VF 244 790
+        # Mode standard GuineeRH optimise :
+        #   Base VF/ONFPP = Brut - indemnites exonerees plafonnees.
+        # Le mode "brut" reste disponible en legacy.
         taux_vf = self.constantes.get('TAUX_VF', Decimal('6.00'))
-        plafond_deduction_vf = self.constantes.get('PLAFOND_CNSS', Decimal('2500000'))
+        exoneration_vf = self.montants.get('exoneration_indemnites', Decimal('0'))
 
         from .formules import evaluer_formule as _evaluer_vf
         params_vf = getattr(self.employe.entreprise, 'parametres_calcul_paie', None)
@@ -1217,19 +1212,15 @@ class MoteurCalculPaie:
                     'avertissement',
                     "Formule personnalisée de base VF invalide. Calcul standard appliqué."
                 )
-                deduction_vf = self._arrondir(
-                    min(base_vf_ta, plafond_deduction_vf) * taux_vf / Decimal('100')
-                )
+                deduction_vf = self._arrondir(min(exoneration_vf, base_vf_ta))
                 base_vf_nette = base_vf_ta - deduction_vf
         elif params_vf and params_vf.mode_base_vf == 'brut':
             # Mode legacy : base = brut directement, pas de déduction
             deduction_vf = Decimal('0')
             base_vf_nette = base_vf_ta
         else:
-            # Mode par défaut : Brut − min(brut, 2,5M) × 6%
-            deduction_vf = self._arrondir(
-                min(base_vf_ta, plafond_deduction_vf) * taux_vf / Decimal('100')
-            )
+            # Mode par defaut : Brut - exoneration indemnitaire plafonnee
+            deduction_vf = self._arrondir(min(exoneration_vf, base_vf_ta))
             base_vf_nette = base_vf_ta - deduction_vf
 
         base_vf_calculee = self._normaliser_base_taxable(
@@ -1245,7 +1236,7 @@ class MoteurCalculPaie:
             'vf',
             'VF',
             base_vf_nette,
-            'salaire brut - déduction VF',
+            'salaire brut - exoneration indemnitaire plafonnee',
         )
 
         self.montants['base_vf'] = base_vf_nette

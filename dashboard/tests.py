@@ -55,13 +55,13 @@ class DashboardPaieTotauxTests(SimpleTestCase):
         bulletin = SimpleNamespace(
             salaire_brut=Decimal('10000000'),
             base_rts=Decimal('7500000'),
-            base_vf=Decimal('9850000'),
+            base_vf=Decimal('7500000'),
             abattement_forfaitaire=Decimal('2500000'),
             cnss_employe=Decimal('125000'),
             cnss_employeur=Decimal('450000'),
-            versement_forfaitaire=Decimal('591000'),
+            versement_forfaitaire=Decimal('450000'),
             taxe_apprentissage=Decimal('0'),
-            contribution_onfpp=Decimal('147750'),
+            contribution_onfpp=Decimal('112500'),
         )
 
         risque = _build_risque_fiscal_paie([bulletin], effectif_total=30)
@@ -76,6 +76,7 @@ class DashboardPaieTotauxTests(SimpleTestCase):
         bulletin = SimpleNamespace(
             employe=employe,
             salaire_brut=Decimal('10000000'),
+            abattement_forfaitaire=Decimal('2500000'),
             net_a_payer=Decimal('9400000'),
             cnss_employe=Decimal('125000'),
             cnss_employeur=Decimal('450000'),
@@ -90,5 +91,5 @@ class DashboardPaieTotauxTests(SimpleTestCase):
         self.assertEqual(len(lignes), 1)
         self.assertEqual(lignes[0]['nom'], 'Administration')
         self.assertEqual(lignes[0]['effectif'], 1)
-        self.assertEqual(lignes[0]['onfpp'], Decimal('147750'))
-        self.assertEqual(lignes[0]['masse_salariale'], Decimal('11188750'))
+        self.assertEqual(lignes[0]['onfpp'], Decimal('112500'))
+        self.assertEqual(lignes[0]['masse_salariale'], Decimal('11153500'))

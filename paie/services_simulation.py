@@ -248,7 +248,7 @@ def calculer_un_bareme(
     net = int(brut) - cnss - rts
 
     # -- Charges patronales --
-    deduction_vf = _half_up(min(brut, plafond_cnss) * taux_vf / Decimal('100'))
+    deduction_vf = int(exon)
     base_vf = max(Decimal('0'), brut - Decimal(str(deduction_vf)))
     vf = _half_up(base_vf * taux_vf / Decimal('100'))
     # Seuil TA/ONFPP : < seuil -> TA 2%, >= seuil -> ONFPP 1,5% sur base VF

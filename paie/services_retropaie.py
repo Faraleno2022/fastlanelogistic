@@ -342,7 +342,7 @@ def verifier_monotonie(annee=None, pct_indemnites_forfaitaires=0, pas=500_000,
 # Détail par tranche (pour affichage pédagogique)
 # ---------------------------------------------------------------------------
 
-def calculer_charges_patronales(brut, annee=None, nb_salaries=0):
+def calculer_charges_patronales(brut, annee=None, nb_salaries=0, pct_indemnites_forfaitaires=25):
     """
     Calcule les charges patronales pour un brut donné.
 
@@ -364,6 +364,7 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0):
     constantes.setdefault('SEUIL_TA_ONFPP',      Decimal('30'))
 
     brut = _arrondir(_d(brut))
+    pct_indem = max(Decimal('0'), min(Decimal('25'), _d(pct_indemnites_forfaitaires)))
     plancher     = constantes['PLANCHER_CNSS']
     plafond      = constantes['PLAFOND_CNSS']
     taux_cnss_pat = constantes['TAUX_CNSS_EMPLOYEUR']
@@ -379,7 +380,7 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0):
         base = _arrondir(max(min(brut, plafond), plancher))
         cnss_pat = _arrondir(base * taux_cnss_pat / Decimal('100'))
 
-    deduction_vf = _arrondir(min(brut, plafond) * taux_vf / Decimal('100'))
+    deduction_vf = _arrondir(brut * pct_indem / Decimal('100'))
     base_vf = max(Decimal('0'), brut - deduction_vf)
     vf = _arrondir(base_vf * taux_vf / Decimal('100'))
     taux_ta = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
@@ -455,7 +456,7 @@ def cout_total_vers_brut(
         else:
             base = _arrondir(max(min(brut, plafond), plancher))
             cnss_pat = _arrondir(base * taux_cnss_pat / Decimal('100'))
-        deduction_vf = _arrondir(min(brut, plafond) * taux_vf / Decimal('100'))
+        deduction_vf = _arrondir(brut * pct_indem / Decimal('100'))
         base_vf = max(Decimal('0'), brut - deduction_vf)
         vf = _arrondir(base_vf * taux_vf / Decimal('100'))
         taux_ta_onfpp = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
