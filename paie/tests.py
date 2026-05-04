@@ -311,6 +311,33 @@ class CNSSCalculTests(SimpleTestCase):
         self.assertFalse(controles['macro_ok'])
         self.assertEqual(controles['net_attendu'], Decimal('1625117056'))
         self.assertEqual(controles['ecart_net'], Decimal('-400000'))
+        self.assertGreater(controles['nb_controles_agregation'], 0)
+
+    def test_livre_paie_liste_retenues_hors_cnss_rts_sans_bloquer(self):
+        employe = SimpleNamespace(matricule='EMP-012', nom='Nom', prenoms='Prenom')
+        bulletin = SimpleNamespace(
+            numero_bulletin='BUL-012',
+            employe=employe,
+            salaire_brut=Decimal('18174015'),
+            rappel_salaire=Decimal('0'),
+            cnss_employe=Decimal('125000'),
+            cnss_employeur=Decimal('450000'),
+            irg=Decimal('1607352'),
+            net_a_payer=Decimal('16241663'),
+        )
+
+        controles = _controles_livre_paie([bulletin], {
+            'total_brut': Decimal('18174015'),
+            'total_retenues': Decimal('1932352'),
+            'total_net': Decimal('16241663'),
+        })
+
+        self.assertTrue(controles['conforme'])
+        self.assertTrue(controles['macro_ok'])
+        self.assertEqual(bulletin.total_retenues_livre, Decimal('1932352'))
+        self.assertEqual(controles['nb_retenues_hors_cnss_rts'], 1)
+        self.assertEqual(controles['retenues_hors_cnss_rts'][0]['matricule'], 'EMP-012')
+        self.assertEqual(controles['retenues_hors_cnss_rts'][0]['montant'], Decimal('200000'))
 
 
 class ChargesPatronalesTests(SimpleTestCase):

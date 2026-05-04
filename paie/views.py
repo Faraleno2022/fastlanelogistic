@@ -1878,12 +1878,38 @@ def _cnss_attendue_livre(brut):
 def _controles_livre_paie(bulletins, totaux):
     """Controle macro et lignes CNSS du livre de paie."""
     anomalies = []
+    retenues_hors_cnss_rts = []
+    total_detail_brut = Decimal('0')
+    total_detail_retenues = Decimal('0')
+    total_detail_net = Decimal('0')
     tolerance_cnss = Decimal('1')
     for bulletin in bulletins:
         brut = Decimal(str(bulletin.salaire_brut or 0))
+        rappel = Decimal(str(getattr(bulletin, 'rappel_salaire', 0) or 0))
+        net = Decimal(str(getattr(bulletin, 'net_a_payer', 0) or 0))
         attendu = _cnss_attendue_livre(brut)
         cnss_emp = Decimal(str(bulletin.cnss_employe or 0))
         cnss_pat = Decimal(str(bulletin.cnss_employeur or 0))
+        rts = Decimal(str(getattr(bulletin, 'irg', 0) or 0))
+        total_retenues_reel = (brut + rappel - net).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+        total_retenues_legales = cnss_emp + rts
+        retenue_hors_cnss_rts = total_retenues_reel - total_retenues_legales
+        setattr(bulletin, 'total_retenues_livre', total_retenues_reel)
+        setattr(bulletin, 'controle_retenues_hors_cnss_rts', retenue_hors_cnss_rts != Decimal('0'))
+        total_detail_brut += brut
+        total_detail_retenues += total_retenues_reel
+        total_detail_net += net
+
+        if retenue_hors_cnss_rts != Decimal('0'):
+            retenues_hors_cnss_rts.append({
+                'numero': bulletin.numero_bulletin,
+                'matricule': bulletin.employe.matricule,
+                'nom': f"{bulletin.employe.nom} {bulletin.employe.prenoms}".strip(),
+                'montant': retenue_hors_cnss_rts,
+                'total_retenues_reel': total_retenues_reel,
+                'total_retenues_legales': total_retenues_legales,
+            })
+
         if abs(cnss_emp - attendu['employe']) > tolerance_cnss or abs(cnss_pat - attendu['employeur']) > tolerance_cnss:
             anomalies.append({
                 'numero': bulletin.numero_bulletin,
@@ -1906,10 +1932,30 @@ def _controles_livre_paie(bulletins, totaux):
     net_attendu = total_brut - total_retenues
     ecart_net = total_net - net_attendu
     macro_ok = ecart_net == Decimal('0')
-    conforme = macro_ok and not anomalies
+    controles_agregation = []
+    for libelle, total_detail, total_resume in (
+        ('Masse salariale brute', total_detail_brut, total_brut),
+        ('Total retenues', total_detail_retenues, total_retenues),
+        ('Net a payer', total_detail_net, total_net),
+    ):
+        ecart = total_detail - total_resume
+        if ecart != Decimal('0'):
+            controles_agregation.append({
+                'libelle': libelle,
+                'total_detail': total_detail,
+                'total_resume': total_resume,
+                'ecart': ecart,
+            })
+
+    conforme = macro_ok and not anomalies and not controles_agregation
     return {
         'anomalies_cnss': anomalies,
         'nb_anomalies_cnss': len(anomalies),
+        'retenues_hors_cnss_rts': retenues_hors_cnss_rts,
+        'nb_retenues_hors_cnss_rts': len(retenues_hors_cnss_rts),
+        'total_retenues_hors_cnss_rts': sum((r['montant'] for r in retenues_hors_cnss_rts), Decimal('0')),
+        'controles_agregation': controles_agregation,
+        'nb_controles_agregation': len(controles_agregation),
         'net_attendu': net_attendu,
         'ecart_net': ecart_net,
         'macro_ok': macro_ok,
@@ -1934,6 +1980,15 @@ def _bloquer_pdf_livre_paie(controles_livre, fmt):
     )
     if controles_livre.get('nb_anomalies_cnss', 0) > len(anomalies):
         lignes += '<li>... autres anomalies CNSS non affichees</li>'
+    agregations = ''.join(
+        '<li>{libelle} : detail {detail} GNF, resume {resume} GNF, ecart {ecart} GNF</li>'.format(
+            libelle=escape(a.get('libelle') or '-'),
+            detail=fmt(a.get('total_detail')),
+            resume=fmt(a.get('total_resume')),
+            ecart=fmt(a.get('ecart')),
+        )
+        for a in controles_livre.get('controles_agregation', [])
+    )
 
     html = """
 <!doctype html>
@@ -1957,7 +2012,9 @@ def _bloquer_pdf_livre_paie(controles_livre, fmt):
     <div class="metric"><strong>Net attendu :</strong> {net_attendu} GNF</div>
     <div class="metric"><strong>Ecart net :</strong> {ecart_net} GNF</div>
     <div class="metric"><strong>Anomalies CNSS :</strong> {nb_anomalies}</div>
+    <div class="metric"><strong>Ecarts aggregation :</strong> {nb_agregations}</div>
     <ul>{lignes}</ul>
+    <ul>{agregations}</ul>
     <div class="hint">Action recommandee : recalculer les bulletins de la periode concernee pour appliquer le plafond CNSS legal.</div>
   </div>
 </body>
@@ -1966,7 +2023,9 @@ def _bloquer_pdf_livre_paie(controles_livre, fmt):
         net_attendu=fmt(controles_livre.get('net_attendu')),
         ecart_net=fmt(controles_livre.get('ecart_net')),
         nb_anomalies=controles_livre.get('nb_anomalies_cnss', 0),
+        nb_agregations=controles_livre.get('nb_controles_agregation', 0),
         lignes=lignes or '<li>Aucune anomalie CNSS detaillee.</li>',
+        agregations=agregations or '<li>Aucun ecart aggregation detaille.</li>',
     )
     return HttpResponse(html, status=409, content_type='text/html; charset=utf-8')
 
@@ -1993,7 +2052,7 @@ def livre_paie(request):
         periode__in=periodes,
         employe__entreprise=request.user.entreprise,
     ).select_related('employe', 'employe__poste', 'periode').annotate(
-        total_retenues_livre=F('cnss_employe') + F('irg')
+        total_retenues_livre=F('salaire_brut') + F('rappel_salaire') - F('net_a_payer')
     ).order_by('periode__mois', 'employe__matricule')
     
     # Calcul des totaux — inclut maintenant base imposable (RTS) et indemnités exonérées
@@ -2005,7 +2064,7 @@ def livre_paie(request):
         total_cnss_employeur=Sum('cnss_employeur'),
         total_irg=Sum('irg'),
         total_net=Sum('net_a_payer'),
-        total_retenues=Sum(F('cnss_employe') + F('irg'))
+        total_retenues=Sum(F('salaire_brut') + F('rappel_salaire') - F('net_a_payer'))
     )
     controles_livre = _controles_livre_paie(bulletins, totaux)
 
@@ -2063,7 +2122,7 @@ def telecharger_livre_paie_pdf(request):
         periode__in=periodes,
         employe__entreprise=request.user.entreprise,
     ).select_related('employe', 'employe__poste', 'periode').annotate(
-        total_retenues_livre=F('cnss_employe') + F('irg')
+        total_retenues_livre=F('salaire_brut') + F('rappel_salaire') - F('net_a_payer')
     ).order_by('periode__mois', 'employe__matricule')
 
     totaux = bulletins.aggregate(
@@ -2074,7 +2133,7 @@ def telecharger_livre_paie_pdf(request):
         total_cnss_employeur=Sum('cnss_employeur'),
         total_irg=Sum('irg'),
         total_net=Sum('net_a_payer'),
-        total_retenues=Sum(F('cnss_employe') + F('irg'))
+        total_retenues=Sum(F('salaire_brut') + F('rappel_salaire') - F('net_a_payer'))
     )
     controles_livre = _controles_livre_paie(bulletins, totaux)
 
@@ -2186,7 +2245,7 @@ def telecharger_livre_paie_pdf(request):
 
     statut_table = Table([
         ['STATUT', controles_livre['statut']],
-        ['Controle', 'Net = brut - CNSS - RTS | CNSS plafonnee OK'],
+        ['Controle', 'Net = brut - retenues affichees | CNSS plafonnee OK'],
     ], colWidths=[2.5 * cm, 10.5 * cm])
     statut_table.setStyle(TableStyle([
         ('FONT', (0, 0), (-1, -1), _FN, 8),
@@ -2234,19 +2293,23 @@ def telecharger_livre_paie_pdf(request):
     story.append(resume)
     story.append(Spacer(1, 0.25 * cm))
 
-    if not controles_livre['macro_ok'] or controles_livre['nb_anomalies_cnss'] > 0:
+    if controles_livre['nb_retenues_hors_cnss_rts'] > 0:
         controle_data = [
-            ['Controle livre de paie', 'Valeur'],
-            ['Net attendu (brut - CNSS - RTS)', f"{fmt(controles_livre['net_attendu'])} GNF"],
-            ['Ecart net', f"{fmt(controles_livre['ecart_net'])} GNF"],
-            ['Anomalies CNSS', str(controles_livre['nb_anomalies_cnss'])],
+            ['Retenues hors CNSS/RTS', 'Valeur'],
+            ['Nombre de lignes', str(controles_livre['nb_retenues_hors_cnss_rts'])],
+            ['Total', f"{fmt(controles_livre['total_retenues_hors_cnss_rts'])} GNF"],
         ]
+        for retenue in controles_livre['retenues_hors_cnss_rts'][:8]:
+            controle_data.append([
+                retenue['matricule'],
+                f"{fmt(retenue['montant'])} GNF",
+            ])
         controle_table = Table(controle_data, colWidths=[5.5 * cm, 4.0 * cm])
         controle_table.setStyle(TableStyle([
             ('FONT', (0, 0), (-1, -1), _FN, 8),
             ('FONT', (0, 0), (-1, 0), _FB, 8),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8d7da')),
-            ('GRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#dc3545')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#fff3cd')),
+            ('GRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#ffda6a')),
             ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
         ]))
         story.append(controle_table)

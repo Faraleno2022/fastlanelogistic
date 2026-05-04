@@ -108,10 +108,21 @@
     {% if controles_livre %}
     <div class="row mb-4">
         <div class="col-12">
-            {% if controles_livre.macro_ok and controles_livre.nb_anomalies_cnss == 0 %}
+            {% if controles_livre.conforme %}
             <div class="alert alert-success shadow-sm">
                 <strong>Contrôle livre de paie OK.</strong>
-                Total net = brut - retenues légales.
+                Total net = brut - retenues affichées.
+                {% if controles_livre.nb_retenues_hors_cnss_rts > 0 %}
+                <div class="mt-2">
+                    Retenues hors CNSS/RTS : {{ controles_livre.nb_retenues_hors_cnss_rts }}
+                    ligne(s), total {{ controles_livre.total_retenues_hors_cnss_rts|floatformat:0|intcomma }} GNF.
+                </div>
+                <ul class="mb-0 mt-1">
+                    {% for ligne in controles_livre.retenues_hors_cnss_rts %}
+                    <li>{{ ligne.matricule }} : {{ ligne.montant|floatformat:0|intcomma }} GNF</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
             </div>
             {% else %}
             <div class="alert alert-danger shadow-sm">
@@ -119,6 +130,14 @@
                 <div>Net attendu : {{ controles_livre.net_attendu|floatformat:0|intcomma }} GNF</div>
                 <div>Écart net : {{ controles_livre.ecart_net|floatformat:0|intcomma }} GNF</div>
                 <div>Anomalies CNSS : {{ controles_livre.nb_anomalies_cnss }}</div>
+                <div>Écarts agrégation : {{ controles_livre.nb_controles_agregation }}</div>
+                {% if controles_livre.controles_agregation %}
+                <ul class="mb-0 mt-2">
+                    {% for controle in controles_livre.controles_agregation %}
+                    <li>{{ controle.libelle }} : détail {{ controle.total_detail|floatformat:0|intcomma }} GNF, résumé {{ controle.total_resume|floatformat:0|intcomma }} GNF, écart {{ controle.ecart|floatformat:0|intcomma }} GNF</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
             </div>
             {% endif %}
         </div>
@@ -159,7 +178,7 @@
                             </thead>
                             <tbody>
                                 {% for bulletin in bulletins %}
-                                <tr class="{% if bulletin.controle_cnss_livre_erreur %}table-danger{% endif %}">
+                                <tr class="{% if bulletin.controle_cnss_livre_erreur %}table-danger{% elif bulletin.controle_retenues_hors_cnss_rts %}table-warning{% endif %}">
                                     <td>{{ bulletin.periode }}</td>
                                     <td>{{ bulletin.employe.matricule }}</td>
                                     <td>{{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}</td>
