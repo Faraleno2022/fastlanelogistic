@@ -199,7 +199,7 @@ def calculer_un_bareme(
       base_rts = brut − CNSS − exon + depasse
       RTS    = calcul progressif (ROUND_HALF_UP sur montants partiels)
       net    = brut − CNSS − RTS
-      VF/TA = base VF × taux ; ONFPP = brut × 1,5%
+      VF/TA/ONFPP = base VF × taux
     """
     brut = Decimal(str(brut))
     total_indemnites = Decimal(str(max(Decimal('0'), total_indemnites)))
@@ -250,7 +250,7 @@ def calculer_un_bareme(
     deduction_vf = _half_up(min(brut, plafond_cnss) * taux_vf / Decimal('100'))
     base_vf = max(Decimal('0'), brut - Decimal(str(deduction_vf)))
     vf = _half_up(base_vf * taux_vf / Decimal('100'))
-    # Seuil TA/ONFPP : < seuil -> TA 2%, >= seuil -> ONFPP 1,5% sur le brut
+    # Seuil TA/ONFPP : < seuil -> TA 2%, >= seuil -> ONFPP 1,5% sur base VF
     seuil_ta_onfpp = int(constantes.get('SEUIL_TA_ONFPP', Decimal('30')))
     if nb_salaries < seuil_ta_onfpp:
         ta    = _half_up(base_vf * TAUX_TA_LEGAL / Decimal('100'))
@@ -258,7 +258,7 @@ def calculer_un_bareme(
         base_onfpp = Decimal('0')
     else:
         ta    = 0
-        base_onfpp = brut
+        base_onfpp = base_vf
         onfpp = _half_up(base_onfpp * TAUX_ONFPP_LEGAL / Decimal('100'))
 
     return {

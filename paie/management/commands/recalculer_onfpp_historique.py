@@ -1,7 +1,7 @@
 """
 Recalcule la contribution ONFPP des bulletins historiques.
 
-Convention retenue : ONFPP = salaire brut × 1,5%.
+Convention retenue : ONFPP = base VF/ONFPP × 1,5%.
 
 Ne touche QUE le champ `contribution_onfpp`. Le `net_a_payer` n'est pas affecté
 car l'ONFPP est une charge patronale (côté employeur), pas une retenue salariée.
@@ -33,7 +33,7 @@ TAUX_ONFPP = Decimal('1.5')
 
 
 class Command(BaseCommand):
-    help = "Recalcule la contribution ONFPP sur le salaire brut pour les bulletins historiques"
+    help = "Recalcule la contribution ONFPP sur la base VF/ONFPP pour les bulletins historiques"
 
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true',
@@ -68,7 +68,7 @@ class Command(BaseCommand):
 
         total = qs.count()
         self.stdout.write(self.style.NOTICE('=' * 78))
-        self.stdout.write(self.style.NOTICE('RECALCUL ONFPP HISTORIQUE — convention : salaire brut × 1,5 %'))
+        self.stdout.write(self.style.NOTICE('RECALCUL ONFPP HISTORIQUE — convention : base VF/ONFPP × 1,5 %'))
         self.stdout.write(self.style.NOTICE('=' * 78))
         self.stdout.write(f"Bulletins ciblés (ONFPP > 0) : {total}")
         if dry_run:
@@ -85,8 +85,8 @@ class Command(BaseCommand):
 
         for b in qs.iterator(chunk_size=200):
             ancien = b.contribution_onfpp or Decimal('0')
-            brut = b.salaire_brut or Decimal('0')
-            nouveau = (brut * TAUX_ONFPP / Decimal('100')).quantize(
+            base_onfpp = b.base_vf or Decimal('0')
+            nouveau = (base_onfpp * TAUX_ONFPP / Decimal('100')).quantize(
                 Decimal('1'), rounding=ROUND_HALF_UP
             )
             ecart = nouveau - ancien

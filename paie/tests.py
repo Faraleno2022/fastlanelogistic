@@ -206,7 +206,7 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(total, Decimal('726000'))
 
     def test_charges_patronales_onfpp_a_partir_de_30_salaries(self):
-        """ONFPP = 1,5% du brut quand l'effectif atteint le seuil."""
+        """ONFPP = 1,5% de la base VF quand l'effectif atteint le seuil."""
         constantes = {
             'PLANCHER_CNSS': Decimal('550000'),
             'PLAFOND_CNSS': Decimal('2500000'),
@@ -222,9 +222,10 @@ class ChargesPatronalesTests(SimpleTestCase):
 
         self.assertEqual(charges['libelle_ta'], 'ONFPP')
         self.assertEqual(charges['base_vf'], 3450000)
+        self.assertEqual(charges['base_ta_onfpp'], 3450000)
         self.assertEqual(charges['vf'], 207000)
-        self.assertEqual(charges['ta'], 54000)
-        self.assertEqual(charges['total'], 711000)
+        self.assertEqual(charges['ta'], 51750)
+        self.assertEqual(charges['total'], 708750)
 
     def test_charges_patronales_ta_sous_30_salaries(self):
         """TA = 2% de la base VF tant que l'effectif reste sous le seuil."""
@@ -278,8 +279,19 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(sous_seuil['ta'], 69000)
         self.assertEqual(sous_seuil['onfpp'], 0)
         self.assertEqual(au_seuil['ta'], 0)
-        self.assertEqual(au_seuil['base_onfpp'], 3600000)
-        self.assertEqual(au_seuil['onfpp'], 54000)
+        self.assertEqual(au_seuil['base_onfpp'], 3450000)
+        self.assertEqual(au_seuil['onfpp'], 51750)
+
+    def test_onfpp_exemple_bulletin_base_vf(self):
+        """Cas audit: ONFPP sur base VF/ONFPP, pas sur le brut."""
+        brut = Decimal('4479445')
+        base_vf, vf, _ = self._calculer_vf_ta(brut)
+        onfpp = round(base_vf * Decimal('0.015'))
+
+        self.assertEqual(base_vf, Decimal('4329445'))
+        self.assertEqual(vf, Decimal('259767'))
+        self.assertEqual(onfpp, Decimal('64942'))
+        self.assertEqual(Decimal('450000') + vf + onfpp, Decimal('774709'))
 
 
 class IRGCalculTests(SimpleTestCase):

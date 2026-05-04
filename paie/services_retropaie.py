@@ -374,7 +374,7 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0):
     base_vf = max(Decimal('0'), brut - deduction_vf)
     vf = _arrondir(base_vf * taux_vf / Decimal('100'))
     taux_ta = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
-    base_ta_onfpp = brut if nb_salaries >= seuil_ta_onfpp else base_vf
+    base_ta_onfpp = base_vf
     ta = _arrondir(base_ta_onfpp * taux_ta / Decimal('100'))
     total = cnss_pat + vf + ta
 
@@ -450,7 +450,7 @@ def cout_total_vers_brut(
         base_vf = max(Decimal('0'), brut - deduction_vf)
         vf = _arrondir(base_vf * taux_vf / Decimal('100'))
         taux_ta_onfpp = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
-        base_ta_onfpp = brut if nb_salaries >= seuil_ta_onfpp else base_vf
+        base_ta_onfpp = base_vf
         ta = _arrondir(base_ta_onfpp * taux_ta_onfpp / Decimal('100'))
         return cnss_pat, vf, ta
 

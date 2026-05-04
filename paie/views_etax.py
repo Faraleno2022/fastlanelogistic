@@ -86,7 +86,7 @@ def get_etax_data(entreprise, annee, mois):
     data['effectif'] = bulletins.values('employe').distinct().count()
     if data['effectif'] >= 30:
         data['total_ta'] = Decimal('0')
-        data['total_onfpp'] = (data['total_brut'] * Decimal('0.015')).quantize(Decimal('1'))
+        data['total_onfpp'] = (data['total_base_vf'] * Decimal('0.015')).quantize(Decimal('1'))
     data['total_fiscal'] = data['total_rts'] + data['total_vf']
     data['total_cnss'] = data['total_cnss_employe'] + data['total_cnss_employeur']
     data['total_general'] = data['total_fiscal']
@@ -107,7 +107,7 @@ def get_etax_data(entreprise, annee, mois):
             'vf': getattr(bulletin, 'versement_forfaitaire', Decimal('0')) or Decimal('0'),
             'ta': getattr(bulletin, 'taxe_apprentissage', Decimal('0')) or Decimal('0'),
             'onfpp': (
-                ((bulletin.salaire_brut or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
+                ((getattr(bulletin, 'base_vf', Decimal('0')) or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
                 if data['effectif'] >= 30
                 else (getattr(bulletin, 'contribution_onfpp', Decimal('0')) or Decimal('0'))
             ),

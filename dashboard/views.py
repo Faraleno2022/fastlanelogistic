@@ -36,7 +36,7 @@ def _charges_attendues_bulletin(bulletin, effectif):
     vf = _arrondir_gnf(base_vf * Decimal('0.06'))
     if effectif >= 30:
         ta = Decimal('0')
-        onfpp = _arrondir_gnf(brut * Decimal('0.015'))
+        onfpp = _arrondir_gnf(base_vf * Decimal('0.015'))
     else:
         ta = _arrondir_gnf(base_vf * Decimal('0.02'))
         onfpp = Decimal('0')
@@ -428,7 +428,7 @@ def index(request):
         )
         if context.get('total_employes', 0) >= 30:
             totaux['ta'] = Decimal('0')
-            totaux['onfpp'] = ((totaux.get('brut') or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
+            totaux['onfpp'] = ((totaux.get('base_vf') or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
         context.update(_build_paie_totaux_context(totaux))
         context['risque_fiscal'] = _build_risque_fiscal_paie(bulletins_mois, context.get('total_employes', 0))
         context['repartition_service_paie'] = _build_repartition_service_paie(

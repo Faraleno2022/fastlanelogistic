@@ -96,14 +96,14 @@ def get_declarations_data(entreprise, annee, mois=None):
     nb_salaries = bulletins.values('employe').distinct().count()
     if nb_salaries >= 30:
         total_ta = Decimal('0')
-        total_onfpp = (masse_salariale * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
+        total_onfpp = (total_base_vf * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
     
     # Détail par employé
     detail_employes = []
     for bulletin in bulletins:
         emp = bulletin.employe
         onfpp = (
-            (bulletin.salaire_brut * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
+            ((bulletin.base_vf or Decimal('0')) * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
             if nb_salaries >= 30
             else bulletin.contribution_onfpp
         )
@@ -530,7 +530,7 @@ def export_dmu_excel(request):
     recap_data = [
         ["RTS (Retenue sur Traitements et Salaires)", float(data['masse_salariale']), "Barème", float(data['total_rts'])],
         ["VF (Versement Forfaitaire)", float(data['total_base_vf']), f"{data['taux_vf']}%", float(data['total_vf'])],
-        ["ONFPP", float(data['masse_salariale']), f"{data['taux_onfpp']}%", float(data['total_onfpp'])],
+        ["ONFPP", float(data['total_base_vf']), f"{data['taux_onfpp']}%", float(data['total_onfpp'])],
         ["TA (Taxe d'Apprentissage)", float(data['total_base_vf']), f"{data['taux_ta']}%", float(data['total_ta'])],
     ]
     

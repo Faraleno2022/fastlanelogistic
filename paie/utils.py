@@ -831,7 +831,7 @@ def generer_bulletin_pdf(bulletin):
         p.setFont(_FONT_ITALIC, 5.5)
         p.setFillColor(colors.HexColor("#666666"))
         p.drawString(margin_left, y,
-            f"Base VF/TA = {base_vf:,.0f} GNF  |  VF = {base_vf:,.0f} x 6%  |  ONFPP = brut x 1,5%"
+            f"Base VF/TA/ONFPP = {base_vf:,.0f} GNF  |  VF = {base_vf:,.0f} x 6%  |  ONFPP = {base_vf:,.0f} x 1,5%"
             .replace(",", " "))
         y -= 0.20*cm
     p.setFillColor(colors.black)

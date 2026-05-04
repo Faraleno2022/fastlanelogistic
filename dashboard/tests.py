@@ -42,7 +42,7 @@ class DashboardPaieTotauxTests(SimpleTestCase):
             cnss_employeur=Decimal('450000'),
             versement_forfaitaire=Decimal('591000'),
             taxe_apprentissage=Decimal('0'),
-            contribution_onfpp=Decimal('147750'),  # ancienne base VF au lieu du brut
+            contribution_onfpp=Decimal('150000'),  # ancienne base brut au lieu de base VF
         )
 
         risque = _build_risque_fiscal_paie([bulletin], effectif_total=30)
@@ -61,7 +61,7 @@ class DashboardPaieTotauxTests(SimpleTestCase):
             cnss_employeur=Decimal('450000'),
             versement_forfaitaire=Decimal('591000'),
             taxe_apprentissage=Decimal('0'),
-            contribution_onfpp=Decimal('150000'),
+            contribution_onfpp=Decimal('147750'),
         )
 
         risque = _build_risque_fiscal_paie([bulletin], effectif_total=30)
@@ -82,7 +82,7 @@ class DashboardPaieTotauxTests(SimpleTestCase):
             irg=Decimal('475000'),
             versement_forfaitaire=Decimal('591000'),
             taxe_apprentissage=Decimal('0'),
-            contribution_onfpp=Decimal('150000'),
+            contribution_onfpp=Decimal('147750'),
         )
 
         lignes = _build_repartition_service_paie([bulletin], effectif_total=30)
@@ -90,5 +90,5 @@ class DashboardPaieTotauxTests(SimpleTestCase):
         self.assertEqual(len(lignes), 1)
         self.assertEqual(lignes[0]['nom'], 'Administration')
         self.assertEqual(lignes[0]['effectif'], 1)
-        self.assertEqual(lignes[0]['onfpp'], Decimal('150000'))
-        self.assertEqual(lignes[0]['masse_salariale'], Decimal('11191000'))
+        self.assertEqual(lignes[0]['onfpp'], Decimal('147750'))
+        self.assertEqual(lignes[0]['masse_salariale'], Decimal('11188750'))

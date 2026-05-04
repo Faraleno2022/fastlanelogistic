@@ -2241,7 +2241,7 @@ def declarations_sociales(request):
     total_ta = totaux['total_ta'] or Decimal('0')
     if total_salaries >= 30:
         total_ta = Decimal('0')
-        total_onfpp = (salaire_brut_total * Decimal('0.015')).quantize(Decimal('1'))
+        total_onfpp = (total_base_vf * Decimal('0.015')).quantize(Decimal('1'))
 
     # Calculs pour CNSS
     declaration_cnss = {
@@ -2358,7 +2358,7 @@ def declarations_sociales_pdf(request):
     total_base_vf = totaux['total_base_vf'] or Decimal('0')
     total_onfpp = totaux['total_onfpp'] or Decimal('0')
     if total_salaries >= 30:
-        total_onfpp = (salaire_brut_total * Decimal('0.015')).quantize(Decimal('1'))
+        total_onfpp = (total_base_vf * Decimal('0.015')).quantize(Decimal('1'))
 
     declaration_cnss = {
         'total_salaries': total_salaries,
@@ -4891,6 +4891,7 @@ def api_impact_fiscal(request):
         'charges_employeur': {
             'cnss_employeur': result['cnss_employeur'],
             'base_vf': result['base_vf'],
+            'base_onfpp': result.get('base_onfpp', 0),
             'deduction_vf': result.get('deduction_vf', 0),
             'vf': result['vf'],
             'ta': result['ta'],
@@ -4915,6 +4916,7 @@ def api_impact_fiscal(request):
             'base_rts_formule': f"{result['brut']:,} − {result['cnss']:,} − {result['exon']:,} + {result['depasse']:,} = {result['base_rts']:,}",
             'base_vf_formule': f"{result['brut']:,} - {result.get('deduction_vf', 0):,} = {result['base_vf']:,} ; deduction CGI = min(brut, {int(constantes.get('PLAFOND_CNSS', 2500000)):,}) x {float(constantes.get('TAUX_VF', 6))}%",
             'vf_formule': f"{result['base_vf']:,} x {float(constantes.get('TAUX_VF', 6))}% = {result['vf']:,}",
+            'onfpp_formule': f"{result.get('base_onfpp', 0):,} x 1.5% = {result['onfpp']:,}",
             'net_formule': f"{result['brut']:,} − {result['cnss']:,} − {result['rts']:,} = {result['net']:,}",
             'reference': 'CGI Guinée – Art. 196 (exonération 25%) / Art. 197 (barème RTS progressif)',
             'reference_vf': 'VF: base = brut - min(brut, plafond CNSS) x 6%; VF = base x 6% (deduction CGI plafonnee a 150 000 GNF avec plafond CNSS 2 500 000 GNF).',
