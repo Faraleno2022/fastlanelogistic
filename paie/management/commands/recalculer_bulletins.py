@@ -17,6 +17,7 @@ Usage:
 """
 from decimal import Decimal
 from django.core.management.base import BaseCommand
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
 from paie.models import BulletinPaie, PeriodePaie, Constante
@@ -84,15 +85,24 @@ class Command(BaseCommand):
         # Recalculer chaque bulletin
         total_modifies = 0
         total_erreurs = 0
+        periodes_recalculees = set()
         
         for bulletin in bulletins:
             try:
                 modifie = self._recalculer_bulletin(bulletin, dry_run, force)
                 if modifie:
                     total_modifies += 1
+                    entreprise_id = getattr(bulletin.employe, 'entreprise_id', None)
+                    if entreprise_id:
+                        periodes_recalculees.add((entreprise_id, bulletin.annee_paie, bulletin.mois_paie))
             except Exception as e:
                 total_erreurs += 1
                 self.stdout.write(self.style.ERROR(f'  ERREUR {bulletin.numero_bulletin}: {e}'))
+
+        if not dry_run:
+            for entreprise_id, annee, mois in periodes_recalculees:
+                cache.delete(f'dashboard_stats_v6_{entreprise_id}_{annee}_{mois}')
+                cache.delete(f'dashboard_stats_v7_{entreprise_id}_{annee}_{mois}')
         
         # Résumé
         self.stdout.write('\n' + '=' * 60)
@@ -181,6 +191,9 @@ class Command(BaseCommand):
             self.stdout.write(f'     CNSS Employe: {ancien_cnss_employe:,.0f} -> {nouveaux_montants["cnss_employe"]:,.0f} ({diff_cnss_employe:+,.0f})')
             self.stdout.write(f'     CNSS Employeur: {ancien_cnss_employeur:,.0f} -> {nouveaux_montants["cnss_employeur"]:,.0f} ({diff_cnss_employeur:+,.0f})')
             self.stdout.write(f'     Net a payer: {ancien_net:,.0f} -> {nouveau_net:,.0f} ({diff_net:+,.0f})')
+            self.stdout.write(f'     Base VF: {bulletin.base_vf:,.0f} -> {nouveaux_montants["base_vf"]:,.0f}')
+            self.stdout.write(f'     VF: {ancien_vf:,.0f} -> {nouveaux_montants["versement_forfaitaire"]:,.0f} ({diff_vf:+,.0f})')
+            self.stdout.write(f'     ONFPP: {ancien_onfpp:,.0f} -> {nouveaux_montants["contribution_onfpp"]:,.0f} ({diff_onfpp:+,.0f})')
             
             if not dry_run:
                 with transaction.atomic():
