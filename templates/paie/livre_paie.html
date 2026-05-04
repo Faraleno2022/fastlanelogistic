@@ -124,13 +124,14 @@
                                     <th rowspan="2">Matricule</th>
                                     <th rowspan="2">Nom et Prénoms</th>
                                     <th rowspan="2">Fonction</th>
-                                    <th colspan="2" class="text-center bg-success text-white">Gains</th>
+                                    <th colspan="3" class="text-center bg-success text-white">Gains & Base imposable</th>
                                     <th colspan="3" class="text-center bg-danger text-white">Retenues</th>
                                     <th rowspan="2" class="bg-primary text-white">Net à Payer</th>
                                 </tr>
                                 <tr>
                                     <th class="text-end">Brut</th>
-                                    <th class="text-end">Imposable</th>
+                                    <th class="text-end" title="Indemnités exonérées (abattement forfaitaire 25%)">Exonéré</th>
+                                    <th class="text-end" title="Base imposable RTS = Brut − Exonéré">Imposable</th>
                                     <th class="text-end">CNSS (5%)</th>
                                     <th class="text-end">IRG</th>
                                     <th class="text-end">Total</th>
@@ -142,9 +143,10 @@
                                     <td>{{ bulletin.periode }}</td>
                                     <td>{{ bulletin.employe.matricule }}</td>
                                     <td>{{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}</td>
-                                    <td>{{ bulletin.employe.poste.intitule_poste|default:"-" }}</td>
+                                    <td>{{ bulletin.employe.poste.intitule_poste|default:bulletin.employe.departement|default:"-" }}</td>
                                     <td class="text-end">{{ bulletin.salaire_brut|floatformat:0|intcomma }}</td>
-                                    <td class="text-end">{{ bulletin.salaire_brut|floatformat:0|intcomma }}</td>
+                                    <td class="text-end text-muted">{{ bulletin.abattement_forfaitaire|floatformat:0|intcomma }}</td>
+                                    <td class="text-end fw-semibold">{{ bulletin.base_rts|floatformat:0|intcomma }}</td>
                                     <td class="text-end">{{ bulletin.cnss_employe|floatformat:0|intcomma }}</td>
                                     <td class="text-end">{{ bulletin.irg|floatformat:0|intcomma }}</td>
                                     <td class="text-end">{{ bulletin.total_retenues|floatformat:0|intcomma }}</td>
@@ -152,7 +154,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="10" class="text-center text-muted py-4">
+                                    <td colspan="11" class="text-center text-muted py-4">
                                         Aucune donnée disponible pour cette période
                                     </td>
                                 </tr>
@@ -163,7 +165,8 @@
                                 <tr>
                                     <th colspan="4" class="text-end">TOTAUX:</th>
                                     <th class="text-end">{{ totaux.total_brut|floatformat:0|intcomma }}</th>
-                                    <th class="text-end">{{ totaux.total_brut|floatformat:0|intcomma }}</th>
+                                    <th class="text-end text-muted">{{ totaux.total_abattement|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_base_rts|floatformat:0|intcomma }}</th>
                                     <th class="text-end">{{ totaux.total_cnss_employe|floatformat:0|intcomma }}</th>
                                     <th class="text-end">{{ totaux.total_irg|floatformat:0|intcomma }}</th>
                                     <th class="text-end">{{ totaux.total_retenues|floatformat:0|intcomma }}</th>

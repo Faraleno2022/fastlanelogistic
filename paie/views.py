@@ -1843,21 +1843,23 @@ def livre_paie(request):
         employe__entreprise=request.user.entreprise,
     ).select_related('employe', 'employe__poste', 'periode').order_by('periode__mois', 'employe__matricule')
     
-    # Calcul des totaux
+    # Calcul des totaux — inclut maintenant base imposable (RTS) et indemnités exonérées
     totaux = bulletins.aggregate(
         total_brut=Sum('salaire_brut'),
+        total_abattement=Sum('abattement_forfaitaire'),
+        total_base_rts=Sum('base_rts'),
         total_cnss_employe=Sum('cnss_employe'),
         total_cnss_employeur=Sum('cnss_employeur'),
         total_irg=Sum('irg'),
         total_net=Sum('net_a_payer'),
         total_retenues=Sum(F('cnss_employe') + F('irg'))
     )
-    
+
     # Années disponibles
     annees = PeriodePaie.objects.filter(
         entreprise=request.user.entreprise
     ).values_list('annee', flat=True).distinct().order_by('-annee')
-    
+
     return render(request, 'paie/livre_paie.html', {
         'bulletins': bulletins,
         'totaux': totaux,
@@ -1908,6 +1910,8 @@ def telecharger_livre_paie_pdf(request):
 
     totaux = bulletins.aggregate(
         total_brut=Sum('salaire_brut'),
+        total_abattement=Sum('abattement_forfaitaire'),
+        total_base_rts=Sum('base_rts'),
         total_cnss_employe=Sum('cnss_employe'),
         total_cnss_employeur=Sum('cnss_employeur'),
         total_irg=Sum('irg'),
@@ -1943,8 +1947,10 @@ def telecharger_livre_paie_pdf(request):
     p.setFont(_FN, 8)
     tot_line = (
         f"Brut: {fmt(totaux.get('total_brut'))} GNF   "
-        f"CNSS Employé: {fmt(totaux.get('total_cnss_employe'))}   "
-        f"CNSS Employeur: {fmt(totaux.get('total_cnss_employeur'))}   "
+        f"Exonéré: {fmt(totaux.get('total_abattement'))}   "
+        f"Imposable: {fmt(totaux.get('total_base_rts'))}   "
+        f"CNSS Emp.: {fmt(totaux.get('total_cnss_employe'))}   "
+        f"CNSS Empr.: {fmt(totaux.get('total_cnss_employeur'))}   "
         f"RTS: {fmt(totaux.get('total_irg'))}   "
         f"Net: {fmt(totaux.get('total_net'))}"
     )
@@ -1953,23 +1959,30 @@ def telecharger_livre_paie_pdf(request):
 
     data = [[
         'Période', 'Matr.', 'Nom et Prénoms', 'Fonction',
-        'Brut', 'CNSS', 'RTS', 'Retenues', 'Net'
+        'Brut', 'Exonéré', 'Imposable', 'CNSS', 'RTS', 'Retenues', 'Net'
     ]]
 
     for b in bulletins:
         emp = b.employe
         nom_complet = f"{emp.nom} {emp.prenoms}"
-        if len(nom_complet) > 25:
-            nom_complet = nom_complet[:23] + '..'
-        fonction = emp.poste.intitule_poste if emp.poste else '-'
-        if len(fonction) > 18:
-            fonction = fonction[:16] + '..'
+        if len(nom_complet) > 22:
+            nom_complet = nom_complet[:20] + '..'
+        # Fonction : intitulé du poste, fallback sur le département texte
+        fonction = (
+            (emp.poste.intitule_poste if emp.poste and emp.poste.intitule_poste else None)
+            or (emp.departement or '').strip()
+            or '-'
+        )
+        if len(fonction) > 16:
+            fonction = fonction[:14] + '..'
         data.append([
             str(b.periode),
             emp.matricule or '-',
             nom_complet,
             fonction,
             fmt(b.salaire_brut),
+            fmt(b.abattement_forfaitaire),
+            fmt(b.base_rts),
             fmt(b.cnss_employe),
             fmt(b.irg),
             fmt(getattr(b, 'total_retenues', (b.cnss_employe or 0) + (b.irg or 0))),
@@ -1979,6 +1992,8 @@ def telecharger_livre_paie_pdf(request):
     data.append([
         'TOTAUX:', '', '', '',
         fmt(totaux.get('total_brut')),
+        fmt(totaux.get('total_abattement')),
+        fmt(totaux.get('total_base_rts')),
         fmt(totaux.get('total_cnss_employe')),
         fmt(totaux.get('total_irg')),
         fmt(totaux.get('total_retenues')),
@@ -1986,9 +2001,10 @@ def telecharger_livre_paie_pdf(request):
     ])
 
     # Largeur disponible en A4 paysage: ~29.7cm - 2*0.8cm marges = ~28cm
+    # 11 colonnes : Période, Matr, Nom, Fonction, Brut, Exo, Imp, CNSS, RTS, Ret, Net
     col_widths = [
-        2.5 * cm, 2.0 * cm, 5.0 * cm, 3.5 * cm,
-        3.0 * cm, 2.5 * cm, 2.5 * cm, 3.0 * cm, 3.0 * cm
+        2.2 * cm, 1.8 * cm, 4.4 * cm, 3.0 * cm,
+        2.4 * cm, 2.2 * cm, 2.4 * cm, 2.1 * cm, 2.1 * cm, 2.4 * cm, 2.4 * cm
     ]
     table = Table(data, colWidths=col_widths, repeatRows=1)
     table.setStyle(TableStyle([
