@@ -666,7 +666,7 @@
                     </div>
                     <div class="d-flex gap-2 mt-3">
                         <button type="button" class="btn btn-primary" id="prop_btn_appliquer">
-                            <i class="bi bi-arrow-right-circle"></i> Appliquer cette structure
+                            <i class="bi bi-arrow-up-circle"></i> Copier dans le moteur du haut
                         </button>
                         <span class="text-muted small align-self-center">
                             Copie les valeurs dans le moteur de structuration ci-dessus
@@ -1574,6 +1574,7 @@
             divSliders.style.display = 'block';
             btnOptim.style.display = 'inline-block';
             recalculer();
+            document.dispatchEvent(new CustomEvent('decomp:ready', {detail: {brut: brutTotal}}));
         })
         .catch(function(err) {
             btnCalc.disabled = false;
@@ -2274,12 +2275,55 @@
         if (e.key === 'Enter') { e.preventDefault(); btnLancer.click(); }
     });
 
-    // Bouton "Appliquer cette structure" → injecte dans le moteur de structuration
+    // Bouton "Copier dans le moteur du haut" → injecte dans le moteur de structuration
     document.getElementById('prop_btn_appliquer').addEventListener('click', function() {
         var data = btnLancer._lastData;
         if (!data || !data.recommandation || !data.retropaie) return;
 
-        // 1. Injecter le brut et lancer la décomposition initiale
+        var btnAppliquer = this;
+        var htmlInitial = btnAppliquer.innerHTML;
+        btnAppliquer.disabled = true;
+        btnAppliquer.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Copie...';
+
+        // 1. Extraire les % recommandés
+        var comps = data.recommandation.composantes || [];
+        var pctMap = {};
+        comps.forEach(function(c) { pctMap[c.cle] = Number(c.pct); });
+        var base = pctMap['salaire_base'] || 75;
+        var t = pctMap['transport'] || 10;
+        var l = pctMap['logement'] || 10;
+        var cv = pctMap['cherte_vie'] || 5;
+
+        var timeoutCopie = null;
+
+        function restaurerBouton() {
+            btnAppliquer.disabled = false;
+            btnAppliquer.innerHTML = htmlInitial;
+        }
+
+        function appliquerApresDecomposition() {
+            if (timeoutCopie) clearTimeout(timeoutCopie);
+            var radioFiscal = document.getElementById('decomp_mode_fiscal');
+            if (radioFiscal) {
+                radioFiscal.checked = true;
+                radioFiscal.dispatchEvent(new Event('change'));
+            }
+            if (window.appliquerStructureDepuisProposition) {
+                window.appliquerStructureDepuisProposition(base, t, l, cv);
+            }
+
+            var succes = document.getElementById('decomp_succes');
+            if (succes) {
+                succes.textContent = 'Structure recommandée copiée : brut ' + fmt(data.retropaie.brut) + ' GNF, base ' + base + '%, transport ' + t + '%, logement ' + l + '%, cherté ' + cv + '%.';
+                succes.style.display = 'block';
+            }
+            var moteur = document.getElementById('decomp_body');
+            if (moteur) moteur.scrollIntoView({behavior: 'smooth', block: 'start'});
+
+            restaurerBouton();
+        }
+
+        // 2. Injecter le brut et attendre que le moteur du haut ait fini sa décomposition
         var champBrut = document.getElementById('decomp_brut');
         if (champBrut) {
             champBrut.value = data.retropaie.brut;
@@ -2287,32 +2331,16 @@
             if (collapse && !collapse.classList.contains('show')) {
                 new bootstrap.Collapse(collapse, {toggle: true});
             }
-            // Décomposer pour charger les rubriques
+
+            document.addEventListener('decomp:ready', appliquerApresDecomposition, {once: true});
+            timeoutCopie = setTimeout(function() {
+                document.removeEventListener('decomp:ready', appliquerApresDecomposition);
+                restaurerBouton();
+            }, 8000);
             document.getElementById('decomp_btn_calculer').click();
+        } else {
+            restaurerBouton();
         }
-
-        // 2. Extraire les % recommandés
-        var comps = data.recommandation.composantes || [];
-        var pctMap = {};
-        comps.forEach(function(c) { pctMap[c.cle] = c.pct; });
-        var base = pctMap['salaire_base'] || 75;
-        var t = pctMap['transport'] || 10;
-        var l = pctMap['logement'] || 10;
-        var cv = pctMap['cherte_vie'] || 5;
-
-        // 3. Appliquer les sliders après que la décomposition a chargé les rubriques
-        setTimeout(function() {
-            // Activer le mode fiscal si disponible
-            var radioFiscal = document.getElementById('decomp_mode_fiscal');
-            if (radioFiscal) {
-                radioFiscal.checked = true;
-                radioFiscal.dispatchEvent(new Event('change'));
-            }
-            // Appliquer via la fonction exposée (set sliders + recalculer + impact fiscal)
-            if (window.appliquerStructureDepuisProposition) {
-                window.appliquerStructureDepuisProposition(base, t, l, cv);
-            }
-        }, 600);
     });
 })();
 </script>
