@@ -2101,8 +2101,8 @@ def telecharger_livre_paie_pdf(request):
         name='LivreTitre',
         parent=styles['Title'],
         fontName=_FB,
-        fontSize=13,
-        leading=15,
+        fontSize=15,
+        leading=17,
         alignment=TA_CENTER,
         textColor=colors.HexColor('#0d47a1'),
         spaceAfter=8,
@@ -2111,8 +2111,8 @@ def telecharger_livre_paie_pdf(request):
         name='LivreSmall',
         parent=styles['Normal'],
         fontName=_FN,
-        fontSize=7,
-        leading=9,
+        fontSize=8,
+        leading=10,
         alignment=TA_LEFT,
     ))
 
@@ -2139,10 +2139,10 @@ def telecharger_livre_paie_pdf(request):
     ]
     resume = Table(resume_data, colWidths=[2.3 * cm, 3.0 * cm, 2.3 * cm, 3.0 * cm, 2.3 * cm, 3.0 * cm])
     resume.setStyle(TableStyle([
-        ('FONT', (0, 0), (-1, -1), _FN, 7),
-        ('FONT', (0, 0), (0, -1), _FB, 7),
-        ('FONT', (2, 0), (2, -1), _FB, 7),
-        ('FONT', (4, 0), (4, -1), _FB, 7),
+        ('FONT', (0, 0), (-1, -1), _FN, 8),
+        ('FONT', (0, 0), (0, -1), _FB, 8),
+        ('FONT', (2, 0), (2, -1), _FB, 8),
+        ('FONT', (4, 0), (4, -1), _FB, 8),
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f4f7fb')),
         ('GRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#ced4da')),
         ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
@@ -2164,8 +2164,8 @@ def telecharger_livre_paie_pdf(request):
         ]
         controle_table = Table(controle_data, colWidths=[5.5 * cm, 4.0 * cm])
         controle_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), _FN, 7),
-            ('FONT', (0, 0), (-1, 0), _FB, 7),
+            ('FONT', (0, 0), (-1, -1), _FN, 8),
+            ('FONT', (0, 0), (-1, 0), _FB, 8),
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8d7da')),
             ('GRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#dc3545')),
             ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
@@ -2224,14 +2224,14 @@ def telecharger_livre_paie_pdf(request):
     ]
     table = Table(data, colWidths=col_widths, repeatRows=1)
     table.setStyle(TableStyle([
-        ('FONT', (0, 0), (-1, -1), _FN, 6),
-        ('FONT', (0, 0), (-1, 0), _FB, 6),
+        ('FONT', (0, 0), (-1, -1), _FN, 7),
+        ('FONT', (0, 0), (-1, 0), _FB, 7),
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),
         ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),
         ('ALIGN', (0, 0), (3, -1), 'LEFT'),
         ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
         ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f8f9fa')),
-        ('FONT', (0, -1), (-1, -1), _FB, 6),
+        ('FONT', (0, -1), (-1, -1), _FB, 7),
         ('LINEABOVE', (0, -1), (-1, -1), 0.8, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('LEFTPADDING', (0, 0), (-1, -1), 3),
