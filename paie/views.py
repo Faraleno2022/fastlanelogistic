@@ -1860,6 +1860,59 @@ def telecharger_bulletin_public(request, token):
     return response
 
 
+def _cnss_attendue_livre(brut):
+    brut = Decimal(str(brut or 0))
+    plancher = Decimal('550000')
+    plafond = Decimal('2500000')
+    if brut < plancher * Decimal('0.10'):
+        base = Decimal('0')
+    else:
+        base = max(min(brut, plafond), plancher)
+    return {
+        'base': base.quantize(Decimal('1'), rounding=ROUND_HALF_UP),
+        'employe': (base * Decimal('0.05')).quantize(Decimal('1'), rounding=ROUND_HALF_UP),
+        'employeur': (base * Decimal('0.18')).quantize(Decimal('1'), rounding=ROUND_HALF_UP),
+    }
+
+
+def _controles_livre_paie(bulletins, totaux):
+    """Controle macro et lignes CNSS du livre de paie."""
+    anomalies = []
+    for bulletin in bulletins:
+        brut = Decimal(str(bulletin.salaire_brut or 0))
+        attendu = _cnss_attendue_livre(brut)
+        cnss_emp = Decimal(str(bulletin.cnss_employe or 0))
+        cnss_pat = Decimal(str(bulletin.cnss_employeur or 0))
+        if abs(cnss_emp - attendu['employe']) > Decimal('2') or abs(cnss_pat - attendu['employeur']) > Decimal('2'):
+            anomalies.append({
+                'numero': bulletin.numero_bulletin,
+                'matricule': bulletin.employe.matricule,
+                'nom': f"{bulletin.employe.nom} {bulletin.employe.prenoms}".strip(),
+                'brut': brut,
+                'base_cnss': attendu['base'],
+                'cnss_employe': cnss_emp,
+                'cnss_employe_attendu': attendu['employe'],
+                'cnss_employeur': cnss_pat,
+                'cnss_employeur_attendu': attendu['employeur'],
+            })
+            setattr(bulletin, 'controle_cnss_livre_erreur', True)
+        else:
+            setattr(bulletin, 'controle_cnss_livre_erreur', False)
+
+    total_brut = Decimal(str(totaux.get('total_brut') or 0))
+    total_retenues = Decimal(str(totaux.get('total_retenues') or 0))
+    total_net = Decimal(str(totaux.get('total_net') or 0))
+    net_attendu = total_brut - total_retenues
+    ecart_net = total_net - net_attendu
+    return {
+        'anomalies_cnss': anomalies,
+        'nb_anomalies_cnss': len(anomalies),
+        'net_attendu': net_attendu,
+        'ecart_net': ecart_net,
+        'macro_ok': abs(ecart_net) <= Decimal('2'),
+    }
+
+
 @login_required
 @entreprise_active_required
 @reauth_required
@@ -1881,7 +1934,9 @@ def livre_paie(request):
     bulletins = BulletinPaie.objects.filter(
         periode__in=periodes,
         employe__entreprise=request.user.entreprise,
-    ).select_related('employe', 'employe__poste', 'periode').order_by('periode__mois', 'employe__matricule')
+    ).select_related('employe', 'employe__poste', 'periode').annotate(
+        total_retenues_livre=F('cnss_employe') + F('irg')
+    ).order_by('periode__mois', 'employe__matricule')
     
     # Calcul des totaux — inclut maintenant base imposable (RTS) et indemnités exonérées
     totaux = bulletins.aggregate(
@@ -1894,6 +1949,7 @@ def livre_paie(request):
         total_net=Sum('net_a_payer'),
         total_retenues=Sum(F('cnss_employe') + F('irg'))
     )
+    controles_livre = _controles_livre_paie(bulletins, totaux)
 
     # Années disponibles
     annees = PeriodePaie.objects.filter(
@@ -1905,7 +1961,8 @@ def livre_paie(request):
         'totaux': totaux,
         'annee': int(annee),
         'mois': int(mois) if mois else None,
-        'annees': annees
+        'annees': annees,
+        'controles_livre': controles_livre,
     })
 
 
@@ -1961,6 +2018,7 @@ def telecharger_livre_paie_pdf(request):
         total_net=Sum('net_a_payer'),
         total_retenues=Sum(F('cnss_employe') + F('irg'))
     )
+    controles_livre = _controles_livre_paie(bulletins, totaux)
 
     def fmt(val):
         try:
@@ -2097,6 +2155,24 @@ def telecharger_livre_paie_pdf(request):
     story.append(resume)
     story.append(Spacer(1, 0.25 * cm))
 
+    if not controles_livre['macro_ok'] or controles_livre['nb_anomalies_cnss'] > 0:
+        controle_data = [
+            ['Controle livre de paie', 'Valeur'],
+            ['Net attendu (brut - CNSS - RTS)', f"{fmt(controles_livre['net_attendu'])} GNF"],
+            ['Ecart net', f"{fmt(controles_livre['ecart_net'])} GNF"],
+            ['Anomalies CNSS', str(controles_livre['nb_anomalies_cnss'])],
+        ]
+        controle_table = Table(controle_data, colWidths=[5.5 * cm, 4.0 * cm])
+        controle_table.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), _FN, 7),
+            ('FONT', (0, 0), (-1, 0), _FB, 7),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8d7da')),
+            ('GRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#dc3545')),
+            ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
+        ]))
+        story.append(controle_table)
+        story.append(Spacer(1, 0.20 * cm))
+
     data = [[
         'Période', 'Matr.', 'Nom et Prénoms', 'Fonction',
         'Brut', 'Exonéré', 'Imposable', 'CNSS', 'RTS', 'Retenues', 'Net'
@@ -2143,8 +2219,8 @@ def telecharger_livre_paie_pdf(request):
     # Largeur disponible en A4 paysage: ~29.7cm - 2*0.8cm marges = ~28cm
     # 11 colonnes : Période, Matr, Nom, Fonction, Brut, Exo, Imp, CNSS, RTS, Ret, Net
     col_widths = [
-        2.2 * cm, 1.8 * cm, 4.4 * cm, 3.0 * cm,
-        2.4 * cm, 2.2 * cm, 2.4 * cm, 2.1 * cm, 2.1 * cm, 2.4 * cm, 2.4 * cm
+        1.9 * cm, 1.5 * cm, 3.8 * cm, 2.5 * cm,
+        2.45 * cm, 2.25 * cm, 2.45 * cm, 2.05 * cm, 2.05 * cm, 2.45 * cm, 2.45 * cm
     ]
     table = Table(data, colWidths=col_widths, repeatRows=1)
     table.setStyle(TableStyle([

@@ -17,6 +17,7 @@ from paie.models import ElementSalaire, RubriquePaie
 from paie.services import MoteurCalculPaie, appliquer_constantes_cnss_legales
 from paie.services_retropaie import calculer_charges_patronales
 from paie.services_simulation import calculer_un_bareme as calculer_un_bareme_simulation
+from paie.views import _controles_livre_paie
 from paie.views_rapports import _charges_patronales_bulletin
 
 
@@ -195,6 +196,38 @@ class CNSSCalculTests(SimpleTestCase):
         self.assertEqual(resultat['assiette_cnss'], 2500000)
         self.assertEqual(resultat['cnss'], 125000)
         self.assertEqual(resultat['cnss_employeur'], 450000)
+
+    def test_livre_paie_detecte_cnss_plafond_incoherente(self):
+        employe = SimpleNamespace(matricule='EMP-039', nom='Nom', prenoms='Prenom')
+        bulletin = SimpleNamespace(
+            numero_bulletin='BUL-039',
+            employe=employe,
+            salaire_brut=Decimal('2668831'),
+            cnss_employe=Decimal('100081'),
+            cnss_employeur=Decimal('360292'),
+        )
+
+        controles = _controles_livre_paie([bulletin], {
+            'total_brut': Decimal('2668831'),
+            'total_retenues': Decimal('100081'),
+            'total_net': Decimal('2568750'),
+        })
+
+        self.assertEqual(controles['nb_anomalies_cnss'], 1)
+        self.assertTrue(bulletin.controle_cnss_livre_erreur)
+        self.assertEqual(controles['anomalies_cnss'][0]['cnss_employe_attendu'], Decimal('125000'))
+        self.assertEqual(controles['anomalies_cnss'][0]['cnss_employeur_attendu'], Decimal('450000'))
+
+    def test_livre_paie_detecte_ecart_macro_net(self):
+        controles = _controles_livre_paie([], {
+            'total_brut': Decimal('1737409437'),
+            'total_retenues': Decimal('112292381'),
+            'total_net': Decimal('1624717056'),
+        })
+
+        self.assertFalse(controles['macro_ok'])
+        self.assertEqual(controles['net_attendu'], Decimal('1625117056'))
+        self.assertEqual(controles['ecart_net'], Decimal('-400000'))
 
 
 class ChargesPatronalesTests(SimpleTestCase):

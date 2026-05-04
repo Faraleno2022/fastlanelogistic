@@ -105,6 +105,26 @@
         </div>
     </div>
 
+    {% if controles_livre %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if controles_livre.macro_ok and controles_livre.nb_anomalies_cnss == 0 %}
+            <div class="alert alert-success shadow-sm">
+                <strong>Contrôle livre de paie OK.</strong>
+                Total net = brut - retenues légales.
+            </div>
+            {% else %}
+            <div class="alert alert-danger shadow-sm">
+                <div class="fw-bold mb-2">Contrôle livre de paie à corriger</div>
+                <div>Net attendu : {{ controles_livre.net_attendu|floatformat:0|intcomma }} GNF</div>
+                <div>Écart net : {{ controles_livre.ecart_net|floatformat:0|intcomma }} GNF</div>
+                <div>Anomalies CNSS : {{ controles_livre.nb_anomalies_cnss }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Livre de paie -->
     <div class="row">
         <div class="col-12">
@@ -139,7 +159,7 @@
                             </thead>
                             <tbody>
                                 {% for bulletin in bulletins %}
-                                <tr>
+                                <tr class="{% if bulletin.controle_cnss_livre_erreur %}table-danger{% endif %}">
                                     <td>{{ bulletin.periode }}</td>
                                     <td>{{ bulletin.employe.matricule }}</td>
                                     <td>{{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}</td>
@@ -157,7 +177,7 @@
                                     <td class="text-end fw-semibold">{{ bulletin.base_rts|floatformat:0|intcomma }}</td>
                                     <td class="text-end">{{ bulletin.cnss_employe|floatformat:0|intcomma }}</td>
                                     <td class="text-end">{{ bulletin.irg|floatformat:0|intcomma }}</td>
-                                    <td class="text-end">{{ bulletin.total_retenues|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.total_retenues_livre|floatformat:0|intcomma }}</td>
                                     <td class="text-end text-success"><strong>{{ bulletin.net_a_payer|floatformat:0|intcomma }}</strong></td>
                                 </tr>
                                 {% empty %}
