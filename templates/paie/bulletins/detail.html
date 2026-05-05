@@ -22,10 +22,7 @@
                     </form>
                     {% endif %}
                     <a href="{% url 'paie:telecharger_bulletin_pdf' bulletin.pk %}" class="btn btn-danger">
-                        <i class="fas fa-file-pdf me-2"></i>PDF Modèle 1
-                    </a>
-                    <a href="{% url 'paie:telecharger_bulletin_pdf' bulletin.pk %}?modele=2" class="btn btn-outline-danger">
-                        <i class="fas fa-file-pdf me-2"></i>PDF Modèle 2 (SDBK)
+                        <i class="fas fa-file-pdf me-2"></i>PDF standard GuineeRH
                     </a>
                     <a href="{% url 'paie:envoyer_email' bulletin.pk %}" class="btn btn-primary">
                         <i class="fas fa-envelope me-2"></i>Email

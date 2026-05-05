@@ -857,10 +857,10 @@ def generer_bulletin_pdf(bulletin):
 
 def generer_bulletin_pdf_sdbk(bulletin):
     """
-    Génère le PDF d'un bulletin de paie au format SDBK.
-    Modèle 2 : tableau unifié Part Salariale / Part Patronale,
-    boîte info en haut à droite, pied récapitulatif avec Net à payer.
+    Compatibilite legacy: l'ancien modele SDBK redirige vers le standard GuineeRH.
     """
+    return generer_bulletin_pdf(bulletin)
+
     from .models import LigneBulletin
 
     lignes = LigneBulletin.objects.filter(bulletin=bulletin).select_related('rubrique').order_by('rubrique__ordre_affichage')

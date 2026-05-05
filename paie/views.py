@@ -557,17 +557,7 @@ def imprimer_bulletin(request, pk):
 @reauth_required
 @entreprise_active_required
 def telecharger_bulletin_pdf(request, pk):
-    """Télécharger un bulletin de paie en PDF (modele=1 classique, modele=2 SDBK)"""
-    modele = request.GET.get('modele', '1')
-    if modele == '2':
-        from .utils import generer_bulletin_pdf_sdbk
-        bulletin = get_object_or_404(
-            BulletinPaie, pk=pk, employe__entreprise=request.user.entreprise)
-        pdf_bytes = generer_bulletin_pdf_sdbk(bulletin)
-        nom = f"bulletin_{bulletin.employe.matricule}_{bulletin.annee_paie}_{bulletin.mois_paie:02d}_sdbk.pdf"
-        response = HttpResponse(pdf_bytes, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{nom}"'
-        return response
+    """Telecharger un bulletin de paie en PDF standard GuineeRH."""
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm, mm
     from reportlab.pdfgen import canvas

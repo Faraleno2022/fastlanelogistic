@@ -142,12 +142,8 @@
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         <a href="{% url 'paie:telecharger_bulletin_pdf' bulletin.pk %}"
-                                           class="btn btn-sm btn-danger" title="PDF Modèle 1">
+                                           class="btn btn-sm btn-danger" title="PDF standard GuineeRH">
                                             <i class="fas fa-file-pdf"></i>
-                                        </a>
-                                        <a href="{% url 'paie:telecharger_bulletin_pdf' bulletin.pk %}?modele=2"
-                                           class="btn btn-sm btn-outline-danger" title="PDF Modèle 2 (SDBK)">
-                                            <i class="fas fa-file-alt"></i>
                                         </a>
                                     </td>
                                 </tr>
@@ -211,4 +207,3 @@
     </div>
 </div>
 {% endblock %}
-
