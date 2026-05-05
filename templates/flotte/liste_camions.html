@@ -10,28 +10,42 @@
 
 <!-- KPIs -->
 <div class="row g-3 mb-4">
-  <div class="col-md-3">
+  <div class="col-md-4 col-lg-2">
     <div class="card kpi-card"><div class="card-body">
       <div class="kpi-title">Nombre de camions</div>
       <div class="kpi-value">{{ totaux.nombre }}</div>
     </div></div>
   </div>
-  <div class="col-md-3">
+  <div class="col-md-4 col-lg-2">
     <div class="card kpi-card"><div class="card-body">
       <div class="kpi-title">Capacité totale (T)</div>
       <div class="kpi-value">{{ totaux.total_capacite|floatformat:0|intcomma }}</div>
     </div></div>
   </div>
-  <div class="col-md-3">
+  <div class="col-md-4 col-lg-2">
     <div class="card kpi-card"><div class="card-body">
       <div class="kpi-title">Valeur totale ({{ DEVISE }})</div>
       <div class="kpi-value">{{ totaux.total_prix|floatformat:0|intcomma }}</div>
     </div></div>
   </div>
-  <div class="col-md-3">
+  <div class="col-md-4 col-lg-2">
     <div class="card kpi-card"><div class="card-body">
-      <div class="kpi-title">Amort. mensuel total</div>
-      <div class="kpi-value">{{ total_amort_mensuel|floatformat:0|intcomma }}</div>
+      <div class="kpi-title">CA flotte</div>
+      <div class="kpi-value text-success">{{ total_ca|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Charges opérationnelles</div>
+      <div class="kpi-value text-danger">{{ total_charges|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Bénéfice estimé</div>
+      <div class="kpi-value {% if total_benefice >= 0 %}text-primary{% else %}text-warning{% endif %}">
+        {{ total_benefice|floatformat:0|intcomma }}
+      </div>
     </div></div>
   </div>
 </div>
@@ -51,6 +65,9 @@
             <th>Date acquisition</th>
             <th class="text-end" data-sum="sum" data-format="int">Prix d'achat</th>
             <th class="text-end" data-sum="sum" data-format="int">Amort. mensuel</th>
+            <th class="text-end" data-sum="sum" data-format="int">CA</th>
+            <th class="text-end" data-sum="sum" data-format="int">Charges</th>
+            <th class="text-end" data-sum="sum" data-format="int">Bénéfice</th>
             <th class="text-end" data-sum="sum" data-format="int">Valeur résiduelle</th>
             <th>Statut</th>
             <th></th>
@@ -66,6 +83,11 @@
             <td>{{ c.date_acquisition|date:"d/m/Y" }}</td>
             <td class="text-end">{{ c.prix_achat|floatformat:0|intcomma }}</td>
             <td class="text-end">{{ c.amortissement_mensuel|floatformat:0|intcomma }}</td>
+            <td class="text-end text-success">{{ c.benefice_data.ca|floatformat:0|intcomma }}</td>
+            <td class="text-end text-danger">{{ c.benefice_data.charges|floatformat:0|intcomma }}</td>
+            <td class="text-end fw-bold {% if c.benefice_data.benefice >= 0 %}text-primary{% else %}text-warning{% endif %}">
+              {{ c.benefice_data.benefice|floatformat:0|intcomma }}
+            </td>
             <td class="text-end">{{ c.valeur_residuelle|floatformat:0|intcomma }}</td>
             <td>
               {% if c.statut == "SERVICE" %}
@@ -85,7 +107,7 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="10" class="text-center text-muted py-4">Aucun camion enregistré</td></tr>
+          <tr><td colspan="13" class="text-center text-muted py-4">Aucun camion enregistré</td></tr>
           {% endfor %}
         </tbody>
       </table>

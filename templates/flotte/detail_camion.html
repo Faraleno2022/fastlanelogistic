@@ -54,6 +54,49 @@
   </div>
 </div>
 
+<!-- Bénéfice estimé -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card border-success shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">CHIFFRE D'AFFAIRES</div>
+        <div class="h4 mb-0 text-success">{{ benefice.ca|floatformat:0|intcomma }}</div>
+        <div class="small text-muted">{{ DEVISE }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-danger shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">CHARGES</div>
+        <div class="h4 mb-0 text-danger">{{ benefice.charges|floatformat:0|intcomma }}</div>
+        <div class="small text-muted">Carburant + pannes + dépenses</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card {% if benefice.benefice >= 0 %}border-primary{% else %}border-warning{% endif %} shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">BÉNÉFICE ESTIMÉ</div>
+        <div class="h4 mb-0 {% if benefice.benefice >= 0 %}text-primary{% else %}text-warning{% endif %}">
+          {{ benefice.benefice|floatformat:0|intcomma }}
+        </div>
+        <div class="small text-muted">Marge : {{ benefice.marge_pct|floatformat:1 }} %</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">DÉTAIL CHARGES</div>
+        <div class="small d-flex justify-content-between"><span>Carburant</span><strong>{{ benefice.carburant|floatformat:0|intcomma }}</strong></div>
+        <div class="small d-flex justify-content-between"><span>Pannes</span><strong>{{ benefice.pannes|floatformat:0|intcomma }}</strong></div>
+        <div class="small d-flex justify-content-between"><span>Dépenses</span><strong>{{ benefice.depenses|floatformat:0|intcomma }}</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Tableau d'amortissement -->
 <div class="card shadow-sm">
   <div class="card-header bg-dark text-white"><i class="bi bi-table"></i> Tableau d'amortissement linéaire</div>
