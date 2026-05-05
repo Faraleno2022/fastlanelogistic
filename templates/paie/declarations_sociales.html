@@ -242,6 +242,26 @@
                     <h4 class="mb-0"><i class="fas fa-calculator me-2"></i>Récapitulatif Total des Charges</h4>
                 </div>
                 <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-md-4 mb-2">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Mode fiscal appliqué</h6>
+                                <h5 class="mb-0">{{ mode_fiscal_label }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Base VF / ONFPP</h6>
+                                <h5 class="mb-0">{{ declaration_charges.base_vf|floatformat:0|intcomma }} GNF</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Optimisation base</h6>
+                                <h5 class="mb-0">{{ taux_optimisation_global }}%</h5>
+                            </div>
+                        </div>
+                    </div>
                     <table class="table table-bordered">
                         <thead class="table-orange-light">
                             <tr>
@@ -254,20 +274,28 @@
                                 <td><strong>CNSS (Total)</strong></td>
                                 <td class="text-end">{{ declaration_cnss.total_cotisation|floatformat:0 }} GNF</td>
                             </tr>
+                            <tr class="table-info">
+                                <td><strong>Total DGI (RTS + VF)</strong></td>
+                                <td class="text-end"><strong>{{ total_dgi|floatformat:0|intcomma }} GNF</strong></td>
+                            </tr>
                             <tr>
                                 <td><strong>RTS (Trésor Public)</strong></td>
                                 <td class="text-end">{{ declaration_irg.total_irg|floatformat:0 }} GNF</td>
                             </tr>
                             <tr>
-                                <td><strong>VF</strong></td>
+                                <td class="ps-4">VF</td>
                                 <td class="text-end">{{ declaration_charges.vf|floatformat:0 }} GNF</td>
                             </tr>
                             <tr>
-                                <td><strong>ONFPP</strong></td>
+                                <td><strong>Total ONFPP</strong></td>
                                 <td class="text-end">{{ declaration_charges.onfpp|floatformat:0 }} GNF</td>
                             </tr>
+                            <tr class="table-warning">
+                                <td><strong>Total DMU (RTS + VF + ONFPP)</strong></td>
+                                <td class="text-end"><strong>{{ total_dmu|floatformat:0|intcomma }} GNF</strong></td>
+                            </tr>
                             <tr class="table-danger">
-                                <th>TOTAL GÉNÉRAL</th>
+                                <th>TOTAL GÉNÉRAL (CNSS + DMU)</th>
                                 <th class="text-end">{{ total_general|floatformat:0|intcomma }} GNF</th>
                             </tr>
                         </tbody>

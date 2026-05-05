@@ -19,8 +19,9 @@ from paie.services import MoteurCalculPaie, appliquer_constantes_cnss_legales
 from paie.services_retropaie import calculer_charges_patronales
 from paie.services_simulation import calculer_un_bareme as calculer_un_bareme_simulation
 from paie.views import _controles_livre_paie
-from paie.views_rapports import _charges_patronales_bulletin
+from paie.views_rapports import _audit_masse_salariale, _charges_patronales_bulletin
 from paie.views_etax import get_etax_data
+from paie.views_export import get_declarations_data
 from temps_travail.models import HeureSupplementaire
 
 
@@ -265,6 +266,16 @@ class EtaxModeTaOnfppTests(TestCase):
         self.assertEqual(data['total_ta'], Decimal('0'))
         self.assertEqual(data['detail_employes'][0]['ta'], Decimal('0'))
         self.assertEqual(data['total_onfpp'], Decimal('382500'))
+
+    def test_dmu_expose_total_dgi_onfpp_et_base_vf(self):
+        data = get_declarations_data(self.entreprise, 2026, 5)
+
+        self.assertEqual(data['total_base_vf'], Decimal('25500000'))
+        self.assertEqual(data['total_dgi'], Decimal('1530000'))
+        self.assertEqual(data['total_onfpp_ta'], Decimal('382500'))
+        self.assertEqual(data['total_dmu'], Decimal('1912500'))
+        self.assertEqual(data['mode_fiscal'], 'optimise')
+        self.assertEqual(data['taux_optimisation_global'], Decimal('15.00'))
 
 class CNSSCalculTests(SimpleTestCase):
     """TU-01 à TU-03: Tests CNSS salarié et employeur"""
@@ -518,6 +529,49 @@ class ChargesPatronalesTests(SimpleTestCase):
         )
 
         self.assertEqual(_charges_patronales_bulletin(bulletin), Decimal('711000'))
+
+    def test_audit_masse_salariale_detecte_ecart_cnss_patronale(self):
+        """Le rapport masse salariale doit signaler un cumul CNSS patronal incomplet."""
+        employe = SimpleNamespace(matricule='EMP-080', nom='Nom', prenoms='Prenom')
+        bulletin = SimpleNamespace(
+            numero_bulletin='BUL-080',
+            employe=employe,
+            salaire_brut=Decimal('8403436'),
+            cnss_employe=Decimal('125000'),
+            cnss_employeur=Decimal('0'),
+            irg=Decimal('377758'),
+            net_a_payer=Decimal('7900678'),
+            versement_forfaitaire=Decimal('1000000'),
+            taxe_apprentissage=Decimal('0'),
+            contribution_onfpp=Decimal('0'),
+            heures_supplementaires_30=Decimal('0'),
+            heures_supplementaires_60=Decimal('0'),
+            prime_heures_sup=Decimal('0'),
+        )
+
+        class FauxQuerySet(list):
+            def select_related(self, *args):
+                return self
+
+            def aggregate(self, **kwargs):
+                return {
+                    'nb': len(self),
+                    'brut': sum((b.salaire_brut for b in self), Decimal('0')),
+                    'cnss_sal': sum((b.cnss_employe for b in self), Decimal('0')),
+                    'cnss_emp': sum((b.cnss_employeur for b in self), Decimal('0')),
+                    'rts': sum((b.irg for b in self), Decimal('0')),
+                    'net': sum((b.net_a_payer for b in self), Decimal('0')),
+                    'vf': sum((b.versement_forfaitaire for b in self), Decimal('0')),
+                    'ta': sum((b.taxe_apprentissage for b in self), Decimal('0')),
+                    'onfpp': sum((b.contribution_onfpp for b in self), Decimal('0')),
+                }
+
+        audit = _audit_masse_salariale(FauxQuerySet([bulletin]))
+
+        self.assertEqual(audit['cnss_patronale_attendue'], Decimal('450000'))
+        self.assertEqual(audit['ecart_cnss_patronale'], Decimal('-450000'))
+        self.assertEqual(audit['nb_anomalies_cnss'], 1)
+        self.assertEqual(audit['statut'], 'a_verifier')
 
     def test_simulation_bascule_ta_onfpp_au_seuil_de_30(self):
         """La simulation applique TA sous 30 salariés et ONFPP à partir de 30."""

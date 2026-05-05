@@ -97,6 +97,21 @@ def get_declarations_data(entreprise, annee, mois=None):
     if nb_salaries >= 30:
         total_ta = Decimal('0')
         total_onfpp = (total_base_vf * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
+
+    total_dgi = total_rts + total_vf
+    total_onfpp_ta = total_onfpp + total_ta
+    total_dmu = total_dgi + total_onfpp_ta
+    deduction_vf_onfpp = max(Decimal('0'), masse_salariale - total_base_vf)
+    taux_optimisation_global = (
+        (deduction_vf_onfpp * Decimal('100') / masse_salariale).quantize(Decimal('0.01'))
+        if masse_salariale else Decimal('0.00')
+    )
+    mode_fiscal = 'optimise' if total_base_vf and total_base_vf < masse_salariale else 'strict'
+    mode_fiscal_label = (
+        'Optimisé - base VF/ONFPP réduite des indemnités exonérées'
+        if mode_fiscal == 'optimise'
+        else 'Strict fiscal - VF/ONFPP sur salaire brut'
+    )
     
     # Détail par employé
     detail_employes = []
@@ -147,6 +162,12 @@ def get_declarations_data(entreprise, annee, mois=None):
         'total_vf': total_vf,
         'total_ta': total_ta,
         'total_onfpp': total_onfpp,
+        'total_dgi': total_dgi,
+        'total_onfpp_ta': total_onfpp_ta,
+        'total_dmu': total_dmu,
+        'mode_fiscal': mode_fiscal,
+        'mode_fiscal_label': mode_fiscal_label,
+        'taux_optimisation_global': taux_optimisation_global,
         'detail_employes': detail_employes,
         'date_generation': timezone.now(),
     }
@@ -479,6 +500,20 @@ def export_dmu_excel(request):
     row += 1
     ws[f'A{row}'] = "Adresse:"
     ws[f'C{row}'] = getattr(data['entreprise'], 'adresse', 'N/A')
+    row += 2
+    ws[f'A{row}'] = "MODE FISCAL ET BASE VF/ONFPP"
+    ws[f'A{row}'].font = title_font
+
+    row += 1
+    fiscal_rows = [
+        ("Mode fiscal appliqué", data['mode_fiscal_label']),
+        ("Base VF/ONFPP", float(data['total_base_vf'])),
+        ("Taux optimisation base", f"{data['taux_optimisation_global']}%"),
+    ]
+    for label, value in fiscal_rows:
+        ws.cell(row=row, column=1, value=label).border = border
+        ws.cell(row=row, column=3, value=value).border = border
+        row += 1
     
     # Liste des salariés
     row += 2
@@ -530,6 +565,7 @@ def export_dmu_excel(request):
     recap_data = [
         ["RTS (Retenue sur Traitements et Salaires)", float(data['masse_salariale']), "Barème", float(data['total_rts'])],
         ["VF (Versement Forfaitaire)", float(data['total_base_vf']), f"{data['taux_vf']}%", float(data['total_vf'])],
+        ["TOTAL DGI (RTS + VF)", "", "", float(data['total_dgi'])],
         ["ONFPP", float(data['total_base_vf']), f"{data['taux_onfpp']}%", float(data['total_onfpp'])],
         ["TA (Taxe d'Apprentissage)", float(data['total_base_vf']), f"{data['taux_ta']}%", float(data['total_ta'])],
     ]
@@ -541,8 +577,8 @@ def export_dmu_excel(request):
         row += 1
     
     # Total à verser DNI
-    total_dni = data['total_rts'] + data['total_vf'] + data['total_onfpp'] + data['total_ta']
-    ws.cell(row=row, column=1, value="TOTAL À VERSER À LA DNI").font = title_font
+    total_dni = data['total_dmu']
+    ws.cell(row=row, column=1, value="TOTAL DMU (RTS + VF + ONFPP/TA)").font = title_font
     ws.cell(row=row, column=4, value=float(total_dni)).font = title_font
     for col in range(1, 5):
         ws.cell(row=row, column=col).border = border
@@ -631,6 +667,20 @@ def export_dmu_pdf(request):
     ]))
     elements.append(info_table)
     elements.append(Spacer(1, 15))
+    elements.append(Paragraph("MODE FISCAL ET BASE VF/ONFPP", section_style))
+    fiscal_data = [
+        ["Mode fiscal appliqué", data['mode_fiscal_label']],
+        ["Base VF/ONFPP", f"{data['total_base_vf']:,.0f} GNF"],
+        ["Taux optimisation base", f"{data['taux_optimisation_global']}%"],
+    ]
+    fiscal_table = Table(fiscal_data, colWidths=[5*cm, 9*cm])
+    fiscal_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+    elements.append(fiscal_table)
+    elements.append(Spacer(1, 15))
     
     # Liste des salariés
     elements.append(Paragraph("LISTE DES SALARIÉS", section_style))
@@ -673,15 +723,16 @@ def export_dmu_pdf(request):
     # Récapitulatif impôts
     elements.append(Paragraph("RÉCAPITULATIF DES IMPÔTS ET TAXES", section_style))
     
-    total_dni = data['total_rts'] + data['total_vf'] + data['total_onfpp'] + data['total_ta']
+    total_dni = data['total_dmu']
     
     recap_data = [
         ["Désignation", "Taux", "Montant"],
         ["RTS (Retenue sur Traitements et Salaires)", "Barème", f"{data['total_rts']:,.0f} GNF"],
         ["VF (Versement Forfaitaire)", f"{data['taux_vf']}%", f"{data['total_vf']:,.0f} GNF"],
+        ["TOTAL DGI (RTS + VF)", "", f"{data['total_dgi']:,.0f} GNF"],
         ["ONFPP", f"{data['taux_onfpp']}%", f"{data['total_onfpp']:,.0f} GNF"],
         ["TA (Taxe d'Apprentissage)", f"{data['taux_ta']}%", f"{data['total_ta']:,.0f} GNF"],
-        ["TOTAL À VERSER À LA DNI", "", f"{total_dni:,.0f} GNF"],
+        ["TOTAL DMU (RTS + VF + ONFPP/TA)", "", f"{total_dni:,.0f} GNF"],
     ]
     
     recap_table = Table(recap_data, colWidths=[8*cm, 3*cm, 4*cm])

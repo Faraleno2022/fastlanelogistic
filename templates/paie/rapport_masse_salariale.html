@@ -135,6 +135,130 @@
         </div>
     </div>
 
+    <!-- Audit automatique -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-{{ audit_conformite.badge_class }} h-100">
+                <div class="card-body text-center">
+                    <div class="text-muted small mb-1"><i class="fas fa-shield-alt me-1"></i>Score conformite</div>
+                    <h2 class="text-{{ audit_conformite.badge_class }} mb-0">{{ audit_conformite.score }}%</h2>
+                    <span class="badge bg-{{ audit_conformite.badge_class }}">{{ audit_conformite.statut_label }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-clipboard-check me-2"></i>Audit automatique de la periode</span>
+                    <span class="badge bg-{{ audit_conformite.badge_class }}">{{ audit_conformite.nb_anomalies_cnss }} anomalie(s) CNSS</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <div class="text-muted small">CNSS patronale reelle</div>
+                            <div class="fw-bold">{{ audit_conformite.cnss_patronale_reelle|floatformat:0|intcomma }} GNF</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">CNSS patronale attendue</div>
+                            <div class="fw-bold">{{ audit_conformite.cnss_patronale_attendue|floatformat:0|intcomma }} GNF</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">Ecart</div>
+                            <div class="fw-bold {% if audit_conformite.ecart_cnss_patronale == 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ audit_conformite.ecart_cnss_patronale|floatformat:0|intcomma }} GNF
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small">Heures supp.</div>
+                            <div class="fw-bold">{{ audit_conformite.heures_supp|floatformat:2 }} h</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small">Montant HS</div>
+                            <div class="fw-bold">{{ audit_conformite.montant_heures_supp|floatformat:0|intcomma }} GNF</div>
+                        </div>
+                    </div>
+                    {% for message in audit_conformite.messages %}
+                    <div class="alert alert-{{ message.niveau }} py-2 mb-2">{{ message.texte }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if audit_conformite.anomalies_cnss %}
+    <div class="card shadow-sm border-danger mb-4">
+        <div class="card-header bg-danger text-white">
+            <i class="fas fa-exclamation-triangle me-2"></i>Anomalies CNSS patronale a corriger
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Bulletin</th>
+                            <th>Employe</th>
+                            <th class="text-end">CNSS sal.</th>
+                            <th class="text-end">Patronale reelle</th>
+                            <th class="text-end">Patronale attendue</th>
+                            <th class="text-end">Ecart</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for anomalie in audit_conformite.anomalies_cnss %}
+                        <tr>
+                            <td>{{ anomalie.numero }}</td>
+                            <td>{{ anomalie.matricule }} - {{ anomalie.nom }}</td>
+                            <td class="text-end">{{ anomalie.cnss_salarie|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ anomalie.cnss_patronale|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ anomalie.cnss_patronale_attendue|floatformat:0|intcomma }}</td>
+                            <td class="text-end text-danger fw-bold">{{ anomalie.ecart|floatformat:0|intcomma }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if audit_mensuel %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <i class="fas fa-calendar-check me-2"></i>Audit automatique par mois
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mois</th>
+                            <th class="text-center">Score</th>
+                            <th class="text-center">Statut</th>
+                            <th class="text-end">Ecart CNSS patronale</th>
+                            <th class="text-center">Anomalies CNSS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for audit in audit_mensuel %}
+                        <tr>
+                            <td>{{ audit.mois_label }}</td>
+                            <td class="text-center fw-bold">{{ audit.score }}%</td>
+                            <td class="text-center"><span class="badge bg-{{ audit.badge_class }}">{{ audit.statut_label }}</span></td>
+                            <td class="text-end {% if audit.ecart_cnss_patronale == 0 %}text-success{% else %}text-danger fw-bold{% endif %}">
+                                {{ audit.ecart_cnss_patronale|floatformat:0|intcomma }}
+                            </td>
+                            <td class="text-center">{{ audit.nb_anomalies_cnss }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row g-4 mb-4">
         <!-- Tableau par service -->
         <div class="col-lg-7">

@@ -2473,18 +2473,33 @@ def declarations_sociales(request):
     }
 
     declaration_charges = {
+        'base_vf': total_base_vf,
         'vf': totaux['total_vf'] or Decimal('0'),
         'ta': total_ta,
         'onfpp': total_onfpp,
     }
     
     # Total général des charges
-    total_general = (
-        declaration_cnss['total_cotisation'] +
-        declaration_irg['total_irg'] +
-        declaration_charges['vf'] +
-        declaration_charges['onfpp']
+    total_dgi = declaration_irg['total_irg'] + declaration_charges['vf']
+    total_onfpp_ta = declaration_charges['onfpp'] + declaration_charges['ta']
+    total_dmu = total_dgi + total_onfpp_ta
+    deduction_vf_onfpp = max(Decimal('0'), salaire_brut_total - total_base_vf)
+    taux_optimisation_global = (
+        (deduction_vf_onfpp * Decimal('100') / salaire_brut_total).quantize(Decimal('0.01'))
+        if salaire_brut_total else Decimal('0.00')
     )
+    mode_fiscal_code = (
+        'optimise'
+        if total_base_vf and total_base_vf < salaire_brut_total
+        else 'strict'
+    )
+    mode_fiscal_label = (
+        'Optimisé - base VF/ONFPP réduite des indemnités exonérées'
+        if mode_fiscal_code == 'optimise'
+        else 'Strict fiscal - VF/ONFPP sur salaire brut'
+    )
+
+    total_general = declaration_cnss['total_cotisation'] + total_dmu
     
     # Détail par employé
     detail_employes = []
@@ -2508,7 +2523,13 @@ def declarations_sociales(request):
         'declaration_cnss': declaration_cnss,
         'declaration_irg': declaration_irg,
         'declaration_charges': declaration_charges,
+        'total_dgi': total_dgi,
+        'total_dmu': total_dmu,
+        'total_onfpp_ta': total_onfpp_ta,
         'total_general': total_general,
+        'mode_fiscal_code': mode_fiscal_code,
+        'mode_fiscal_label': mode_fiscal_label,
+        'taux_optimisation_global': taux_optimisation_global,
         'detail_employes': detail_employes,
         'annee': int(annee),
         'mois': int(mois) if mois else None,
@@ -2579,15 +2600,23 @@ def declarations_sociales_pdf(request):
         'total_irg': totaux['total_rts'] or Decimal('0'),
     }
     declaration_charges = {
+        'base_vf': total_base_vf,
         'vf': totaux['total_vf'] or Decimal('0'),
         'onfpp': total_onfpp,
     }
-    total_general = (
-        declaration_cnss['total_cotisation'] +
-        declaration_irg['total_irg'] +
-        declaration_charges['vf'] +
-        declaration_charges['onfpp']
+    total_dgi = declaration_irg['total_irg'] + declaration_charges['vf']
+    total_dmu = total_dgi + declaration_charges['onfpp']
+    deduction_vf_onfpp = max(Decimal('0'), salaire_brut_total - total_base_vf)
+    taux_optimisation_global = (
+        (deduction_vf_onfpp * Decimal('100') / salaire_brut_total).quantize(Decimal('0.01'))
+        if salaire_brut_total else Decimal('0.00')
     )
+    mode_fiscal_label = (
+        'Optimisé - base VF/ONFPP réduite des indemnités exonérées'
+        if total_base_vf and total_base_vf < salaire_brut_total
+        else 'Strict fiscal - VF/ONFPP sur salaire brut'
+    )
+    total_general = declaration_cnss['total_cotisation'] + total_dmu
     
     # Créer le PDF
     buffer = BytesIO()
@@ -2643,14 +2672,34 @@ def declarations_sociales_pdf(request):
     elements.append(irg_table)
     elements.append(Spacer(1, 0.5*cm))
 
+    elements.append(Paragraph("Mode fiscal et base VF/ONFPP", styles['Heading2']))
+    mode_data = [
+        ['Libellé', 'Valeur'],
+        ['Mode fiscal appliqué', mode_fiscal_label],
+        ['Base VF/ONFPP', f"{declaration_charges['base_vf']:,.0f}"],
+        ['Taux optimisation base', f"{taux_optimisation_global}%"],
+    ]
+    mode_table = Table(mode_data, colWidths=[7*cm, 9*cm])
+    mode_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#EF7707')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(mode_table)
+    elements.append(Spacer(1, 0.5*cm))
+
     elements.append(Paragraph("Récapitulatif total des charges", styles['Heading2']))
     recap_data = [
         ['Organisme', 'Montant (GNF)'],
         ['CNSS (Total)', f"{declaration_cnss['total_cotisation']:,.0f}"],
-        ['RTS (Trésor Public)', f"{declaration_irg['total_irg']:,.0f}"],
-        ['VF', f"{declaration_charges['vf']:,.0f}"],
-        ['ONFPP', f"{declaration_charges['onfpp']:,.0f}"],
-        ['TOTAL GÉNÉRAL', f"{total_general:,.0f}"],
+        ['Total DGI (RTS + VF)', f"{total_dgi:,.0f}"],
+        ['  RTS (Trésor Public)', f"{declaration_irg['total_irg']:,.0f}"],
+        ['  VF', f"{declaration_charges['vf']:,.0f}"],
+        ['Total ONFPP', f"{declaration_charges['onfpp']:,.0f}"],
+        ['TOTAL DMU (RTS + VF + ONFPP)', f"{total_dmu:,.0f}"],
+        ['TOTAL GÉNÉRAL (CNSS + DMU)', f"{total_general:,.0f}"],
     ]
     recap_table = Table(recap_data, colWidths=[10*cm, 6*cm])
     recap_table.setStyle(TableStyle([

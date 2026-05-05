@@ -12,7 +12,7 @@ import math
 import calendar
 from collections import defaultdict
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -135,6 +135,158 @@ def _charges_patronales_bulletin(bulletin):
     )
 
 
+CNSS_TAUX_SALARIE = Decimal('5')
+CNSS_TAUX_EMPLOYEUR = Decimal('18')
+CNSS_TOLERANCE_GNF = Decimal('1')
+RATIO_CHARGES_MIN = Decimal('15')
+RATIO_CHARGES_MAX = Decimal('30')
+
+
+def _money0(value):
+    """Normalise un montant GNF a l'unite pour les controles d'audit."""
+    return Decimal(str(value or 0)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+
+
+def _cnss_patronale_attendue_depuis_salarie(cnss_salarie):
+    """Recalcule la CNSS patronale attendue avec le ratio legal 18% / 5%."""
+    cnss_salarie = _money0(cnss_salarie)
+    if cnss_salarie == Decimal('0'):
+        return Decimal('0')
+    return (cnss_salarie * CNSS_TAUX_EMPLOYEUR / CNSS_TAUX_SALARIE).quantize(
+        Decimal('1'), rounding=ROUND_HALF_UP
+    )
+
+
+def _audit_masse_salariale(bulletins_qs):
+    """Audit automatique de coherence du rapport masse salariale."""
+    bulletins = list(bulletins_qs.select_related('employe'))
+    indicateurs = _calcul_rapport(bulletins_qs)
+    anomalies_cnss = []
+    cnss_patronale_attendue = Decimal('0')
+    cnss_patronale_reelle = Decimal('0')
+    heures_supp = Decimal('0')
+    montant_heures_supp = Decimal('0')
+
+    for bulletin in bulletins:
+        attendu = _cnss_patronale_attendue_depuis_salarie(bulletin.cnss_employe)
+        reel = _money0(bulletin.cnss_employeur)
+        ecart = reel - attendu
+        cnss_patronale_attendue += attendu
+        cnss_patronale_reelle += reel
+        heures_supp += (
+            Decimal(str(getattr(bulletin, 'heures_supplementaires_30', 0) or 0)) +
+            Decimal(str(getattr(bulletin, 'heures_supplementaires_60', 0) or 0))
+        )
+        montant_heures_supp += _money0(getattr(bulletin, 'prime_heures_sup', 0))
+
+        if abs(ecart) > CNSS_TOLERANCE_GNF:
+            anomalies_cnss.append({
+                'numero': bulletin.numero_bulletin,
+                'matricule': bulletin.employe.matricule,
+                'nom': f"{bulletin.employe.nom} {bulletin.employe.prenoms}".strip(),
+                'cnss_salarie': _money0(bulletin.cnss_employe),
+                'cnss_patronale': reel,
+                'cnss_patronale_attendue': attendu,
+                'ecart': ecart,
+            })
+
+    ecart_cnss = cnss_patronale_reelle - cnss_patronale_attendue
+    ratio = Decimal(str(indicateurs.get('ratio_charges') or 0))
+    messages = []
+    score = 100 if indicateurs['nb'] else 0
+
+    if not indicateurs['nb']:
+        messages.append({
+            'niveau': 'info',
+            'texte': "Aucun bulletin valide pour la periode selectionnee.",
+        })
+    elif abs(ecart_cnss) <= CNSS_TOLERANCE_GNF:
+        messages.append({
+            'niveau': 'success',
+            'texte': "CNSS patronale coherente avec la CNSS salariee (ratio legal 18% / 5%).",
+        })
+    else:
+        score -= min(45, 15 + len(anomalies_cnss) * 5)
+        messages.append({
+            'niveau': 'danger',
+            'texte': "Ecart CNSS patronale detecte entre le cumul stocke et le cumul attendu.",
+        })
+
+    if indicateurs['nb'] and (ratio < RATIO_CHARGES_MIN or ratio > RATIO_CHARGES_MAX):
+        score -= 10
+        messages.append({
+            'niveau': 'warning',
+            'texte': "Ratio charges / brut hors fourchette de controle interne (15% a 30%).",
+        })
+    elif indicateurs['nb']:
+        messages.append({
+            'niveau': 'success',
+            'texte': "Ratio charges / brut dans la fourchette de controle interne.",
+        })
+
+    if heures_supp > 0:
+        messages.append({
+            'niveau': 'info',
+            'texte': "Heures supplementaires presentes et integrees au rapport.",
+        })
+    else:
+        messages.append({
+            'niveau': 'info',
+            'texte': "Aucune heure supplementaire declaree sur la periode.",
+        })
+
+    score = max(0, min(100, int(score)))
+    if score >= 95:
+        statut = 'conforme'
+        statut_label = 'Conforme'
+        badge_class = 'success'
+    elif score >= 75:
+        statut = 'a_verifier'
+        statut_label = 'A verifier'
+        badge_class = 'warning'
+    else:
+        statut = 'critique'
+        statut_label = 'Critique'
+        badge_class = 'danger'
+
+    return {
+        'score': score,
+        'statut': statut,
+        'statut_label': statut_label,
+        'badge_class': badge_class,
+        'messages': messages,
+        'anomalies_cnss': anomalies_cnss,
+        'nb_anomalies_cnss': len(anomalies_cnss),
+        'cnss_patronale_attendue': cnss_patronale_attendue,
+        'cnss_patronale_reelle': cnss_patronale_reelle,
+        'ecart_cnss_patronale': ecart_cnss,
+        'heures_supp': heures_supp,
+        'montant_heures_supp': montant_heures_supp,
+        'ratio_charges_min': RATIO_CHARGES_MIN,
+        'ratio_charges_max': RATIO_CHARGES_MAX,
+    }
+
+
+def _audit_masse_salariale_par_mois(entreprise, annee, service_id=None):
+    """Genere le score de conformite mois par mois pour une annee."""
+    audits = []
+    for mois in range(1, 13):
+        bulletins = BulletinPaie.objects.filter(
+            employe__entreprise=entreprise,
+            annee_paie=annee,
+            mois_paie=mois,
+            statut_bulletin__in=['calcule', 'valide', 'paye'],
+        )
+        if service_id:
+            bulletins = bulletins.filter(employe__service_id=service_id)
+        audit = _audit_masse_salariale(bulletins)
+        if audit['score'] or audit['nb_anomalies_cnss']:
+            audit['mois'] = mois
+            audit['mois_label'] = MOIS_FR[mois]
+            audits.append(audit)
+    return audits
+
+
 @login_required
 @entreprise_active_required
 @reauth_required
@@ -226,6 +378,8 @@ def rapport_masse_salariale(request):
 
     # --- Indicateurs globaux ---
     indicateurs = _calcul_rapport(bulletins)
+    audit_conformite = _audit_masse_salariale(bulletins)
+    audit_mensuel = _audit_masse_salariale_par_mois(entreprise, annee, service_id=service_id or None)
 
     # --- Comparaison N vs N-1 ---
     bulletins_n1 = BulletinPaie.objects.filter(
@@ -262,6 +416,8 @@ def rapport_masse_salariale(request):
         'evolution_data': evolution_data,
         'top10': top10_data,
         'indicateurs': indicateurs,
+        'audit_conformite': audit_conformite,
+        'audit_mensuel': audit_mensuel,
         'indic_n1': indic_n1,
         'evol_brut': evol_brut,
         'annees_dispo': annees_dispo,
@@ -317,6 +473,10 @@ def rapport_masse_salariale_excel(request):
         if align:
             cell.alignment = align
         cell.border = border
+
+    indicateurs = _calcul_rapport(bulletins)
+    audit_conformite = _audit_masse_salariale(bulletins)
+    audit_mensuel = _audit_masse_salariale_par_mois(entreprise, annee, service_id=service_id or None)
 
     # Titre
     ws.merge_cells('A1:G1')
@@ -375,6 +535,32 @@ def rapport_masse_salariale_excel(request):
     for col_letter, width in zip('ABCDEFG', [30, 14, 18, 18, 18, 18, 18]):
         ws.column_dimensions[col_letter].width = width
 
+    audit_ws = wb.create_sheet('Audit conformite')
+    audit_ws.append(['Score', 'Statut', 'CNSS patronale reelle', 'CNSS patronale attendue', 'Ecart CNSS', 'Heures supp', 'Montant HS'])
+    audit_ws.append([
+        audit_conformite['score'],
+        audit_conformite['statut_label'],
+        float(audit_conformite['cnss_patronale_reelle']),
+        float(audit_conformite['cnss_patronale_attendue']),
+        float(audit_conformite['ecart_cnss_patronale']),
+        float(audit_conformite['heures_supp']),
+        float(audit_conformite['montant_heures_supp']),
+    ])
+    audit_ws.append([])
+    audit_ws.append(['Mois', 'Score', 'Statut', 'Ecart CNSS', 'Anomalies CNSS'])
+    for audit in audit_mensuel:
+        audit_ws.append([
+            audit['mois_label'],
+            audit['score'],
+            audit['statut_label'],
+            float(audit['ecart_cnss_patronale']),
+            audit['nb_anomalies_cnss'],
+        ])
+    for col in range(1, 8):
+        audit_ws.cell(row=1, column=col).font = header_font
+        audit_ws.cell(row=1, column=col).fill = header_fill
+        audit_ws.column_dimensions[get_column_letter(col)].width = 24
+
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
@@ -406,6 +592,8 @@ def rapport_masse_salariale_pdf(request):
         mois=mois or None, trimestre=trimestre or None, service_id=service_id or None,
     )
     indicateurs = _calcul_rapport(bulletins)
+    audit_conformite = _audit_masse_salariale(bulletins)
+    audit_mensuel = _audit_masse_salariale_par_mois(entreprise, annee, service_id=service_id or None)
 
     # Tableau par service
     par_service = {}
@@ -469,6 +657,45 @@ def rapport_masse_salariale_pdf(request):
         ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
     ]))
     elements.append(t_indic)
+
+    elements.append(Paragraph('Audit de conformite', section_style))
+    audit_data = [
+        ['Controle', 'Valeur'],
+        ['Score de conformite', f"{audit_conformite['score']}% - {audit_conformite['statut_label']}"],
+        ['CNSS patronale reelle', f"{audit_conformite['cnss_patronale_reelle']:,.0f} GNF"],
+        ['CNSS patronale attendue', f"{audit_conformite['cnss_patronale_attendue']:,.0f} GNF"],
+        ['Ecart CNSS patronale', f"{audit_conformite['ecart_cnss_patronale']:,.0f} GNF"],
+        ['Heures supplementaires', f"{audit_conformite['heures_supp']:,.2f} h / {audit_conformite['montant_heures_supp']:,.0f} GNF"],
+    ]
+    t_audit = Table(audit_data, colWidths=[8*cm, 7*cm])
+    t_audit.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2F855A')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+    ]))
+    elements.append(t_audit)
+
+    if audit_mensuel:
+        monthly_rows = [['Mois', 'Score', 'Statut', 'Ecart CNSS']]
+        for audit in audit_mensuel:
+            monthly_rows.append([
+                audit['mois_label'],
+                f"{audit['score']}%",
+                audit['statut_label'],
+                f"{audit['ecart_cnss_patronale']:,.0f}",
+            ])
+        t_monthly = Table(monthly_rows, colWidths=[5*cm, 3*cm, 4*cm, 4*cm])
+        t_monthly.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1F4E79')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+        ]))
+        elements.append(Spacer(1, 0.3*cm))
+        elements.append(t_monthly)
 
     # Tableau par service
     elements.append(Paragraph("Répartition par service", section_style))
