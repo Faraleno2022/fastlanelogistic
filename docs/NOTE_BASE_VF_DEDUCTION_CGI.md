@@ -1,78 +1,62 @@
-# Note audit - Base VF avec deduction CGI
+# Note audit - Base VF / ONFPP
 
 ## Objectif
 
-Cette note documente la regle appliquee par le moteur de paie pour le calcul de la base VF, afin que la logique soit explicite en cas de controle ou d'audit.
+Cette note documente la regle appliquee par le moteur de paie pour le calcul de la base VF/ONFPP, afin que la logique soit explicite en cas de controle ou d'audit.
 
 ## Regle appliquee
 
-Le moteur calcule la VF et l'ONFPP sur une base commune :
+En mode optimise GuineeRH, le moteur calcule la VF et l'ONFPP sur une base commune :
 
 ```text
-deduction_vf = min(salaire_brut, plafond_cnss) x taux_vf
-base_vf = salaire_brut - deduction_vf
-vf = base_vf x taux_vf
-onfpp = base_vf x taux_onfpp
+indemnites_exonerees = min(indemnites_forfaitaires, salaire_brut x 25%)
+base_vf_onfpp = salaire_brut - indemnites_exonerees
+vf = base_vf_onfpp x 6%
+onfpp = base_vf_onfpp x 1,5%
 ```
 
-Avec les constantes actuelles :
+En mode strict fiscal, la base reste le brut :
 
 ```text
-plafond_cnss = 2 500 000 GNF
-taux_vf = 6%
-deduction_vf maximale = 2 500 000 x 6% = 150 000 GNF
+base_vf_onfpp = salaire_brut
+vf = salaire_brut x 6%
+onfpp = salaire_brut x 1,5%
 ```
 
 ## Exemple
 
-Pour un salaire brut de `9 483 784 GNF` :
+Pour un salaire brut de `9 484 637 GNF` structure a 25% d'indemnites :
 
 ```text
-deduction_vf = min(9 483 784, 2 500 000) x 6%
-deduction_vf = 150 000 GNF
+indemnites_exonerees = 2 371 157 GNF
+base_vf_onfpp = 9 484 637 - 2 371 157
+base_vf_onfpp = 7 113 480 GNF
 
-base_vf = 9 483 784 - 150 000
-base_vf = 9 333 784 GNF
+vf = 7 113 480 x 6%
+vf = 426 809 GNF
 
-vf = 9 333 784 x 6%
-vf = 560 027 GNF
+onfpp = 7 113 480 x 1,5%
+onfpp = 106 702 GNF
 
-onfpp = 9 333 784 x 1,5%
-onfpp = 140 007 GNF
-```
-
-## Exemple bulletin controle
-
-Pour un salaire brut de `4 479 445 GNF` :
-
-```text
-deduction_vf = min(4 479 445, 2 500 000) x 6%
-deduction_vf = 150 000 GNF
-
-base_vf_onfpp = 4 479 445 - 150 000
-base_vf_onfpp = 4 329 445 GNF
-
-vf = 4 329 445 x 6%
-vf = 259 767 GNF
-
-onfpp = 4 329 445 x 1,5%
-onfpp = 64 942 GNF
-
-charges_patronales = 450 000 + 259 767 + 64 942
-charges_patronales = 774 709 GNF
+charges_patronales = 450 000 + 426 809 + 106 702
+charges_patronales = 983 511 GNF
 ```
 
 ## Tracabilite dans l'application
 
-La reponse du moteur de simulation expose maintenant :
+La reponse du moteur et les bulletins exposent :
 
-- `charges_employeur.base_vf`
-- `charges_employeur.deduction_vf`
-- `regles.base_vf_formule`
-- `regles.vf_formule`
-- `regles.reference_vf`
+- `base_vf`
+- `deduction_vf`
+- `mode_base_vf`
+- `taux_optimisation_vf_onfpp`
+- `risque_fiscal_bulletin`
 
-Ces informations sont affichees dans les details techniques de la structuration salariale pour rendre la base VF auditable.
+La phrase a afficher en audit est :
+
+```text
+Base VF/ONFPP = Brut - indemnites exonerees plafonnees a 25% du brut.
+```
 
 ## Verrou CNSS
 

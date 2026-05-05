@@ -1110,11 +1110,10 @@ def telecharger_bulletin_pdf(request, pk):
     charges_table.wrapOn(p, width, height)
     charges_table.drawOn(p, 1.5*cm, y - ch_table_h)
     y -= ch_table_h + 0.15*cm
-    # Note explicative VF (Versement Forfaitaire) — règle CGI Guinée :
-    #   Déduction VF = min(brut, plafond CNSS 2 500 000) × 6%   (plafonnée à 150 000)
-    #   Base VF      = Brut − Déduction VF
-    #   VF final     = Base VF × 6%
-    # La déduction VF est un mécanisme fiscal CGI, PAS une exonération d'indemnités.
+    # Note explicative VF (Versement Forfaitaire) - regle CGI Guinee :
+    #   Base VF/ONFPP = Brut - indemnites exonerees plafonnees a 25% du brut.
+    #   VF final      = Base VF x 6%
+    #   ONFPP/TA      = Base VF x taux applicable
     if base_vf > 0 and y > 3.8*cm:
         base_vf_f = float(base_vf)
         brut_gnf = float(bulletin.salaire_brut)
@@ -1128,8 +1127,8 @@ def telecharger_bulletin_pdf(request, pk):
         else:
             deduction = brut_gnf - base_vf_f
             note_base = (
-                f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} − déduction CGI {deduction:,.0f} "
-                f"(min(brut; 2 500 000) × 6 %) = {base_vf_f:,.0f} GNF"
+                f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} - indemnites exonerees plafonnees {deduction:,.0f} "
+                f"(25 % max du brut) = {base_vf_f:,.0f} GNF"
             )
             charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
         p.drawString(1.5*cm, y,
@@ -1754,11 +1753,10 @@ def telecharger_bulletin_public(request, token):
     charges_table.wrapOn(p, width, height)
     charges_table.drawOn(p, 1.5*cm, y - ch_table_h)
     y -= ch_table_h + 0.15*cm
-    # Note explicative VF (Versement Forfaitaire) — règle CGI Guinée :
-    #   Déduction VF = min(brut, plafond CNSS 2 500 000) × 6%   (plafonnée à 150 000)
-    #   Base VF      = Brut − Déduction VF
-    #   VF final     = Base VF × 6%
-    # La déduction VF est un mécanisme fiscal CGI, PAS une exonération d'indemnités.
+    # Note explicative VF (Versement Forfaitaire) - regle CGI Guinee :
+    #   Base VF/ONFPP = Brut - indemnites exonerees plafonnees a 25% du brut.
+    #   VF final      = Base VF x 6%
+    #   ONFPP/TA      = Base VF x taux applicable
     if base_vf > 0 and y > 3.8*cm:
         base_vf_f = float(base_vf)
         brut_gnf = float(bulletin.salaire_brut)
@@ -1772,8 +1770,8 @@ def telecharger_bulletin_public(request, token):
         else:
             deduction = brut_gnf - base_vf_f
             note_base = (
-                f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} − déduction CGI {deduction:,.0f} "
-                f"(min(brut; 2 500 000) × 6 %) = {base_vf_f:,.0f} GNF"
+                f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} - indemnites exonerees plafonnees {deduction:,.0f} "
+                f"(25 % max du brut) = {base_vf_f:,.0f} GNF"
             )
             charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
         p.drawString(1.5*cm, y,
