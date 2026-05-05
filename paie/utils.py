@@ -798,7 +798,7 @@ def generer_bulletin_pdf(bulletin):
             f"{ta:,.0f}".replace(",", " ")])
     elif onfpp > 0:
         charges_data.append([f"ONFPP (applicable si effectif \u2265 30 sal. \u2014 effectif actuel : {nb_sal})",
-            f"{bulletin.salaire_brut:,.0f}".replace(",", " "),
+            f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
             "1,5%",
             f"{onfpp:,.0f}".replace(",", " ")])
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
@@ -833,6 +833,12 @@ def generer_bulletin_pdf(bulletin):
         p.drawString(margin_left, y,
             f"Base VF/TA/ONFPP = {base_vf:,.0f} GNF  |  VF = {base_vf:,.0f} x 6%  |  ONFPP = {base_vf:,.0f} x 1,5%"
             .replace(",", " "))
+        y -= 0.20*cm
+        risque = getattr(bulletin, 'risque_fiscal_bulletin', {})
+        mode = getattr(bulletin, 'mode_base_vf_effectif', 'indetermine')
+        mode_label = 'strict fiscal' if mode == 'strict' else 'optimise' if mode == 'optimise' else 'a verifier'
+        p.drawString(margin_left, y,
+            f"Mode VF/ONFPP: {mode_label}  |  Taux optimisation: {bulletin.taux_optimisation_vf_onfpp}%  |  Risque fiscal: {risque.get('label', 'A verifier')}")
         y -= 0.20*cm
     p.setFillColor(colors.black)
 

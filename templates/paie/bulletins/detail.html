@@ -284,6 +284,32 @@
                         <tr class="small text-muted">
                             <td colspan="2" class="pt-0">Base VF: {{ bulletin.base_vf|default:bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
                         </tr>
+                        <tr class="small">
+                            <td>Mode VF/ONFPP</td>
+                            <td class="text-end">
+                                <span class="badge bg-{% if bulletin.mode_base_vf_effectif == 'strict' %}secondary{% elif bulletin.mode_base_vf_effectif == 'optimise' %}success{% else %}warning text-dark{% endif %}">
+                                    {% if bulletin.mode_base_vf_effectif == 'strict' %}Strict fiscal{% elif bulletin.mode_base_vf_effectif == 'optimise' %}Optimise{% else %}A verifier{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr class="small">
+                            <td>Taux d'optimisation</td>
+                            <td class="text-end">
+                                <strong>{{ bulletin.taux_optimisation_vf_onfpp }}%</strong>
+                                {% if bulletin.economie_vf_onfpp_vs_strict > 0 %}
+                                <span class="text-muted">({{ bulletin.economie_vf_onfpp_vs_strict|floatformat:0|intcomma }} GNF vs strict)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr class="small">
+                            <td>Risque fiscal</td>
+                            <td class="text-end">
+                                <span class="badge bg-{{ bulletin.risque_fiscal_bulletin.classe }}">
+                                    {{ bulletin.risque_fiscal_bulletin.label }}
+                                </span>
+                                <span class="text-muted">{{ bulletin.risque_fiscal_bulletin.raisons|join:", " }}</span>
+                            </td>
+                        </tr>
                         {% if bulletin.taxe_apprentissage and bulletin.taxe_apprentissage > 0 %}
                         <tr>
                             <td>Taxe d'Apprentissage TA ({{ bulletin.taux_ta|default:"2" }}%) <span class="badge bg-secondary">&lt;30 sal.</span></td>

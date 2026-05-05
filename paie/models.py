@@ -274,6 +274,83 @@ class BulletinPaie(models.Model):
         return brut + rappel - trop_percu - net
 
     @property
+    def mode_base_vf_effectif(self):
+        """Mode de base VF/ONFPP constate sur le bulletin."""
+        brut = Decimal(self.salaire_brut or 0)
+        base_vf = Decimal(self.base_vf or 0)
+        if brut <= 0 or base_vf <= 0:
+            return 'indetermine'
+        return 'strict' if abs(brut - base_vf) <= Decimal('1') else 'optimise'
+
+    @property
+    def taux_optimisation_vf_onfpp(self):
+        """Part du brut retiree de la base VF/ONFPP."""
+        brut = Decimal(self.salaire_brut or 0)
+        base_vf = Decimal(self.base_vf or 0)
+        if brut <= 0 or base_vf <= 0:
+            return Decimal('0.00')
+        deduction = max(Decimal('0'), brut - base_vf)
+        return (deduction * Decimal('100') / brut).quantize(Decimal('0.01'))
+
+    @property
+    def economie_vf_onfpp_vs_strict(self):
+        """Economie estimee par rapport au mode strict brut."""
+        brut = Decimal(self.salaire_brut or 0)
+        base_vf = Decimal(self.base_vf or 0)
+        if brut <= 0 or base_vf <= 0:
+            return Decimal('0')
+        taux_ta_onfpp = Decimal('2.00') if (self.taxe_apprentissage or 0) > 0 else Decimal('1.50')
+        taux_total = Decimal('6.00') + taux_ta_onfpp
+        return ((brut - base_vf) * taux_total / Decimal('100')).quantize(Decimal('1'))
+
+    @property
+    def risque_fiscal_bulletin(self):
+        """Indicateur simple pour audit: faible, moyen ou eleve."""
+        brut = Decimal(self.salaire_brut or 0)
+        base_vf = Decimal(self.base_vf or 0)
+        taux = self.taux_optimisation_vf_onfpp
+        raisons = []
+        niveau = 'faible'
+        classe = 'success'
+
+        if brut <= 0 or base_vf <= 0:
+            niveau = 'eleve'
+            classe = 'danger'
+            raisons.append('Base VF/ONFPP manquante')
+        elif taux > Decimal('25.01'):
+            niveau = 'eleve'
+            classe = 'danger'
+            raisons.append('Optimisation superieure au plafond 25%')
+        elif taux >= Decimal('23.00'):
+            niveau = 'moyen'
+            classe = 'warning'
+            raisons.append('Structure fortement optimisee')
+
+        if base_vf > 0:
+            vf_attendue = (base_vf * Decimal('0.06')).quantize(Decimal('1'))
+            vf_reelle = Decimal(self.versement_forfaitaire or 0).quantize(Decimal('1'))
+            if abs(vf_reelle - vf_attendue) > Decimal('1'):
+                niveau = 'eleve'
+                classe = 'danger'
+                raisons.append('Ecart VF')
+
+            taux_ta_onfpp = Decimal('0.02') if (self.taxe_apprentissage or 0) > 0 else Decimal('0.015')
+            attendu = (base_vf * taux_ta_onfpp).quantize(Decimal('1'))
+            reel = Decimal((self.taxe_apprentissage or 0) + (self.contribution_onfpp or 0)).quantize(Decimal('1'))
+            if abs(reel - attendu) > Decimal('1'):
+                niveau = 'eleve'
+                classe = 'danger'
+                raisons.append('Ecart TA/ONFPP')
+
+        labels = {'faible': 'Faible', 'moyen': 'Moyen', 'eleve': 'Eleve'}
+        return {
+            'niveau': niveau,
+            'label': labels[niveau],
+            'classe': classe,
+            'raisons': raisons or ['Controles coherents'],
+        }
+
+    @property
     def rts(self):
         """Alias RTS pour irg (Retenue à la Source = ancien IRG)"""
         return self.irg
@@ -1247,9 +1324,9 @@ class ParametresCalculPaie(models.Model):
 
     # Base VF / TA
     MODE_BASE_VF = [
-        ('brut', 'Brut direct (simplifié)'),
-        ('brut_moins_deduction', 'Modèle standard GuinéeRH : brut − déduction CGI plafonnée'),
-        ('formule', 'Formule personnalisée'),
+        ('brut_moins_deduction', 'Mode optimise GuineeRH : brut - deduction CGI plafonnee'),
+        ('brut', 'Mode strict fiscal : VF/ONFPP sur salaire brut'),
+        ('formule', 'Formule personnalisee'),
     ]
     mode_base_vf = models.CharField(
         max_length=30, choices=MODE_BASE_VF, default='brut_moins_deduction'

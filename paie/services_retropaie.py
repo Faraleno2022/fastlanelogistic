@@ -342,7 +342,13 @@ def verifier_monotonie(annee=None, pct_indemnites_forfaitaires=0, pas=500_000,
 # Détail par tranche (pour affichage pédagogique)
 # ---------------------------------------------------------------------------
 
-def calculer_charges_patronales(brut, annee=None, nb_salaries=0, pct_indemnites_forfaitaires=25):
+def calculer_charges_patronales(
+    brut,
+    annee=None,
+    nb_salaries=0,
+    pct_indemnites_forfaitaires=25,
+    mode_base_vf='brut_moins_deduction',
+):
     """
     Calcule les charges patronales pour un brut donné.
 
@@ -380,7 +386,7 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0, pct_indemnites_
         base = _arrondir(max(min(brut, plafond), plancher))
         cnss_pat = _arrondir(base * taux_cnss_pat / Decimal('100'))
 
-    deduction_vf = _arrondir(brut * pct_indem / Decimal('100'))
+    deduction_vf = Decimal('0') if mode_base_vf == 'brut' else _arrondir(brut * pct_indem / Decimal('100'))
     base_vf = max(Decimal('0'), brut - deduction_vf)
     vf = _arrondir(base_vf * taux_vf / Decimal('100'))
     taux_ta = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
@@ -390,6 +396,8 @@ def calculer_charges_patronales(brut, annee=None, nb_salaries=0, pct_indemnites_
 
     return {
         'cnss_employeur':      int(cnss_pat),
+        'mode_base_vf':         mode_base_vf,
+        'deduction_vf':         int(deduction_vf),
         'base_vf':             int(base_vf),
         'base_ta_onfpp':       int(base_ta_onfpp),
         'vf':                  int(vf),

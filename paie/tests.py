@@ -555,6 +555,58 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(onfpp, Decimal('50394'))
         self.assertEqual(Decimal('450000') + vf + onfpp, Decimal('701969'))
 
+    def test_charges_patronales_mode_strict_fiscal_sur_brut(self):
+        """Le mode strict fiscal applique VF/ONFPP directement sur le brut."""
+        constantes = {
+            'PLANCHER_CNSS': Decimal('550000'),
+            'PLAFOND_CNSS': Decimal('2500000'),
+            'TAUX_CNSS_EMPLOYEUR': Decimal('18'),
+            'TAUX_VF': Decimal('6'),
+            'TAUX_TA': Decimal('2'),
+            'TAUX_ONFPP': Decimal('1.5'),
+            'SEUIL_TA_ONFPP': Decimal('30'),
+        }
+
+        with patch('paie.cache_service.PayrollCacheService.get_constantes', return_value=constantes):
+            charges = calculer_charges_patronales(
+                Decimal('3600000'), nb_salaries=30, mode_base_vf='brut'
+            )
+
+        self.assertEqual(charges['mode_base_vf'], 'brut')
+        self.assertEqual(charges['deduction_vf'], 0)
+        self.assertEqual(charges['base_vf'], 3600000)
+        self.assertEqual(charges['vf'], 216000)
+        self.assertEqual(charges['ta'], 54000)
+        self.assertEqual(charges['total'], 720000)
+
+    def test_bulletin_indicateur_optimisation_et_risque(self):
+        """Chaque bulletin expose son taux d'optimisation et son risque fiscal."""
+        bulletin = BulletinPaie(
+            salaire_brut=Decimal('3600000'),
+            base_vf=Decimal('2700000'),
+            versement_forfaitaire=Decimal('162000'),
+            contribution_onfpp=Decimal('40500'),
+            taxe_apprentissage=Decimal('0'),
+        )
+
+        self.assertEqual(bulletin.mode_base_vf_effectif, 'optimise')
+        self.assertEqual(bulletin.taux_optimisation_vf_onfpp, Decimal('25.00'))
+        self.assertEqual(bulletin.economie_vf_onfpp_vs_strict, Decimal('67500'))
+        self.assertEqual(bulletin.risque_fiscal_bulletin['niveau'], 'moyen')
+
+    def test_bulletin_indicateur_detecte_ecart_vf(self):
+        """Un ecart VF/ONFPP visible fait remonter le risque du bulletin."""
+        bulletin = BulletinPaie(
+            salaire_brut=Decimal('3600000'),
+            base_vf=Decimal('2700000'),
+            versement_forfaitaire=Decimal('216000'),
+            contribution_onfpp=Decimal('40500'),
+            taxe_apprentissage=Decimal('0'),
+        )
+
+        self.assertEqual(bulletin.risque_fiscal_bulletin['niveau'], 'eleve')
+        self.assertIn('Ecart VF', bulletin.risque_fiscal_bulletin['raisons'])
+
 
 class IRGCalculTests(SimpleTestCase):
     """TU-06 et TU-07: Tests IRG/RTS"""

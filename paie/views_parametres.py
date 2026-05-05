@@ -129,7 +129,7 @@ def parametres_calcul_paie(request):
         params.formule_exoneration = nouvelle_formule_exo
 
         # --- Base VF/TA ---
-        nouveau_mode_vf = request.POST.get('mode_base_vf', 'brut')
+        nouveau_mode_vf = request.POST.get('mode_base_vf', 'brut_moins_deduction')
         _enregistrer_historique(
             params, request.user,
             'mode_base_vf',
