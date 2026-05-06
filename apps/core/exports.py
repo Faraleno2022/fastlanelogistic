@@ -822,7 +822,7 @@ def _render_bon_transport_flowables(bon, body_w: float, info: dict) -> list:
     ], left_w)
 
     camion_code = bon.camion.code if bon.camion else ""
-    plaque = bon.plaque or (bon.camion.plaque if bon.camion else "")
+    plaque = bon.plaque or (bon.camion.immatriculation if bon.camion else "")
     vehicule_kv = build_kv_block([
         ("Plaque camion", plaque),
         ("Code camion", camion_code),
