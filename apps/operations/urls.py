@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 from . import views_io
 
@@ -31,12 +32,6 @@ urlpatterns = [
     path("depenses-admin/<int:pk>/modifier/", views.depense_edit, name="depense_edit"),
     path("depenses-admin/<int:pk>/supprimer/", views.depense_delete, name="depense_delete"),
 
-    # Transport bauxite
-    path("transport-bauxite/", views.transport_bauxite, name="transport_bauxite"),
-    path("transport-bauxite/nouveau/", views.transport_create, name="transport_create"),
-    path("transport-bauxite/<int:pk>/modifier/", views.transport_edit, name="transport_edit"),
-    path("transport-bauxite/<int:pk>/supprimer/", views.transport_delete, name="transport_delete"),
-
     # Bons de transport
     path("bons-transport/", views.bons_transport, name="bons_transport"),
     path("bons-transport/modele-vierge/", views.bon_modele_vierge, name="bon_modele_vierge"),
@@ -44,4 +39,26 @@ urlpatterns = [
     path("bons-transport/<int:pk>/modifier/", views.bon_edit, name="bon_edit"),
     path("bons-transport/<int:pk>/supprimer/", views.bon_delete, name="bon_delete"),
     path("bons-transport/<int:pk>/imprimer/", views.bon_imprimer, name="bon_imprimer"),
+
+    # Anciennes URLs Transport bauxite : redirection vers Bons de transport.
+    path(
+        "transport-bauxite/",
+        RedirectView.as_view(pattern_name="operations:bons_transport", permanent=False),
+        name="transport_bauxite",
+    ),
+    path(
+        "transport-bauxite/nouveau/",
+        RedirectView.as_view(pattern_name="operations:bon_create", permanent=False),
+        name="transport_create",
+    ),
+    path(
+        "transport-bauxite/<int:pk>/modifier/",
+        RedirectView.as_view(pattern_name="operations:bons_transport", permanent=False),
+        name="transport_edit",
+    ),
+    path(
+        "transport-bauxite/<int:pk>/supprimer/",
+        RedirectView.as_view(pattern_name="operations:bons_transport", permanent=False),
+        name="transport_delete",
+    ),
 ]
