@@ -176,12 +176,12 @@ class TransportBauxite(TimeStampedModel):
 class BonTransport(TimeStampedModel):
     """Bon de transport — registre chargement/pesée (feuille Bon Transport)."""
     date = models.DateField("Date")
-    prenom = models.CharField("First Name / Prénom", max_length=80)
-    nom = models.CharField("Last Name / Nom", max_length=80)
+    prenom = models.CharField("First Name / Prénom", max_length=80, blank=True)
+    nom = models.CharField("Last Name / Nom", max_length=80, blank=True)
     telephone = models.CharField("Phone Number", max_length=30, blank=True)
-    plaque = models.CharField("Plate / Plaque", max_length=30)
+    plaque = models.CharField("Plate / Plaque", max_length=30, blank=True)
     carte_entree = models.CharField("Carte d'entrée / Entry car N°", max_length=40, blank=True)
-    lieu_chargement = models.CharField("Lieu de chargement / Loading zone", max_length=120)
+    lieu_chargement = models.CharField("Lieu de chargement / Loading zone", max_length=120, blank=True)
     heure_depart = models.TimeField("Heure de départ / Departure Time", null=True, blank=True)
     heure_pesee_start = models.TimeField("Heure pesée Start", null=True, blank=True)
     heure_pesee_end = models.TimeField("Heure pesée End", null=True, blank=True)
