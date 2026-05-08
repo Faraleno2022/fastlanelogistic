@@ -131,6 +131,96 @@ class HeuresSupplementairesBaseTests(TestCase):
         self.assertEqual(moteur.lignes[-1]['nombre'], Decimal('1.03'))
 
 
+class BulletinCnssIndemnitesTests(TestCase):
+    """Controle que les indemnites exonerees RTS/VF ne reduisent pas la base CNSS."""
+
+    def setUp(self):
+        self.entreprise = Entreprise.objects.create(
+            nom_entreprise='CNSS Indemnites SARL',
+            slug='cnss-indemnites',
+            email='cnss@example.com',
+        )
+        self.employe = Employe.objects.create(
+            entreprise=self.entreprise,
+            matricule='EMP-CNSS-001',
+            nom='Test',
+            prenoms='CNSS',
+            statut_employe='actif',
+        )
+        ElementSalaire.objects.filter(employe=self.employe).delete()
+        self.periode = PeriodePaie.objects.create(
+            entreprise=self.entreprise,
+            annee=2026,
+            mois=5,
+            libelle='Mai 2026',
+            date_debut=date(2026, 5, 1),
+            date_fin=date(2026, 5, 31),
+            statut_periode='ouverte',
+        )
+
+        rubrique_base = RubriquePaie.objects.create(
+            entreprise=self.entreprise,
+            code_rubrique='SAL_BASE',
+            libelle_rubrique='Salaire de base',
+            type_rubrique='gain',
+            categorie_rubrique='salaire_base',
+            soumis_cnss=True,
+            soumis_irg=True,
+            ordre_calcul=10,
+            ordre_affichage=10,
+            actif=True,
+        )
+        ElementSalaire.objects.create(
+            employe=self.employe,
+            rubrique=rubrique_base,
+            montant=Decimal('2013158'),
+            date_debut=date(2026, 5, 1),
+            actif=True,
+            recurrent=True,
+        )
+
+        for code, libelle, montant, ordre in [
+            ('TRANSPORT', 'Indemnite transport', Decimal('200000'), 20),
+            ('LOGEMENT', 'Indemnite logement', Decimal('200000'), 21),
+            ('CHERTE', 'Indemnite cherte de vie', Decimal('256250'), 22),
+        ]:
+            rubrique = RubriquePaie.objects.create(
+                entreprise=self.entreprise,
+                code_rubrique=code,
+                libelle_rubrique=libelle,
+                type_rubrique='gain',
+                categorie_rubrique='indemnite',
+                soumis_cnss=False,
+                soumis_irg=False,
+                ordre_calcul=ordre,
+                ordre_affichage=ordre,
+                actif=True,
+            )
+            ElementSalaire.objects.create(
+                employe=self.employe,
+                rubrique=rubrique,
+                montant=montant,
+                date_debut=date(2026, 5, 1),
+                actif=True,
+                recurrent=True,
+            )
+
+    def test_cnss_reste_calculee_sur_brut_plafonne(self):
+        montants = MoteurCalculPaie(self.employe, self.periode).calculer_bulletin()
+
+        self.assertEqual(montants['brut'], Decimal('2669408'))
+        self.assertEqual(montants['indemnites_forfaitaires'], Decimal('656250'))
+        self.assertEqual(montants['cnss_base'], Decimal('2500000'))
+        self.assertEqual(montants['cnss_employe'], Decimal('125000'))
+        self.assertEqual(montants['cnss_employeur'], Decimal('450000'))
+        self.assertEqual(montants['base_rts'], Decimal('1888158'))
+        self.assertEqual(montants['irg'], Decimal('44408'))
+        self.assertEqual(montants['net'], Decimal('2500000'))
+        self.assertEqual(montants['base_vf'], Decimal('2013158'))
+        self.assertEqual(montants['versement_forfaitaire'], Decimal('120789'))
+        self.assertEqual(montants['taxe_apprentissage'], Decimal('40263'))
+
+
 class LivrePaiePdfTests(TestCase):
     """Controle que le livre annuel reste telechargeable sans mois obligatoire."""
 

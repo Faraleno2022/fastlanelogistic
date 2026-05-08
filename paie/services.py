@@ -1082,19 +1082,14 @@ class MoteurCalculPaie:
         # On utilise le brut plutôt que cnss_base (accumulé via soumis_cnss) car toutes les
         # rubriques ne sont pas forcément taguées, et la loi guinéenne applique la CNSS sur
         # le brut global (plancher 550 000 / plafond 2 500 000 GNF).
-        # Si cnss_base est renseigné et cohérent (> 10% du plancher), on l'utilise en priorité ;
-        # sinon on tombe sur le brut.
-        plancher_seuil = self.constantes.get('PLANCHER_CNSS', Decimal('550000')) * Decimal('0.10')
-        if self.montants['cnss_base'] >= plancher_seuil:
-            retenue_absence = self.montants.get('retenue_absence', Decimal('0'))
-            base_raw = max(Decimal('0'), self.montants['cnss_base'] - retenue_absence)
-        else:
-            base_raw = self.montants['brut']
+        # Ne pas utiliser cnss_base accumule via soumis_cnss: il peut exclure les indemnites
+        # exonerees de RTS/VF, alors que la CNSS reste calculee sur le brut plafonne.
+        base_raw = self.montants['brut']
         base_raw = self._normaliser_base_taxable(
             'cnss_brut',
             'CNSS brute',
             base_raw,
-            'cnss_base - retenue_absence ou salaire brut',
+            'salaire brut',
             fallback=self.montants.get('brut', Decimal('0')),
         )
 
