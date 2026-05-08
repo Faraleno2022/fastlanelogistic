@@ -394,6 +394,9 @@ AXES_COOLOFF_TIME = 1  # Temps de blocage en heures
 AXES_LOCK_OUT_AT_FAILURE = True
 AXES_LOCKOUT_TEMPLATE = 'core/account_locked.html'
 AXES_RESET_ON_SUCCESS = True
+# Offline build: django-axes AccessLog has legacy DB variants with session_hash NOT NULL.
+# Disabling successful-login logs keeps brute-force protection active without breaking login.
+AXES_DISABLE_ACCESS_LOG = True
 AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']
 AXES_IPWARE_PROXY_COUNT = 1
 AXES_IPWARE_META_PRECEDENCE_ORDER = [

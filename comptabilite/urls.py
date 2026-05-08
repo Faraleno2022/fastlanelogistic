@@ -48,7 +48,10 @@ try:
     
     # NOTE: le dossier `comptabilite/views/` existe (package) et masque le fichier `comptabilite/views.py`.
     # On charge donc explicitement `views.py` avec un nom de module qualifié afin que les imports relatifs fonctionnent.
-    views_path = os.path.join(os.path.dirname(__file__), 'views.py')
+    base_dir = os.path.dirname(__file__)
+    views_path = os.path.join(base_dir, 'views.py')
+    if not os.path.exists(views_path):
+        views_path = os.path.join(base_dir, 'views.pyc')
     spec = importlib.util.spec_from_file_location('comptabilite.views_legacy', views_path)
     comptabilite_views = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(comptabilite_views)

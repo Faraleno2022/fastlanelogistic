@@ -144,6 +144,10 @@ Type: files; Name: "{app}\_internal\manage.py"
 ; Nettoyer les anciens .pyc résiduels (seront recréés par le nouveau build)
 Type: files; Name: "{app}\_internal\run_server.pyc"
 Type: files; Name: "{app}\_internal\manage.pyc"
+; Nettoyer une ancienne migration residuelle qui creait un conflit de graphe paie.
+Type: files; Name: "{app}\_internal\paie\migrations\0134_set_seuil_ta_onfpp_30.py"
+Type: files; Name: "{app}\_internal\paie\migrations\0134_set_seuil_ta_onfpp_30.pyc"
+Type: files; Name: "{app}\_internal\paie\migrations\__pycache__\0134_set_seuil_ta_onfpp_30*.pyc"
 ; Nettoyer les anciens sous-dossiers .py résiduels
 Type: filesandordirs; Name: "{app}\_internal\core\*.py"
 Type: filesandordirs; Name: "{app}\_internal\employes\*.py"
