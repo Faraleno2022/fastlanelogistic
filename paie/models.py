@@ -265,6 +265,11 @@ class BulletinPaie(models.Model):
         return (self.cnss_employeur or 0) + (self.versement_forfaitaire or 0) + (self.taxe_apprentissage or 0) + (self.contribution_onfpp or 0)
 
     @property
+    def total_charges_salariales(self):
+        """Total des charges salariales legales (CNSS salarie + RTS)."""
+        return (self.cnss_employe or 0) + (self.irg or 0)
+
+    @property
     def total_retenues(self):
         """Total réel des retenues = brut - net + rappel - trop_percu"""
         brut = self.salaire_brut or 0

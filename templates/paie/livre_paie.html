@@ -159,21 +159,22 @@
                         <table class="table table-bordered table-hover table-sm livre-paie-table">
                             <thead class="table-orange-light">
                                 <tr>
-                                    <th rowspan="2">Période</th>
-                                    <th rowspan="2">Matricule</th>
-                                    <th rowspan="2">Nom et Prénoms</th>
-                                    <th rowspan="2">Fonction</th>
-                                    <th colspan="3" class="text-center bg-success text-white">Gains & Base imposable</th>
-                                    <th colspan="3" class="text-center bg-danger text-white">Retenues</th>
-                                    <th rowspan="2" class="bg-primary text-white">Net à Payer</th>
-                                </tr>
-                                <tr>
-                                    <th class="text-end">Brut</th>
-                                    <th class="text-end" title="Indemnités exonérées (abattement forfaitaire 25%)">Exonéré</th>
-                                    <th class="text-end" title="Base imposable RTS = Brut − Exonéré">Imposable</th>
-                                    <th class="text-end">CNSS (5%)</th>
-                                    <th class="text-end">RTS</th>
-                                    <th class="text-end">Total</th>
+                                    <th>Période</th>
+                                    <th>Matricule</th>
+                                    <th>Nom et Prénoms</th>
+                                    <th>Fonction</th>
+                                    <th class="text-end">Salaire de base</th>
+                                    <th class="text-end">Prime de Logement</th>
+                                    <th class="text-end">Prime de transport</th>
+                                    <th class="text-end">Cherté de vie</th>
+                                    <th class="text-end">Salaire brut</th>
+                                    <th class="text-end">CNSS 5%</th>
+                                    <th class="text-end">CNSS 18%</th>
+                                    <th class="text-end">Base taxable RTS</th>
+                                    <th class="text-end">Avance sur Salaire</th>
+                                    <th class="text-end bg-primary text-white">Salaire Net</th>
+                                    <th class="text-end">ONFPP</th>
+                                    <th class="text-end">VF</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -191,17 +192,22 @@
                                             Poste à renseigner
                                         {% endif %}
                                     </td>
-                                    <td class="text-end">{{ bulletin.salaire_brut|floatformat:0|intcomma }}</td>
-                                    <td class="text-end text-muted">{{ bulletin.abattement_forfaitaire|floatformat:0|intcomma }}</td>
-                                    <td class="text-end fw-semibold">{{ bulletin.base_rts|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.livre_salaire_base|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.livre_prime_logement|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.livre_prime_transport|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.livre_cherte_vie|floatformat:0|intcomma }}</td>
+                                    <td class="text-end fw-semibold">{{ bulletin.salaire_brut|floatformat:0|intcomma }}</td>
                                     <td class="text-end">{{ bulletin.cnss_employe|floatformat:0|intcomma }}</td>
-                                    <td class="text-end">{{ bulletin.irg|floatformat:0|intcomma }}</td>
-                                    <td class="text-end">{{ bulletin.total_retenues_livre|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.cnss_employeur|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.base_rts|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.livre_avance_salaire|floatformat:0|intcomma }}</td>
                                     <td class="text-end text-success"><strong>{{ bulletin.net_a_payer|floatformat:0|intcomma }}</strong></td>
+                                    <td class="text-end">{{ bulletin.contribution_onfpp|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.versement_forfaitaire|floatformat:0|intcomma }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="11" class="text-center text-muted py-4">
+                                    <td colspan="16" class="text-center text-muted py-4">
                                         Aucune donnée disponible pour cette période
                                     </td>
                                 </tr>
@@ -211,13 +217,18 @@
                             <tfoot class="table-secondary">
                                 <tr>
                                     <th colspan="4" class="text-end">TOTAUX:</th>
+                                    <th class="text-end">{{ totaux.total_salaire_base|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_prime_logement|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_prime_transport|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_cherte_vie|floatformat:0|intcomma }}</th>
                                     <th class="text-end">{{ totaux.total_brut|floatformat:0|intcomma }}</th>
-                                    <th class="text-end text-muted">{{ totaux.total_abattement|floatformat:0|intcomma }}</th>
-                                    <th class="text-end">{{ totaux.total_base_rts|floatformat:0|intcomma }}</th>
                                     <th class="text-end">{{ totaux.total_cnss_employe|floatformat:0|intcomma }}</th>
-                                    <th class="text-end">{{ totaux.total_irg|floatformat:0|intcomma }}</th>
-                                    <th class="text-end">{{ totaux.total_retenues|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_cnss_employeur|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_base_rts|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_avance_salaire|floatformat:0|intcomma }}</th>
                                     <th class="text-end text-success"><strong>{{ totaux.total_net|floatformat:0|intcomma }}</strong></th>
+                                    <th class="text-end">{{ totaux.total_onfpp|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_vf|floatformat:0|intcomma }}</th>
                                 </tr>
                             </tfoot>
                             {% endif %}
@@ -252,12 +263,12 @@
 <style>
     /* Réduire la taille de police pour le livre de paie */
     .livre-paie-table {
-        font-size: 0.75rem;
+        font-size: 0.68rem;
     }
     
     .livre-paie-table th,
     .livre-paie-table td {
-        padding: 0.25rem 0.4rem;
+        padding: 0.22rem 0.32rem;
         white-space: nowrap;
     }
     

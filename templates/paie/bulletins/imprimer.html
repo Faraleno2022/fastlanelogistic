@@ -440,6 +440,37 @@
         </tbody>
     </table>
 
+    <!-- Charges Salariales -->
+    <div class="section-title">CHARGES SALARIALES</div>
+    <table class="detail-table">
+        <thead>
+            <tr>
+                <th style="width: 50%;">Libellé</th>
+                <th class="text-right" style="width: 20%;">Base</th>
+                <th class="text-center" style="width: 10%;">Taux</th>
+                <th class="text-right" style="width: 20%;">Montant</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>CNSS 5%</td>
+                <td class="text-right">Plafond 2 500 000</td>
+                <td class="text-center">5%</td>
+                <td class="text-right" style="color: #d62828;">- {{ bulletin.cnss_employe|floatformat:0|intcomma }} GNF</td>
+            </tr>
+            <tr>
+                <td>RTS</td>
+                <td class="text-right">{{ bulletin.base_rts|floatformat:0|intcomma }}</td>
+                <td class="text-center">{{ bulletin.taux_effectif_rts|floatformat:2 }}%</td>
+                <td class="text-right" style="color: #d62828;">- {{ bulletin.irg|floatformat:0|intcomma }} GNF</td>
+            </tr>
+            <tr style="background-color: #fde2e2; font-weight: bold;">
+                <td colspan="3">TOTAL Charge salariale</td>
+                <td class="text-right" style="color: #d62828;">- {{ bulletin.total_charges_salariales|floatformat:0|intcomma }} GNF</td>
+            </tr>
+        </tbody>
+    </table>
+
     <!-- Récapitulatif -->
     <div class="summary-box">
         <table style="width: 100%;">

@@ -204,8 +204,35 @@
         </div>
     </div>
 
-    <!-- Récapitulatif -->
+    <!-- Charges salariales -->
     <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0 text-center">Charges salariales</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <td>CNSS 5%</td>
+                            <td class="text-end text-danger">- {{ bulletin.cnss_employe|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        <tr>
+                            <td>RTS</td>
+                            <td class="text-end text-danger">- {{ bulletin.irg|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        <tr class="border-top">
+                            <th>TOTAL Charge salariale</th>
+                            <th class="text-end text-danger">- {{ bulletin.total_charges_salariales|floatformat:0|intcomma }} GNF</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Récapitulatif -->
+    <div class="row mt-4">
         <div class="col-md-6 mx-auto">
             <div class="card shadow-sm border-primary">
                 <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">

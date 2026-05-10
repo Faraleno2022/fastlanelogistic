@@ -2,7 +2,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from django.db.models import Sum, Count, Q, Case, When, Value, IntegerField
+from django.db.models import Sum, Count, Q, Case, When, Value, IntegerField, F, Prefetch
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.db import transaction
@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, date
 import json
 import re
+import unicodedata
 
 
 def parse_montant(valeur):
@@ -943,6 +944,61 @@ def telecharger_bulletin_pdf(request, pk):
     retenues_table.wrapOn(p, width, height)
     retenues_table.drawOn(p, 1.5*cm, y - table_height)
     y -= table_height + 0.5*cm
+
+    # === CHARGES SALARIALES ===
+    total_charges_salariales = getattr(
+        bulletin,
+        'total_charges_salariales',
+        (bulletin.cnss_employe or 0) + (bulletin.irg or 0),
+    )
+    p.setFillColor(colors.HexColor("#dc3545"))
+    p.setFont(_FB, 9)
+    p.drawString(1.5*cm, y, "CHARGES SALARIALES")
+    p.setFillColor(colors.black)
+    y -= 0.35*cm
+
+    charges_salariales_data = [
+        ["Charge salariale", "Base", "Taux", "Montant"],
+        [
+            "CNSS 5%",
+            f"{base_cnss:,.0f}".replace(",", " "),
+            "5%",
+            f"- {bulletin.cnss_employe:,.0f}".replace(",", " "),
+        ],
+        [
+            "RTS",
+            rts_base_str,
+            f"{taux_eff_rts_val:g}%" if taux_eff_rts_val else "-",
+            f"- {bulletin.irg:,.0f}".replace(",", " "),
+        ],
+        [
+            "TOTAL Charge salariale",
+            "",
+            "",
+            f"- {total_charges_salariales:,.0f} GNF".replace(",", " "),
+        ],
+    ]
+    cs_row_h = 13
+    charges_salariales_table = Table(
+        charges_salariales_data,
+        colWidths=[8*cm, 3*cm, 2*cm, 4*cm],
+        rowHeights=cs_row_h,
+    )
+    charges_salariales_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#dc3545")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), _FB),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor("#fde2e2")),
+        ('FONTNAME', (0, -1), (-1, -1), _FB),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    cs_table_height = len(charges_salariales_data) * cs_row_h
+    charges_salariales_table.wrapOn(p, width, height)
+    charges_salariales_table.drawOn(p, 1.5*cm, y - cs_table_height)
+    y -= cs_table_height + 0.4*cm
 
     # === DÉTAIL CALCUL RTS (barème progressif) ===
     from paie.utils import calculer_detail_tranches_rts
@@ -2018,6 +2074,85 @@ def _bloquer_pdf_livre_paie(controles_livre, fmt):
     return HttpResponse(html, status=409, content_type='text/html; charset=utf-8')
 
 
+_DETAILS_LIVRE_PAIE = (
+    'livre_salaire_base',
+    'livre_prime_logement',
+    'livre_prime_transport',
+    'livre_cherte_vie',
+    'livre_avance_salaire',
+)
+
+
+def _normaliser_texte_livre(valeur):
+    texte = str(valeur or '').strip().lower()
+    return ''.join(
+        caractere for caractere in unicodedata.normalize('NFKD', texte)
+        if not unicodedata.combining(caractere)
+    )
+
+
+def _categorie_ligne_livre_paie(ligne):
+    rubrique = getattr(ligne, 'rubrique', None)
+    if not rubrique:
+        return None
+
+    code = _normaliser_texte_livre(getattr(rubrique, 'code_rubrique', '')).upper()
+    libelle = _normaliser_texte_livre(
+        f"{getattr(rubrique, 'libelle_rubrique', '')} {getattr(ligne, 'libelle_personnalise', '')}"
+    )
+    categorie = _normaliser_texte_livre(getattr(rubrique, 'categorie_rubrique', ''))
+    type_rubrique = _normaliser_texte_livre(getattr(rubrique, 'type_rubrique', ''))
+
+    if categorie == 'salaire_base' or code in {'BASE', 'SAL_BASE', 'SALAIRE_BASE'} or 'salaire de base' in libelle:
+        return 'livre_salaire_base'
+    if code in {'PL', 'LOG'} or 'LOGEMENT' in code or 'logement' in libelle or 'hebergement' in libelle:
+        return 'livre_prime_logement'
+    if code in {'PT', 'TRP'} or 'TRANSPORT' in code or 'transport' in libelle:
+        return 'livre_prime_transport'
+    if code in {'PCV', 'PVC', 'CHV'} or 'CHERT' in code or 'cherte' in libelle or 'vie chere' in libelle:
+        return 'livre_cherte_vie'
+    if type_rubrique == 'retenue' and (code in {'AVS', 'AVANCE'} or 'AVANCE' in code or 'avance' in libelle):
+        return 'livre_avance_salaire'
+    return None
+
+
+def _enrichir_details_livre_paie(bulletins):
+    totaux_details = {
+        'total_salaire_base': Decimal('0'),
+        'total_prime_logement': Decimal('0'),
+        'total_prime_transport': Decimal('0'),
+        'total_cherte_vie': Decimal('0'),
+        'total_avance_salaire': Decimal('0'),
+    }
+
+    correspondances_totaux = {
+        'livre_salaire_base': 'total_salaire_base',
+        'livre_prime_logement': 'total_prime_logement',
+        'livre_prime_transport': 'total_prime_transport',
+        'livre_cherte_vie': 'total_cherte_vie',
+        'livre_avance_salaire': 'total_avance_salaire',
+    }
+
+    for bulletin in bulletins:
+        details = {champ: Decimal('0') for champ in _DETAILS_LIVRE_PAIE}
+        lignes = getattr(bulletin, 'lignes_livre_paie', None)
+        if lignes is None:
+            lignes = bulletin.lignes.select_related('rubrique').all()
+
+        for ligne in lignes:
+            champ = _categorie_ligne_livre_paie(ligne)
+            if not champ:
+                continue
+            montant = Decimal(str(getattr(ligne, 'montant', 0) or 0))
+            details[champ] += montant
+
+        for champ, montant in details.items():
+            setattr(bulletin, champ, montant)
+            totaux_details[correspondances_totaux[champ]] += montant
+
+    return totaux_details
+
+
 @login_required
 @entreprise_active_required
 @reauth_required
@@ -2035,12 +2170,17 @@ def livre_paie(request):
         periodes = periodes.filter(mois=mois)
     
     # Récupérer tous les bulletins des périodes
-    from django.db.models import F
     bulletins = BulletinPaie.objects.filter(
         periode__in=periodes,
         employe__entreprise=request.user.entreprise,
     ).select_related('employe', 'employe__poste', 'periode').annotate(
         total_retenues_livre=F('salaire_brut') + F('rappel_salaire') - F('net_a_payer')
+    ).prefetch_related(
+        Prefetch(
+            'lignes',
+            queryset=LigneBulletin.objects.select_related('rubrique').order_by('ordre', 'id'),
+            to_attr='lignes_livre_paie',
+        )
     ).order_by('periode__mois', 'employe__matricule')
     
     # Calcul des totaux — inclut maintenant base imposable (RTS) et indemnités exonérées
@@ -2052,8 +2192,12 @@ def livre_paie(request):
         total_cnss_employeur=Sum('cnss_employeur'),
         total_irg=Sum('irg'),
         total_net=Sum('net_a_payer'),
+        total_onfpp=Sum('contribution_onfpp'),
+        total_vf=Sum('versement_forfaitaire'),
         total_retenues=Sum(F('salaire_brut') + F('rappel_salaire') - F('net_a_payer'))
     )
+    bulletins = list(bulletins)
+    totaux.update(_enrichir_details_livre_paie(bulletins))
     controles_livre = _controles_livre_paie(bulletins, totaux)
 
     # Années disponibles
@@ -2083,7 +2227,6 @@ def telecharger_livre_paie_pdf(request):
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.utils import ImageReader
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from django.db.models import F
     import io
     import os
 
@@ -2111,6 +2254,12 @@ def telecharger_livre_paie_pdf(request):
         employe__entreprise=request.user.entreprise,
     ).select_related('employe', 'employe__poste', 'periode').annotate(
         total_retenues_livre=F('salaire_brut') + F('rappel_salaire') - F('net_a_payer')
+    ).prefetch_related(
+        Prefetch(
+            'lignes',
+            queryset=LigneBulletin.objects.select_related('rubrique').order_by('ordre', 'id'),
+            to_attr='lignes_livre_paie',
+        )
     ).order_by('periode__mois', 'employe__matricule')
 
     totaux = bulletins.aggregate(
@@ -2121,8 +2270,12 @@ def telecharger_livre_paie_pdf(request):
         total_cnss_employeur=Sum('cnss_employeur'),
         total_irg=Sum('irg'),
         total_net=Sum('net_a_payer'),
+        total_onfpp=Sum('contribution_onfpp'),
+        total_vf=Sum('versement_forfaitaire'),
         total_retenues=Sum(F('salaire_brut') + F('rappel_salaire') - F('net_a_payer'))
     )
+    bulletins = list(bulletins)
+    totaux.update(_enrichir_details_livre_paie(bulletins))
     controles_livre = _controles_livre_paie(bulletins, totaux)
 
     def fmt(val):
@@ -2260,8 +2413,10 @@ def telecharger_livre_paie_pdf(request):
     )
 
     resume_data = [
-        ['Brut', f"{fmt(totaux.get('total_brut'))} GNF", 'Exonéré', f"{fmt(totaux.get('total_abattement'))} GNF", 'Imposable', f"{fmt(totaux.get('total_base_rts'))} GNF"],
-        ['CNSS employé', f"{fmt(totaux.get('total_cnss_employe'))} GNF", 'RTS', f"{fmt(totaux.get('total_irg'))} GNF", 'Net', f"{fmt(totaux.get('total_net'))} GNF"],
+        ['Salaire base', f"{fmt(totaux.get('total_salaire_base'))} GNF", 'Logement', f"{fmt(totaux.get('total_prime_logement'))} GNF", 'Transport', f"{fmt(totaux.get('total_prime_transport'))} GNF"],
+        ['Cherté de vie', f"{fmt(totaux.get('total_cherte_vie'))} GNF", 'Brut', f"{fmt(totaux.get('total_brut'))} GNF", 'Net', f"{fmt(totaux.get('total_net'))} GNF"],
+        ['CNSS 5%', f"{fmt(totaux.get('total_cnss_employe'))} GNF", 'CNSS 18%', f"{fmt(totaux.get('total_cnss_employeur'))} GNF", 'Base RTS', f"{fmt(totaux.get('total_base_rts'))} GNF"],
+        ['Avance', f"{fmt(totaux.get('total_avance_salaire'))} GNF", 'ONFPP', f"{fmt(totaux.get('total_onfpp'))} GNF", 'VF', f"{fmt(totaux.get('total_vf'))} GNF"],
     ]
     resume = Table(resume_data, colWidths=[2.3 * cm, 3.0 * cm, 2.3 * cm, 3.0 * cm, 2.3 * cm, 3.0 * cm])
     resume.setStyle(TableStyle([
@@ -2305,7 +2460,8 @@ def telecharger_livre_paie_pdf(request):
 
     data = [[
         'Période', 'Matr.', 'Nom et Prénoms', 'Fonction',
-        'Brut', 'Exonéré', 'Imposable', 'CNSS', 'RTS', 'Retenues', 'Net'
+        'Base', 'Logement', 'Transport', 'Cherté', 'Brut', 'CNSS 5%', 'CNSS 18%',
+        'Base RTS', 'Avance', 'Net', 'ONFPP', 'VF'
     ]]
 
     for b in bulletins:
@@ -2326,46 +2482,56 @@ def telecharger_livre_paie_pdf(request):
             emp.matricule or '-',
             nom_complet,
             fonction,
+            fmt(getattr(b, 'livre_salaire_base', 0)),
+            fmt(getattr(b, 'livre_prime_logement', 0)),
+            fmt(getattr(b, 'livre_prime_transport', 0)),
+            fmt(getattr(b, 'livre_cherte_vie', 0)),
             fmt(b.salaire_brut),
-            fmt(b.abattement_forfaitaire),
-            fmt(b.base_rts),
             fmt(b.cnss_employe),
-            fmt(b.irg),
-            fmt(getattr(b, 'total_retenues_livre', (b.cnss_employe or 0) + (b.irg or 0))),
+            fmt(b.cnss_employeur),
+            fmt(b.base_rts),
+            fmt(getattr(b, 'livre_avance_salaire', 0)),
             fmt(b.net_a_payer),
+            fmt(b.contribution_onfpp),
+            fmt(b.versement_forfaitaire),
         ])
 
     data.append([
         'TOTAUX:', '', '', '',
+        fmt(totaux.get('total_salaire_base')),
+        fmt(totaux.get('total_prime_logement')),
+        fmt(totaux.get('total_prime_transport')),
+        fmt(totaux.get('total_cherte_vie')),
         fmt(totaux.get('total_brut')),
-        fmt(totaux.get('total_abattement')),
-        fmt(totaux.get('total_base_rts')),
         fmt(totaux.get('total_cnss_employe')),
-        fmt(totaux.get('total_irg')),
-        fmt(totaux.get('total_retenues')),
+        fmt(totaux.get('total_cnss_employeur')),
+        fmt(totaux.get('total_base_rts')),
+        fmt(totaux.get('total_avance_salaire')),
         fmt(totaux.get('total_net')),
+        fmt(totaux.get('total_onfpp')),
+        fmt(totaux.get('total_vf')),
     ])
 
     # Largeur disponible en A4 paysage: ~29.7cm - 2*0.8cm marges = ~28cm
-    # 11 colonnes : Période, Matr, Nom, Fonction, Brut, Exo, Imp, CNSS, RTS, Ret, Net
     col_widths = [
-        1.9 * cm, 1.5 * cm, 3.8 * cm, 2.5 * cm,
-        2.45 * cm, 2.25 * cm, 2.45 * cm, 2.05 * cm, 2.05 * cm, 2.45 * cm, 2.45 * cm
+        1.45 * cm, 1.15 * cm, 2.65 * cm, 1.85 * cm,
+        1.45 * cm, 1.50 * cm, 1.50 * cm, 1.45 * cm, 1.55 * cm, 1.55 * cm,
+        1.55 * cm, 1.65 * cm, 1.55 * cm, 1.55 * cm, 1.45 * cm, 1.45 * cm
     ]
     table = Table(data, colWidths=col_widths, repeatRows=1)
     table.setStyle(TableStyle([
-        ('FONT', (0, 0), (-1, -1), _FN, 7),
-        ('FONT', (0, 0), (-1, 0), _FB, 7),
+        ('FONT', (0, 0), (-1, -1), _FN, 5.5),
+        ('FONT', (0, 0), (-1, 0), _FB, 5.5),
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),
         ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),
         ('ALIGN', (0, 0), (3, -1), 'LEFT'),
         ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
         ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f8f9fa')),
-        ('FONT', (0, -1), (-1, -1), _FB, 7),
+        ('FONT', (0, -1), (-1, -1), _FB, 5.5),
         ('LINEABOVE', (0, -1), (-1, -1), 0.8, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 3),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 1.5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 1.5),
         ('TOPPADDING', (0, 0), (-1, -1), 2),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
     ]))
