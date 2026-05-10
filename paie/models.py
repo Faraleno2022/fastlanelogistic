@@ -173,6 +173,7 @@ class BulletinPaie(models.Model):
     versement_forfaitaire = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text='VF 6% sur base VF')
     taxe_apprentissage = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text='TA 2% sur base VF')
     taux_ta = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text='Taux TA appliqué (%)')
+    base_onfpp = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text='Base de calcul ONFPP')
     contribution_onfpp = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text='ONFPP 1,5% sur base VF/ONFPP')
     nombre_salaries = models.IntegerField(default=1, help_text='Nombre de salariés pour déterminer TA vs ONFPP')
     
@@ -339,9 +340,15 @@ class BulletinPaie(models.Model):
                 classe = 'danger'
                 raisons.append('Ecart VF')
 
-            taux_ta_onfpp = Decimal('0.02') if (self.taxe_apprentissage or 0) > 0 else Decimal('0.015')
-            attendu = (base_vf * taux_ta_onfpp).quantize(Decimal('1'))
-            reel = Decimal((self.taxe_apprentissage or 0) + (self.contribution_onfpp or 0)).quantize(Decimal('1'))
+            if (self.taxe_apprentissage or 0) > 0:
+                base_charge = base_vf
+                taux_ta_onfpp = Decimal('0.02')
+                reel = Decimal(self.taxe_apprentissage or 0).quantize(Decimal('1'))
+            else:
+                base_charge = Decimal(self.base_onfpp or 0) or base_vf
+                taux_ta_onfpp = Decimal('0.015')
+                reel = Decimal(self.contribution_onfpp or 0).quantize(Decimal('1'))
+            attendu = (base_charge * taux_ta_onfpp).quantize(Decimal('1'))
             if abs(reel - attendu) > Decimal('1'):
                 niveau = 'eleve'
                 classe = 'danger'
@@ -1329,8 +1336,8 @@ class ParametresCalculPaie(models.Model):
 
     # Base VF / TA
     MODE_BASE_VF = [
-        ('brut_moins_deduction', 'Mode optimise GuineeRH : brut - deduction CGI plafonnee'),
-        ('brut', 'Mode strict fiscal : VF/ONFPP sur salaire brut'),
+        ('brut_moins_deduction', 'Mode optimise GuineeRH : VF/TA sur brut - deduction CGI plafonnee'),
+        ('brut', 'Mode strict fiscal : VF/TA sur salaire brut'),
         ('formule', 'Formule personnalisee'),
     ]
     mode_base_vf = models.CharField(
@@ -1339,6 +1346,14 @@ class ParametresCalculPaie(models.Model):
     formule_base_vf = models.TextField(
         blank=True,
         help_text="Ex: brut - 150000 if brut >= 2500000 else brut * 0.94"
+    )
+
+    MODE_BASE_ONFPP = [
+        ('base_vf', 'Mode standard GuineeRH : ONFPP sur base VF/TA'),
+        ('brut', 'Mode strict fiscal : ONFPP sur salaire brut'),
+    ]
+    mode_base_onfpp = models.CharField(
+        max_length=20, choices=MODE_BASE_ONFPP, default='base_vf'
     )
 
     # Base RTS personnalisée
@@ -1365,6 +1380,7 @@ class ParametresCalculPaie(models.Model):
         self.formule_exoneration = ''
         self.mode_base_vf = 'brut_moins_deduction'
         self.formule_base_vf = ''
+        self.mode_base_onfpp = 'base_vf'
         self.utiliser_formule_base_rts = False
         self.formule_base_rts = ''
 

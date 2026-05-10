@@ -348,6 +348,7 @@ def calculer_charges_patronales(
     nb_salaries=0,
     pct_indemnites_forfaitaires=25,
     mode_base_vf='brut_moins_deduction',
+    mode_base_onfpp='base_vf',
 ):
     """
     Calcule les charges patronales pour un brut donné.
@@ -390,15 +391,17 @@ def calculer_charges_patronales(
     base_vf = max(Decimal('0'), brut - deduction_vf)
     vf = _arrondir(base_vf * taux_vf / Decimal('100'))
     taux_ta = constantes['TAUX_ONFPP'] if onfpp_actif else constantes['TAUX_TA']
-    base_ta_onfpp = base_vf
+    base_ta_onfpp = brut if onfpp_actif and mode_base_onfpp == 'brut' else base_vf
     ta = _arrondir(base_ta_onfpp * taux_ta / Decimal('100'))
     total = cnss_pat + vf + ta
 
     return {
         'cnss_employeur':      int(cnss_pat),
         'mode_base_vf':         mode_base_vf,
+        'mode_base_onfpp':      mode_base_onfpp,
         'deduction_vf':         int(deduction_vf),
         'base_vf':             int(base_vf),
+        'base_onfpp':          int(base_ta_onfpp) if onfpp_actif else 0,
         'base_ta_onfpp':       int(base_ta_onfpp),
         'vf':                  int(vf),
         'ta':                  int(ta),

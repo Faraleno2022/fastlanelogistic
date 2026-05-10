@@ -208,6 +208,7 @@ class Command(BaseCommand):
                         bulletin.abattement_forfaitaire,
                     )
                     bulletin.base_vf = nouveaux_montants['base_vf']
+                    bulletin.base_onfpp = nouveaux_montants.get('base_onfpp', bulletin.base_vf)
                     bulletin.versement_forfaitaire = nouveaux_montants['versement_forfaitaire']
                     bulletin.taxe_apprentissage = nouveaux_montants['taxe_apprentissage']
                     bulletin.taux_ta = nouveaux_montants['taux_ta']

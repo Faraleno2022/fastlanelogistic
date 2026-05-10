@@ -1112,6 +1112,7 @@ def telecharger_bulletin_pdf(request, pk):
     taux_ta = getattr(bulletin, 'taux_ta', 0) or 0
     onfpp = getattr(bulletin, 'contribution_onfpp', 0) or 0
     base_vf = getattr(bulletin, 'base_vf', 0) or 0
+    base_onfpp = getattr(bulletin, 'base_onfpp', 0) or base_vf
     nb_sal = getattr(bulletin, 'nombre_salaries', 0) or 0
     total_charges = bulletin.cnss_employeur + vf + ta + onfpp
     taux_ta_label = str(taux_ta).rstrip('0').rstrip('.').replace('.', ',') if taux_ta else '2'
@@ -1133,7 +1134,7 @@ def telecharger_bulletin_pdf(request, pk):
             f"{ta:,.0f}".replace(",", " ")])
     elif onfpp > 0:
         charges_data.append([f"ONFPP (applicable si effectif \u2265 30 sal. \u2014 effectif actuel : {nb_sal})",
-            f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
+            f"{base_onfpp:,.0f}".replace(",", " ") if base_onfpp else "-",
             "1,5%",
             f"{onfpp:,.0f}".replace(",", " ")])
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
@@ -1164,6 +1165,7 @@ def telecharger_bulletin_pdf(request, pk):
         ta_ou_onfpp = 'ONFPP' if onfpp > 0 else 'TA'
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
         charge_valeur = onfpp if onfpp > 0 else ta
+        base_charge_note = float(base_onfpp) if onfpp > 0 else base_vf_f
         p.setFont(_FB, 4.8)
         p.setFillColor(colors.HexColor("#444444"))
         p.drawString(1.5*cm, y,
@@ -1173,7 +1175,7 @@ def telecharger_bulletin_pdf(request, pk):
         y -= 0.16*cm
         p.drawString(1.5*cm, y,
             f"VF = {base_vf_f:,.0f} x 6% = {vf:,.0f} GNF | "
-            f"{ta_ou_onfpp} = {base_vf_f:,.0f} x {taux_ta_note}% = {charge_valeur:,.0f} GNF"
+            f"{ta_ou_onfpp} = {base_charge_note:,.0f} x {taux_ta_note}% = {charge_valeur:,.0f} GNF"
             .replace(",", " "))
         y -= 0.16*cm
         p.drawString(1.5*cm, y,
@@ -1747,6 +1749,7 @@ def telecharger_bulletin_public(request, token):
     taux_ta = getattr(bulletin, 'taux_ta', 0) or 0
     onfpp = getattr(bulletin, 'contribution_onfpp', 0) or 0
     base_vf = getattr(bulletin, 'base_vf', 0) or 0
+    base_onfpp = getattr(bulletin, 'base_onfpp', 0) or base_vf
     nb_sal = getattr(bulletin, 'nombre_salaries', 0) or 0
     total_charges = bulletin.cnss_employeur + vf + ta + onfpp
     taux_ta_label = str(taux_ta).rstrip('0').rstrip('.').replace('.', ',') if taux_ta else '2'
@@ -1768,7 +1771,7 @@ def telecharger_bulletin_public(request, token):
             f"{ta:,.0f}".replace(",", " ")])
     elif onfpp > 0:
         charges_data.append([f"ONFPP (applicable si effectif \u2265 30 sal. \u2014 effectif actuel : {nb_sal})",
-            f"{base_vf:,.0f}".replace(",", " ") if base_vf else "-",
+            f"{base_onfpp:,.0f}".replace(",", " ") if base_onfpp else "-",
             "1,5%",
             f"{onfpp:,.0f}".replace(",", " ")])
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
@@ -1799,6 +1802,7 @@ def telecharger_bulletin_public(request, token):
         ta_ou_onfpp = 'ONFPP' if onfpp > 0 else 'TA'
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
         charge_valeur = onfpp if onfpp > 0 else ta
+        base_charge_note = float(base_onfpp) if onfpp > 0 else base_vf_f
         p.setFont(_FB, 4.8)
         p.setFillColor(colors.HexColor("#444444"))
         p.drawString(1.5*cm, y,
@@ -1808,7 +1812,7 @@ def telecharger_bulletin_public(request, token):
         y -= 0.16*cm
         p.drawString(1.5*cm, y,
             f"VF = {base_vf_f:,.0f} x 6% = {vf:,.0f} GNF | "
-            f"{ta_ou_onfpp} = {base_vf_f:,.0f} x {taux_ta_note}% = {charge_valeur:,.0f} GNF"
+            f"{ta_ou_onfpp} = {base_charge_note:,.0f} x {taux_ta_note}% = {charge_valeur:,.0f} GNF"
             .replace(",", " "))
         y -= 0.16*cm
         p.drawString(1.5*cm, y,
@@ -2584,6 +2588,7 @@ def declarations_sociales(request):
     totaux = bulletins.aggregate(
         total_brut=Sum('salaire_brut'),
         total_base_vf=Sum('base_vf'),
+        total_base_onfpp=Sum('base_onfpp'),
         total_cnss_employe=Sum('cnss_employe'),
         total_cnss_employeur=Sum('cnss_employeur'),
         total_rts=Sum('irg'),
@@ -2593,11 +2598,12 @@ def declarations_sociales(request):
     )
     salaire_brut_total = totaux['total_brut'] or Decimal('0')
     total_base_vf = totaux['total_base_vf'] or Decimal('0')
+    total_base_onfpp = totaux['total_base_onfpp'] or total_base_vf
     total_onfpp = totaux['total_onfpp'] or Decimal('0')
     total_ta = totaux['total_ta'] or Decimal('0')
-    if total_salaries >= 30:
+    if total_salaries >= 30 and not total_onfpp:
         total_ta = Decimal('0')
-        total_onfpp = (total_base_vf * Decimal('0.015')).quantize(Decimal('1'))
+        total_onfpp = (total_base_onfpp * Decimal('0.015')).quantize(Decimal('1'))
 
     # Calculs pour CNSS
     declaration_cnss = {
@@ -2624,6 +2630,7 @@ def declarations_sociales(request):
 
     declaration_charges = {
         'base_vf': total_base_vf,
+        'base_onfpp': total_base_onfpp,
         'vf': totaux['total_vf'] or Decimal('0'),
         'ta': total_ta,
         'onfpp': total_onfpp,
@@ -2725,6 +2732,7 @@ def declarations_sociales_pdf(request):
     totaux = bulletins.aggregate(
         total_brut=Sum('salaire_brut'),
         total_base_vf=Sum('base_vf'),
+        total_base_onfpp=Sum('base_onfpp'),
         total_cnss_employe=Sum('cnss_employe'),
         total_cnss_employeur=Sum('cnss_employeur'),
         total_rts=Sum('irg'),
@@ -2733,9 +2741,10 @@ def declarations_sociales_pdf(request):
     )
     salaire_brut_total = totaux['total_brut'] or Decimal('0')
     total_base_vf = totaux['total_base_vf'] or Decimal('0')
+    total_base_onfpp = totaux['total_base_onfpp'] or total_base_vf
     total_onfpp = totaux['total_onfpp'] or Decimal('0')
-    if total_salaries >= 30:
-        total_onfpp = (total_base_vf * Decimal('0.015')).quantize(Decimal('1'))
+    if total_salaries >= 30 and not total_onfpp:
+        total_onfpp = (total_base_onfpp * Decimal('0.015')).quantize(Decimal('1'))
 
     declaration_cnss = {
         'total_salaries': total_salaries,
@@ -2751,6 +2760,7 @@ def declarations_sociales_pdf(request):
     }
     declaration_charges = {
         'base_vf': total_base_vf,
+        'base_onfpp': total_base_onfpp,
         'vf': totaux['total_vf'] or Decimal('0'),
         'onfpp': total_onfpp,
     }
@@ -2826,7 +2836,8 @@ def declarations_sociales_pdf(request):
     mode_data = [
         ['Libellé', 'Valeur'],
         ['Mode fiscal appliqué', mode_fiscal_label],
-        ['Base VF/ONFPP', f"{declaration_charges['base_vf']:,.0f}"],
+        ['Base VF', f"{declaration_charges['base_vf']:,.0f}"],
+        ['Base ONFPP', f"{declaration_charges['base_onfpp']:,.0f}"],
         ['Taux optimisation base', f"{taux_optimisation_global}%"],
     ]
     mode_table = Table(mode_data, colWidths=[7*cm, 9*cm])

@@ -109,6 +109,7 @@ class Command(BaseCommand):
                 # Bypass du verrou via queryset.update() — opération de migration
                 # systeme, pas une modification utilisateur.
                 BulletinPaie.objects.filter(pk=b.pk).update(
+                    base_onfpp=base_onfpp,
                     contribution_onfpp=nouveau
                 )
 

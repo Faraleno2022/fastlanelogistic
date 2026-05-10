@@ -585,10 +585,36 @@ class ChargesPatronalesTests(SimpleTestCase):
 
         self.assertEqual(charges['libelle_ta'], 'ONFPP')
         self.assertEqual(charges['base_vf'], 2700000)
+        self.assertEqual(charges['base_onfpp'], 2700000)
         self.assertEqual(charges['base_ta_onfpp'], 2700000)
         self.assertEqual(charges['vf'], 162000)
         self.assertEqual(charges['ta'], 40500)
         self.assertEqual(charges['total'], 652500)
+
+    def test_charges_patronales_onfpp_strict_sur_brut_sans_changer_vf(self):
+        """Le mode ONFPP strict applique seulement l'ONFPP sur le brut."""
+        constantes = {
+            'PLANCHER_CNSS': Decimal('550000'),
+            'PLAFOND_CNSS': Decimal('2500000'),
+            'TAUX_CNSS_EMPLOYEUR': Decimal('18'),
+            'TAUX_VF': Decimal('6'),
+            'TAUX_TA': Decimal('2'),
+            'TAUX_ONFPP': Decimal('1.5'),
+            'SEUIL_TA_ONFPP': Decimal('30'),
+        }
+
+        with patch('paie.cache_service.PayrollCacheService.get_constantes', return_value=constantes):
+            charges = calculer_charges_patronales(
+                Decimal('3600000'), nb_salaries=30, mode_base_onfpp='brut'
+            )
+
+        self.assertEqual(charges['mode_base_vf'], 'brut_moins_deduction')
+        self.assertEqual(charges['mode_base_onfpp'], 'brut')
+        self.assertEqual(charges['base_vf'], 2700000)
+        self.assertEqual(charges['base_onfpp'], 3600000)
+        self.assertEqual(charges['vf'], 162000)
+        self.assertEqual(charges['ta'], 54000)
+        self.assertEqual(charges['total'], 666000)
 
     def test_charges_patronales_ta_sous_30_salaries(self):
         """TA = 2% de la base VF tant que l'effectif reste sous le seuil."""
@@ -728,6 +754,7 @@ class ChargesPatronalesTests(SimpleTestCase):
         bulletin = BulletinPaie(
             salaire_brut=Decimal('3600000'),
             base_vf=Decimal('2700000'),
+            base_onfpp=Decimal('2700000'),
             versement_forfaitaire=Decimal('162000'),
             contribution_onfpp=Decimal('40500'),
             taxe_apprentissage=Decimal('0'),
@@ -737,6 +764,19 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(bulletin.taux_optimisation_vf_onfpp, Decimal('25.00'))
         self.assertEqual(bulletin.economie_vf_onfpp_vs_strict, Decimal('67500'))
         self.assertEqual(bulletin.risque_fiscal_bulletin['niveau'], 'moyen')
+
+    def test_bulletin_controle_onfpp_strict_sur_base_dediee(self):
+        """Le controle accepte ONFPP sur brut quand base_onfpp est renseignee."""
+        bulletin = BulletinPaie(
+            salaire_brut=Decimal('3600000'),
+            base_vf=Decimal('2700000'),
+            base_onfpp=Decimal('3600000'),
+            versement_forfaitaire=Decimal('162000'),
+            contribution_onfpp=Decimal('54000'),
+            taxe_apprentissage=Decimal('0'),
+        )
+
+        self.assertNotIn('Ecart TA/ONFPP', bulletin.risque_fiscal_bulletin['raisons'])
 
     def test_bulletin_indicateur_detecte_ecart_vf(self):
         """Un ecart VF/ONFPP visible fait remonter le risque du bulletin."""

@@ -1195,6 +1195,7 @@ class MoteurCalculPaie:
         from .formules import evaluer_formule as _evaluer_vf
         params_vf = getattr(self.employe.entreprise, 'parametres_calcul_paie', None)
         mode_base_vf = params_vf.mode_base_vf if params_vf else 'brut_moins_deduction'
+        mode_base_onfpp = getattr(params_vf, 'mode_base_onfpp', 'base_vf') if params_vf else 'base_vf'
 
         if params_vf and params_vf.mode_base_vf == 'formule' and params_vf.formule_base_vf:
             # Mode personnalisé : formule définie par l'entreprise
@@ -1238,6 +1239,7 @@ class MoteurCalculPaie:
         self.montants['base_vf'] = base_vf_nette
         self.montants['deduction_vf'] = deduction_vf
         self.montants['mode_base_vf'] = mode_base_vf
+        self.montants['mode_base_onfpp'] = mode_base_onfpp
         self.montants['taux_vf'] = taux_vf
         self.montants['versement_forfaitaire'] = self._arrondir(
             base_vf_nette * taux_vf / Decimal('100')
@@ -1261,15 +1263,19 @@ class MoteurCalculPaie:
             self.montants['taxe_apprentissage'] = self._arrondir(
                 self.montants['base_ta'] * TAUX_TA_LEGAL / Decimal('100')
             )
+            self.montants['base_onfpp'] = Decimal('0')
             self.montants['contribution_onfpp'] = Decimal('0')
         else:
             self.montants['taxe_apprentissage'] = Decimal('0')
+            base_onfpp_source = base_vf_ta if mode_base_onfpp == 'brut' else base_vf_nette
+            base_onfpp_libelle = 'salaire brut' if mode_base_onfpp == 'brut' else 'base VF nette'
             base_onfpp = self._normaliser_base_taxable(
                 'onfpp',
                 'ONFPP',
-                base_vf_nette,
-                'base VF nette',
+                base_onfpp_source,
+                base_onfpp_libelle,
             )
+            self.montants['base_onfpp'] = base_onfpp
             self.montants['contribution_onfpp'] = self._arrondir(
                 base_onfpp * TAUX_ONFPP_LEGAL / Decimal('100')
             )
@@ -1791,7 +1797,9 @@ class MoteurCalculPaie:
                 },
                 '6_charges_patronales': {
                     'mode_base_vf':        m.get('mode_base_vf', 'brut_moins_deduction'),
+                    'mode_base_onfpp':     m.get('mode_base_onfpp', 'base_vf'),
                     'base_vf':             int(money(m.get('base_vf', Decimal('0')))),
+                    'base_onfpp':          int(money(m.get('base_onfpp', Decimal('0')))),
                     'deduction_vf':        int(money(m.get('deduction_vf', Decimal('0')))),
                     'cnss_employeur':      int(money(m.get('cnss_employeur', Decimal('0')))),
                     'vf':                  int(money(m.get('versement_forfaitaire', Decimal('0')))),
@@ -1926,6 +1934,7 @@ class MoteurCalculPaie:
         # Champs de transparence/conformité
         bulletin_data['abattement_forfaitaire'] = self.montants.get('abattement_forfaitaire', Decimal('0'))
         bulletin_data['base_vf'] = self.montants.get('base_vf', Decimal('0'))
+        bulletin_data['base_onfpp'] = self.montants.get('base_onfpp', Decimal('0'))
         bulletin_data['nombre_salaries'] = self.nb_salaries
 
         # Snapshot des paramètres figés pour audit et reproductibilité

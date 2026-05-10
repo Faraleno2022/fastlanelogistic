@@ -77,6 +77,7 @@ def get_declarations_data(entreprise, annee, mois=None):
     totaux = bulletins.aggregate(
         masse_salariale=Sum('salaire_brut'),
         total_base_vf=Sum('base_vf'),
+        total_base_onfpp=Sum('base_onfpp'),
         total_cnss_employe=Sum('cnss_employe'),
         total_cnss_employeur=Sum('cnss_employeur'),
         total_rts=Sum('irg'),
@@ -87,6 +88,7 @@ def get_declarations_data(entreprise, annee, mois=None):
     
     masse_salariale = totaux['masse_salariale'] or Decimal('0')
     total_base_vf = totaux['total_base_vf'] or Decimal('0')
+    total_base_onfpp = totaux['total_base_onfpp'] or total_base_vf
     total_cnss_employe = totaux['total_cnss_employe'] or Decimal('0')
     total_cnss_employeur = totaux['total_cnss_employeur'] or Decimal('0')
     total_rts = totaux['total_rts'] or Decimal('0')
@@ -94,9 +96,9 @@ def get_declarations_data(entreprise, annee, mois=None):
     total_ta = totaux['total_ta'] or Decimal('0')
     total_onfpp = totaux['total_onfpp'] or Decimal('0')
     nb_salaries = bulletins.values('employe').distinct().count()
-    if nb_salaries >= 30:
+    if nb_salaries >= 30 and not total_onfpp:
         total_ta = Decimal('0')
-        total_onfpp = (total_base_vf * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
+        total_onfpp = (total_base_onfpp * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
 
     total_dgi = total_rts + total_vf
     total_onfpp_ta = total_onfpp + total_ta
@@ -118,8 +120,8 @@ def get_declarations_data(entreprise, annee, mois=None):
     for bulletin in bulletins:
         emp = bulletin.employe
         onfpp = (
-            ((bulletin.base_vf or Decimal('0')) * taux_onfpp / Decimal('100')).quantize(Decimal('1'))
-            if nb_salaries >= 30
+            (((bulletin.base_onfpp or bulletin.base_vf or Decimal('0')) * taux_onfpp / Decimal('100')).quantize(Decimal('1')))
+            if nb_salaries >= 30 and not bulletin.contribution_onfpp
             else bulletin.contribution_onfpp
         )
         detail_employes.append({
@@ -135,6 +137,7 @@ def get_declarations_data(entreprise, annee, mois=None):
             'rts': bulletin.irg,
             'net_a_payer': bulletin.net_a_payer,
             'base_vf': bulletin.base_vf,
+            'base_onfpp': bulletin.base_onfpp or bulletin.base_vf,
             'vf': bulletin.versement_forfaitaire,
             'ta': bulletin.taxe_apprentissage,
             'onfpp': onfpp,
@@ -148,6 +151,7 @@ def get_declarations_data(entreprise, annee, mois=None):
         'nb_salaries': nb_salaries,
         'masse_salariale': masse_salariale,
         'total_base_vf': total_base_vf,
+        'total_base_onfpp': total_base_onfpp,
         'plancher_cnss': plancher_cnss,
         'plafond_cnss': plafond_cnss,
         'taux_cnss_employe': taux_cnss_employe,
@@ -507,7 +511,8 @@ def export_dmu_excel(request):
     row += 1
     fiscal_rows = [
         ("Mode fiscal appliqué", data['mode_fiscal_label']),
-        ("Base VF/ONFPP", float(data['total_base_vf'])),
+        ("Base VF", float(data['total_base_vf'])),
+        ("Base ONFPP", float(data['total_base_onfpp'])),
         ("Taux optimisation base", f"{data['taux_optimisation_global']}%"),
     ]
     for label, value in fiscal_rows:
@@ -566,7 +571,7 @@ def export_dmu_excel(request):
         ["RTS (Retenue sur Traitements et Salaires)", float(data['masse_salariale']), "Barème", float(data['total_rts'])],
         ["VF (Versement Forfaitaire)", float(data['total_base_vf']), f"{data['taux_vf']}%", float(data['total_vf'])],
         ["TOTAL DGI (RTS + VF)", "", "", float(data['total_dgi'])],
-        ["ONFPP", float(data['total_base_vf']), f"{data['taux_onfpp']}%", float(data['total_onfpp'])],
+        ["ONFPP", float(data['total_base_onfpp']), f"{data['taux_onfpp']}%", float(data['total_onfpp'])],
         ["TA (Taxe d'Apprentissage)", float(data['total_base_vf']), f"{data['taux_ta']}%", float(data['total_ta'])],
     ]
     
@@ -670,7 +675,8 @@ def export_dmu_pdf(request):
     elements.append(Paragraph("MODE FISCAL ET BASE VF/ONFPP", section_style))
     fiscal_data = [
         ["Mode fiscal appliqué", data['mode_fiscal_label']],
-        ["Base VF/ONFPP", f"{data['total_base_vf']:,.0f} GNF"],
+        ["Base VF", f"{data['total_base_vf']:,.0f} GNF"],
+        ["Base ONFPP", f"{data['total_base_onfpp']:,.0f} GNF"],
         ["Taux optimisation base", f"{data['taux_optimisation_global']}%"],
     ]
     fiscal_table = Table(fiscal_data, colWidths=[5*cm, 9*cm])

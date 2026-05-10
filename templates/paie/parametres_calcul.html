@@ -164,6 +164,21 @@
                             <div id="result_base_vf" class="mt-2"></div>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mode de calcul de la base ONFPP</label>
+                            <select name="mode_base_onfpp" class="form-select" id="id_mode_base_onfpp">
+                                {% for value, label in modes_base_onfpp %}
+                                <option value="{{ value }}"
+                                    {% if params.mode_base_onfpp == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Par defaut, ONFPP reste sur la base VF/TA optimisee. Le mode strict fiscal applique ONFPP sur le brut total.
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

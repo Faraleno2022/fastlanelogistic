@@ -68,6 +68,7 @@ def parametres_calcul_paie(request):
                 'formule_exoneration': params.formule_exoneration,
                 'mode_base_vf': params.mode_base_vf,
                 'formule_base_vf': params.formule_base_vf,
+                'mode_base_onfpp': params.mode_base_onfpp,
                 'utiliser_formule_base_rts': params.utiliser_formule_base_rts,
                 'formule_base_rts': params.formule_base_rts,
             }
@@ -147,6 +148,17 @@ def parametres_calcul_paie(request):
         )
         params.formule_base_vf = nouvelle_formule_vf
 
+        nouveau_mode_onfpp = request.POST.get('mode_base_onfpp', 'base_vf')
+        if nouveau_mode_onfpp not in ('base_vf', 'brut'):
+            nouveau_mode_onfpp = 'base_vf'
+        _enregistrer_historique(
+            params, request.user,
+            'mode_base_onfpp',
+            params.mode_base_onfpp,
+            nouveau_mode_onfpp, raison,
+        )
+        params.mode_base_onfpp = nouveau_mode_onfpp
+
         # --- Base RTS ---
         nouveau_utiliser_rts = request.POST.get('utiliser_formule_base_rts') == 'on'
         _enregistrer_historique(
@@ -175,6 +187,7 @@ def parametres_calcul_paie(request):
         'peut_modifier': peut_modifier,
         'modes_exoneration': ParametresCalculPaie.MODE_EXONERATION,
         'modes_base_vf': ParametresCalculPaie.MODE_BASE_VF,
+        'modes_base_onfpp': ParametresCalculPaie.MODE_BASE_ONFPP,
         'variables_disponibles': [
             ('brut', 'Salaire brut total'),
             ('cnss', 'Cotisation CNSS salarié'),
