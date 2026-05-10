@@ -786,7 +786,7 @@ def telecharger_bulletin_pdf(request, pk):
     table_height = len(gains_data) * row_height
     gains_table.wrapOn(p, width, height)
     gains_table.drawOn(p, 1.5*cm, y - table_height)
-    y -= table_height + 0.8*cm
+    y -= table_height + 0.35*cm
     
     # === DÉTAIL HEURES SUPPLÉMENTAIRES ===
     hs_30 = getattr(bulletin, 'heures_supplementaires_30', 0) or 0
@@ -805,7 +805,7 @@ def telecharger_bulletin_pdf(request, pk):
         p.setFillColor(colors.HexColor("#6c757d"))
         p.drawString(1.5*cm, y, "DÉTAIL HEURES SUPPLÉMENTAIRES (Code du Travail Art. 221)")
         p.setFillColor(colors.black)
-        y -= 0.25*cm
+        y -= 0.18*cm
         
         # Calcul des montants individuels (salaire_base / 173,33 × h × coefficient)
         _sal_base = Decimal(str(bulletin.salaire_base or 0))
@@ -890,9 +890,9 @@ def telecharger_bulletin_pdf(request, pk):
         hs_table_h = nb_hs_rows * hs_row_h
         hs_table.wrapOn(p, width, height)
         hs_table.drawOn(p, 1.5*cm, y - hs_table_h)
-        y -= hs_table_h + 0.8*cm
+        y -= hs_table_h + 0.35*cm
     else:
-        y -= 0.8*cm
+        y -= 0.25*cm
     
     # === RETENUES ===
     # Titre RETENUES
@@ -900,7 +900,7 @@ def telecharger_bulletin_pdf(request, pk):
     p.setFont(_FB, 9)
     p.drawString(1.5*cm, y, "RETENUES ET COTISATIONS")
     p.setFillColor(colors.black)
-    y -= 0.4*cm
+    y -= 0.25*cm
     
     retenues_data = [["Libellé", "Base", "Taux", "Montant"]]
     # Filtrer les doublons CNSS et IRG (déjà dans les lignes du bulletin)
@@ -943,7 +943,7 @@ def telecharger_bulletin_pdf(request, pk):
     table_height = len(retenues_data) * row_height
     retenues_table.wrapOn(p, width, height)
     retenues_table.drawOn(p, 1.5*cm, y - table_height)
-    y -= table_height + 0.5*cm
+    y -= table_height + 0.25*cm
 
     # === CHARGES SALARIALES ===
     total_charges_salariales = getattr(
@@ -955,7 +955,7 @@ def telecharger_bulletin_pdf(request, pk):
     p.setFont(_FB, 9)
     p.drawString(1.5*cm, y, "CHARGES SALARIALES")
     p.setFillColor(colors.black)
-    y -= 0.35*cm
+    y -= 0.22*cm
 
     charges_salariales_data = [
         ["Charge salariale", "Base", "Taux", "Montant"],
@@ -978,7 +978,7 @@ def telecharger_bulletin_pdf(request, pk):
             f"- {total_charges_salariales:,.0f} GNF".replace(",", " "),
         ],
     ]
-    cs_row_h = 13
+    cs_row_h = 12
     charges_salariales_table = Table(
         charges_salariales_data,
         colWidths=[8*cm, 3*cm, 2*cm, 4*cm],
@@ -998,7 +998,7 @@ def telecharger_bulletin_pdf(request, pk):
     cs_table_height = len(charges_salariales_data) * cs_row_h
     charges_salariales_table.wrapOn(p, width, height)
     charges_salariales_table.drawOn(p, 1.5*cm, y - cs_table_height)
-    y -= cs_table_height + 0.4*cm
+    y -= cs_table_height + 0.22*cm
 
     # === DÉTAIL CALCUL RTS (barème progressif) ===
     from paie.utils import calculer_detail_tranches_rts
@@ -1020,7 +1020,7 @@ def telecharger_bulletin_pdf(request, pk):
                 f"Brut {bulletin.salaire_brut:,.0f} − CNSS {bulletin.cnss_employe:,.0f}"
                 .replace(",", " "))
         p.setFillColor(colors.black)
-        y -= 0.25*cm
+        y -= 0.18*cm
 
         rts_detail_data = [["Tranche (bornes)", "Base taxable", "Taux", "Impôt"]]
         cumul_impot = Decimal('0')
@@ -1056,7 +1056,7 @@ def telecharger_bulletin_pdf(request, pk):
         rts_table_h = nb_rows * rts_row_h
         rts_table.wrapOn(p, width, height)
         rts_table.drawOn(p, 1.5*cm, y - rts_table_h)
-        y -= rts_table_h + 0.4*cm
+        y -= rts_table_h + 0.25*cm
     else:
         y -= 0.2*cm
     
@@ -1068,7 +1068,7 @@ def telecharger_bulletin_pdf(request, pk):
     abatt_forfait = getattr(bulletin, 'abattement_forfaitaire', 0) or 0
     has_abatt = abatt_forfait > 0
     extra_lines = (1 if has_rappel else 0) + (1 if has_trop_percu else 0) + (1 if has_abatt else 0)
-    recap_height = 2.1*cm + extra_lines * 0.35*cm
+    recap_height = 1.85*cm + extra_lines * 0.30*cm
     p.setStrokeColor(colors.HexColor("#ce1126"))
     p.setLineWidth(2)
     p.rect(1.5*cm, y - recap_height, width - 3*cm, recap_height, stroke=1, fill=0)
@@ -1088,12 +1088,12 @@ def telecharger_bulletin_pdf(request, pk):
     
     offset_y = 1*cm
     if has_rappel:
-        offset_y += 0.4*cm
+        offset_y += 0.3*cm
         p.setFillColor(colors.HexColor("#007bff"))
         p.drawString(2*cm, y - offset_y, "Rappel/Complément salaire précédent:")
         p.drawRightString(width - 2*cm, y - offset_y, f"+ {rappel:,.0f} GNF".replace(",", " "))
     if has_trop_percu:
-        offset_y += 0.4*cm
+        offset_y += 0.3*cm
         p.setFillColor(colors.HexColor("#dc3545"))
         p.drawString(2*cm, y - offset_y, "Retenue trop-perçu salaire précédent:")
         p.drawRightString(width - 2*cm, y - offset_y, f"- {trop_percu:,.0f} GNF".replace(",", " "))
@@ -1104,7 +1104,7 @@ def telecharger_bulletin_pdf(request, pk):
     p.drawRightString(width - 2*cm, y - offset_y - 0.7*cm, f"{bulletin.net_a_payer:,.0f} GNF".replace(",", " "))
     p.setFillColor(colors.black)
     
-    y -= recap_height + 0.5*cm
+    y -= recap_height + 0.25*cm
     
     # === CHARGES PATRONALES ===
     vf = getattr(bulletin, 'versement_forfaitaire', 0) or 0
@@ -1139,7 +1139,7 @@ def telecharger_bulletin_pdf(request, pk):
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
         f"{total_charges:,.0f} GNF".replace(",", " ")])
 
-    ch_row_h = 13
+    ch_row_h = 12
     charges_table = Table(charges_data, colWidths=[7*cm, 3.5*cm, 2*cm, 4.5*cm], rowHeights=ch_row_h)
     charges_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#fd7e14")),
@@ -1157,7 +1157,7 @@ def telecharger_bulletin_pdf(request, pk):
     charges_table.drawOn(p, 1.5*cm, y - ch_table_h)
     y -= ch_table_h + 0.15*cm
     # Note VF/TA complete, en petit gras, decoupee pour eviter tout debordement.
-    if base_vf > 0 and y > 3.65*cm:
+    if base_vf > 0 and y > 2.75*cm:
         base_vf_f = float(base_vf)
         brut_gnf = float(bulletin.salaire_brut)
         deduction = max(0, brut_gnf - base_vf_f)
@@ -1479,7 +1479,7 @@ def telecharger_bulletin_public(request, token):
     table_height = len(gains_data) * row_height
     gains_table.wrapOn(p, width, height)
     gains_table.drawOn(p, 1.5*cm, y - table_height)
-    y -= table_height + 0.8*cm
+    y -= table_height + 0.35*cm
     
     # === DÉTAIL HEURES SUPPLÉMENTAIRES ===
     hs_30 = getattr(bulletin, 'heures_supplementaires_30', 0) or 0
@@ -1498,7 +1498,7 @@ def telecharger_bulletin_public(request, token):
         p.setFillColor(colors.HexColor("#6c757d"))
         p.drawString(1.5*cm, y, "DÉTAIL HEURES SUPPLÉMENTAIRES (Code du Travail Art. 221)")
         p.setFillColor(colors.black)
-        y -= 0.25*cm
+        y -= 0.18*cm
         
         # Calcul des montants individuels (salaire_base / 173,33 × h × coefficient)
         _sal_base = Decimal(str(bulletin.salaire_base or 0))
@@ -1573,16 +1573,16 @@ def telecharger_bulletin_public(request, token):
         hs_table_h = nb_hs_rows * hs_row_h
         hs_table.wrapOn(p, width, height)
         hs_table.drawOn(p, 1.5*cm, y - hs_table_h)
-        y -= hs_table_h + 0.8*cm
+        y -= hs_table_h + 0.35*cm
     else:
-        y -= 0.8*cm
+        y -= 0.25*cm
     
     # === RETENUES ===
     p.setFillColor(colors.HexColor("#dc3545"))
     p.setFont(_FB, 9)
     p.drawString(1.5*cm, y, "RETENUES ET COTISATIONS")
     p.setFillColor(colors.black)
-    y -= 0.4*cm
+    y -= 0.25*cm
     
     retenues_data = [["Libellé", "Base", "Taux", "Montant"]]
     # Filtrer les doublons CNSS et IRG (déjà dans les lignes du bulletin)
@@ -1625,7 +1625,7 @@ def telecharger_bulletin_public(request, token):
     table_height = len(retenues_data) * row_height
     retenues_table.wrapOn(p, width, height)
     retenues_table.drawOn(p, 1.5*cm, y - table_height)
-    y -= table_height + 0.5*cm
+    y -= table_height + 0.25*cm
 
     # === DÉTAIL CALCUL RTS (barème progressif) ===
     from paie.utils import calculer_detail_tranches_rts
@@ -1647,7 +1647,7 @@ def telecharger_bulletin_public(request, token):
                 f"Brut {bulletin.salaire_brut:,.0f} − CNSS {bulletin.cnss_employe:,.0f}"
                 .replace(",", " "))
         p.setFillColor(colors.black)
-        y -= 0.25*cm
+        y -= 0.18*cm
 
         rts_detail_data = [["Tranche (bornes)", "Base taxable", "Taux", "Impôt"]]
         cumul_impot = Decimal('0')
@@ -1683,7 +1683,7 @@ def telecharger_bulletin_public(request, token):
         rts_table_h = nb_rows * rts_row_h
         rts_table.wrapOn(p, width, height)
         rts_table.drawOn(p, 1.5*cm, y - rts_table_h)
-        y -= rts_table_h + 0.4*cm
+        y -= rts_table_h + 0.25*cm
     else:
         y -= 0.2*cm
     
@@ -1693,7 +1693,7 @@ def telecharger_bulletin_public(request, token):
     has_rappel = rappel > 0
     has_trop_percu = trop_percu > 0
     extra_lines = (1 if has_rappel else 0) + (1 if has_trop_percu else 0)
-    recap_height = 2.1*cm + extra_lines * 0.4*cm
+    recap_height = 1.85*cm + extra_lines * 0.30*cm
     p.setStrokeColor(colors.HexColor("#ce1126"))
     p.setLineWidth(2)
     p.rect(1.5*cm, y - recap_height, width - 3*cm, recap_height, stroke=1, fill=0)
@@ -1715,19 +1715,19 @@ def telecharger_bulletin_public(request, token):
     
     # Afficher l'abattement forfaitaire si présent (détail RTS)
     if has_abatt:
-        offset_y += 0.35*cm
+        offset_y += 0.3*cm
         p.setFont(_FN, 7)
         p.setFillColor(colors.HexColor("#666666"))
         p.drawString(2.3*cm, y - offset_y, f"└─ abattement 25%: {abatt_forfait:,.0f}".replace(",", " "))
     
     if has_rappel:
-        offset_y += 0.35*cm
+        offset_y += 0.3*cm
         p.setFillColor(colors.HexColor("#007bff"))
         p.setFont(_FN, 8)
         p.drawString(2*cm, y - offset_y, "Rappel/Complément salaire précédent:")
         p.drawRightString(width - 2*cm, y - offset_y, f"+ {rappel:,.0f} GNF".replace(",", " "))
     if has_trop_percu:
-        offset_y += 0.35*cm
+        offset_y += 0.3*cm
         p.setFillColor(colors.HexColor("#dc3545"))
         p.setFont(_FN, 8)
         p.drawString(2*cm, y - offset_y, "Retenue trop-perçu salaire précédent:")
@@ -1739,7 +1739,7 @@ def telecharger_bulletin_public(request, token):
     p.drawRightString(width - 2*cm, y - offset_y - 0.7*cm, f"{bulletin.net_a_payer:,.0f} GNF".replace(",", " "))
     p.setFillColor(colors.black)
     
-    y -= recap_height + 0.5*cm
+    y -= recap_height + 0.25*cm
     
     # === CHARGES PATRONALES ===
     vf = getattr(bulletin, 'versement_forfaitaire', 0) or 0
@@ -1774,7 +1774,7 @@ def telecharger_bulletin_public(request, token):
     charges_data.append(["TOTAL CHARGES PATRONALES", "", "",
         f"{total_charges:,.0f} GNF".replace(",", " ")])
 
-    ch_row_h = 13
+    ch_row_h = 12
     charges_table = Table(charges_data, colWidths=[7*cm, 3.5*cm, 2*cm, 4.5*cm], rowHeights=ch_row_h)
     charges_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#fd7e14")),
@@ -1792,7 +1792,7 @@ def telecharger_bulletin_public(request, token):
     charges_table.drawOn(p, 1.5*cm, y - ch_table_h)
     y -= ch_table_h + 0.15*cm
     # Note VF/TA complete, en petit gras, decoupee pour eviter tout debordement.
-    if base_vf > 0 and y > 3.65*cm:
+    if base_vf > 0 and y > 2.75*cm:
         base_vf_f = float(base_vf)
         brut_gnf = float(bulletin.salaire_brut)
         deduction = max(0, brut_gnf - base_vf_f)
