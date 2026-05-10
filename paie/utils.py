@@ -826,19 +826,28 @@ def generer_bulletin_pdf(bulletin):
     charges_table.wrapOn(p, width, height)
     charges_table.drawOn(p, margin_left, y - ch_table_h)
     y -= ch_table_h + 0.15*cm
-    # Note explicative VF/TA
+    # Note VF/TA complete, en petit gras, decoupee pour eviter tout debordement.
     if base_vf > 0:
-        p.setFont(_FONT_ITALIC, 5.5)
-        p.setFillColor(colors.HexColor("#666666"))
+        base_vf_f = float(base_vf)
+        brut_gnf = float(bulletin.salaire_brut)
+        deduction = max(0, brut_gnf - base_vf_f)
+        ta_ou_onfpp = 'ONFPP' if onfpp > 0 else 'TA'
+        taux_note = '1,5' if onfpp > 0 else taux_ta_label
+        charge_valeur = onfpp if onfpp > 0 else ta
+        p.setFont(_FONT_BOLD, 4.8)
+        p.setFillColor(colors.HexColor("#444444"))
         p.drawString(margin_left, y,
-            f"Base VF/TA/ONFPP = {base_vf:,.0f} GNF  |  VF = {base_vf:,.0f} x 6%  |  ONFPP = {base_vf:,.0f} x 1,5%"
+            f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} - indemnites exonerees plafonnees {deduction:,.0f} "
+            f"(25% max du brut) = {base_vf_f:,.0f} GNF"
             .replace(",", " "))
-        y -= 0.20*cm
-        risque = getattr(bulletin, 'risque_fiscal_bulletin', {})
-        mode = getattr(bulletin, 'mode_base_vf_effectif', 'indetermine')
-        mode_label = 'strict fiscal' if mode == 'strict' else 'optimise' if mode == 'optimise' else 'a verifier'
+        y -= 0.16*cm
         p.drawString(margin_left, y,
-            f"Mode VF/ONFPP: {mode_label}  |  Taux optimisation: {bulletin.taux_optimisation_vf_onfpp}%  |  Risque fiscal: {risque.get('label', 'A verifier')}")
+            f"VF = {base_vf_f:,.0f} x 6% = {vf:,.0f} GNF | "
+            f"{ta_ou_onfpp} = {base_vf_f:,.0f} x {taux_note}% = {charge_valeur:,.0f} GNF"
+            .replace(",", " "))
+        y -= 0.16*cm
+        p.drawString(margin_left, y,
+            "Ref : Code General des Impots - Guinee (Versement Forfaitaire sur salaires, taux 6%)")
         y -= 0.20*cm
     p.setFillColor(colors.black)
 

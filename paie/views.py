@@ -1156,37 +1156,29 @@ def telecharger_bulletin_pdf(request, pk):
     charges_table.wrapOn(p, width, height)
     charges_table.drawOn(p, 1.5*cm, y - ch_table_h)
     y -= ch_table_h + 0.15*cm
-    # Note explicative VF (Versement Forfaitaire) - regle CGI Guinee :
-    #   Base VF/ONFPP = Brut - indemnites exonerees plafonnees a 25% du brut.
-    #   VF final      = Base VF x 6%
-    #   ONFPP/TA      = Base VF x taux applicable
-    if base_vf > 0 and y > 3.8*cm:
+    # Note VF/TA complete, en petit gras, decoupee pour eviter tout debordement.
+    if base_vf > 0 and y > 3.65*cm:
         base_vf_f = float(base_vf)
         brut_gnf = float(bulletin.salaire_brut)
+        deduction = max(0, brut_gnf - base_vf_f)
         ta_ou_onfpp = 'ONFPP' if onfpp > 0 else 'TA'
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
-        p.setFont(_FI, 6)
-        p.setFillColor(colors.HexColor("#666666"))
-        if abs(base_vf_f - brut_gnf) < 1:
-            note_base = f"Base VF/{ta_ou_onfpp} = Brut {base_vf_f:,.0f} GNF"
-            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
-        else:
-            deduction = brut_gnf - base_vf_f
-            note_base = (
-                f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} - indemnites exonerees plafonnees {deduction:,.0f} "
-                f"(25 % max du brut) = {base_vf_f:,.0f} GNF"
-            )
-            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
+        charge_valeur = onfpp if onfpp > 0 else ta
+        p.setFont(_FB, 4.8)
+        p.setFillColor(colors.HexColor("#444444"))
         p.drawString(1.5*cm, y,
-            re.sub(r"(\d),(?=\d{3}\b)", "\\1\u00A0",
-                   f"{note_base}  |  VF = {base_vf_f:,.0f} × 6 %  |  {charge_note}"))
+            f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} - indemnites exonerees plafonnees {deduction:,.0f} "
+            f"(25% max du brut) = {base_vf_f:,.0f} GNF"
+            .replace(",", " "))
+        y -= 0.16*cm
+        p.drawString(1.5*cm, y,
+            f"VF = {base_vf_f:,.0f} x 6% = {vf:,.0f} GNF | "
+            f"{ta_ou_onfpp} = {base_vf_f:,.0f} x {taux_ta_note}% = {charge_valeur:,.0f} GNF"
+            .replace(",", " "))
+        y -= 0.16*cm
+        p.drawString(1.5*cm, y,
+            "Ref : Code General des Impots - Guinee (Versement Forfaitaire sur salaires, taux 6%)")
         y -= 0.20*cm
-        # Référence légale (justification en cas de contrôle fiscal)
-        p.setFont(_FI, 5.5)
-        p.setFillColor(colors.HexColor("#888888"))
-        p.drawString(1.5*cm, y,
-            "Réf : Code Général des Impôts — Guinée (Versement Forfaitaire sur salaires, taux 6 %)")
-        y -= 0.25*cm
         p.setFillColor(colors.black)
     p.setFillColor(colors.black)
     
@@ -1799,37 +1791,29 @@ def telecharger_bulletin_public(request, token):
     charges_table.wrapOn(p, width, height)
     charges_table.drawOn(p, 1.5*cm, y - ch_table_h)
     y -= ch_table_h + 0.15*cm
-    # Note explicative VF (Versement Forfaitaire) - regle CGI Guinee :
-    #   Base VF/ONFPP = Brut - indemnites exonerees plafonnees a 25% du brut.
-    #   VF final      = Base VF x 6%
-    #   ONFPP/TA      = Base VF x taux applicable
-    if base_vf > 0 and y > 3.8*cm:
+    # Note VF/TA complete, en petit gras, decoupee pour eviter tout debordement.
+    if base_vf > 0 and y > 3.65*cm:
         base_vf_f = float(base_vf)
         brut_gnf = float(bulletin.salaire_brut)
+        deduction = max(0, brut_gnf - base_vf_f)
         ta_ou_onfpp = 'ONFPP' if onfpp > 0 else 'TA'
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
-        p.setFont(_FI, 6)
-        p.setFillColor(colors.HexColor("#666666"))
-        if abs(base_vf_f - brut_gnf) < 1:
-            note_base = f"Base VF/{ta_ou_onfpp} = Brut {base_vf_f:,.0f} GNF"
-            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
-        else:
-            deduction = brut_gnf - base_vf_f
-            note_base = (
-                f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} - indemnites exonerees plafonnees {deduction:,.0f} "
-                f"(25 % max du brut) = {base_vf_f:,.0f} GNF"
-            )
-            charge_note = f"{ta_ou_onfpp} = {base_vf_f:,.0f} × {taux_ta_note} %"
+        charge_valeur = onfpp if onfpp > 0 else ta
+        p.setFont(_FB, 4.8)
+        p.setFillColor(colors.HexColor("#444444"))
         p.drawString(1.5*cm, y,
-            re.sub(r"(\d),(?=\d{3}\b)", "\\1\u00A0",
-                   f"{note_base}  |  VF = {base_vf_f:,.0f} × 6 %  |  {charge_note}"))
+            f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} - indemnites exonerees plafonnees {deduction:,.0f} "
+            f"(25% max du brut) = {base_vf_f:,.0f} GNF"
+            .replace(",", " "))
+        y -= 0.16*cm
+        p.drawString(1.5*cm, y,
+            f"VF = {base_vf_f:,.0f} x 6% = {vf:,.0f} GNF | "
+            f"{ta_ou_onfpp} = {base_vf_f:,.0f} x {taux_ta_note}% = {charge_valeur:,.0f} GNF"
+            .replace(",", " "))
+        y -= 0.16*cm
+        p.drawString(1.5*cm, y,
+            "Ref : Code General des Impots - Guinee (Versement Forfaitaire sur salaires, taux 6%)")
         y -= 0.20*cm
-        # Référence légale (justification en cas de contrôle fiscal)
-        p.setFont(_FI, 5.5)
-        p.setFillColor(colors.HexColor("#888888"))
-        p.drawString(1.5*cm, y,
-            "Réf : Code Général des Impôts — Guinée (Versement Forfaitaire sur salaires, taux 6 %)")
-        y -= 0.25*cm
         p.setFillColor(colors.black)
     p.setFillColor(colors.black)
     
