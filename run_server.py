@@ -379,12 +379,20 @@ def _apply_missing_columns():
     bul_cols = [
         ('heures_feries_nuit', 'DECIMAL(6,2) DEFAULT 0'),
         ('prime_feries_nuit', 'DECIMAL(15,2) DEFAULT 0'),
+        ('base_onfpp', 'DECIMAL(15,2) DEFAULT 0'),
     ]
     for col_name, col_type in bul_cols:
         try:
             cursor.execute(f'ALTER TABLE bulletins_paie ADD COLUMN {col_name} {col_type}')
         except Exception:
             pass
+    try:
+        cursor.execute(
+            'UPDATE bulletins_paie SET base_onfpp = COALESCE(base_vf, 0) '
+            'WHERE COALESCE(contribution_onfpp, 0) > 0 AND COALESCE(base_onfpp, 0) = 0'
+        )
+    except Exception:
+        pass
 
     # Colonnes sur rubriques_paie (catégorie, mode calcul, exonération)
     rub_cols = [
@@ -434,8 +442,9 @@ def _apply_missing_columns():
                 mode_exoneration_indemnites VARCHAR(20) NOT NULL DEFAULT "plafond_pct",
                 plafond_exoneration_pct DECIMAL(5,2) NOT NULL DEFAULT 25,
                 formule_exoneration TEXT NOT NULL DEFAULT "",
-                mode_base_vf VARCHAR(30) NOT NULL DEFAULT "brut",
+                mode_base_vf VARCHAR(30) NOT NULL DEFAULT "brut_moins_deduction",
                 formule_base_vf TEXT NOT NULL DEFAULT "",
+                mode_base_onfpp VARCHAR(20) NOT NULL DEFAULT "base_vf",
                 utiliser_formule_base_rts BOOLEAN NOT NULL DEFAULT 0,
                 formule_base_rts TEXT NOT NULL DEFAULT "",
                 date_modification DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -445,6 +454,14 @@ def _apply_missing_columns():
         pass  # table existe déjà
 
     # Table historique paramètres paie
+    try:
+        cursor.execute(
+            'ALTER TABLE parametres_calcul_paie '
+            'ADD COLUMN mode_base_onfpp VARCHAR(20) NOT NULL DEFAULT "base_vf"'
+        )
+    except Exception:
+        pass
+
     try:
         cursor.execute('''CREATE TABLE IF NOT EXISTS historique_parametres_paie (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
