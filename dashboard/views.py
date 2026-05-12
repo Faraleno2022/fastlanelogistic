@@ -258,31 +258,60 @@ def index(request):
     
     entreprise_id = request.user.entreprise_id
 
-    # Filtre période (mois/année) — défaut = mois en cours
+    # Filtre periode (mois/annee). Par defaut, aucun filtre: toutes les periodes.
     now = timezone.now()
+    mois_filtre = None
+    annee_filtre = None
+    mois_param = request.GET.get('mois')
+    annee_param = request.GET.get('annee')
     try:
-        mois_filtre = int(request.GET.get('mois', now.month))
-        annee_filtre = int(request.GET.get('annee', now.year))
+        if mois_param:
+            mois_filtre = int(mois_param)
     except (TypeError, ValueError):
-        mois_filtre, annee_filtre = now.month, now.year
-    if not (1 <= mois_filtre <= 12):
-        mois_filtre = now.month
-    if not (2000 <= annee_filtre <= 2100):
-        annee_filtre = now.year
+        mois_filtre = None
+    try:
+        if annee_param:
+            annee_filtre = int(annee_param)
+    except (TypeError, ValueError):
+        annee_filtre = None
+    if mois_filtre is not None and not (1 <= mois_filtre <= 12):
+        mois_filtre = None
+    if annee_filtre is not None and not (2000 <= annee_filtre <= 2100):
+        annee_filtre = None
 
     mois_labels = [
         (1, 'Janvier'), (2, 'Février'), (3, 'Mars'), (4, 'Avril'),
         (5, 'Mai'), (6, 'Juin'), (7, 'Juillet'), (8, 'Août'),
         (9, 'Septembre'), (10, 'Octobre'), (11, 'Novembre'), (12, 'Décembre'),
     ]
-    annees_disponibles = list(range(now.year - 5, now.year + 2))
+    if entreprise_id:
+        annees_disponibles = list(
+            PeriodePaie.objects.filter(entreprise_id=entreprise_id)
+            .values_list('annee', flat=True)
+            .distinct()
+            .order_by('-annee')
+        )
+    else:
+        annees_disponibles = []
+    if now.year not in annees_disponibles:
+        annees_disponibles = [now.year, *annees_disponibles]
+    mois_nom = dict(mois_labels).get(mois_filtre)
+    if mois_filtre and annee_filtre:
+        periode_label = f"{mois_nom} {annee_filtre}"
+    elif annee_filtre:
+        periode_label = f"Année {annee_filtre}"
+    elif mois_filtre:
+        periode_label = f"{mois_nom} - toutes années"
+    else:
+        periode_label = "Toutes les périodes"
 
     filtre_context = {
         'mois_filtre': mois_filtre,
         'annee_filtre': annee_filtre,
-        'periode_label': f"{dict(mois_labels).get(mois_filtre, mois_filtre)} {annee_filtre}",
+        'periode_label': periode_label,
         'mois_labels': mois_labels,
         'annees_disponibles': annees_disponibles,
+        'filtre_periode_actif': mois_filtre is not None or annee_filtre is not None,
     }
 
     # Si l'utilisateur n'a pas d'entreprise, afficher un dashboard vide avec alerte
@@ -312,7 +341,7 @@ def index(request):
         }
         return render(request, 'dashboard/index.html', context)
 
-    cache_key = f'dashboard_stats_v7_{entreprise_id}_{annee_filtre}_{mois_filtre}'
+    cache_key = f'dashboard_stats_v8_{entreprise_id}_{annee_filtre or "all"}_{mois_filtre or "all"}'
 
     # Essayer de récupérer du cache
     cached_data = cache.get(cache_key)
@@ -393,56 +422,46 @@ def index(request):
         employe__entreprise=request.user.entreprise,
     ).count()
     
-    # Paie de la période sélectionnée (filtre mois/année)
-    try:
-        periode_actuelle = PeriodePaie.objects.get(
-            entreprise=request.user.entreprise,
-            annee=annee_filtre,
-            mois=mois_filtre
-        )
-        bulletins_mois = BulletinPaie.objects.filter(
-            periode=periode_actuelle,
-            employe__entreprise=request.user.entreprise,
-        )
-        # Un bulletin "calculé" recouvre tous ceux dont les calculs ont été figés
-        # (calcule, valide, paye). Un bulletin "validé" inclut les bulletins payés
-        # (un paiement implique nécessairement validation préalable).
-        context['bulletins_calcules'] = bulletins_mois.filter(
-            statut_bulletin__in=('calcule', 'valide', 'paye')
-        ).count()
-        context['bulletins_valides'] = bulletins_mois.filter(
-            statut_bulletin__in=('valide', 'paye')
-        ).count()
-        context['bulletins_en_attente'] = max(
-            0, context['bulletins_calcules'] - context['bulletins_valides']
-        )
-        totaux = bulletins_mois.aggregate(
-            brut=Sum('salaire_brut'),
-            net=Sum('net_a_payer'),
-            base_vf=Sum('base_vf'),
-            trs=Sum('irg'),
-            vf=Sum('versement_forfaitaire'),
-            ta=Sum('taxe_apprentissage'),
-            onfpp=Sum('contribution_onfpp'),
-            cnss_5=Sum('cnss_employe'),
-            cnss_18=Sum('cnss_employeur'),
-        )
-        if context.get('total_employes', 0) >= 30:
-            totaux['ta'] = Decimal('0')
-            totaux['onfpp'] = ((totaux.get('base_vf') or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
-        context.update(_build_paie_totaux_context(totaux))
-        context['risque_fiscal'] = _build_risque_fiscal_paie(bulletins_mois, context.get('total_employes', 0))
-        context['repartition_service_paie'] = _build_repartition_service_paie(
-            bulletins_mois,
-            context.get('total_employes', 0),
-        )
-    except PeriodePaie.DoesNotExist:
-        context['bulletins_calcules'] = 0
-        context['bulletins_valides'] = 0
-        context['bulletins_en_attente'] = 0
-        context.update(_build_paie_totaux_context({}))
-        context['risque_fiscal'] = _build_risque_fiscal_paie([], context.get('total_employes', 0))
-        context['repartition_service_paie'] = []
+    # Paie de la periode selectionnee. Sans filtre, on affiche le cumul global.
+    bulletins_paie = BulletinPaie.objects.filter(
+        employe__entreprise=request.user.entreprise,
+    )
+    if annee_filtre:
+        bulletins_paie = bulletins_paie.filter(periode__annee=annee_filtre)
+    if mois_filtre:
+        bulletins_paie = bulletins_paie.filter(periode__mois=mois_filtre)
+
+    # Un bulletin "calcule" recouvre tous ceux dont les calculs ont ete figes
+    # (calcule, valide, paye). Un bulletin "valide" inclut les bulletins payes.
+    context['bulletins_calcules'] = bulletins_paie.filter(
+        statut_bulletin__in=('calcule', 'valide', 'paye')
+    ).count()
+    context['bulletins_valides'] = bulletins_paie.filter(
+        statut_bulletin__in=('valide', 'paye')
+    ).count()
+    context['bulletins_en_attente'] = max(
+        0, context['bulletins_calcules'] - context['bulletins_valides']
+    )
+    totaux = bulletins_paie.aggregate(
+        brut=Sum('salaire_brut'),
+        net=Sum('net_a_payer'),
+        base_vf=Sum('base_vf'),
+        trs=Sum('irg'),
+        vf=Sum('versement_forfaitaire'),
+        ta=Sum('taxe_apprentissage'),
+        onfpp=Sum('contribution_onfpp'),
+        cnss_5=Sum('cnss_employe'),
+        cnss_18=Sum('cnss_employeur'),
+    )
+    if context.get('total_employes', 0) >= 30:
+        totaux['ta'] = Decimal('0')
+        totaux['onfpp'] = ((totaux.get('base_vf') or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
+    context.update(_build_paie_totaux_context(totaux))
+    context['risque_fiscal'] = _build_risque_fiscal_paie(bulletins_paie, context.get('total_employes', 0))
+    context['repartition_service_paie'] = _build_repartition_service_paie(
+        bulletins_paie,
+        context.get('total_employes', 0),
+    )
     
     # Pointages du jour
     context['pointages_jour'] = Pointage.objects.filter(

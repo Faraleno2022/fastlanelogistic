@@ -100,6 +100,7 @@
             <i class="bi bi-calendar3"></i> Mois
         </label>
         <select name="mois" id="filtre-mois" class="form-select form-select-sm">
+            <option value="" {% if not mois_filtre %}selected{% endif %}>Tous les mois</option>
             {% for num, nom in mois_labels %}
                 <option value="{{ num }}" {% if num == mois_filtre %}selected{% endif %}>{{ nom }}</option>
             {% endfor %}
@@ -110,6 +111,7 @@
             <i class="bi bi-calendar-event"></i> Année
         </label>
         <select name="annee" id="filtre-annee" class="form-select form-select-sm">
+            <option value="" {% if not annee_filtre %}selected{% endif %}>Toutes les années</option>
             {% for an in annees_disponibles %}
                 <option value="{{ an }}" {% if an == annee_filtre %}selected{% endif %}>{{ an }}</option>
             {% endfor %}
@@ -120,7 +122,7 @@
             <i class="bi bi-funnel"></i> Filtrer
         </button>
         <a href="{% url 'dashboard:index' %}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-counterclockwise"></i> Mois en cours
+            <i class="bi bi-arrow-counterclockwise"></i> Tout afficher
         </a>
     </div>
 </form>
@@ -263,7 +265,7 @@
 
 </div>
 
-<!-- Cotisations & Taxes du mois -->
+<!-- Cotisations & Taxes -->
 <div class="row mb-4">
     <div class="col-12">
         <h5 class="mb-3"><i class="bi bi-bank"></i> Cotisations & Taxes ({{ periode_label }})</h5>

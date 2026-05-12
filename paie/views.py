@@ -2071,6 +2071,28 @@ _DETAILS_LIVRE_PAIE = (
 )
 
 
+def _filtres_periode_livre_paie(request):
+    annee = None
+    mois = None
+    annee_param = request.GET.get('annee')
+    mois_param = request.GET.get('mois')
+    try:
+        if annee_param:
+            annee = int(annee_param)
+    except (TypeError, ValueError):
+        annee = None
+    try:
+        if mois_param:
+            mois = int(mois_param)
+    except (TypeError, ValueError):
+        mois = None
+    if annee is not None and not (2000 <= annee <= 2100):
+        annee = None
+    if mois is not None and not (1 <= mois <= 12):
+        mois = None
+    return annee, mois
+
+
 def _normaliser_texte_livre(valeur):
     texte = str(valeur or '').strip().lower()
     return ''.join(
@@ -2147,13 +2169,13 @@ def _enrichir_details_livre_paie(bulletins):
 def livre_paie(request):
     """Livre de paie conforme"""
     # Filtres
-    annee = request.GET.get('annee', timezone.now().year)
-    mois = request.GET.get('mois')
+    annee, mois = _filtres_periode_livre_paie(request)
     
     periodes = PeriodePaie.objects.filter(
         entreprise=request.user.entreprise,
-        annee=annee
     )
+    if annee:
+        periodes = periodes.filter(annee=annee)
     if mois:
         periodes = periodes.filter(mois=mois)
     
@@ -2169,7 +2191,7 @@ def livre_paie(request):
             queryset=LigneBulletin.objects.select_related('rubrique').order_by('ordre', 'id'),
             to_attr='lignes_livre_paie',
         )
-    ).order_by('periode__mois', 'employe__matricule')
+    ).order_by('periode__annee', 'periode__mois', 'employe__matricule')
     
     # Calcul des totaux — inclut maintenant base imposable (RTS) et indemnités exonérées
     totaux = bulletins.aggregate(
@@ -2192,14 +2214,20 @@ def livre_paie(request):
     annees = PeriodePaie.objects.filter(
         entreprise=request.user.entreprise
     ).values_list('annee', flat=True).distinct().order_by('-annee')
+    pdf_params = []
+    if annee:
+        pdf_params.append(f'annee={annee}')
+    if mois:
+        pdf_params.append(f'mois={mois}')
 
     return render(request, 'paie/livre_paie.html', {
         'bulletins': bulletins,
         'totaux': totaux,
-        'annee': int(annee),
-        'mois': int(mois) if mois else None,
+        'annee': annee,
+        'mois': mois,
         'annees': annees,
         'controles_livre': controles_livre,
+        'livre_pdf_query': f"?{'&'.join(pdf_params)}" if pdf_params else '',
     })
 
 
@@ -2227,13 +2255,13 @@ def telecharger_livre_paie_pdf(request):
     except Exception:
         _FN = 'Helvetica'; _FB = 'Helvetica-Bold'
 
-    annee = request.GET.get('annee', timezone.now().year)
-    mois = request.GET.get('mois')
+    annee, mois = _filtres_periode_livre_paie(request)
 
     periodes = PeriodePaie.objects.filter(
         entreprise=request.user.entreprise,
-        annee=annee
     )
+    if annee:
+        periodes = periodes.filter(annee=annee)
     if mois:
         periodes = periodes.filter(mois=mois)
 
@@ -2248,7 +2276,7 @@ def telecharger_livre_paie_pdf(request):
             queryset=LigneBulletin.objects.select_related('rubrique').order_by('ordre', 'id'),
             to_attr='lignes_livre_paie',
         )
-    ).order_by('periode__mois', 'employe__matricule')
+    ).order_by('periode__annee', 'periode__mois', 'employe__matricule')
 
     totaux = bulletins.aggregate(
         total_brut=Sum('salaire_brut'),
@@ -2367,7 +2395,9 @@ def telecharger_livre_paie_pdf(request):
 
     story = []
 
-    titre = f"Livre de Paie - Année {int(annee)}"
+    titre = "Livre de Paie - Toutes les périodes"
+    if annee:
+        titre = f"Livre de Paie - Année {int(annee)}"
     if mois:
         titre += f" - Mois {int(mois)}"
     story.append(Paragraph(titre, styles['LivreTitre']))
@@ -2546,7 +2576,7 @@ def telecharger_livre_paie_pdf(request):
 
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
-    filename = f"livre_paie_{int(annee)}"
+    filename = f"livre_paie_{int(annee)}" if annee else "livre_paie_toutes_periodes"
     if mois:
         filename += f"_{int(mois)}"
     filename += ".pdf"
