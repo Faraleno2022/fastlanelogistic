@@ -118,7 +118,7 @@ class PageAPropos(models.Model):
     )
     adresse = models.CharField("Adresse", max_length=300, blank=True)
     email = models.EmailField("E-mail public", blank=True)
-    telephone = models.CharField("Téléphone public", max_length=30, blank=True)
+    telephone = models.CharField("Téléphone public", max_length=60, blank=True)
 
     class Meta:
         verbose_name = "Page « À propos »"

@@ -35,6 +35,12 @@ def site_context(request):
     except Exception:
         pass
 
+    default_phone = settings.SEO_ORGANIZATION.get("phone", "")
+    if "614 73 77 77" in contact_telephone or "614 74 77 77" in contact_telephone:
+        contact_telephone = default_phone
+    elif not contact_telephone:
+        contact_telephone = default_phone
+
     return {
         "SOCIETE_NOM": societe_nom,
         "DEVISE": devise,

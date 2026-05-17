@@ -190,7 +190,7 @@ SEO_ORGANIZATION = {
     "name": "Fastlane Logistic",
     "legal_name": "Fastlane Logistic SARL",
     "founding_year": "2020",
-    "phone": "+224 000 000 000",
+    "phone": "+224 614 73 77 77 / +224 614 74 77 77",
     "email": "contact@fastlanelogisticgn.com",
     "street": "Kipé Centre Émetteur",
     "locality": "Conakry",
