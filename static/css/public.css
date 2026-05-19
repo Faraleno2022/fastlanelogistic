@@ -80,14 +80,14 @@ body.public-site {
 .public-navbar .nav-link.nav-cta:focus {
   background: var(--fl-accent-2);
   transform: translateY(-1px);
-  border-color: rgba(255,255,255,.75);
-  box-shadow: 0 10px 22px rgba(230, 57, 70,.35), 0 0 0 .18rem rgba(252, 209, 22, .22);
+  border-color: rgba(255,255,255,.55);
+  box-shadow: 0 6px 16px rgba(230, 57, 70,.28), inset 0 -2px 0 rgba(15,44,71,.18);
 }
 .public-navbar .nav-link.nav-cta.active {
   background: var(--fl-accent-2);
   color: var(--fl-navy) !important;
-  border-color: rgba(255,255,255,.85);
-  box-shadow: 0 8px 20px rgba(230, 57, 70,.32), inset 0 0 0 1px rgba(15,44,71,.18);
+  border-color: rgba(255,255,255,.62);
+  box-shadow: 0 6px 16px rgba(230, 57, 70,.25), inset 0 -2px 0 rgba(15,44,71,.2);
 }
 .public-navbar .navbar-brand { font-size: 1.1rem; letter-spacing: .3px; padding-top: .15rem; padding-bottom: .15rem; }
 .public-navbar .navbar-brand img { height: 34px !important; }
@@ -104,19 +104,20 @@ body.public-site {
 .public-navbar .nav-link:hover,
 .public-navbar .nav-link:focus {
   background: rgba(255,255,255,.08);
-  border-color: rgba(255,255,255,.24);
+  border-color: rgba(255,255,255,.16);
+  box-shadow: inset 0 -2px 0 rgba(255,255,255,.22);
   color: #fff !important;
 }
 .public-navbar .nav-link:focus-visible {
   outline: 0;
-  box-shadow: 0 0 0 .18rem rgba(252, 209, 22, .28);
+  box-shadow: inset 0 -2px 0 rgba(252, 209, 22, .45);
 }
 .public-navbar .nav-link.active {
   background: var(--fl-accent);
   color: var(--fl-navy) !important;
   font-weight: 600;
-  border-color: rgba(255,255,255,.72);
-  box-shadow: 0 6px 18px rgba(230,57,70,.26), inset 0 0 0 1px rgba(15,44,71,.14);
+  border-color: rgba(255,255,255,.52);
+  box-shadow: inset 0 -2px 0 rgba(15,44,71,.18);
 }
 
 /* === Compacification navbar pour ecrans 992-1199px (lg) === */
