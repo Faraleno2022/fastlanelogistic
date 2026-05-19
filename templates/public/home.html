@@ -294,48 +294,6 @@
   </div>
 </section>
 
-
-{# ============== FLOTTE (conditionnel) ============== #}
-{% if camions %}
-<section class="section-padded">
-  <div class="container">
-    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
-      <div>
-        <div class="section-kicker">Notre flotte</div>
-        <h2 class="section-title mb-0">Des camions modernes et suivis.</h2>
-      </div>
-      <p class="text-muted mb-0 mt-3">Capacité cumulée : <strong class="text-primary">{{ stats_flotte.capacite_totale|intcomma }} tonnes</strong></p>
-    </div>
-    <div class="row g-4">
-      {% for c in camions %}
-      <div class="col-sm-6 col-lg-3">
-        <div class="truck-premium">
-          <div class="truck-header">
-            <span class="truck-code">{{ c.code }}</span>
-            {% if c.statut == "SERVICE" %}
-              <span class="truck-status status-on"><span class="status-dot"></span> En service</span>
-            {% elif c.statut == "ATELIER" %}
-              <span class="truck-status status-warn"><span class="status-dot"></span> Atelier</span>
-            {% else %}
-              <span class="truck-status status-off"><span class="status-dot"></span> {{ c.get_statut_display }}</span>
-            {% endif %}
-          </div>
-          <div class="truck-visual-premium"><i class="bi bi-truck-front-fill"></i></div>
-          <div class="truck-body">
-            <h6 class="truck-model">{{ c.marque_modele }}</h6>
-            <div class="truck-specs">
-              <div class="spec"><i class="bi bi-box-seam"></i> {{ c.capacite_tonnes|floatformat:0 }} T</div>
-              <div class="spec"><i class="bi bi-card-text"></i> {{ c.immatriculation }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
 {# ============== POURQUOI FASTLANE ============== #}
 <section class="section-padded landing-reasons landing-reasons-light">
   <div class="container">
