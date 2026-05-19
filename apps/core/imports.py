@@ -9,6 +9,7 @@ Ce module fournit :
 """
 from __future__ import annotations
 import io
+import unicodedata
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from decimal import Decimal, InvalidOperation
@@ -58,7 +59,7 @@ def _p_decimal(v):
     if isinstance(v, (int, float, Decimal)):
         return Decimal(str(v))
     try:
-        cleaned = str(v).strip().replace(" ", "").replace(",", ".")
+        cleaned = str(v).strip().replace(" ", "").replace(",", ".").replace("%", "")
         return Decimal(cleaned)
     except (InvalidOperation, ValueError):
         raise ValueError(f"nombre attendu, reçu : {v!r}")
@@ -119,6 +120,22 @@ class Column:
     help: str = ""
     # Optionnel : résolveur (ex: code camion -> instance Camion)
     resolve: Callable[[Any], Any] | None = None
+
+
+def _norm_label(value: Any) -> str:
+    if value is None:
+        return ""
+    text = unicodedata.normalize("NFKD", str(value))
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    return "".join(ch for ch in text.lower() if ch.isalnum())
+
+
+def _label_keys(value: Any) -> set[str]:
+    text = "" if value is None else str(value)
+    keys = {_norm_label(text)}
+    if "(" in text:
+        keys.add(_norm_label(text.split("(", 1)[0]))
+    return {k for k in keys if k}
 
 
 # ---------------------------------------------------------------------------
@@ -221,10 +238,10 @@ def read_excel_rows(uploaded_file, schema: Sequence[Column]):
 
     # Repérage de la ligne d'en-tête : on accepte ligne 1 OU ligne 5 (si template)
     header_row = None
-    expected = {c.label.strip().lower() for c in schema}
+    expected = {_norm_label(c.label) for c in schema if c.required}
     for r in range(1, 8):
         row_vals = [ws.cell(row=r, column=i).value for i in range(1, len(schema) + 1)]
-        labels = {str(v).strip().lower() for v in row_vals if v}
+        labels = {_norm_label(v) for v in row_vals if v}
         if expected.issubset(labels):
             header_row = r
             break
@@ -233,17 +250,23 @@ def read_excel_rows(uploaded_file, schema: Sequence[Column]):
 
     # Mapping colonne index -> Column
     header_vals = [ws.cell(row=header_row, column=i).value for i in range(1, len(schema) + 10)]
-    label_to_col = {c.label.strip().lower(): c for c in schema}
+    label_to_col = {}
+    for c in schema:
+        for key in _label_keys(c.label):
+            label_to_col[key] = c
     idx_to_col: dict[int, Column] = {}
     for i, lbl in enumerate(header_vals, start=1):
         if lbl is None:
             continue
-        col = label_to_col.get(str(lbl).strip().lower())
+        col = label_to_col.get(_norm_label(lbl))
         if col:
             idx_to_col[i] = col
 
-    missing = [c.label for c in schema if c.required and c.label.strip().lower() not in
-               {str(v).strip().lower() for v in header_vals if v}]
+    normalized_headers = {_norm_label(v) for v in header_vals if v}
+    missing = [
+        c.label for c in schema
+        if c.required and not (_label_keys(c.label) & normalized_headers)
+    ]
     if missing:
         return [], [(header_row, f"Colonnes obligatoires manquantes : {', '.join(missing)}")]
 

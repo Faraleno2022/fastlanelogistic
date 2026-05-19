@@ -122,7 +122,7 @@ def fiche_carburant_rows(qs):
 
 
 FICHE_CARBURANT_IMPORT = [
-    Column("date", "Date (jj/mm/aaaa)", "date", required=True),
+    Column("date", "Date", "date", required=True),
     Column("numero", "N°", "int",
            help="Laisser vide ou 0 pour générer automatiquement le prochain N° de la date."),
     Column("chauffeur", "Chauffeur (code)", "str", resolve=_resolve_employe,
