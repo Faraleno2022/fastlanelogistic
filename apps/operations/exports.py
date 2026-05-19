@@ -14,7 +14,10 @@ from apps.flotte.models import Camion
 from apps.rh.models import Employe
 from apps.facturation.models import Contrat
 
-from .models import Carburant, Panne, DepenseAdmin, TransportBauxite, BonTransport
+from .models import (
+    BonTransport, Carburant, DepenseAdmin, FicheCarburant, Panne,
+    TransportBauxite,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -96,6 +99,43 @@ CARBURANT_IMPORT = [
            help="Laisser vide pour utiliser la valeur par défaut."),
     Column("station", "Station / Lieu", "str"),
     Column("observations", "Observations", "str"),
+]
+
+
+# ---------------------------------------------------------------------------
+# Fiche de gestion carburant
+# ---------------------------------------------------------------------------
+
+FICHE_CARBURANT_COLUMNS = [
+    "Date", "N°", "Nom et prénom", "Plaque", "Niveau carburant",
+    "Quantité", "Heure", "Rotation", "Observation",
+]
+
+
+def fiche_carburant_rows(qs):
+    for f in qs:
+        yield [
+            f.date, f.numero, f.chauffeur_nom, f.plaque,
+            f"{f.niveau_carburant}%", f.quantite, f.heure,
+            f.rotation, f.observation,
+        ]
+
+
+FICHE_CARBURANT_IMPORT = [
+    Column("date", "Date (jj/mm/aaaa)", "date", required=True),
+    Column("numero", "N°", "int",
+           help="Laisser vide ou 0 pour générer automatiquement le prochain N° de la date."),
+    Column("chauffeur", "Chauffeur (code)", "str", resolve=_resolve_employe,
+           help="Optionnel. Si renseigné, le nom peut être rempli automatiquement."),
+    Column("chauffeur_nom", "Nom et prénom", "str", required=True),
+    Column("camion", "Camion (code)", "str", resolve=_resolve_camion,
+           help="Optionnel. Si renseigné, la plaque peut être remplie automatiquement."),
+    Column("plaque", "Plaque", "str", required=True),
+    Column("niveau_carburant", "Niveau carburant (%)", "decimal"),
+    Column("quantite", "Quantité", "decimal", required=True),
+    Column("heure", "Heure (HH:MM)", "time"),
+    Column("rotation", "Rotation", "int"),
+    Column("observation", "Observation", "str"),
 ]
 
 
@@ -277,6 +317,15 @@ REGISTRY = {
         "import_schema": PANNES_IMPORT,
         "select_related": ("camion", "contrat"),
         "fiche_type": "panne",
+    },
+    "fiche_carburant": {
+        "titre": "Fiche de gestion carburant",
+        "Model": FicheCarburant,
+        "columns": FICHE_CARBURANT_COLUMNS,
+        "build_rows": fiche_carburant_rows,
+        "import_schema": FICHE_CARBURANT_IMPORT,
+        "select_related": ("camion", "chauffeur"),
+        "fiche_type": "carburant",
     },
     "depenses": {
         "titre": "Dépenses administratives",

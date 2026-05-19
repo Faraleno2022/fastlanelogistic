@@ -270,6 +270,8 @@ def read_excel_rows(uploaded_file, schema: Sequence[Column]):
                 errors.append((r, f"{col.label} : {e}"))
                 row_ok = False
                 continue
+            if val is None and not col.required:
+                continue
             # FK optionnelle : si valeur vide, on ne met rien dans row_data
             if col.resolve:
                 if val in (None, ""):

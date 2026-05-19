@@ -146,6 +146,7 @@ def module_to_list_name(module: str) -> str:
     """Le slug d'URL module -> nom de la vue liste correspondante."""
     return {
         "carburant": "carburant",
+        "fiche_carburant": "fiche_carburant",
         "pannes": "pannes",
         "depenses": "depenses_admin",
         "transport": "transport_bauxite",
