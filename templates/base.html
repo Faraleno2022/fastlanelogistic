@@ -150,6 +150,9 @@
           </ul>
         </li>
         <li class="nav-item"><a class="nav-link" href="{% url 'core:parametres' %}" title="Paramètres"><i class="bi bi-sliders"></i></a></li>
+        {% if user.is_superuser or user.role == "ADMIN" %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:user_list' %}" title="Utilisateurs et permissions"><i class="bi bi-people-fill"></i><span class="d-xl-none d-inline-block ms-1">Utilisateurs</span></a></li>
+        {% endif %}
         <li class="nav-item"><a class="nav-link" href="/admin/" title="Administration Django"><i class="bi bi-gear"></i><span class="d-xl-none d-inline-block ms-1">Admin</span></a></li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown"
