@@ -1,5 +1,18 @@
 from django import forms
-from .models import ContactMessage
+from .models import AppelOffre, ContactMessage, Evenement
+
+
+def _apply_bootstrap(fields):
+    for field in fields.values():
+        widget = field.widget
+        if isinstance(widget, forms.CheckboxInput):
+            widget.attrs.setdefault("class", "form-check-input")
+        elif isinstance(widget, forms.Select):
+            widget.attrs.setdefault("class", "form-select")
+        elif isinstance(widget, forms.Textarea):
+            widget.attrs.setdefault("class", "form-control")
+        else:
+            widget.attrs.setdefault("class", "form-control")
 
 
 class ContactForm(forms.ModelForm):
@@ -62,3 +75,45 @@ class ContactForm(forms.ModelForm):
                 "Votre message est trop court (minimum 10 caractères)."
             )
         return msg
+
+
+class EvenementForm(forms.ModelForm):
+    class Meta:
+        model = Evenement
+        fields = [
+            "titre", "date_evenement", "lieu", "resume", "contenu", "image",
+            "statut",
+        ]
+        widgets = {
+            "date_evenement": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+            "resume": forms.Textarea(attrs={"rows": 3, "col": "12"}),
+            "contenu": forms.Textarea(attrs={"rows": 8, "col": "12"}),
+            "image": forms.ClearableFileInput(attrs={"col": "12"}),
+            "statut": forms.Select(attrs={"col": "4"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _apply_bootstrap(self.fields)
+
+
+class AppelOffreForm(forms.ModelForm):
+    class Meta:
+        model = AppelOffre
+        fields = [
+            "reference", "titre", "objet", "description", "lieu_execution",
+            "date_publication", "date_limite", "contact_email",
+            "contact_telephone", "document", "statut",
+        ]
+        widgets = {
+            "objet": forms.Textarea(attrs={"rows": 3, "col": "12"}),
+            "description": forms.Textarea(attrs={"rows": 8, "col": "12"}),
+            "date_publication": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+            "date_limite": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+            "document": forms.ClearableFileInput(attrs={"col": "12"}),
+            "statut": forms.Select(attrs={"col": "4"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _apply_bootstrap(self.fields)

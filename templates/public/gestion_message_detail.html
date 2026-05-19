@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Message de {{ msg.nom }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-envelope-open"></i> {{ msg.get_sujet_display }}</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="text-muted small">Nom</div>
+            <div class="fw-semibold">{{ msg.nom }}</div>
+          </div>
+          <div class="col-md-6">
+            <div class="text-muted small">Entreprise</div>
+            <div class="fw-semibold">{{ msg.entreprise|default:"-" }}</div>
+          </div>
+          <div class="col-md-6">
+            <div class="text-muted small">E-mail</div>
+            <a href="mailto:{{ msg.email }}">{{ msg.email }}</a>
+          </div>
+          <div class="col-md-6">
+            <div class="text-muted small">Téléphone</div>
+            <div>{{ msg.telephone|default:"-" }}</div>
+          </div>
+        </div>
+        <h6 class="text-muted">Message</h6>
+        <div class="border rounded bg-light p-3" style="white-space: pre-wrap;">{{ msg.message }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-check2-square"></i> Suivi interne</h6>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" name="traite" id="traite" {% if msg.traite %}checked{% endif %}>
+            <label class="form-check-label" for="traite">Marquer comme traité</label>
+          </div>
+          <label for="reponse_interne" class="form-label">Note interne</label>
+          <textarea name="reponse_interne" id="reponse_interne" rows="6" class="form-control mb-3">{{ msg.reponse_interne }}</textarea>
+          <div class="d-flex justify-content-between">
+            <a href="{% url 'public:gestion_messages' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i> Retour
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg"></i> Enregistrer
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="card-footer small text-muted">
+        Reçu le {{ msg.created_at|date:"d/m/Y H:i" }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

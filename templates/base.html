@@ -73,6 +73,19 @@
             <li><a class="dropdown-item" href="{% url 'facturation:contrats' %}">Contrats</a></li>
           </ul>
         </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" title="Gestion du site public">
+            <i class="bi bi-globe2"></i><span class="nav-label"> Site public</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'public:gestion_messages' %}"><i class="bi bi-envelope-paper"></i> Messages envoyés</a></li>
+            <li><a class="dropdown-item" href="{% url 'public:gestion_appels_offres' %}"><i class="bi bi-file-earmark-text"></i> Appels d'offres</a></li>
+            <li><a class="dropdown-item" href="{% url 'public:gestion_evenements' %}"><i class="bi bi-calendar-event"></i> Événements</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'public:appel_offre_create' %}"><i class="bi bi-plus-circle"></i> Ajouter un appel d'offres</a></li>
+            <li><a class="dropdown-item" href="{% url 'public:evenement_create' %}"><i class="bi bi-plus-circle"></i> Ajouter un événement</a></li>
+          </ul>
+        </li>
       </ul>
       <ul class="navbar-nav">
         <!-- Sélecteur de contrat actif (mémorisé en session) -->

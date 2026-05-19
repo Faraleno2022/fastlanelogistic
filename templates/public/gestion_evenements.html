@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Gestion des événements{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h3 class="mb-0"><i class="bi bi-calendar-event"></i> Événements</h3>
+    <p class="text-muted mb-0">Créer et publier les actualités visibles sur le site.</p>
+  </div>
+  <a href="{% url 'public:evenement_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Ajouter
+  </a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Date</th>
+          <th>Titre</th>
+          <th>Lieu</th>
+          <th>Statut</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for evt in evenements %}
+        <tr>
+          <td>{{ evt.date_evenement|date:"d/m/Y" }}</td>
+          <td>
+            <strong>{{ evt.titre }}</strong>
+            {% if evt.resume %}<div class="small text-muted">{{ evt.resume|truncatechars:90 }}</div>{% endif %}
+          </td>
+          <td>{{ evt.lieu|default:"-" }}</td>
+          <td>
+            {% if evt.statut == "publie" %}
+              <span class="badge bg-success">Publié</span>
+            {% else %}
+              <span class="badge bg-secondary">Brouillon</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{% url 'public:evenement_edit' evt.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'public:evenement_delete' evt.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted py-4">Aucun événement créé.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

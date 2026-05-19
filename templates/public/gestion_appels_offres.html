@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Gestion des appels d'offres{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h3 class="mb-0"><i class="bi bi-file-earmark-text"></i> Appels d'offres</h3>
+    <p class="text-muted mb-0">Ajouter et publier les appels d'offres du site public.</p>
+  </div>
+  <a href="{% url 'public:appel_offre_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Ajouter
+  </a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Référence</th>
+          <th>Titre</th>
+          <th>Publication</th>
+          <th>Limite</th>
+          <th>Statut</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ao in appels %}
+        <tr>
+          <td><strong>{{ ao.reference }}</strong></td>
+          <td>
+            {{ ao.titre }}
+            <div class="small text-muted">{{ ao.objet|truncatechars:90 }}</div>
+          </td>
+          <td>{{ ao.date_publication|date:"d/m/Y" }}</td>
+          <td>{{ ao.date_limite|date:"d/m/Y" }}</td>
+          <td>
+            {% if ao.statut == "ouvert" %}
+              <span class="badge bg-success">Ouvert</span>
+            {% elif ao.statut == "clos" %}
+              <span class="badge bg-danger">Clos</span>
+            {% else %}
+              <span class="badge bg-secondary">Brouillon</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{% url 'public:appel_offre_edit' ao.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'public:appel_offre_delete' ao.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">Aucun appel d'offres créé.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

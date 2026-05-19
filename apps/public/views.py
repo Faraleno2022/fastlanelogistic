@@ -1,12 +1,12 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
-from django.db.models import Sum, Count, Q
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from .forms import ContactForm
-from .models import Evenement, AppelOffre, PageAPropos
+from .forms import AppelOffreForm, ContactForm, EvenementForm
+from .models import AppelOffre, ContactMessage, Evenement, PageAPropos
 
 
 def home(request):
@@ -22,31 +22,10 @@ def home(request):
                       .order_by("date_limite")[:3])
 
     # Flotte — aperçu public (masque volontairement les prix / infos sensibles)
-    camions = []
-    stats_flotte = {"nb_total": 0, "nb_service": 0, "capacite_totale": 0}
-    try:
-        from apps.flotte.models import Camion
-        qs = Camion.objects.exclude(statut="VENDU").order_by("code")
-        camions = list(qs[:8])
-        agg = qs.aggregate(
-            nb=Count("id"),
-            nb_service=Count("id", filter=Q(statut="SERVICE")),
-            cap=Sum("capacite_tonnes"),
-        )
-        stats_flotte = {
-            "nb_total": agg["nb"] or 0,
-            "nb_service": agg["nb_service"] or 0,
-            "capacite_totale": int(agg["cap"] or 0),
-        }
-    except Exception:
-        pass
-
     return render(request, "public/home.html", {
         "prochains_events": prochains_events,
         "derniers_events": derniers_events,
         "appels_ouverts": appels_ouverts,
-        "camions": camions,
-        "stats_flotte": stats_flotte,
     })
 
 
@@ -135,6 +114,136 @@ def contact(request):
     return render(request, "public/contact.html", {
         "form": form,
         "page": page,
+    })
+
+
+@login_required
+def gestion_messages(request):
+    messages_contact = ContactMessage.objects.all()
+    return render(request, "public/gestion_messages.html", {
+        "messages_contact": messages_contact,
+    })
+
+
+@login_required
+def gestion_message_detail(request, pk):
+    msg = get_object_or_404(ContactMessage, pk=pk)
+    if request.method == "POST":
+        msg.traite = request.POST.get("traite") == "on"
+        msg.reponse_interne = request.POST.get("reponse_interne", "").strip()
+        msg.save(update_fields=["traite", "reponse_interne", "updated_at"])
+        messages.success(request, "Message mis à jour.")
+        return redirect("public:gestion_message_detail", pk=msg.pk)
+    return render(request, "public/gestion_message_detail.html", {"msg": msg})
+
+
+@login_required
+def gestion_evenements(request):
+    evenements = Evenement.objects.all()
+    return render(request, "public/gestion_evenements.html", {
+        "evenements": evenements,
+    })
+
+
+@login_required
+def evenement_create(request):
+    form = EvenementForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        obj = form.save()
+        messages.success(request, f"Événement « {obj.titre} » ajouté.")
+        return redirect("public:gestion_evenements")
+    return render(request, "_form_generic.html", {
+        "form": form,
+        "titre": "Nouvel événement",
+        "icone": "calendar-plus",
+        "retour_url": "public:gestion_evenements",
+    })
+
+
+@login_required
+def evenement_edit(request, pk):
+    obj = get_object_or_404(Evenement, pk=pk)
+    form = EvenementForm(request.POST or None, request.FILES or None, instance=obj)
+    if form.is_valid():
+        form.save()
+        messages.success(request, f"Événement « {obj.titre} » mis à jour.")
+        return redirect("public:gestion_evenements")
+    return render(request, "_form_generic.html", {
+        "form": form,
+        "titre": f"Modifier événement : {obj.titre}",
+        "icone": "pencil",
+        "retour_url": "public:gestion_evenements",
+    })
+
+
+@login_required
+def evenement_delete(request, pk):
+    obj = get_object_or_404(Evenement, pk=pk)
+    if request.method == "POST":
+        titre = obj.titre
+        obj.delete()
+        messages.success(request, f"Événement « {titre} » supprimé.")
+        return redirect("public:gestion_evenements")
+    return render(request, "confirm_delete.html", {
+        "objet": obj,
+        "titre": "Supprimer l'événement",
+        "message": f"Supprimer l'événement « {obj.titre} » ?",
+        "retour_url": "public:gestion_evenements",
+    })
+
+
+@login_required
+def gestion_appels_offres(request):
+    appels = AppelOffre.objects.all()
+    return render(request, "public/gestion_appels_offres.html", {
+        "appels": appels,
+    })
+
+
+@login_required
+def appel_offre_create(request):
+    form = AppelOffreForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        obj = form.save()
+        messages.success(request, f"Appel d'offres {obj.reference} ajouté.")
+        return redirect("public:gestion_appels_offres")
+    return render(request, "_form_generic.html", {
+        "form": form,
+        "titre": "Nouvel appel d'offres",
+        "icone": "file-earmark-plus",
+        "retour_url": "public:gestion_appels_offres",
+    })
+
+
+@login_required
+def appel_offre_edit(request, pk):
+    obj = get_object_or_404(AppelOffre, pk=pk)
+    form = AppelOffreForm(request.POST or None, request.FILES or None, instance=obj)
+    if form.is_valid():
+        form.save()
+        messages.success(request, f"Appel d'offres {obj.reference} mis à jour.")
+        return redirect("public:gestion_appels_offres")
+    return render(request, "_form_generic.html", {
+        "form": form,
+        "titre": f"Modifier appel d'offres : {obj.reference}",
+        "icone": "pencil",
+        "retour_url": "public:gestion_appels_offres",
+    })
+
+
+@login_required
+def appel_offre_delete(request, pk):
+    obj = get_object_or_404(AppelOffre, pk=pk)
+    if request.method == "POST":
+        reference = obj.reference
+        obj.delete()
+        messages.success(request, f"Appel d'offres {reference} supprimé.")
+        return redirect("public:gestion_appels_offres")
+    return render(request, "confirm_delete.html", {
+        "objet": obj,
+        "titre": "Supprimer l'appel d'offres",
+        "message": f"Supprimer l'appel d'offres {obj.reference} ?",
+        "retour_url": "public:gestion_appels_offres",
     })
 
 
