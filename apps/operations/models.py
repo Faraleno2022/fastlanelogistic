@@ -58,6 +58,55 @@ class Carburant(TimeStampedModel):
         return self.litres_pris * self.prix_unitaire
 
 
+class FicheCarburant(TimeStampedModel):
+    """Registre journalier carburant, proche de la fiche terrain Excel."""
+    date = models.DateField("Date")
+    numero = models.PositiveIntegerField("N°", default=0)
+    chauffeur_nom = models.CharField("Nom et prénom", max_length=160)
+    plaque = models.CharField("Plaque", max_length=40)
+    niveau_carburant = models.DecimalField(
+        "Niveau carburant (%)", max_digits=5, decimal_places=2, default=0,
+    )
+    quantite = models.DecimalField("Quantité", max_digits=10, decimal_places=2, default=0)
+    heure = models.TimeField("Heure", null=True, blank=True)
+    rotation = models.PositiveIntegerField("Rotation", default=0)
+    observation = models.CharField("Observation", max_length=200, blank=True)
+    camion = models.ForeignKey(
+        Camion, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="fiches_carburant",
+    )
+    chauffeur = models.ForeignKey(
+        Employe, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="fiches_carburant",
+    )
+
+    class Meta:
+        verbose_name = "Fiche de gestion carburant"
+        verbose_name_plural = "Fiches de gestion carburant"
+        ordering = ["-date", "numero"]
+        unique_together = [("date", "numero")]
+        indexes = [models.Index(fields=["date", "plaque"])]
+
+    def __str__(self):
+        return f"{self.date} — {self.numero} — {self.plaque}"
+
+    def save(self, *args, **kwargs):
+        if self.chauffeur and not self.chauffeur_nom:
+            self.chauffeur_nom = self.chauffeur.nom_complet
+        if self.camion and not self.plaque:
+            self.plaque = f"{self.camion.immatriculation} {self.camion.code}".strip()
+        if not self.numero:
+            last = (
+                FicheCarburant.objects
+                .filter(date=self.date)
+                .order_by("-numero")
+                .values_list("numero", flat=True)
+                .first()
+            )
+            self.numero = (last or 0) + 1
+        super().save(*args, **kwargs)
+
+
 class Panne(TimeStampedModel):
     class Type(models.TextChoices):
         PNEUS = "PNEUS", "Pneus"

@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Carburant, Panne, DepenseAdmin, TransportBauxite, BonTransport
+from .models import (
+    BonTransport, Carburant, DepenseAdmin, FicheCarburant, Panne,
+    TransportBauxite,
+)
 
 
 @admin.register(Carburant)
@@ -9,6 +12,18 @@ class CarburantAdmin(admin.ModelAdmin):
                     "prix_unitaire", "montant_total", "station")
     list_filter = ("camion", "station", "date")
     search_fields = ("camion__code", "camion__immatriculation", "station")
+    date_hierarchy = "date"
+    autocomplete_fields = ("camion", "chauffeur")
+
+
+@admin.register(FicheCarburant)
+class FicheCarburantAdmin(admin.ModelAdmin):
+    list_display = (
+        "date", "numero", "chauffeur_nom", "plaque", "niveau_carburant",
+        "quantite", "heure", "rotation", "observation",
+    )
+    list_filter = ("date", "plaque")
+    search_fields = ("chauffeur_nom", "plaque", "observation")
     date_hierarchy = "date"
     autocomplete_fields = ("camion", "chauffeur")
 

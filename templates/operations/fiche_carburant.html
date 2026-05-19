@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Fiche de gestion carburant — {{ mois }}/{{ annee }}{% endblock %}
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h3 class="mb-0"><i class="bi bi-clipboard-data"></i> Fiche de gestion carburant</h3>
+    <p class="text-muted mb-0">Enregistrements terrain, totaux par date et statistiques en temps réel.</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <form method="get" class="d-flex gap-2">
+      <select name="mois" class="form-select form-select-sm" style="width:auto">
+        <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+        <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+        <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+        <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+        <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+        <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+        <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+        <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+        <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+        <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+        <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+        <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+      </select>
+      <input type="number" name="annee" value="{{ annee }}" class="form-control form-control-sm" style="width:90px">
+      <button class="btn btn-sm btn-primary">Filtrer</button>
+    </form>
+    <a href="{% url 'operations:fiche_carburant_create' %}" class="btn btn-success btn-sm">
+      <i class="bi bi-plus-lg"></i> Ajouter
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Niveau total</div>
+      <div class="kpi-value"><span data-live="niveau">{{ total_niveau|floatformat:0 }}</span>%</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Quantité totale</div>
+      <div class="kpi-value" data-live="quantite">{{ total_quantite|floatformat:0|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Rotations</div>
+      <div class="kpi-value" data-live="rotation">{{ total_rotation|intcomma }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card kpi-card"><div class="card-body">
+      <div class="kpi-title">Enregistrements</div>
+      <div class="kpi-value" data-live="count">{{ fiches|length }}</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header bg-primary text-white text-center">
+    <h4 class="mb-0 fw-bold">FICHE DE GESTION CARBURANT</h4>
+  </div>
+  <div class="card-body">
+    <div class="row g-2 align-items-center mb-2">
+      <div class="col-md-6">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+          <input id="ficheCarburantSearch" type="search" class="form-control"
+                 placeholder="Date, nom, plaque, observation..." autocomplete="off">
+        </div>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <small class="text-muted">
+          <i class="bi bi-activity"></i>
+          Les totaux visibles se recalculent automatiquement pendant la recherche.
+        </small>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table id="tblFicheCarburant" class="table table-bordered align-middle mb-0 fiche-carburant-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>N°</th>
+            <th>Nom et prénom</th>
+            <th>Plaque</th>
+            <th class="text-end">Niveau carburant</th>
+            <th class="text-end">Quantité</th>
+            <th>Heure</th>
+            <th class="text-end">Rotation</th>
+            <th>Observation</th>
+            <th class="text-end"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% regroup fiches by date as fiches_par_date %}
+          {% for group in fiches_par_date %}
+            {% for f in group.list %}
+            <tr data-row="entry"
+                data-date="{{ f.date|date:'d/m/Y' }}"
+                data-niveau="{{ f.niveau_carburant }}"
+                data-quantite="{{ f.quantite }}"
+                data-rotation="{{ f.rotation }}">
+              <td>{{ f.date|date:"d/m/Y" }}</td>
+              <td>{{ f.numero }}</td>
+              <td>{{ f.chauffeur_nom }}</td>
+              <td>{{ f.plaque }}</td>
+              <td class="text-end">{{ f.niveau_carburant|floatformat:0 }}%</td>
+              <td class="text-end">{{ f.quantite|floatformat:0 }}</td>
+              <td>{% if f.heure %}{{ f.heure|time:"H:i" }}{% endif %}</td>
+              <td class="text-end">{{ f.rotation }}</td>
+              <td>{{ f.observation }}</td>
+              <td class="text-end text-nowrap">
+                <a href="{% url 'operations:fiche_carburant_edit' f.pk %}" class="btn btn-outline-warning btn-sm" title="Modifier"><i class="bi bi-pencil"></i></a>
+                <a href="{% url 'operations:fiche_carburant_delete' f.pk %}" class="btn btn-outline-danger btn-sm" title="Supprimer"><i class="bi bi-trash"></i></a>
+              </td>
+            </tr>
+            {% endfor %}
+            <tr class="table-secondary fw-bold" data-row="total" data-date="{{ group.grouper|date:'d/m/Y' }}">
+              <td colspan="4">TOTAL {{ group.grouper|date:"d/m/Y" }}</td>
+              <td class="text-end" data-total="niveau">0%</td>
+              <td class="text-end" data-total="quantite">0</td>
+              <td></td>
+              <td class="text-end" data-total="rotation">0</td>
+              <td colspan="2"></td>
+            </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" class="text-center text-muted py-4">Aucun enregistrement carburant ce mois.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<style>
+  .fiche-carburant-table thead th {
+    background: #2f5597;
+    color: #fff;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .fiche-carburant-table tbody tr[data-row="entry"]:nth-child(odd) td {
+    background: #fff2cc;
+  }
+  .fiche-carburant-table tbody tr[data-row="entry"]:nth-child(even) td {
+    background: #fbe5d6;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const table = document.getElementById('tblFicheCarburant');
+  if (!table) return;
+  const searchInput = document.getElementById('ficheCarburantSearch');
+
+  function number(value) {
+    const parsed = parseFloat(String(value || '0').replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function format(value) {
+    return Math.round(value).toLocaleString('fr-FR');
+  }
+
+  function rowMatches(row, query) {
+    if (!query) return true;
+    return row.innerText.toLowerCase().includes(query);
+  }
+
+  function recalc() {
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const totalsByDate = {};
+    let niveau = 0;
+    let quantite = 0;
+    let rotation = 0;
+    let count = 0;
+
+    table.querySelectorAll('tbody tr[data-row="entry"]').forEach(function (row) {
+      const visible = rowMatches(row, query);
+      row.style.display = visible ? '' : 'none';
+      if (!visible) return;
+      const date = row.dataset.date;
+      const bucket = totalsByDate[date] || { niveau: 0, quantite: 0, rotation: 0 };
+      bucket.niveau += number(row.dataset.niveau);
+      bucket.quantite += number(row.dataset.quantite);
+      bucket.rotation += number(row.dataset.rotation);
+      totalsByDate[date] = bucket;
+      niveau += number(row.dataset.niveau);
+      quantite += number(row.dataset.quantite);
+      rotation += number(row.dataset.rotation);
+      count += 1;
+    });
+
+    table.querySelectorAll('tbody tr[data-row="total"]').forEach(function (row) {
+      const total = totalsByDate[row.dataset.date] || { niveau: 0, quantite: 0, rotation: 0 };
+      const visible = total.niveau || total.quantite || total.rotation;
+      row.style.display = visible ? '' : 'none';
+      row.querySelector('[data-total="niveau"]').textContent = format(total.niveau) + '%';
+      row.querySelector('[data-total="quantite"]').textContent = format(total.quantite);
+      row.querySelector('[data-total="rotation"]').textContent = format(total.rotation);
+    });
+
+    document.querySelector('[data-live="niveau"]').textContent = format(niveau);
+    document.querySelector('[data-live="quantite"]').textContent = format(quantite);
+    document.querySelector('[data-live="rotation"]').textContent = format(rotation);
+    document.querySelector('[data-live="count"]').textContent = format(count);
+  }
+
+  if (searchInput) searchInput.addEventListener('input', recalc);
+  recalc();
+});
+</script>
+
+{% endblock %}

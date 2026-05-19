@@ -6,9 +6,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper, ProtectedError
 from apps.core.session_helpers import get_contrat_actif
 from apps.core.utils import format_protected_error
-from .models import Carburant, Panne, DepenseAdmin, TransportBauxite, BonTransport
+from .models import (
+    BonTransport, Carburant, DepenseAdmin, FicheCarburant, Panne,
+    TransportBauxite,
+)
 from .forms import (
-    CarburantForm, PanneForm, DepenseAdminForm,
+    CarburantForm, FicheCarburantForm, PanneForm, DepenseAdminForm,
     TransportBauxiteForm, BonTransportForm,
 )
 
@@ -97,6 +100,8 @@ def _crud_factory(Model, Form, list_url, label, icone):
 
 carburant_create, carburant_edit, carburant_delete = _crud_factory(
     Carburant, CarburantForm, "operations:carburant", "Prise de carburant", "fuel-pump")
+fiche_carburant_create, fiche_carburant_edit, fiche_carburant_delete = _crud_factory(
+    FicheCarburant, FicheCarburantForm, "operations:fiche_carburant", "Fiche carburant", "clipboard-data")
 panne_create, panne_edit, panne_delete = _crud_factory(
     Panne, PanneForm, "operations:pannes", "Panne", "tools")
 depense_create, depense_edit, depense_delete = _crud_factory(
@@ -129,6 +134,39 @@ def carburant_list(request):
         "prises": prises, "mois": mois, "annee": annee,
         "total_km": total_km, "total_litres": total_litres,
         "total_montant": total_montant, "conso_moy": conso_moy,
+    })
+
+
+@login_required
+def fiche_carburant(request):
+    mois, annee = _filtre_periode(request)
+    fiches = list(
+        FicheCarburant.objects
+        .filter(date__month=mois, date__year=annee)
+        .select_related("camion", "chauffeur")
+        .order_by("date", "numero")
+    )
+    total_niveau = sum((f.niveau_carburant for f in fiches), Decimal(0))
+    total_quantite = sum((f.quantite for f in fiches), Decimal(0))
+    total_rotation = sum((f.rotation for f in fiches), 0)
+    stats_par_date = {}
+    for f in fiches:
+        row = stats_par_date.setdefault(
+            f.date,
+            {"niveau": Decimal(0), "quantite": Decimal(0), "rotation": 0, "count": 0},
+        )
+        row["niveau"] += f.niveau_carburant
+        row["quantite"] += f.quantite
+        row["rotation"] += f.rotation
+        row["count"] += 1
+    return render(request, "operations/fiche_carburant.html", {
+        "fiches": fiches,
+        "mois": mois,
+        "annee": annee,
+        "total_niveau": total_niveau,
+        "total_quantite": total_quantite,
+        "total_rotation": total_rotation,
+        "stats_par_date": stats_par_date,
     })
 
 

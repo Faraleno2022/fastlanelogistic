@@ -19,6 +19,10 @@ urlpatterns = [
     path("carburant/nouveau/", views.carburant_create, name="carburant_create"),
     path("carburant/<int:pk>/modifier/", views.carburant_edit, name="carburant_edit"),
     path("carburant/<int:pk>/supprimer/", views.carburant_delete, name="carburant_delete"),
+    path("fiche-carburant/", views.fiche_carburant, name="fiche_carburant"),
+    path("fiche-carburant/nouveau/", views.fiche_carburant_create, name="fiche_carburant_create"),
+    path("fiche-carburant/<int:pk>/modifier/", views.fiche_carburant_edit, name="fiche_carburant_edit"),
+    path("fiche-carburant/<int:pk>/supprimer/", views.fiche_carburant_delete, name="fiche_carburant_delete"),
 
     # Pannes
     path("pannes/", views.pannes_list, name="pannes"),

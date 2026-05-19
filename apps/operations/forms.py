@@ -1,6 +1,9 @@
 from datetime import date
 from django import forms
-from .models import Carburant, Panne, DepenseAdmin, TransportBauxite, BonTransport
+from .models import (
+    BonTransport, Carburant, DepenseAdmin, FicheCarburant, Panne,
+    TransportBauxite,
+)
 
 
 class CarburantForm(forms.ModelForm):
@@ -13,7 +16,7 @@ class CarburantForm(forms.ModelForm):
             "prix_unitaire", "station", "observations",
         ]
         widgets = {
-            "date": forms.DateInput(attrs={"class": "form-control", "type": "date", "col": "3"}),
+            "date": forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date", "col": "3"}),
             "heure": forms.TimeInput(attrs={"class": "form-control", "type": "time", "col": "3"}),
             "camion": forms.Select(attrs={"class": "form-select", "col": "3"}),
             "chauffeur": forms.Select(attrs={"class": "form-select", "col": "3"}),
@@ -39,6 +42,52 @@ class CarburantForm(forms.ModelForm):
         if not self.instance.pk:
             self.fields["date"].initial = date.today()
         self.fields["contrat"].required = False
+
+
+class FicheCarburantForm(forms.ModelForm):
+    class Meta:
+        model = FicheCarburant
+        fields = [
+            "date", "numero", "chauffeur", "chauffeur_nom", "camion", "plaque",
+            "niveau_carburant", "quantite", "heure", "rotation", "observation",
+        ]
+        widgets = {
+            "date": forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date", "col": "3"}),
+            "numero": forms.NumberInput(attrs={"class": "form-control", "min": "0", "col": "2"}),
+            "chauffeur": forms.Select(attrs={"class": "form-select", "col": "4"}),
+            "chauffeur_nom": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nom et prénom", "col": "6"}),
+            "camion": forms.Select(attrs={"class": "form-select", "col": "4"}),
+            "plaque": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: BK 2387 F01", "col": "4"}),
+            "niveau_carburant": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0", "col": "3"}),
+            "quantite": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0", "col": "3"}),
+            "heure": forms.TimeInput(attrs={"class": "form-control", "type": "time", "col": "3"}),
+            "rotation": forms.NumberInput(attrs={"class": "form-control", "min": "0", "col": "3"}),
+            "observation": forms.TextInput(attrs={"class": "form-control", "col": "12"}),
+        }
+        help_texts = {
+            "numero": "Laisser 0 pour générer automatiquement le prochain N° de la date.",
+            "niveau_carburant": "Saisir la valeur en pourcentage, sans le signe %.",
+            "chauffeur_nom": "Peut être rempli automatiquement si un chauffeur est sélectionné.",
+            "plaque": "Peut être remplie automatiquement si un camion est sélectionné.",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.fields["date"].initial = date.today()
+            self.fields["numero"].initial = 0
+        self.fields["chauffeur"].required = False
+        self.fields["chauffeur_nom"].required = False
+        self.fields["camion"].required = False
+        self.fields["plaque"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get("chauffeur") and not cleaned.get("chauffeur_nom"):
+            self.add_error("chauffeur_nom", "Renseignez un nom ou sélectionnez un chauffeur.")
+        if not cleaned.get("camion") and not cleaned.get("plaque"):
+            self.add_error("plaque", "Renseignez une plaque ou sélectionnez un camion.")
+        return cleaned
 
 
 class PanneForm(forms.ModelForm):
