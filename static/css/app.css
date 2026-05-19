@@ -8,10 +8,31 @@ body { background:#f4f6f9; font-family: Arial, sans-serif; }
   font-size: .78rem;
   padding: .35rem .45rem !important;
   white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, color .15s ease;
+}
+.navbar .nav-link:hover,
+.navbar .nav-link:focus,
+.navbar .nav-link.show {
+  background: rgba(255,255,255,.14);
+  border-color: rgba(255,255,255,.32);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+  color: #fff !important;
+}
+.navbar .nav-link:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 .18rem rgba(255,255,255,.28);
 }
 .navbar .nav-link i { font-size: .88rem; margin-right: .15rem; }
 .navbar .dropdown-menu { font-size: .85rem; min-width: 11rem; }
 .navbar .dropdown-item { padding-top: .35rem; padding-bottom: .35rem; }
+.navbar .dropdown-item:hover,
+.navbar .dropdown-item:focus,
+.navbar .dropdown-item.active {
+  background: #1F4E78;
+  color: #fff;
+}
 .navbar .badge { font-size: .65rem; font-weight: 500; }
 .navbar form .dropdown-item { font-size: .85rem; }
 .navbar .user-name { max-width: 150px; font-size: .78rem; }
