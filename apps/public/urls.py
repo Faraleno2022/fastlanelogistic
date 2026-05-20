@@ -1,11 +1,12 @@
 from django.urls import path
+from django.views.generic.base import RedirectView
 from . import views
 
 app_name = "public"
 
 urlpatterns = [
-    path("", views.home, name="home"),
-    path("a-propos/", views.a_propos, name="a_propos"),
+    path("", RedirectView.as_view(url="/connexion/", permanent=False), name="home"),
+    path("a-propos/", RedirectView.as_view(url="/connexion/", permanent=False), name="a_propos"),
     path("gestion/messages/", views.gestion_messages, name="gestion_messages"),
     path("gestion/messages/<int:pk>/", views.gestion_message_detail, name="gestion_message_detail"),
     path("gestion/evenements/", views.gestion_evenements, name="gestion_evenements"),
@@ -16,9 +17,9 @@ urlpatterns = [
     path("gestion/appels-offres/ajouter/", views.appel_offre_create, name="appel_offre_create"),
     path("gestion/appels-offres/<int:pk>/modifier/", views.appel_offre_edit, name="appel_offre_edit"),
     path("gestion/appels-offres/<int:pk>/supprimer/", views.appel_offre_delete, name="appel_offre_delete"),
-    path("evenements/", views.evenements_liste, name="evenements"),
-    path("evenements/<slug:slug>/", views.evenement_detail, name="evenement_detail"),
-    path("appels-offres/", views.appels_offres_liste, name="appels_offres"),
-    path("appels-offres/<slug:slug>/", views.appel_offre_detail, name="appel_offre_detail"),
-    path("contact/", views.contact, name="contact"),
+    path("evenements/", RedirectView.as_view(url="/connexion/", permanent=False), name="evenements"),
+    path("evenements/<slug:slug>/", RedirectView.as_view(url="/connexion/", permanent=False), name="evenement_detail"),
+    path("appels-offres/", RedirectView.as_view(url="/connexion/", permanent=False), name="appels_offres"),
+    path("appels-offres/<slug:slug>/", RedirectView.as_view(url="/connexion/", permanent=False), name="appel_offre_detail"),
+    path("contact/", RedirectView.as_view(url="/connexion/", permanent=False), name="contact"),
 ]
