@@ -329,6 +329,15 @@
 const carData = {{ chart_car_par_camion_json|safe }};
 const transData = {{ chart_tonnage_par_camion_json|safe }};
 const chargesData = {{ chart_charges_json|safe }};
+const fastlaneChartColors = {
+  navy: '#0F2C47',
+  blue: '#1F4E78',
+  red: '#E63946',
+  yellow: '#FCD116',
+  green: '#009460',
+  bauxite: '#B5651D',
+  muted: '#6B7280'
+};
 
 if (carData.labels.length) {
   new Chart(document.getElementById('chartCarburant'), {
@@ -336,8 +345,8 @@ if (carData.labels.length) {
     data: {
       labels: carData.labels,
       datasets: [
-        { label: 'Coût (GNF)', data: carData.montants, backgroundColor: '#F59E0B', yAxisID: 'y' },
-        { label: 'Conso (L/100km)', data: carData.conso, type: 'line', borderColor: '#DC2626', backgroundColor: '#DC2626', yAxisID: 'y1', tension: 0.3 }
+        { label: 'Coût (GNF)', data: carData.montants, backgroundColor: fastlaneChartColors.yellow, yAxisID: 'y' },
+        { label: 'Conso (L/100km)', data: carData.conso, type: 'line', borderColor: fastlaneChartColors.red, backgroundColor: fastlaneChartColors.red, yAxisID: 'y1', tension: 0.3 }
       ]
     },
     options: {
@@ -356,8 +365,8 @@ if (transData.labels.length) {
     data: {
       labels: transData.labels,
       datasets: [
-        { label: 'Tonnage (T)', data: transData.tonnage, backgroundColor: '#10B981', yAxisID: 'y' },
-        { label: 'Voyages', data: transData.voyages, type: 'line', borderColor: '#1F4E78', backgroundColor: '#1F4E78', yAxisID: 'y1', tension: 0.3 }
+        { label: 'Tonnage (T)', data: transData.tonnage, backgroundColor: fastlaneChartColors.green, yAxisID: 'y' },
+        { label: 'Voyages', data: transData.voyages, type: 'line', borderColor: fastlaneChartColors.blue, backgroundColor: fastlaneChartColors.blue, yAxisID: 'y1', tension: 0.3 }
       ]
     },
     options: {
@@ -377,7 +386,13 @@ if (chargesData.length) {
       labels: chargesData.map(x => x.label),
       datasets: [{
         data: chargesData.map(x => x.value),
-        backgroundColor: ['#F59E0B', '#DC2626', '#1F4E78', '#6B7280', '#10B981']
+        backgroundColor: [
+          fastlaneChartColors.yellow,
+          fastlaneChartColors.red,
+          fastlaneChartColors.blue,
+          fastlaneChartColors.muted,
+          fastlaneChartColors.green
+        ]
       }]
     },
     options: { responsive: true, plugins: { legend: { position: 'right' } } }

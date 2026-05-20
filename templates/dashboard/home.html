@@ -105,16 +105,37 @@
 {% block extra_js %}
 <script>
 const dataCamion = {{ ca_par_camion_json|safe }};
+const fastlaneChartColors = {
+  navy: '#0F2C47',
+  blue: '#1F4E78',
+  lightBlue: '#2E75B6',
+  red: '#E63946',
+  yellow: '#FCD116',
+  green: '#009460',
+  bauxite: '#B5651D',
+  muted: '#6B7280'
+};
 new Chart(document.getElementById('chartCamion'), {
   type: 'bar',
-  data: { labels: dataCamion.labels, datasets: [{ label: 'CA (GNF)', data: dataCamion.values, backgroundColor: '#2E75B6' }] },
+  data: { labels: dataCamion.labels, datasets: [{ label: 'CA (GNF)', data: dataCamion.values, backgroundColor: fastlaneChartColors.lightBlue }] },
   options: { responsive: true, plugins: { legend: { display: false } } }
 });
 
 const dataChauffeur = {{ tonnage_par_chauffeur_json|safe }};
 new Chart(document.getElementById('chartChauffeur'), {
   type: 'doughnut',
-  data: { labels: dataChauffeur.labels, datasets: [{ data: dataChauffeur.values, backgroundColor: ['#1F4E78','#2E75B6','#548235','#C00000','#FFC000','#7030A0','#385723','#00B050','#FF7F00','#888888'] }] }
+  data: { labels: dataChauffeur.labels, datasets: [{ data: dataChauffeur.values, backgroundColor: [
+    fastlaneChartColors.blue,
+    fastlaneChartColors.lightBlue,
+    fastlaneChartColors.green,
+    fastlaneChartColors.red,
+    fastlaneChartColors.yellow,
+    fastlaneChartColors.bauxite,
+    fastlaneChartColors.navy,
+    '#2E7D32',
+    '#D97706',
+    fastlaneChartColors.muted
+  ] }] }
 });
 
 const serie = {{ serie_mensuelle_json|safe }};
@@ -123,7 +144,7 @@ new Chart(document.getElementById('chartMois'), {
   data: {
     labels: serie.map(x => x.mois),
     datasets: [
-      { label: 'CA (GNF)', data: serie.map(x => x.ca), borderColor: '#1F4E78', backgroundColor: 'rgba(31,78,120,.15)', fill: true, tension: .3, yAxisID: 'y' },
+      { label: 'CA (GNF)', data: serie.map(x => x.ca), borderColor: fastlaneChartColors.blue, backgroundColor: 'rgba(31,78,120,.15)', fill: true, tension: .3, yAxisID: 'y' },
       { label: 'Tonnage (T)', data: serie.map(x => x.tonnage), borderColor: '#548235', backgroundColor: 'rgba(84,130,53,.15)', fill: true, tension: .3, yAxisID: 'y1' }
     ]
   },

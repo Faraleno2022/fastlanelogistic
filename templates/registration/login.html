@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Connexion — {{ SOCIETE_NOM }}{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-5">
+<div class="row justify-content-center align-items-center login-shell">
   <div class="col-md-5">
-    <div class="card shadow">
+    <div class="card login-card">
       <div class="card-body p-4">
-        <h3 class="text-center mb-4" style="color:#1F4E78">
+        <h3 class="text-center mb-4 login-brand">
           <i class="bi bi-truck-front-fill"></i> {{ SOCIETE_NOM }}
         </h3>
         <p class="text-center text-muted mb-4">Connexion au système de gestion</p>
@@ -21,7 +21,7 @@
             <label class="form-label">Mot de passe</label>
             <input type="password" name="password" class="form-control" required>
           </div>
-          <button type="submit" class="btn btn-primary w-100" style="background:#1F4E78;border:none;">
+          <button type="submit" class="btn btn-primary login-submit w-100">
             <i class="bi bi-box-arrow-in-right"></i> Se connecter
           </button>
         </form>
