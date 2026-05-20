@@ -196,9 +196,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # ============================================================================
 
 AUTH_USER_MODEL = 'core.Utilisateur'
-LOGIN_URL = 'login'
+LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = 'dashboard:index'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = '/login/'
 
 # ============================================================================
 # AUTRES CONFIGURATIONS
