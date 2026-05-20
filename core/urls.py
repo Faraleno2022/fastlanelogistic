@@ -16,7 +16,6 @@ urlpatterns = [
     
     path('', views.index_view, name='index'),
     path('login/', views.login_view, name='login'),
-    path('connexion/', views.login_view, name='connexion'),
     path('logout/', views.logout_view, name='logout'),
     path('documentation-legale/', views.documentation_legale, name='documentation_legale'),
     path('documentation-legale/print/', views.documentation_legale_print, name='documentation_legale_print'),

@@ -6,9 +6,9 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
-from django.views.generic.base import RedirectView
 from django.views.static import serve
 from django.http import HttpResponse
+from core.views_modules.demo import demo_accueil, demo_telecharger_pdf
 import os
 
 def robots_txt(request):
@@ -16,6 +16,7 @@ def robots_txt(request):
 User-agent: *
 Allow: /
 Allow: /login/
+Allow: /inscription/
 Disallow: /admin/
 Disallow: /api/
 Disallow: /employes/
@@ -31,9 +32,24 @@ def sitemap_xml(request):
     content = """<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
+        <loc>https://www.guineerh.space/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+    </url>
+    <url>
         <loc>https://www.guineerh.space/login/</loc>
         <changefreq>monthly</changefreq>
-        <priority>1.0</priority>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://www.guineerh.space/inscription/</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://www.guineerh.space/documentation-legale/</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
     </url>
 </urlset>"""
     return HttpResponse(content, content_type="application/xml")
@@ -45,10 +61,9 @@ def google_verification_2(request):
     return HttpResponse("google-site-verification: google10babad53f3eade7.html", content_type="text/html")
 
 urlpatterns = [
-    # Anciennes pages publiques: l'application expose seulement la connexion.
-    path('demo/', RedirectView.as_view(url='/login/', permanent=False), name='demo_accueil'),
-    path('demo/pdf/', RedirectView.as_view(url='/login/', permanent=False), name='demo_telecharger_pdf'),
-    path('connexion/', RedirectView.as_view(url='/login/', permanent=False), name='connexion'),
+    # Démonstration commerciale (accessible sans authentification)
+    path('demo/', demo_accueil, name='demo_accueil'),
+    path('demo/pdf/', demo_telecharger_pdf, name='demo_telecharger_pdf'),
 
     path('robots.txt', robots_txt, name='robots_txt'),
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),

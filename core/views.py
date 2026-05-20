@@ -85,12 +85,12 @@ def login_view(request):
     return render(request, 'core/login.html')
 
 
+@login_required
 def logout_view(request):
     """Vue de déconnexion"""
-    if request.user.is_authenticated:
-        log_activity(request, 'Déconnexion', 'core')
-        logout(request)
-        messages.info(request, 'Vous avez été déconnecté.')
+    log_activity(request, 'Déconnexion', 'core')
+    logout(request)
+    messages.info(request, 'Vous avez été déconnecté.')
     return redirect('core:login')
 
 
@@ -145,15 +145,37 @@ def profile_view(request):
 
 
 def index_view(request):
-    """Accueil: application interne uniquement, sans page publique."""
+    """Page d'accueil - redirige vers le dashboard si connecté, sinon affiche landing page"""
     if request.user.is_authenticated:
         return redirect('dashboard:index')
-    return redirect('core:login')
+    
+    # Récupérer les offres d'emploi ouvertes et non expirées pour affichage public
+    from recrutement.models import OffreEmploi
+    from formation.models import CatalogueFormation
+    from datetime import date
+    from django.db.models import Q
+    
+    # Toutes les offres ouvertes (aucune limite) pour affichage public
+    offres_emploi = OffreEmploi.objects.filter(
+        statut_offre='ouverte'
+    ).select_related('entreprise', 'service').order_by('-date_publication')
+
+    # Toutes les formations publiées (aucune limite) pour affichage public
+    formations = CatalogueFormation.objects.filter(
+        publiee=True,
+        actif=True
+    ).select_related('entreprise').order_by('-date_publication')
+    
+    return render(request, 'landing.html', {
+        'offres_emploi': offres_emploi,
+        'formations': formations,
+        'today': date.today(),
+    })
 
 
 def landing_page(request):
-    """Ancienne page publique: redirection vers la connexion."""
-    return redirect('/login/')
+    """Landing page publique pour le schéma public (multi-tenant)"""
+    return render(request, 'landing.html')
 
 
 def csrf_failure(request, reason=""):
