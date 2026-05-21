@@ -89,7 +89,7 @@ body {
 }
 .app-navbar .navbar-brand i,
 .app-navbar .nav-link i {
-  color: var(--fl-blue) !important;
+  color: #fff !important;
 }
 .app-navbar .nav-link.active {
   color: #fff !important;
