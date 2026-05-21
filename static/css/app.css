@@ -27,6 +27,12 @@ body {
   border-bottom: 3px solid var(--fl-red);
 }
 
+.app-navbar .navbar-brand,
+.app-navbar .navbar-brand:hover,
+.app-navbar .navbar-brand:focus {
+  color: #fff !important;
+}
+
 .btn-primary,
 .bg-primary {
   background-color: var(--fl-navy-2) !important;
@@ -73,6 +79,14 @@ body {
   border-radius: 6px;
   transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, color .15s ease;
 }
+.app-navbar .nav-link {
+  color: rgba(255,255,255,.92) !important;
+}
+.app-navbar .nav-link.active {
+  color: #fff !important;
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.2);
+}
 .navbar .nav-link:hover,
 .navbar .nav-link:focus,
 .navbar .nav-link.show {
@@ -87,12 +101,31 @@ body {
 }
 .navbar .nav-link i { font-size: .88rem; margin-right: .15rem; }
 .navbar .dropdown-menu { font-size: .85rem; min-width: 11rem; }
+.app-navbar .dropdown-menu {
+  background: #fff;
+  border: 1px solid var(--fl-border);
+  box-shadow: 0 .5rem 1rem rgba(15,44,71,.16);
+}
 .navbar .dropdown-item { padding-top: .35rem; padding-bottom: .35rem; }
+.app-navbar .dropdown-item {
+  color: var(--fl-ink);
+}
 .navbar .dropdown-item:hover,
 .navbar .dropdown-item:focus,
 .navbar .dropdown-item.active {
   background: var(--fl-navy-2);
   color: #fff;
+}
+.app-navbar .dropdown-item.text-danger {
+  color: var(--fl-red-dark) !important;
+}
+.app-navbar .dropdown-item.text-danger:hover,
+.app-navbar .dropdown-item.text-danger:focus {
+  background: var(--fl-red-dark);
+  color: #fff !important;
+}
+.app-navbar .navbar-toggler {
+  border-color: rgba(255,255,255,.35);
 }
 .navbar .badge { font-size: .65rem; font-weight: 500; }
 .navbar form .dropdown-item { font-size: .85rem; }
