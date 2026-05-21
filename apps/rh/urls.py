@@ -1,11 +1,9 @@
 from django.urls import path
-from django.views.generic import RedirectView
 from . import views
 
 app_name = "rh"
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="rh:liste_employes", permanent=False), name="home"),
     # Employés
     path("employes/", views.liste_employes, name="liste_employes"),
     path("employes/nouveau/", views.employe_create, name="employe_create"),
