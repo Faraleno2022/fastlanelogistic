@@ -4,6 +4,7 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 from apps.public.sitemaps import sitemaps as public_sitemaps
 from apps.public.views import robots_txt, google_site_verification
@@ -30,6 +31,11 @@ urlpatterns = [
     path("operations/", include("apps.operations.urls")),
     path("facturation/", include("apps.facturation.urls")),
     path("dashboard/", include("apps.dashboard.urls")),
+    path(
+        "app/",
+        RedirectView.as_view(pattern_name="rh:liste_employes", permanent=False),
+        name="rh_app",
+    ),
 
     # SEO — sitemap & robots.txt
     path(
