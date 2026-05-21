@@ -23,7 +23,8 @@ body {
 }
 
 .app-navbar {
-  background: var(--fl-blue) !important;
+  background-color: var(--fl-blue) !important;
+  background-image: none !important;
   border-bottom: 3px solid var(--fl-navy-2);
 }
 
