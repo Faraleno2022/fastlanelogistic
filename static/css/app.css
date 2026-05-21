@@ -23,13 +23,13 @@ body {
 }
 
 .app-navbar {
-  background-color: var(--fl-blue) !important;
+  background-color: var(--fl-navy) !important;
   background-image: none !important;
   border-bottom: 3px solid var(--fl-navy-2);
 }
 
 .app-navbar > .container-fluid {
-  background-color: var(--fl-blue) !important;
+  background-color: var(--fl-navy) !important;
 }
 
 .app-navbar .navbar-brand,

@@ -39,7 +39,7 @@ body.public-site {
 
 /* --------- Navbar --------- */
 .public-navbar {
-  background-color: var(--fl-blue) !important;
+  background-color: var(--fl-navy) !important;
   background-image: none !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -53,7 +53,7 @@ body.public-site {
   transition: background .3s ease, box-shadow .3s ease;
 }
 .public-navbar.fixed-top.is-scrolled {
-  background-color: var(--fl-blue) !important;
+  background-color: var(--fl-navy) !important;
   background-image: none !important;
   box-shadow: 0 8px 24px rgba(15,44,71,.18);
 }
