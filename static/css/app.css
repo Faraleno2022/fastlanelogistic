@@ -28,6 +28,10 @@ body {
   border-bottom: 3px solid var(--fl-navy-2);
 }
 
+.app-navbar > .container-fluid {
+  background-color: var(--fl-blue) !important;
+}
+
 .app-navbar .navbar-brand,
 .app-navbar .navbar-brand:hover,
 .app-navbar .navbar-brand:focus {
