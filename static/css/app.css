@@ -87,6 +87,10 @@ body {
 .app-navbar .nav-link {
   color: rgba(255,255,255,.92) !important;
 }
+.app-navbar .navbar-brand i,
+.app-navbar .nav-link i {
+  color: var(--fl-blue) !important;
+}
 .app-navbar .nav-link.active {
   color: #fff !important;
   background: rgba(255,255,255,.12);
