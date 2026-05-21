@@ -23,8 +23,8 @@ body {
 }
 
 .app-navbar {
-  background: linear-gradient(90deg, var(--fl-navy), var(--fl-navy-2));
-  border-bottom: 3px solid var(--fl-red);
+  background: var(--fl-blue) !important;
+  border-bottom: 3px solid var(--fl-navy-2);
 }
 
 .app-navbar .navbar-brand,
