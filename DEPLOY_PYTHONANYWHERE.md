@@ -57,6 +57,5 @@ Cliquer sur **Reload** dans l'onglet Web.
 ## URLs publiques / privées
 - `/` `/a-propos/` `/evenements/` `/appels-offres/` → **public** (pas de lien de connexion)
 - `/connexion/` → écran de login
-- `/app/` → accès rapide à l'application RH
 - `/dashboard/` `/flotte/` `/rh/` `/operations/` `/facturation/` → **backoffice** (authentifié)
 - `/admin/` → administration Django (superuser)
