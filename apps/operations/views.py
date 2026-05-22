@@ -226,9 +226,10 @@ def bons_transport(request):
     # Synthèse par chauffeur (prénom + nom)
     synth = {}
     for b in bons:
-        key = (b.prenom, b.nom)
+        chauffeur = b.chauffeur_display or b.nom or b.prenom
+        key = (chauffeur, b.plaque)
         s = synth.setdefault(key, {
-            "prenom": b.prenom, "nom": b.nom, "telephone": b.telephone,
+            "chauffeur": chauffeur,
             "plaque": b.plaque, "nb_bons": 0, "nb_voyages": 0,
             "quantite_totale": Decimal(0),
         })

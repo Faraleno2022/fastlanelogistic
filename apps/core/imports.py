@@ -280,7 +280,7 @@ def read_excel_rows(uploaded_file, schema: Sequence[Column]):
         if lbl is None:
             continue
         col = label_to_col.get(_norm_label(lbl))
-        if col:
+        if col and col not in idx_to_col.values():
             idx_to_col[i] = col
 
     normalized_headers = {_norm_label(v) for v in header_vals if v}

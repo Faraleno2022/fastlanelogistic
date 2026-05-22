@@ -85,7 +85,7 @@ class FicheCarburant(TimeStampedModel):
         verbose_name_plural = "Fiches de gestion carburant"
         ordering = ["-date", "numero"]
         unique_together = [("date", "numero")]
-        indexes = [models.Index(fields=["date", "plaque"])]
+        indexes = [models.Index(fields=["date", "plaque"], name="operations__date_5d105e_idx")]
 
     def __str__(self):
         return f"{self.date} — {self.numero} — {self.plaque}"
@@ -229,6 +229,7 @@ class BonTransport(TimeStampedModel):
     nom = models.CharField("Last Name / Nom", max_length=80, blank=True)
     telephone = models.CharField("Phone Number", max_length=30, blank=True)
     plaque = models.CharField("Plate / Plaque", max_length=30, blank=True)
+    remarque = models.CharField("Remarque", max_length=200, blank=True)
     carte_entree = models.CharField("Carte d'entrée / Entry car N°", max_length=40, blank=True)
     lieu_chargement = models.CharField("Lieu de chargement / Loading zone", max_length=120, blank=True)
     heure_depart = models.TimeField("Heure de départ / Departure Time", null=True, blank=True)
@@ -237,6 +238,12 @@ class BonTransport(TimeStampedModel):
     observation = models.CharField("Observation", max_length=200, blank=True)
     quantite = models.DecimalField("Quantité / Quantity (T)", max_digits=8, decimal_places=2, default=0)
     num_bon = models.CharField("N° Bon", max_length=40, unique=True)
+    heure_observation_start = models.TimeField("Observation H debut", null=True, blank=True)
+    heure_observation_end = models.TimeField("Observation H fin", null=True, blank=True)
+    quantite_1 = models.DecimalField("Quantite 1", max_digits=8, decimal_places=2, default=0)
+    quantite_2 = models.DecimalField("Quantite 2", max_digits=8, decimal_places=2, default=0)
+    quantite_3 = models.DecimalField("Quantite 3", max_digits=8, decimal_places=2, default=0)
+    quantite_4 = models.DecimalField("Quantite 4", max_digits=8, decimal_places=2, default=0)
     camion = models.ForeignKey(Camion, on_delete=models.SET_NULL, null=True, blank=True, related_name="bons")
     chauffeur = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True, related_name="bons")
     contrat = models.ForeignKey(
@@ -254,9 +261,16 @@ class BonTransport(TimeStampedModel):
     def __str__(self):
         return f"{self.num_bon} — {self.date}"
 
+    @property
+    def chauffeur_display(self):
+        return " ".join(part for part in (self.prenom, self.nom) if part).strip()
+
     def save(self, *args, **kwargs):
         if not self.num_bon:
             self.num_bon = f"BT-{self.date.strftime('%Y-%m')}-{BonTransport.objects.filter(date__year=self.date.year, date__month=self.date.month).count()+1:03d}"
+        detail_total = self.quantite_1 + self.quantite_2 + self.quantite_3 + self.quantite_4
+        if detail_total:
+            self.quantite = detail_total
         super().save(*args, **kwargs)
 
 
