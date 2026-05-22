@@ -65,6 +65,27 @@ def _p_decimal(v):
         raise ValueError(f"nombre attendu, reçu : {v!r}")
 
 
+@parser("percent")
+def _p_percent(v):
+    if v is None or v == "":
+        return Decimal(0)
+    if isinstance(v, (int, float, Decimal)):
+        value = Decimal(str(v))
+        if Decimal(0) < abs(value) < Decimal(1):
+            return value * Decimal(100)
+        return value
+    try:
+        text = str(v).strip()
+        has_percent = "%" in text
+        cleaned = text.replace(" ", "").replace(",", ".").replace("%", "")
+        value = Decimal(cleaned)
+        if not has_percent and Decimal(0) < abs(value) < Decimal(1):
+            return value * Decimal(100)
+        return value
+    except (InvalidOperation, ValueError):
+        raise ValueError(f"pourcentage attendu, recu : {v!r}")
+
+
 @parser("date")
 def _p_date(v):
     if v is None or v == "":
@@ -277,6 +298,9 @@ def read_excel_rows(uploaded_file, schema: Sequence[Column]):
     for r in range(first_data_row, max_row + 1):
         # ignore les lignes totalement vides
         if all(ws.cell(row=r, column=i).value in (None, "") for i in idx_to_col):
+            continue
+        first_value = ws.cell(row=r, column=1).value
+        if isinstance(first_value, str) and first_value.strip().upper().startswith("TOTAL"):
             continue
         row_data = {}
         row_ok = True

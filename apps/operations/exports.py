@@ -131,7 +131,7 @@ FICHE_CARBURANT_IMPORT = [
     Column("camion", "Camion (code)", "str", resolve=_resolve_camion,
            help="Optionnel. Si renseigné, la plaque peut être remplie automatiquement."),
     Column("plaque", "Plaque", "str", required=True),
-    Column("niveau_carburant", "Niveau carburant (%)", "decimal"),
+    Column("niveau_carburant", "Niveau carburant (%)", "percent"),
     Column("quantite", "Quantité", "decimal", required=True),
     Column("heure", "Heure (HH:MM)", "time"),
     Column("rotation", "Rotation", "int"),
