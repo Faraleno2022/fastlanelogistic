@@ -148,7 +148,7 @@
   </div>
   <div class="col-md-4">
     <div class="card kpi-card"><div class="card-body">
-      <div class="kpi-title">QuantitÃ© totale (T)</div>
+      <div class="kpi-title">Quantite totale (T)</div>
       <div class="kpi-value">{{ total_quantite|floatformat:0|intcomma }}</div>
     </div></div>
   </div>
@@ -160,10 +160,10 @@
   </div>
 </div>
 
-<!-- SynthÃ¨se par chauffeur -->
+<!-- Synthese par chauffeur -->
 {% if synth %}
 <div class="card shadow-sm mb-4">
-  <div class="card-header bg-info text-white"><i class="bi bi-bar-chart"></i> SynthÃ¨se par chauffeur</div>
+  <div class="card-header bg-info text-white"><i class="bi bi-bar-chart"></i> Synthese par chauffeur</div>
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-sm table-hover mb-0">
@@ -173,7 +173,7 @@
             <th>Plaque</th>
             <th class="text-end">Nb bons</th>
             <th class="text-end">Nb voyages</th>
-            <th class="text-end">QuantitÃ© (T)</th>
+            <th class="text-end">Quantite (T)</th>
             <th class="text-end">Moy / voyage</th>
           </tr>
         </thead>
@@ -195,23 +195,57 @@
 </div>
 {% endif %}
 
-<!-- DÃ©tail des bons -->
+<!-- Detail des bons -->
 <div class="card shadow-sm">
-  <div class="card-header bg-dark text-white"><i class="bi bi-list-ul"></i> DÃ©tail des bons</div>
+  <div class="card-header bg-dark text-white"><i class="bi bi-list-ul"></i> Detail des bons</div>
   <div class="card-body">
     {% include "_search_bar.html" with target="#tblBons" placeholder="NÂ° bon, chauffeur, plaque, lieu..." %}
     <div class="table-responsive">
       <table id="tblBons" data-searchable class="table table-hover table-striped mb-0">
         <thead class="table-secondary">
           <tr>
-            <th>REFERENCE BON</th><th>Date</th><th>CHAUFFEUR</th><th>PLAQUE</th><th>REMARQUE</th><th>N° CARTE D'ENTREE</th><th>LIEU DE CHARGEMENT</th><th>HEURE DE DEPART</th><th>PESEE H DEBUT</th><th>PESEE H FIN</th><th>OBS. H DEBUT</th><th>OBS. H FIN</th><th class="text-end">QTE 1</th><th class="text-end">QTE 2</th><th class="text-end">QTE 3</th><th class="text-end">QTE 4</th><th class="text-end" data-sum="sum" data-format="dec2">TOTAL</th><th>OBSERVATION</th>
+            <th>REFERENCE BON</th>
+            <th>Date</th>
+            <th>CHAUFFEUR</th>
+            <th>PLAQUE</th>
+            <th>REMARQUE</th>
+            <th>N CARTE D'ENTREE</th>
+            <th>LIEU DE CHARGEMENT</th>
+            <th>HEURE DE DEPART</th>
+            <th>PESEE H DEBUT</th>
+            <th>PESEE H FIN</th>
+            <th>OBS. H DEBUT</th>
+            <th>OBS. H FIN</th>
+            <th class="text-end">QTE 1</th>
+            <th class="text-end">QTE 2</th>
+            <th class="text-end">QTE 3</th>
+            <th class="text-end">QTE 4</th>
+            <th class="text-end" data-sum="sum" data-format="dec2">TOTAL (T)</th>
+            <th>OBSERVATION</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {% for b in bons %}
           <tr>
-            <td><strong>{{ b.num_bon }}</strong></td><td>{{ b.date|date:"d/m/Y" }}</td><td>{{ b.chauffeur_display }}</td><td>{{ b.plaque }}</td><td>{{ b.remarque }}</td><td>{{ b.carte_entree }}</td><td>{{ b.lieu_chargement }}</td><td>{{ b.heure_depart|time:"H:i"|default:"—" }}</td><td>{{ b.heure_pesee_start|time:"H:i"|default:"—" }}</td><td>{{ b.heure_pesee_end|time:"H:i"|default:"—" }}</td><td>{{ b.heure_observation_start|time:"H:i"|default:"—" }}</td><td>{{ b.heure_observation_end|time:"H:i"|default:"—" }}</td><td class="text-end">{{ b.quantite_1|floatformat:2 }}</td><td class="text-end">{{ b.quantite_2|floatformat:2 }}</td><td class="text-end">{{ b.quantite_3|floatformat:2 }}</td><td class="text-end">{{ b.quantite_4|floatformat:2 }}</td><td class="text-end fw-bold">{{ b.quantite|floatformat:2 }}</td><td>{{ b.observation }}</td>
+            <td><strong>{{ b.num_bon }}</strong></td>
+            <td>{{ b.date|date:"d/m/Y" }}</td>
+            <td>{{ b.chauffeur_display|default:"Non renseigne" }}</td>
+            <td>{{ b.plaque|default:"Non renseignee" }}</td>
+            <td>{{ b.remarque }}</td>
+            <td>{{ b.carte_entree }}</td>
+            <td>{{ b.lieu_chargement }}</td>
+            <td>{{ b.heure_depart|time:"H:i"|default:"-" }}</td>
+            <td>{{ b.heure_pesee_start|time:"H:i"|default:"-" }}</td>
+            <td>{{ b.heure_pesee_end|time:"H:i"|default:"-" }}</td>
+            <td>{{ b.heure_observation_start|time:"H:i"|default:"-" }}</td>
+            <td>{{ b.heure_observation_end|time:"H:i"|default:"-" }}</td>
+            <td class="text-end">{{ b.quantite_1|floatformat:2 }}</td>
+            <td class="text-end">{{ b.quantite_2|floatformat:2 }}</td>
+            <td class="text-end">{{ b.quantite_3|floatformat:2 }}</td>
+            <td class="text-end">{{ b.quantite_4|floatformat:2 }}</td>
+            <td class="text-end fw-bold">{{ b.quantite|floatformat:2 }}</td>
+            <td>{{ b.observation }}</td>
             <td class="text-nowrap">
               <a href="{% url 'operations:bon_imprimer' b.pk %}" class="btn btn-outline-primary btn-sm" title="Imprimer (PDF)" target="_blank"><i class="bi bi-printer"></i></a>
               <a href="{% url 'operations:bon_edit' b.pk %}" class="btn btn-outline-warning btn-sm" title="Modifier"><i class="bi bi-pencil"></i></a>
@@ -238,15 +272,15 @@
 </div>
 
 <!-- ============================================================== -->
-<!-- MODÃˆLE VIERGE â€” BON DE TRANSPORT BAUXITE                      -->
-<!-- Ã€ imprimer puis remettre au chauffeur pour remplissage manuel -->
+<!-- MODELE VIERGE - BON DE TRANSPORT BAUXITE                      -->
+<!-- A imprimer puis remettre au chauffeur pour remplissage manuel -->
 <!-- ============================================================== -->
 <div class="card shadow-sm mt-4 no-print">
   <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-file-earmark-ruled"></i> ModÃ¨le vierge â€” Bon de transport bauxite</span>
+    <span><i class="bi bi-file-earmark-ruled"></i> Modele vierge - Bon de transport bauxite</span>
     <div class="d-flex gap-2">
       <a href="{% url 'operations:bon_modele_vierge' %}?n=100" class="btn btn-light btn-sm" title="GÃ©nÃ¨re un lot de 100 bons numÃ©rotÃ©s automatiquement" target="_blank">
-        <i class="bi bi-file-earmark-pdf text-danger"></i> TÃ©lÃ©charger 100 bons numÃ©rotÃ©s
+        <i class="bi bi-file-earmark-pdf text-danger"></i> Telecharger 100 bons numerotes
       </a>
       <button type="button" onclick="window.print()" class="btn btn-warning btn-sm" title="Imprimer ce modÃ¨le">
         <i class="bi bi-printer"></i> Imprimer le modÃ¨le
@@ -256,26 +290,25 @@
   <div class="card-body bg-light">
     <p class="text-muted small mb-3">
       <i class="bi bi-info-circle"></i>
-      Le bouton Â« TÃ©lÃ©charger 100 bons numÃ©rotÃ©s Â» gÃ©nÃ¨re un PDF de
-      <strong>100 pages</strong>, chaque page portant un <strong>NÂ° BON unique</strong>
-      (format <code>BTV-NNNNN</code>) et son numÃ©ro de page. Chaque clic <strong>continue</strong>
-      la sÃ©quence â€” aucun numÃ©ro n'est jamais rÃ©-Ã©mis.
+      Le bouton telecharge un PDF de <strong>100 pages</strong>, chaque page portant
+      un <strong>N BON unique</strong> (format <code>BTV-NNNNN</code>) et son numero
+      de page. Chaque clic continue la sequence, sans reutiliser les numeros deja emis.
     </p>
   </div>
 </div>
 
 <div class="bon-modele-wrap mb-4">
   <div class="bon-modele">
-    <!-- Bandeau drapeau GuinÃ©e -->
+    <!-- Bandeau drapeau Guinee -->
     <div class="bon-flag-strip"><div class="r"></div><div class="y"></div><div class="g"></div></div>
 
-    <!-- En-tÃªte : sociÃ©tÃ© + NÂ° BON + DATE -->
+    <!-- En-tete : societe + N BON + DATE -->
     <div class="bon-header">
       <div class="company">
         <div class="name">FASTLANE LOGISTIC</div>
-        <div class="sub">Transport &amp; Logistique â€” Conakry, GuinÃ©e</div>
+        <div class="sub">Transport &amp; Logistique - Conakry, Guinee</div>
       </div>
-      <div class="label-cell">NÂ° BON :</div>
+      <div class="label-cell">N BON :</div>
       <div class="value-cell">&nbsp;</div>
       <div class="label-cell">DATE :</div>
       <div class="value-cell">&nbsp;</div>
@@ -283,36 +316,36 @@
 
     <!-- Bandeau titre rouge -->
     <div class="bon-title">
-      BON DE TRANSPORT BAUXITE <span class="light">â€”â€” FASTLANE LOGISTIC</span>
+      BON DE TRANSPORT BAUXITE <span class="light">-- FASTLANE LOGISTIC</span>
     </div>
 
     <!-- Corps : 2 colonnes -->
     <div class="bon-body">
-      <!-- Colonne gauche : identitÃ© chauffeur + vÃ©hicule + client -->
+      <!-- Colonne gauche : identite chauffeur + vehicule + client -->
       <div class="left">
-        <div class="bon-row"><div class="lab">PrÃ©nom</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row"><div class="lab">Chauffeur</div><div class="val">&nbsp;</div></div>
         <div class="bon-row alt"><div class="lab">Nom</div><div class="val">&nbsp;</div></div>
-        <div class="bon-row"><div class="lab">TÃ©lÃ©phone</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row"><div class="lab">Remarque</div><div class="val">&nbsp;</div></div>
         <div class="bon-row alt"><div class="lab">Plaque camion</div><div class="val">&nbsp;</div></div>
-        <div class="bon-row"><div class="lab">Carte d'entrÃ©e</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row"><div class="lab">Carte d'entree</div><div class="val">&nbsp;</div></div>
         <div class="bon-row alt"><div class="lab">Lieu de chargement</div><div class="val">&nbsp;</div></div>
-        <div class="bon-row"><div class="lab">Heure de dÃ©part</div><div class="val">&nbsp;</div></div>
+        <div class="bon-row"><div class="lab">Heure de depart</div><div class="val">&nbsp;</div></div>
         <div class="bon-row alt"><div class="lab">Client / Projet</div><div class="val">&nbsp;</div></div>
       </div>
 
-      <!-- Colonne droite : pesÃ©es + signatures -->
+      <!-- Colonne droite : pesees + signatures -->
       <div class="right">
-        <div class="bon-section">â–Œ PESÃ‰ES ET QUANTITÃ‰ TRANSPORTÃ‰E</div>
+        <div class="bon-section">PESEES ET QUANTITE TRANSPORTEE</div>
         <div class="bon-pesees">
-          <div class="head">PESÃ‰E DÃ‰BUT (T)</div>
-          <div class="head">PESÃ‰E FIN (T)</div>
-          <div class="head red">QUANTITÃ‰ NETTE (T)</div>
+          <div class="head">PESEE DEBUT</div>
+          <div class="head">PESEE FIN</div>
+          <div class="head red">QUANTITE NETTE (T)</div>
           <div class="cell">&nbsp;</div>
           <div class="cell">&nbsp;</div>
           <div class="cell netto">&nbsp;</div>
         </div>
 
-        <div class="bon-section mt-0" style="margin-top:0;">â–Œ SIGNATURES ET VALIDATIONS</div>
+        <div class="bon-section mt-0" style="margin-top:0;">SIGNATURES ET VALIDATIONS</div>
         <div class="bon-sign-head">
           <div class="a">Chauffeur</div>
           <div class="b">Resp. site</div>
@@ -328,7 +361,7 @@
 
     <!-- Avertissement lÃ©gal -->
     <div class="bon-warn">
-      âš  Document officiel FASTLANE LOGISTIC â€” Toute altÃ©ration est passible de poursuites. Conserver l'original.
+      Document officiel FASTLANE LOGISTIC - Toute alteration est passible de poursuites. Conserver l'original.
     </div>
   </div>
 </div>

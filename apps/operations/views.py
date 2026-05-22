@@ -1,4 +1,4 @@
-from datetime import date
+﻿from datetime import date
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -17,10 +17,10 @@ from .forms import (
 
 
 def _build_initial(request):
-    """Retourne le dict `initial` pour pré-remplir le formulaire en fonction
+    """Retourne le dict `initial` pour prÃ©-remplir le formulaire en fonction
     du contrat actif en session et du querystring.
 
-    Priorité :
+    PrioritÃ© :
       1. `?contrat=<code>` dans l'URL (surcharge ponctuelle)
       2. Contrat actif en session
       3. Aucun (None)
@@ -40,15 +40,15 @@ def _build_initial(request):
 
 
 def _pre_fill_client_and_tarif(initial, Model):
-    """Pour TransportBauxite : si on a un contrat dans initial, on pré-remplit
-    aussi le client et le tarif_unitaire pour éviter une double saisie."""
+    """Pour TransportBauxite : si on a un contrat dans initial, on prÃ©-remplit
+    aussi le client et le tarif_unitaire pour Ã©viter une double saisie."""
     if Model is TransportBauxite and "contrat" in initial and initial["contrat"]:
         initial.setdefault("client", initial["contrat"].client)
         initial.setdefault("tarif_unitaire", initial["contrat"].tarif)
 
 
 def _crud_factory(Model, Form, list_url, label, icone):
-    """Génère les vues create/edit/delete pour un modèle."""
+    """GÃ©nÃ¨re les vues create/edit/delete pour un modÃ¨le."""
     @login_required
     def create_view(request):
         initial = _build_initial(request) if request.method != "POST" else {}
@@ -56,11 +56,11 @@ def _crud_factory(Model, Form, list_url, label, icone):
         form = Form(request.POST or None, initial=initial)
         if form.is_valid():
             form.save()
-            messages.success(request, f"{label} ajouté(e).")
+            messages.success(request, f"{label} ajoutÃ©(e).")
             return redirect(list_url)
         contrat_initial = initial.get("contrat") if initial else None
         return render(request, "_form_generic.html", {
-            "form": form, "titre": f"Ajouter — {label}",
+            "form": form, "titre": f"Ajouter â€” {label}",
             "icone": icone, "retour_url": list_url,
             "contrat_prefill": contrat_initial,
         })
@@ -71,10 +71,10 @@ def _crud_factory(Model, Form, list_url, label, icone):
         form = Form(request.POST or None, instance=obj)
         if form.is_valid():
             form.save()
-            messages.success(request, f"{label} mis(e) à jour.")
+            messages.success(request, f"{label} mis(e) Ã  jour.")
             return redirect(list_url)
         return render(request, "_form_generic.html", {
-            "form": form, "titre": f"Modifier — {label}",
+            "form": form, "titre": f"Modifier â€” {label}",
             "icone": "pencil", "retour_url": list_url,
         })
 
@@ -87,11 +87,11 @@ def _crud_factory(Model, Form, list_url, label, icone):
             except ProtectedError as e:
                 messages.error(request, format_protected_error(e))
                 return redirect(list_url)
-            messages.success(request, f"{label} supprimé(e).")
+            messages.success(request, f"{label} supprimÃ©(e).")
             return redirect(list_url)
         return render(request, "confirm_delete.html", {
-            "objet": obj, "titre": f"Supprimer — {label}",
-            "message": f"Supprimer définitivement cet élément ({obj}) ?",
+            "objet": obj, "titre": f"Supprimer â€” {label}",
+            "message": f"Supprimer dÃ©finitivement cet Ã©lÃ©ment ({obj}) ?",
             "retour_url": list_url,
         })
 
@@ -105,7 +105,7 @@ fiche_carburant_create, fiche_carburant_edit, fiche_carburant_delete = _crud_fac
 panne_create, panne_edit, panne_delete = _crud_factory(
     Panne, PanneForm, "operations:pannes", "Panne", "tools")
 depense_create, depense_edit, depense_delete = _crud_factory(
-    DepenseAdmin, DepenseAdminForm, "operations:depenses_admin", "Dépense admin.", "file-earmark-text")
+    DepenseAdmin, DepenseAdminForm, "operations:depenses_admin", "DÃ©pense admin.", "file-earmark-text")
 transport_create, transport_edit, transport_delete = _crud_factory(
     TransportBauxite, TransportBauxiteForm, "operations:transport_bauxite", "Voyage bauxite", "truck")
 bon_create, bon_edit, bon_delete = _crud_factory(
@@ -223,14 +223,15 @@ def bons_transport(request):
     total_quantite = sum((b.quantite for b in bons), Decimal(0))
     nb_bons = bons.count()
 
-    # Synthèse par chauffeur (prénom + nom)
+    # Synthese par chauffeur
     synth = {}
     for b in bons:
-        chauffeur = b.chauffeur_display or b.nom or b.prenom
-        key = (chauffeur, b.plaque)
+        chauffeur = b.chauffeur_display or b.nom or b.prenom or "Non renseigne"
+        plaque = b.plaque or "Non renseignee"
+        key = (chauffeur, plaque)
         s = synth.setdefault(key, {
             "chauffeur": chauffeur,
-            "plaque": b.plaque, "nb_bons": 0, "nb_voyages": 0,
+            "plaque": plaque, "nb_bons": 0, "nb_voyages": 0,
             "quantite_totale": Decimal(0),
         })
         s["nb_bons"] += 1
@@ -250,7 +251,7 @@ def bons_transport(request):
 
 @login_required
 def bon_imprimer(request, pk):
-    """Génère le PDF professionnel du bon pour impression / remise chauffeur."""
+    """GÃ©nÃ¨re le PDF professionnel du bon pour impression / remise chauffeur."""
     from apps.core.exports import build_bon_transport_pdf
     bon = get_object_or_404(BonTransport, pk=pk)
     inline = request.GET.get("inline") == "1"
@@ -259,11 +260,11 @@ def bon_imprimer(request, pk):
 
 @login_required
 def bon_modele_vierge(request):
-    """Génère un lot de 100 bons vierges pré-numérotés.
+    """GÃ©nÃ¨re un lot de 100 bons vierges prÃ©-numÃ©rotÃ©s.
 
-    Chaque clic réserve atomiquement 100 nouveaux numéros consécutifs
-    via ``BlankBonCounter`` : aucun numéro n'est jamais ré-émis. Le
-    paramètre ``?n=`` permet d'ajuster la taille du lot (1 à 500)."""
+    Chaque clic rÃ©serve atomiquement 100 nouveaux numÃ©ros consÃ©cutifs
+    via ``BlankBonCounter`` : aucun numÃ©ro n'est jamais rÃ©-Ã©mis. Le
+    paramÃ¨tre ``?n=`` permet d'ajuster la taille du lot (1 Ã  500)."""
     from apps.core.exports import build_bon_transport_blank_pdf_batch
     from .models import BlankBonCounter
     try:
