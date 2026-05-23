@@ -334,15 +334,6 @@ BONS_IMPORT = [
 # ---------------------------------------------------------------------------
 
 REGISTRY = {
-    "carburant": {
-        "titre": "Suivi carburant",
-        "Model": Carburant,
-        "columns": CARBURANT_COLUMNS,
-        "build_rows": carburant_rows,
-        "import_schema": CARBURANT_IMPORT,
-        "select_related": ("camion", "chauffeur", "contrat"),
-        "fiche_type": "carburant",
-    },
     "pannes": {
         "titre": "Pannes & réparations",
         "Model": Panne,

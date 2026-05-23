@@ -14,11 +14,7 @@ urlpatterns = [
     path("fiche-vierge/<str:fiche_type>/", views_io.fiche_vierge, name="fiche_vierge"),
 
 
-    # Carburant
-    path("carburant/", views.carburant_list, name="carburant"),
-    path("carburant/nouveau/", views.carburant_create, name="carburant_create"),
-    path("carburant/<int:pk>/modifier/", views.carburant_edit, name="carburant_edit"),
-    path("carburant/<int:pk>/supprimer/", views.carburant_delete, name="carburant_delete"),
+    # Fiche carburant
     path("fiche-carburant/", views.fiche_carburant, name="fiche_carburant"),
     path("fiche-carburant/nouveau/", views.fiche_carburant_create, name="fiche_carburant_create"),
     path("fiche-carburant/<int:pk>/modifier/", views.fiche_carburant_edit, name="fiche_carburant_edit"),

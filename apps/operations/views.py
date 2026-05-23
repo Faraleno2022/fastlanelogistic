@@ -7,12 +7,11 @@ from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper, Pro
 from apps.core.session_helpers import get_contrat_actif
 from apps.core.utils import format_protected_error
 from .models import (
-    BonTransport, Carburant, DepenseAdmin, FicheCarburant, Panne,
-    TransportBauxite,
+    BonTransport, DepenseAdmin, FicheCarburant, Panne, TransportBauxite,
 )
 from .forms import (
-    CarburantForm, FicheCarburantForm, PanneForm, DepenseAdminForm,
-    TransportBauxiteForm, BonTransportForm,
+    FicheCarburantForm, PanneForm, DepenseAdminForm, TransportBauxiteForm,
+    BonTransportForm,
 )
 
 
@@ -98,8 +97,6 @@ def _crud_factory(Model, Form, list_url, label, icone):
     return create_view, edit_view, delete_view
 
 
-carburant_create, carburant_edit, carburant_delete = _crud_factory(
-    Carburant, CarburantForm, "operations:carburant", "Prise de carburant", "fuel-pump")
 fiche_carburant_create, fiche_carburant_edit, fiche_carburant_delete = _crud_factory(
     FicheCarburant, FicheCarburantForm, "operations:fiche_carburant", "Fiche carburant", "clipboard-data")
 panne_create, panne_edit, panne_delete = _crud_factory(
@@ -120,21 +117,6 @@ def _filtre_periode(request):
     except (ValueError, TypeError):
         mois, annee = today.month, today.year
     return mois, annee
-
-
-@login_required
-def carburant_list(request):
-    mois, annee = _filtre_periode(request)
-    prises = Carburant.objects.filter(date__month=mois, date__year=annee).select_related("camion", "chauffeur")
-    total_km = sum((p.km_parcourus for p in prises), 0)
-    total_litres = sum((p.litres_pris for p in prises), Decimal(0))
-    total_montant = sum((p.montant_total for p in prises), Decimal(0))
-    conso_moy = (total_litres / total_km * 100) if total_km else 0
-    return render(request, "operations/carburant.html", {
-        "prises": prises, "mois": mois, "annee": annee,
-        "total_km": total_km, "total_litres": total_litres,
-        "total_montant": total_montant, "conso_moy": conso_moy,
-    })
 
 
 @login_required
