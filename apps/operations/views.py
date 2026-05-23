@@ -1,5 +1,6 @@
 ﻿from datetime import date
 from decimal import Decimal
+import json
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
@@ -132,6 +133,9 @@ def fiche_carburant(request):
     total_quantite = sum((f.quantite for f in fiches), Decimal(0))
     total_rotation = sum((f.rotation for f in fiches), 0)
     stats_par_date = {}
+    dates_graph = []
+    stats_vehicules = {}
+    evolution_vehicules = {}
     for f in fiches:
         row = stats_par_date.setdefault(
             f.date,
@@ -141,6 +145,51 @@ def fiche_carburant(request):
         row["quantite"] += f.quantite
         row["rotation"] += f.rotation
         row["count"] += 1
+        date_label = f.date.strftime("%d/%m")
+        if date_label not in dates_graph:
+            dates_graph.append(date_label)
+        plaque = (f.plaque or "Non renseignee").strip() or "Non renseignee"
+        vehicle = stats_vehicules.setdefault(
+            plaque,
+            {
+                "plaque": plaque,
+                "chauffeurs": set(),
+                "quantite": Decimal(0),
+                "rotation": 0,
+                "count": 0,
+                "last_date": f.date,
+            },
+        )
+        if f.chauffeur_nom:
+            vehicle["chauffeurs"].add(f.chauffeur_nom)
+        vehicle["quantite"] += f.quantite
+        vehicle["rotation"] += f.rotation
+        vehicle["count"] += 1
+        vehicle["last_date"] = max(vehicle["last_date"], f.date)
+        evolution_vehicules.setdefault(plaque, {}).setdefault(date_label, Decimal(0))
+        evolution_vehicules[plaque][date_label] += f.quantite
+    stats_vehicules_list = sorted(
+        stats_vehicules.values(),
+        key=lambda item: item["quantite"],
+        reverse=True,
+    )
+    for item in stats_vehicules_list:
+        item["chauffeurs_label"] = ", ".join(sorted(item["chauffeurs"])) or "Non renseigne"
+        item["moyenne"] = item["quantite"] / item["count"] if item["count"] else Decimal(0)
+        item["moyenne_rotation"] = item["quantite"] / item["rotation"] if item["rotation"] else Decimal(0)
+    chart_conso_camions = {
+        "labels": dates_graph,
+        "datasets": [
+            {
+                "label": item["plaque"],
+                "data": [
+                    float(evolution_vehicules[item["plaque"]].get(label, 0))
+                    for label in dates_graph
+                ],
+            }
+            for item in stats_vehicules_list[:8]
+        ],
+    }
     return render(request, "operations/fiche_carburant.html", {
         "fiches": fiches,
         "mois": mois,
@@ -149,6 +198,8 @@ def fiche_carburant(request):
         "total_quantite": total_quantite,
         "total_rotation": total_rotation,
         "stats_par_date": stats_par_date,
+        "stats_vehicules": stats_vehicules_list,
+        "chart_conso_camions_json": json.dumps(chart_conso_camions),
     })
 
 
