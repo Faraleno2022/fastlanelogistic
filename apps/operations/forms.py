@@ -51,11 +51,17 @@ class FicheCarburantForm(forms.ModelForm):
             "date", "numero", "chauffeur", "chauffeur_nom", "camion", "plaque",
             "niveau_carburant", "quantite", "heure", "rotation", "observation",
         ]
+        labels = {
+            "numero": "N",
+            "chauffeur_nom": "Nom et prenom",
+            "niveau_carburant": "Niveau carburant (%)",
+            "quantite": "Quantite",
+        }
         widgets = {
             "date": forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date", "col": "3"}),
             "numero": forms.NumberInput(attrs={"class": "form-control", "min": "0", "col": "2"}),
             "chauffeur": forms.Select(attrs={"class": "form-select", "col": "4"}),
-            "chauffeur_nom": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nom et prÃ©nom", "col": "6"}),
+            "chauffeur_nom": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nom et prenom", "col": "6"}),
             "camion": forms.Select(attrs={"class": "form-select", "col": "4"}),
             "plaque": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: BK 2387 F01", "col": "4"}),
             "niveau_carburant": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0", "col": "3"}),
@@ -65,10 +71,10 @@ class FicheCarburantForm(forms.ModelForm):
             "observation": forms.TextInput(attrs={"class": "form-control", "col": "12"}),
         }
         help_texts = {
-            "numero": "Laisser 0 pour gÃ©nÃ©rer automatiquement le prochain NÂ° de la date.",
+            "numero": "Laisser 0 pour generer automatiquement le prochain numero de la date.",
             "niveau_carburant": "Saisir la valeur en pourcentage, sans le signe %.",
-            "chauffeur_nom": "Peut Ãªtre rempli automatiquement si un chauffeur est sÃ©lectionnÃ©.",
-            "plaque": "Peut Ãªtre remplie automatiquement si un camion est sÃ©lectionnÃ©.",
+            "chauffeur_nom": "Peut etre rempli automatiquement si un chauffeur est selectionne.",
+            "plaque": "Peut etre remplie automatiquement si un camion est selectionne.",
         }
 
     def __init__(self, *args, **kwargs):
@@ -84,9 +90,9 @@ class FicheCarburantForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
         if not cleaned.get("chauffeur") and not cleaned.get("chauffeur_nom"):
-            self.add_error("chauffeur_nom", "Renseignez un nom ou sÃ©lectionnez un chauffeur.")
+            self.add_error("chauffeur_nom", "Renseignez un nom ou selectionnez un chauffeur.")
         if not cleaned.get("camion") and not cleaned.get("plaque"):
-            self.add_error("plaque", "Renseignez une plaque ou sÃ©lectionnez un camion.")
+            self.add_error("plaque", "Renseignez une plaque ou selectionnez un camion.")
         return cleaned
 
 

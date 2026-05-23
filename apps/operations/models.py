@@ -88,7 +88,7 @@ class FicheCarburant(TimeStampedModel):
         indexes = [models.Index(fields=["date", "plaque"], name="operations__date_5d105e_idx")]
 
     def __str__(self):
-        return f"{self.date} — {self.numero} — {self.plaque}"
+        return f"{self.date} - {self.numero} - {self.plaque}"
 
     def save(self, *args, **kwargs):
         if self.chauffeur and not self.chauffeur_nom:
