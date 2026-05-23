@@ -2,6 +2,27 @@
 {% load humanize %}
 {% block title %}Pannes & réparations — {{ mois }}/{{ annee }}{% endblock %}
 {% block content %}
+<style>
+#tblPannes thead th {
+  font-size: .66rem;
+  line-height: 1.08;
+  padding: .32rem .36rem;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+#tblPannes tbody td,
+#tblPannes tfoot td {
+  font-size: .7rem;
+  line-height: 1.15;
+  padding: .26rem .34rem;
+  vertical-align: middle;
+}
+#tblPannes .btn-sm {
+  --bs-btn-padding-y: .1rem;
+  --bs-btn-padding-x: .25rem;
+  --bs-btn-font-size: .66rem;
+}
+</style>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3 class="mb-0"><i class="bi bi-tools"></i> Pannes & réparations — {{ mois }}/{{ annee }}</h3>
@@ -89,10 +110,6 @@
             <th>Reference piece</th>
             <th>Fournisseur</th>
             <th>Contact Fournisseur</th>
-            <th class="text-end" data-sum="sum" data-format="dec2">Quantite</th>
-            <th class="text-end" data-sum="sum" data-format="int">Prix unitaire</th>
-            <th class="text-end" data-sum="sum" data-format="int">Prix total</th>
-            <th class="text-end" data-sum="sum" data-format="int">Jours immo.</th>
             <th>Date commande</th>
             <th>Date reception</th>
             <th>Nom du Technicien</th>
@@ -111,10 +128,6 @@
             <td>{{ p.reference_piece }}</td>
             <td>{{ p.fournisseur }}</td>
             <td>{{ p.contact_fournisseur }}</td>
-            <td class="text-end">{{ p.quantite|floatformat:2 }}</td>
-            <td class="text-end">{{ p.prix_unitaire|floatformat:0|intcomma }}</td>
-            <td class="text-end fw-bold text-danger">{{ p.cout_pieces|floatformat:0|intcomma }}</td>
-            <td class="text-end">{{ p.duree_immobilisation }}</td>
             <td>{{ p.date_commande|date:"d/m/Y"|default:"-" }}</td>
             <td>{{ p.date_reception_commande|date:"d/m/Y"|default:"-" }}</td>
             <td>{{ p.nom_technicien }}</td>
@@ -125,21 +138,13 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="17" class="text-center text-muted py-4">Aucune panne ce mois</td></tr>
+          <tr><td colspan="13" class="text-center text-muted py-4">Aucune panne ce mois</td></tr>
           {% endfor %}
         </tbody>
         {% if pannes %}
         <tfoot class="table-secondary fw-bold">
           <tr>
-            <td colspan="8">TOTAUX</td>
-            <td></td>
-            <td></td>
-            <td class="text-end text-danger">{{ total|floatformat:0|intcomma }}</td>
-            <td class="text-end">{{ total_immo }}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td colspan="12">TOTAL : {{ pannes|length }} panne(s)</td>
             <td></td>
           </tr>
         </tfoot>
