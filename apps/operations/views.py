@@ -55,7 +55,7 @@ def _crud_factory(Model, Form, list_url, label, icone):
         form = Form(request.POST or None, initial=initial)
         if form.is_valid():
             form.save()
-            messages.success(request, f"{label} ajoutÃ©(e).")
+            messages.success(request, f"{label} ajoute.")
             return redirect(list_url)
         contrat_initial = initial.get("contrat") if initial else None
         return render(request, "_form_generic.html", {
@@ -70,7 +70,7 @@ def _crud_factory(Model, Form, list_url, label, icone):
         form = Form(request.POST or None, instance=obj)
         if form.is_valid():
             form.save()
-            messages.success(request, f"{label} mis(e) Ã  jour.")
+            messages.success(request, f"{label} mis a jour.")
             return redirect(list_url)
         return render(request, "_form_generic.html", {
             "form": form, "titre": f"Modifier - {label}",
@@ -86,7 +86,7 @@ def _crud_factory(Model, Form, list_url, label, icone):
             except ProtectedError as e:
                 messages.error(request, format_protected_error(e))
                 return redirect(list_url)
-            messages.success(request, f"{label} supprimÃ©(e).")
+            messages.success(request, f"{label} supprime.")
             return redirect(list_url)
         return render(request, "confirm_delete.html", {
             "objet": obj, "titre": f"Supprimer - {label}",
