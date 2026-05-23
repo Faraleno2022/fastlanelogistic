@@ -21,20 +21,20 @@ class CarburantForm(forms.ModelForm):
             "camion": forms.Select(attrs={"class": "form-select", "col": "3"}),
             "chauffeur": forms.Select(attrs={"class": "form-select", "col": "3"}),
             "contrat": forms.Select(attrs={"class": "form-select", "col": "4",
-                                           "title": "Laisser vide pour répartir au prorata entre tous les contrats actifs"}),
+                                           "title": "Laisser vide pour rÃ©partir au prorata entre tous les contrats actifs"}),
             "km_avant": forms.NumberInput(attrs={"class": "form-control", "col": "4"}),
             "km_tableau_bord": forms.NumberInput(attrs={"class": "form-control", "col": "4"}),
             "litres_avant": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "col": "3"}),
             "litres_apres": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "col": "3"}),
             "prix_unitaire": forms.NumberInput(attrs={"class": "form-control", "step": "1", "col": "3"}),
-            "station": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Station CBG-Sangarédi", "col": "3"}),
+            "station": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Station CBG-SangarÃ©di", "col": "3"}),
             "observations": forms.TextInput(attrs={"class": "form-control", "col": "12"}),
         }
         help_texts = {
-            "km_avant": "Km relevé au dernier plein (départ de ce trajet)",
-            "km_tableau_bord": "Km affiché actuellement sur le tableau de bord",
+            "km_avant": "Km relevÃ© au dernier plein (dÃ©part de ce trajet)",
+            "km_tableau_bord": "Km affichÃ© actuellement sur le tableau de bord",
             "litres_avant": "Niveau jauge avant remplissage",
-            "litres_apres": "Niveau jauge après remplissage",
+            "litres_apres": "Niveau jauge aprÃ¨s remplissage",
         }
 
     def __init__(self, *args, **kwargs):
@@ -55,7 +55,7 @@ class FicheCarburantForm(forms.ModelForm):
             "date": forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date", "col": "3"}),
             "numero": forms.NumberInput(attrs={"class": "form-control", "min": "0", "col": "2"}),
             "chauffeur": forms.Select(attrs={"class": "form-select", "col": "4"}),
-            "chauffeur_nom": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nom et prénom", "col": "6"}),
+            "chauffeur_nom": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nom et prÃ©nom", "col": "6"}),
             "camion": forms.Select(attrs={"class": "form-select", "col": "4"}),
             "plaque": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: BK 2387 F01", "col": "4"}),
             "niveau_carburant": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0", "col": "3"}),
@@ -65,10 +65,10 @@ class FicheCarburantForm(forms.ModelForm):
             "observation": forms.TextInput(attrs={"class": "form-control", "col": "12"}),
         }
         help_texts = {
-            "numero": "Laisser 0 pour générer automatiquement le prochain N° de la date.",
+            "numero": "Laisser 0 pour gÃ©nÃ©rer automatiquement le prochain NÂ° de la date.",
             "niveau_carburant": "Saisir la valeur en pourcentage, sans le signe %.",
-            "chauffeur_nom": "Peut être rempli automatiquement si un chauffeur est sélectionné.",
-            "plaque": "Peut être remplie automatiquement si un camion est sélectionné.",
+            "chauffeur_nom": "Peut Ãªtre rempli automatiquement si un chauffeur est sÃ©lectionnÃ©.",
+            "plaque": "Peut Ãªtre remplie automatiquement si un camion est sÃ©lectionnÃ©.",
         }
 
     def __init__(self, *args, **kwargs):
@@ -84,9 +84,9 @@ class FicheCarburantForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
         if not cleaned.get("chauffeur") and not cleaned.get("chauffeur_nom"):
-            self.add_error("chauffeur_nom", "Renseignez un nom ou sélectionnez un chauffeur.")
+            self.add_error("chauffeur_nom", "Renseignez un nom ou sÃ©lectionnez un chauffeur.")
         if not cleaned.get("camion") and not cleaned.get("plaque"):
-            self.add_error("plaque", "Renseignez une plaque ou sélectionnez un camion.")
+            self.add_error("plaque", "Renseignez une plaque ou sÃ©lectionnez un camion.")
         return cleaned
 
 
@@ -104,10 +104,15 @@ class PanneForm(forms.ModelForm):
             "camion": "N Flotte",
             "chauffeur_nom": "Nom du chauffeur",
             "description_panne": "Description de la panne",
+            "piece_remplacee": "Piece remplacee",
             "reference_piece": "Reference de la piece remplacee",
+            "fournisseur": "Fournisseur",
             "contact_fournisseur": "Contact Fournisseur",
+            "quantite": "Quantite",
+            "prix_unitaire": "Prix unitaire",
             "cout_pieces": "Prix total",
             "duree_immobilisation": "Nombre de jours d'immobilisation du camion",
+            "date_commande": "Date de la commande",
             "date_reception_commande": "Date de reception de la commande",
             "nom_technicien": "Nom du Technicien",
         }
@@ -124,10 +129,10 @@ class PanneForm(forms.ModelForm):
             "date_reception_commande": forms.DateInput(attrs={"class": "form-control", "type": "date", "col": "3"}),
             "nom_technicien": forms.TextInput(attrs={"class": "form-control", "col": "3"}),
             "contrat": forms.Select(attrs={"class": "form-select", "col": "3",
-                                           "title": "Laisser vide pour répartir au prorata entre tous les contrats actifs"}),
+                                           "title": "Laisser vide pour rÃ©partir au prorata entre tous les contrats actifs"}),
             "type_panne": forms.Select(attrs={"class": "form-select", "col": "3"}),
-            "piece_remplacee": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Pneu AV gauche, filtre huile…", "col": "9"}),
-            "fournisseur": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Garage Sidibé", "col": "6"}),
+            "piece_remplacee": forms.TextInput(attrs={"class": "form-control", "col": "3"}),
+            "fournisseur": forms.TextInput(attrs={"class": "form-control", "col": "3"}),
             "cout_pieces": forms.NumberInput(attrs={"class": "form-control", "step": "1", "col": "3", "readonly": "readonly"}),
             "cout_main_oeuvre": forms.NumberInput(attrs={"class": "form-control", "step": "1", "col": "3"}),
             "duree_immobilisation": forms.NumberInput(attrs={"class": "form-control", "min": "0", "col": "3"}),
@@ -141,14 +146,20 @@ class PanneForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.instance.pk:
             self.fields["date"].initial = date.today()
-        self.fields["cout_pieces"].required = False
+        for field_name in ("quantite", "prix_unitaire", "cout_pieces", "duree_immobilisation"):
+            self.fields[field_name].required = False
 
     def clean(self):
         cleaned = super().clean()
         quantite = cleaned.get("quantite") or 0
         prix_unitaire = cleaned.get("prix_unitaire") or 0
+        cleaned["quantite"] = quantite
+        cleaned["prix_unitaire"] = prix_unitaire
+        cleaned["duree_immobilisation"] = cleaned.get("duree_immobilisation") or 0
         if quantite and prix_unitaire:
             cleaned["cout_pieces"] = quantite * prix_unitaire
+        else:
+            cleaned["cout_pieces"] = cleaned.get("cout_pieces") or 0
         return cleaned
 
 
@@ -163,17 +174,17 @@ class DepenseAdminForm(forms.ModelForm):
             "date": forms.DateInput(attrs={"class": "form-control", "type": "date", "col": "3"}),
             "type_depense": forms.Select(attrs={"class": "form-select", "col": "3"}),
             "camion": forms.Select(attrs={"class": "form-select", "col": "3",
-                                         "title": "Laisser vide pour une dépense générale non liée à un camion"}),
+                                         "title": "Laisser vide pour une dÃ©pense gÃ©nÃ©rale non liÃ©e Ã  un camion"}),
             "contrat": forms.Select(attrs={"class": "form-select", "col": "3",
-                                           "title": "Laisser vide pour répartir au prorata entre tous les contrats actifs"}),
+                                           "title": "Laisser vide pour rÃ©partir au prorata entre tous les contrats actifs"}),
             "statut": forms.Select(attrs={"class": "form-select", "col": "3"}),
             "description": forms.TextInput(attrs={"class": "form-control", "col": "5"}),
-            "reference": forms.TextInput(attrs={"class": "form-control", "placeholder": "N° reçu, quittance…", "col": "4"}),
+            "reference": forms.TextInput(attrs={"class": "form-control", "placeholder": "NÂ° reÃ§u, quittanceâ€¦", "col": "4"}),
             "montant": forms.NumberInput(attrs={"class": "form-control", "step": "1", "col": "4"}),
             "echeance": forms.DateInput(attrs={"class": "form-control", "type": "date", "col": "4"}),
         }
         help_texts = {
-            "camion": "Optionnel — laissez vide pour une dépense générale",
+            "camion": "Optionnel â€” laissez vide pour une dÃ©pense gÃ©nÃ©rale",
             "montant": "Montant en GNF",
             "echeance": "Date limite de paiement (optionnel)",
         }
@@ -199,20 +210,20 @@ class TransportBauxiteForm(forms.ModelForm):
             "camion": forms.Select(attrs={"class": "form-select", "col": "3"}),
             "chauffeur": forms.Select(attrs={"class": "form-select", "col": "3"}),
             "contrat": forms.Select(attrs={"class": "form-select", "col": "3",
-                                           "title": "Contrat client — détermine la facturation"}),
-            "trajet": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Sangarédi → Port Kamsar", "col": "9"}),
+                                           "title": "Contrat client â€” dÃ©termine la facturation"}),
+            "trajet": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: SangarÃ©di â†’ Port Kamsar", "col": "9"}),
             "distance_km": forms.NumberInput(attrs={"class": "form-control", "step": "0.1", "col": "3"}),
             "tonnage": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "col": "3"}),
             "tarif_unitaire": forms.NumberInput(attrs={"class": "form-control", "step": "1", "col": "3"}),
             "client": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: CBG", "col": "3"}),
-            "num_bon": forms.TextInput(attrs={"class": "form-control", "placeholder": "Généré automatiquement si vide", "col": "4"}),
+            "num_bon": forms.TextInput(attrs={"class": "form-control", "placeholder": "GÃ©nÃ©rÃ© automatiquement si vide", "col": "4"}),
             "observations": forms.Textarea(attrs={"class": "form-control", "rows": 2, "col": "12"}),
         }
         help_texts = {
             "distance_km": "Distance du trajet en km",
-            "tonnage": "Tonnage transporté en tonnes",
+            "tonnage": "Tonnage transportÃ© en tonnes",
             "tarif_unitaire": "Tarif en GNF par tonne",
-            "num_bon": "Laissez vide pour génération automatique",
+            "num_bon": "Laissez vide pour gÃ©nÃ©ration automatique",
         }
 
     def __init__(self, *args, **kwargs):
@@ -252,7 +263,7 @@ class BonTransportForm(forms.ModelForm):
             "plaque": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: BK 2387 F01", "col": "3"}),
             "remarque": forms.TextInput(attrs={"class": "form-control", "col": "4"}),
             "carte_entree": forms.TextInput(attrs={"class": "form-control", "col": "3"}),
-            "lieu_chargement": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Trémie 3 — Sangarédi", "col": "4"}),
+            "lieu_chargement": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: TrÃ©mie 3 â€” SangarÃ©di", "col": "4"}),
             "heure_depart": forms.TimeInput(attrs={"class": "form-control", "type": "time", "col": "4"}),
             "heure_pesee_start": forms.TimeInput(attrs={"class": "form-control", "type": "time", "col": "4"}),
             "heure_pesee_end": forms.TimeInput(attrs={"class": "form-control", "type": "time", "col": "4"}),
@@ -266,10 +277,10 @@ class BonTransportForm(forms.ModelForm):
             "observation": forms.Textarea(attrs={"class": "form-control", "rows": 2, "col": "12"}),
         }
         help_texts = {
-            "quantite": "Tonnage pesé en tonnes",
-            "heure_pesee_start": "Heure d'entrée sur le pont-bascule",
+            "quantite": "Tonnage pesÃ© en tonnes",
+            "heure_pesee_start": "Heure d'entrÃ©e sur le pont-bascule",
             "heure_pesee_end": "Heure de sortie du pont-bascule",
-            "carte_entree": "N° de carte d'accès au site",
+            "carte_entree": "NÂ° de carte d'accÃ¨s au site",
         }
 
     def __init__(self, *args, **kwargs):

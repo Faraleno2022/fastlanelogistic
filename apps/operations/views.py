@@ -59,7 +59,7 @@ def _crud_factory(Model, Form, list_url, label, icone):
             return redirect(list_url)
         contrat_initial = initial.get("contrat") if initial else None
         return render(request, "_form_generic.html", {
-            "form": form, "titre": f"Ajouter â€” {label}",
+            "form": form, "titre": f"Ajouter - {label}",
             "icone": icone, "retour_url": list_url,
             "contrat_prefill": contrat_initial,
         })
@@ -73,7 +73,7 @@ def _crud_factory(Model, Form, list_url, label, icone):
             messages.success(request, f"{label} mis(e) Ã  jour.")
             return redirect(list_url)
         return render(request, "_form_generic.html", {
-            "form": form, "titre": f"Modifier â€” {label}",
+            "form": form, "titre": f"Modifier - {label}",
             "icone": "pencil", "retour_url": list_url,
         })
 
@@ -89,7 +89,7 @@ def _crud_factory(Model, Form, list_url, label, icone):
             messages.success(request, f"{label} supprimÃ©(e).")
             return redirect(list_url)
         return render(request, "confirm_delete.html", {
-            "objet": obj, "titre": f"Supprimer â€” {label}",
+            "objet": obj, "titre": f"Supprimer - {label}",
             "message": f"Supprimer dÃ©finitivement cet Ã©lÃ©ment ({obj}) ?",
             "retour_url": list_url,
         })
