@@ -126,12 +126,21 @@ class Panne(TimeStampedModel):
         related_name="pannes", verbose_name="Projet / Contrat",
         help_text="Si renseigné, cette panne sera imputée à ce contrat. Sinon, elle sera répartie au prorata entre tous les contrats actifs.",
     )
-    type_panne = models.CharField("Type", max_length=20, choices=Type.choices)
+    type_panne = models.CharField("Type", max_length=20, choices=Type.choices, default=Type.AUTRE)
+    chauffeur_nom = models.CharField("Nom du chauffeur", max_length=160, blank=True)
+    description_panne = models.TextField("Description de la panne", blank=True)
     piece_remplacee = models.CharField("Pièce remplacée", max_length=200, blank=True)
+    reference_piece = models.CharField("Reference de la piece remplacee", max_length=120, blank=True)
     fournisseur = models.CharField("Fournisseur / Garage", max_length=120, blank=True)
+    contact_fournisseur = models.CharField("Contact fournisseur", max_length=80, blank=True)
+    quantite = models.DecimalField("Quantite", max_digits=10, decimal_places=2, default=0)
+    prix_unitaire = models.DecimalField("Prix unitaire", max_digits=14, decimal_places=2, default=0)
     cout_pieces = models.DecimalField("Coût pièces (GNF)", max_digits=14, decimal_places=2, default=0)
     cout_main_oeuvre = models.DecimalField("Coût main d'œuvre (GNF)", max_digits=14, decimal_places=2, default=0)
     duree_immobilisation = models.PositiveIntegerField("Durée immobilisation (jours)", default=0)
+    date_commande = models.DateField("Date de la commande", null=True, blank=True)
+    date_reception_commande = models.DateField("Date de reception de la commande", null=True, blank=True)
+    nom_technicien = models.CharField("Nom du technicien", max_length=160, blank=True)
     observations = models.CharField("Observations", max_length=200, blank=True)
 
     class Meta:
@@ -145,6 +154,11 @@ class Panne(TimeStampedModel):
     @property
     def cout_total(self):
         return self.cout_pieces + self.cout_main_oeuvre
+
+    def save(self, *args, **kwargs):
+        if self.quantite and self.prix_unitaire:
+            self.cout_pieces = self.quantite * self.prix_unitaire
+        super().save(*args, **kwargs)
 
 
 class DepenseAdmin(TimeStampedModel):

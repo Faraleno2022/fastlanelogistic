@@ -124,6 +124,26 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     updateTotal();
   }
+
+  const panneQuantity = document.getElementById('id_quantite');
+  const panneUnitPrice = document.getElementById('id_prix_unitaire');
+  const panneTotal = document.getElementById('id_cout_pieces');
+  if (panneQuantity && panneUnitPrice && panneTotal) {
+    const toNumber = function (value) {
+      const normalized = String(value || '').replace(/\s/g, '').replace(',', '.');
+      const number = parseFloat(normalized);
+      return Number.isFinite(number) ? number : 0;
+    };
+    const updatePanneTotal = function () {
+      const total = toNumber(panneQuantity.value) * toNumber(panneUnitPrice.value);
+      panneTotal.value = total ? total.toFixed(2) : '';
+    };
+    panneQuantity.addEventListener('input', updatePanneTotal);
+    panneQuantity.addEventListener('change', updatePanneTotal);
+    panneUnitPrice.addEventListener('input', updatePanneTotal);
+    panneUnitPrice.addEventListener('change', updatePanneTotal);
+    updatePanneTotal();
+  }
 });
 </script>
 {% endblock %}

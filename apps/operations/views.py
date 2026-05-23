@@ -156,6 +156,7 @@ def fiche_carburant(request):
 def pannes_list(request):
     mois, annee = _filtre_periode(request)
     pannes = Panne.objects.filter(date__month=mois, date__year=annee).select_related("camion")
+    total_quantite = sum((p.quantite for p in pannes), Decimal(0))
     total_pieces = sum((p.cout_pieces for p in pannes), Decimal(0))
     total_mo = sum((p.cout_main_oeuvre for p in pannes), Decimal(0))
     total = total_pieces + total_mo
@@ -168,6 +169,7 @@ def pannes_list(request):
         s["montant"] += p.cout_total
     return render(request, "operations/pannes.html", {
         "pannes": pannes, "mois": mois, "annee": annee,
+        "total_quantite": total_quantite,
         "total_pieces": total_pieces, "total_mo": total_mo,
         "total": total, "total_immo": total_immo, "stats": stats,
     })

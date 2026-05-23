@@ -94,34 +94,62 @@ class PanneForm(forms.ModelForm):
     class Meta:
         model = Panne
         fields = [
-            "date", "camion", "contrat", "type_panne", "piece_remplacee",
-            "fournisseur", "cout_pieces", "cout_main_oeuvre",
-            "duree_immobilisation", "observations",
+            "date", "camion", "chauffeur_nom", "description_panne",
+            "piece_remplacee", "reference_piece", "fournisseur",
+            "contact_fournisseur", "quantite", "prix_unitaire", "cout_pieces",
+            "duree_immobilisation", "date_commande", "date_reception_commande",
+            "nom_technicien", "observations",
         ]
+        labels = {
+            "camion": "N Flotte",
+            "chauffeur_nom": "Nom du chauffeur",
+            "description_panne": "Description de la panne",
+            "reference_piece": "Reference de la piece remplacee",
+            "contact_fournisseur": "Contact Fournisseur",
+            "cout_pieces": "Prix total",
+            "duree_immobilisation": "Nombre de jours d'immobilisation du camion",
+            "date_reception_commande": "Date de reception de la commande",
+            "nom_technicien": "Nom du Technicien",
+        }
         widgets = {
             "date": forms.DateInput(attrs={"class": "form-control", "type": "date", "col": "3"}),
             "camion": forms.Select(attrs={"class": "form-select", "col": "3"}),
+            "chauffeur_nom": forms.TextInput(attrs={"class": "form-control", "col": "3"}),
+            "description_panne": forms.Textarea(attrs={"class": "form-control", "rows": 2, "col": "6"}),
+            "reference_piece": forms.TextInput(attrs={"class": "form-control", "col": "3"}),
+            "contact_fournisseur": forms.TextInput(attrs={"class": "form-control", "col": "3"}),
+            "quantite": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "col": "3"}),
+            "prix_unitaire": forms.NumberInput(attrs={"class": "form-control", "step": "1", "col": "3"}),
+            "date_commande": forms.DateInput(attrs={"class": "form-control", "type": "date", "col": "3"}),
+            "date_reception_commande": forms.DateInput(attrs={"class": "form-control", "type": "date", "col": "3"}),
+            "nom_technicien": forms.TextInput(attrs={"class": "form-control", "col": "3"}),
             "contrat": forms.Select(attrs={"class": "form-select", "col": "3",
                                            "title": "Laisser vide pour répartir au prorata entre tous les contrats actifs"}),
             "type_panne": forms.Select(attrs={"class": "form-select", "col": "3"}),
             "piece_remplacee": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Pneu AV gauche, filtre huile…", "col": "9"}),
             "fournisseur": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Garage Sidibé", "col": "6"}),
-            "cout_pieces": forms.NumberInput(attrs={"class": "form-control", "step": "1", "col": "3"}),
+            "cout_pieces": forms.NumberInput(attrs={"class": "form-control", "step": "1", "col": "3", "readonly": "readonly"}),
             "cout_main_oeuvre": forms.NumberInput(attrs={"class": "form-control", "step": "1", "col": "3"}),
             "duree_immobilisation": forms.NumberInput(attrs={"class": "form-control", "min": "0", "col": "3"}),
             "observations": forms.Textarea(attrs={"class": "form-control", "rows": 2, "col": "12"}),
         }
         help_texts = {
-            "cout_pieces": "Montant en GNF",
-            "cout_main_oeuvre": "Montant en GNF",
-            "duree_immobilisation": "Nombre de jours d'immobilisation du camion",
+            "cout_pieces": "Calcule automatiquement : quantite x prix unitaire.",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.instance.pk:
             self.fields["date"].initial = date.today()
-        self.fields["contrat"].required = False
+        self.fields["cout_pieces"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        quantite = cleaned.get("quantite") or 0
+        prix_unitaire = cleaned.get("prix_unitaire") or 0
+        if quantite and prix_unitaire:
+            cleaned["cout_pieces"] = quantite * prix_unitaire
+        return cleaned
 
 
 class DepenseAdminForm(forms.ModelForm):

@@ -144,35 +144,41 @@ FICHE_CARBURANT_IMPORT = [
 # ---------------------------------------------------------------------------
 
 PANNES_COLUMNS = [
-    "Date", "Camion", "Contrat", "Type",
-    "Pièce remplacée", "Fournisseur",
-    "Coût pièces", "Coût M.O.", "Coût total",
-    "Jours immo.", "Observations",
+    "Date", "N Flotte", "Nom du chauffeur", "Description de la panne",
+    "Piece remplacee", "Reference de la piece remplacee", "Fournisseur",
+    "Contact Fournisseur", "Quantite", "Prix unitaire", "Prix total",
+    "Nombre de jours d'immobilisation du camion", "Date de la commande",
+    "Date de reception de la commande", "Nom du Technicien", "Observations",
 ]
 
 
 def pannes_rows(qs):
     for p in qs:
         yield [
-            p.date, p.camion.code, p.contrat.code if p.contrat else "",
-            p.get_type_panne_display(), p.piece_remplacee, p.fournisseur,
-            p.cout_pieces, p.cout_main_oeuvre, p.cout_total,
-            p.duree_immobilisation, p.observations,
+            p.date, p.camion.code, p.chauffeur_nom, p.description_panne,
+            p.piece_remplacee, p.reference_piece, p.fournisseur,
+            p.contact_fournisseur, p.quantite, p.prix_unitaire,
+            p.cout_pieces, p.duree_immobilisation, p.date_commande,
+            p.date_reception_commande, p.nom_technicien, p.observations,
         ]
 
 
 PANNES_IMPORT = [
-    Column("date", "Date (jj/mm/aaaa)", "date", required=True),
-    Column("camion", "Camion (code)", "str", required=True, resolve=_resolve_camion),
-    Column("contrat", "Contrat (code)", "str", resolve=_resolve_contrat),
-    Column("type_panne", "Type", "str", required=True,
-           resolve=_resolve_choice(Panne.Type.choices),
-           help="Valeurs possibles : " + ", ".join(l for _, l in Panne.Type.choices)),
-    Column("piece_remplacee", "Pièce remplacée", "str"),
-    Column("fournisseur", "Fournisseur / Garage", "str"),
-    Column("cout_pieces", "Coût pièces (GNF)", "decimal"),
-    Column("cout_main_oeuvre", "Coût main d'œuvre (GNF)", "decimal"),
-    Column("duree_immobilisation", "Durée immo. (jours)", "int"),
+    Column("date", "Date", "date", required=True),
+    Column("camion", "N Flotte", "str", required=True, resolve=_resolve_camion),
+    Column("chauffeur_nom", "Nom du chauffeur", "str"),
+    Column("description_panne", "Description de la panne", "str"),
+    Column("piece_remplacee", "Piece remplacee", "str"),
+    Column("reference_piece", "Reference de la piece remplacee", "str"),
+    Column("fournisseur", "Fournisseur", "str"),
+    Column("contact_fournisseur", "Contact Fournisseur", "str"),
+    Column("quantite", "Quantite", "decimal"),
+    Column("prix_unitaire", "Prix unitaire", "decimal"),
+    Column("cout_pieces", "Prix total", "decimal"),
+    Column("duree_immobilisation", "Nombre de jours d'immobilisation du camion", "int"),
+    Column("date_commande", "Date de la commande", "date"),
+    Column("date_reception_commande", "Date de reception de la commande", "date"),
+    Column("nom_technicien", "Nom du Technicien", "str"),
     Column("observations", "Observations", "str"),
 ]
 

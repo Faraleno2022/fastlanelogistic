@@ -30,9 +30,13 @@ class FicheCarburantAdmin(admin.ModelAdmin):
 
 @admin.register(Panne)
 class PanneAdmin(admin.ModelAdmin):
-    list_display = ("date", "camion", "type_panne", "piece_remplacee",
-                    "cout_pieces", "cout_main_oeuvre", "cout_total",
-                    "duree_immobilisation")
+    list_display = (
+        "date", "camion", "chauffeur_nom", "description_panne",
+        "piece_remplacee", "reference_piece", "fournisseur",
+        "contact_fournisseur", "quantite", "prix_unitaire", "cout_pieces",
+        "duree_immobilisation", "date_commande", "date_reception_commande",
+        "nom_technicien",
+    )
     list_filter = ("type_panne", "fournisseur", "date")
     search_fields = ("camion__code", "piece_remplacee", "fournisseur")
     date_hierarchy = "date"
