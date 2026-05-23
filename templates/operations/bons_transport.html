@@ -1,6 +1,6 @@
 ﻿{% extends "base.html" %}
 {% load humanize %}
-{% block title %}Bons de transport â€” {{ mois }}/{{ annee }}{% endblock %}
+{% block title %}Bons de transport - {{ mois }}/{{ annee }}{% endblock %}
 {% block content %}
 <style>
 /* === ModÃ¨le imprimable du Bon de Transport Bauxite === */
@@ -134,22 +134,22 @@
 
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h3 class="mb-0"><i class="bi bi-card-checklist"></i> Bons de transport â€” {{ mois }}/{{ annee }}</h3>
+  <h3 class="mb-0"><i class="bi bi-card-checklist"></i> Bons de transport - {{ mois }}/{{ annee }}</h3>
   <div class="d-flex gap-2">
     <form method="get" class="d-flex gap-2">
       <select name="mois" class="form-select form-select-sm" style="width:auto">
         <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
-        <option value="2" {% if mois == 2 %}selected{% endif %}>FÃ©vrier</option>
+        <option value="2" {% if mois == 2 %}selected{% endif %}>Fevrier</option>
         <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
         <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
         <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
         <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
         <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
-        <option value="8" {% if mois == 8 %}selected{% endif %}>AoÃ»t</option>
+        <option value="8" {% if mois == 8 %}selected{% endif %}>Aout</option>
         <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
         <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
         <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
-        <option value="12" {% if mois == 12 %}selected{% endif %}>DÃ©cembre</option>
+        <option value="12" {% if mois == 12 %}selected{% endif %}>Decembre</option>
       </select>
       <input type="number" name="annee" value="{{ annee }}" class="form-control form-control-sm" style="width:90px">
       <button class="btn btn-sm btn-primary">Filtrer</button>
