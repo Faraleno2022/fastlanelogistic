@@ -199,28 +199,23 @@
 <div class="card shadow-sm">
   <div class="card-header bg-dark text-white"><i class="bi bi-list-ul"></i> Detail des bons</div>
   <div class="card-body">
-    {% include "_search_bar.html" with target="#tblBons" placeholder="NÂ° bon, chauffeur, plaque, lieu..." %}
+    {% include "_search_bar.html" with target="#tblBons" placeholder="Date, plaque, chauffeur, reference bon..." %}
     <div class="table-responsive">
       <table id="tblBons" data-searchable class="table table-hover table-striped mb-0">
         <thead class="table-secondary">
           <tr>
-            <th>REFERENCE BON</th>
             <th>Date</th>
-            <th>CHAUFFEUR</th>
             <th>PLAQUE</th>
-            <th>REMARQUE</th>
-            <th>N CARTE D'ENTREE</th>
-            <th>LIEU DE CHARGEMENT</th>
+            <th>CHAUFFEUR</th>
+            <th>REFERENCE BON</th>
+            <th>CARTE D'ENTREE</th>
             <th>HEURE DE DEPART</th>
-            <th>PESEE H DEBUT</th>
-            <th>PESEE H FIN</th>
-            <th>OBS. H DEBUT</th>
-            <th>OBS. H FIN</th>
+            <th>HEURE DE PESEE</th>
             <th class="text-end">QTE 1</th>
             <th class="text-end">QTE 2</th>
             <th class="text-end">QTE 3</th>
             <th class="text-end">QTE 4</th>
-            <th class="text-end" data-sum="sum" data-format="dec2">TOTAL (T)</th>
+            <th class="text-end" data-sum="sum" data-format="dec2">QUANTITE TOTALE</th>
             <th>OBSERVATION</th>
             <th></th>
           </tr>
@@ -228,18 +223,13 @@
         <tbody>
           {% for b in bons %}
           <tr>
-            <td><strong>{{ b.num_bon }}</strong></td>
             <td>{{ b.date|date:"d/m/Y" }}</td>
-            <td>{{ b.chauffeur_display|default:"Non renseigne" }}</td>
             <td>{{ b.plaque|default:"Non renseignee" }}</td>
-            <td>{{ b.remarque }}</td>
+            <td>{{ b.chauffeur_display|default:"Non renseigne" }}</td>
+            <td><strong>{{ b.num_bon }}</strong></td>
             <td>{{ b.carte_entree }}</td>
-            <td>{{ b.lieu_chargement }}</td>
             <td>{{ b.heure_depart|time:"H:i"|default:"-" }}</td>
             <td>{{ b.heure_pesee_start|time:"H:i"|default:"-" }}</td>
-            <td>{{ b.heure_pesee_end|time:"H:i"|default:"-" }}</td>
-            <td>{{ b.heure_observation_start|time:"H:i"|default:"-" }}</td>
-            <td>{{ b.heure_observation_end|time:"H:i"|default:"-" }}</td>
             <td class="text-end">{{ b.quantite_1|floatformat:2 }}</td>
             <td class="text-end">{{ b.quantite_2|floatformat:2 }}</td>
             <td class="text-end">{{ b.quantite_3|floatformat:2 }}</td>
@@ -253,13 +243,13 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="19" class="text-center text-muted py-4">Aucun bon de transport ce mois</td></tr>
+          <tr><td colspan="14" class="text-center text-muted py-4">Aucun bon de transport ce mois</td></tr>
           {% endfor %}
         </tbody>
         {% if bons %}
         <tfoot class="table-secondary fw-bold">
           <tr>
-            <td colspan="16">TOTAL ({{ nb_bons }} bons)</td>
+            <td colspan="11">TOTAL ({{ nb_bons }} bons)</td>
             <td class="text-end">{{ total_quantite|floatformat:0|intcomma }} T</td>
             <td></td>
             <td></td>

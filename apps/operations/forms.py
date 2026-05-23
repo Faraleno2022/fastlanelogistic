@@ -198,15 +198,19 @@ class BonTransportForm(forms.ModelForm):
     class Meta:
         model = BonTransport
         fields = [
-            "num_bon",
-            "date", "camion", "chauffeur", "contrat",
-            "prenom", "nom", "telephone", "plaque",
-            "remarque", "carte_entree", "lieu_chargement",
-            "heure_depart", "heure_pesee_start", "heure_pesee_end",
-            "heure_observation_start", "heure_observation_end",
+            "date", "plaque", "nom", "num_bon", "carte_entree",
+            "heure_depart", "heure_pesee_start",
             "quantite_1", "quantite_2", "quantite_3", "quantite_4",
             "quantite", "observation",
         ]
+        labels = {
+            "nom": "Chauffeur",
+            "num_bon": "Reference bon",
+            "carte_entree": "Carte d'entree",
+            "heure_depart": "Heure de depart",
+            "heure_pesee_start": "HEURE DE PESEE",
+            "quantite": "Quantite totale",
+        }
         widgets = {
             "num_bon": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: BT-001", "col": "3"}),
             "date": forms.DateInput(attrs={"class": "form-control", "type": "date", "col": "3"}),
@@ -215,11 +219,11 @@ class BonTransportForm(forms.ModelForm):
             "contrat": forms.Select(attrs={"class": "form-select", "col": "3",
                                            "title": "Contrat client de ce bon"}),
             "prenom": forms.TextInput(attrs={"class": "form-control", "col": "4"}),
-            "nom": forms.TextInput(attrs={"class": "form-control", "col": "4"}),
+            "nom": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nom et prenom", "col": "3"}),
             "telephone": forms.TextInput(attrs={"class": "form-control", "placeholder": "+224 6xx xx xx xx", "col": "4"}),
-            "plaque": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: RC-1234-A", "col": "4"}),
+            "plaque": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: BK 2387 F01", "col": "3"}),
             "remarque": forms.TextInput(attrs={"class": "form-control", "col": "4"}),
-            "carte_entree": forms.TextInput(attrs={"class": "form-control", "col": "4"}),
+            "carte_entree": forms.TextInput(attrs={"class": "form-control", "col": "3"}),
             "lieu_chargement": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Trémie 3 — Sangarédi", "col": "4"}),
             "heure_depart": forms.TimeInput(attrs={"class": "form-control", "type": "time", "col": "4"}),
             "heure_pesee_start": forms.TimeInput(attrs={"class": "form-control", "type": "time", "col": "4"}),
@@ -244,7 +248,7 @@ class BonTransportForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.instance.pk:
             self.fields["date"].initial = date.today()
-        for field_name in ("num_bon", "prenom", "nom", "plaque", "lieu_chargement", "contrat"):
+        for field_name in ("num_bon", "nom", "plaque"):
             self.fields[field_name].required = False
 
     def clean(self):

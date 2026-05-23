@@ -61,11 +61,10 @@ class TransportBauxiteAdmin(admin.ModelAdmin):
 
 @admin.register(BonTransport)
 class BonTransportAdmin(admin.ModelAdmin):
-    list_display = ("num_bon", "date", "chauffeur_display", "plaque",
-                    "remarque", "carte_entree", "lieu_chargement",
-                    "heure_depart", "heure_pesee_start", "heure_pesee_end",
+    list_display = ("date", "plaque", "chauffeur_display", "num_bon",
+                    "carte_entree", "heure_depart", "heure_pesee_start",
                     "quantite_1", "quantite_2", "quantite_3", "quantite_4",
-                    "quantite")
+                    "quantite", "observation")
     list_filter = ("lieu_chargement", "date")
     search_fields = ("num_bon", "plaque", "prenom", "nom", "remarque", "carte_entree")
     date_hierarchy = "date"

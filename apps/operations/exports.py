@@ -295,23 +295,18 @@ BONS_IMPORT = [
 ]
 
 
-# Nouveau format Bon de transport terrain.
 BONS_COLUMNS = [
-    "Date", "Reference bon", "Chauffeur", "Plaque", "Remarque",
-    "N carte d'entree", "Lieu de chargement", "Heure de depart",
-    "Pesee H debut", "Pesee H fin", "Observation H debut",
-    "Observation H fin", "Quantite 1", "Quantite 2", "Quantite 3",
-    "Quantite 4", "Quantite totale", "Observation",
+    "Date", "Plaque", "Chauffeur", "Reference bon", "Carte d'entree",
+    "Heure de depart", "HEURE DE PESEE", "Quantite 1", "Quantite 2",
+    "Quantite 3", "Quantite 4", "Quantite totale", "Observation",
 ]
 
 
 def bons_rows(qs):
     for b in qs:
         yield [
-            b.date, b.num_bon, b.chauffeur_display, b.plaque, b.remarque,
-            b.carte_entree, b.lieu_chargement, b.heure_depart,
-            b.heure_pesee_start, b.heure_pesee_end,
-            b.heure_observation_start, b.heure_observation_end,
+            b.date, b.plaque, b.chauffeur_display, b.num_bon, b.carte_entree,
+            b.heure_depart, b.heure_pesee_start,
             b.quantite_1, b.quantite_2, b.quantite_3, b.quantite_4,
             b.quantite, b.observation,
         ]
@@ -319,17 +314,12 @@ def bons_rows(qs):
 
 BONS_IMPORT = [
     Column("date", "Date", "date", required=True),
-    Column("num_bon", "Reference bon", "str", help="Laisser vide pour generation automatique."),
-    Column("nom", "Chauffeur", "str", required=True),
     Column("plaque", "Plaque", "str", required=True),
-    Column("remarque", "Remarque", "str"),
-    Column("carte_entree", "N carte d'entree", "str"),
-    Column("lieu_chargement", "Lieu de chargement", "str", required=True),
+    Column("nom", "Chauffeur", "str", required=True),
+    Column("num_bon", "Reference bon", "str", help="Laisser vide pour generation automatique."),
+    Column("carte_entree", "Carte d'entree", "str"),
     Column("heure_depart", "Heure de depart", "time"),
-    Column("heure_pesee_start", "H debut", "time"),
-    Column("heure_pesee_end", "H fin", "time"),
-    Column("heure_observation_start", "Observation H debut", "time"),
-    Column("heure_observation_end", "Observation H fin", "time"),
+    Column("heure_pesee_start", "HEURE DE PESEE", "time"),
     Column("quantite_1", "Quantite 1", "decimal"),
     Column("quantite_2", "Quantite 2", "decimal"),
     Column("quantite_3", "Quantite 3", "decimal"),
