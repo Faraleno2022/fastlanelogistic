@@ -90,7 +90,7 @@ def _crud_factory(Model, Form, list_url, label, icone):
             return redirect(list_url)
         return render(request, "confirm_delete.html", {
             "objet": obj, "titre": f"Supprimer - {label}",
-            "message": f"Supprimer dÃ©finitivement cet Ã©lÃ©ment ({obj}) ?",
+            "message": f"Supprimer definitivement cet element ({obj}) ?",
             "retour_url": list_url,
         })
 
