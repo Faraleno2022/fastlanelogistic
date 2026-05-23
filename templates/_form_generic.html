@@ -97,6 +97,33 @@ document.addEventListener('DOMContentLoaded', function () {
     const prev = el.previousElementSibling;
     if (prev) prev.classList.add('is-invalid');
   });
+
+  const quantityInputs = [
+    document.getElementById('id_quantite_1'),
+    document.getElementById('id_quantite_2'),
+    document.getElementById('id_quantite_3'),
+    document.getElementById('id_quantite_4')
+  ].filter(Boolean);
+  const totalInput = document.getElementById('id_quantite');
+
+  if (quantityInputs.length && totalInput) {
+    const toNumber = function (value) {
+      const normalized = String(value || '').replace(/\s/g, '').replace(',', '.');
+      const number = parseFloat(normalized);
+      return Number.isFinite(number) ? number : 0;
+    };
+    const updateTotal = function () {
+      const total = quantityInputs.reduce(function (sum, input) {
+        return sum + toNumber(input.value);
+      }, 0);
+      totalInput.value = total ? total.toFixed(2) : '';
+    };
+    quantityInputs.forEach(function (input) {
+      input.addEventListener('input', updateTotal);
+      input.addEventListener('change', updateTotal);
+    });
+    updateTotal();
+  }
 });
 </script>
 {% endblock %}
