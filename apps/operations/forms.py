@@ -248,7 +248,7 @@ class BonTransportForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.instance.pk:
             self.fields["date"].initial = date.today()
-        for field_name in ("num_bon", "nom", "plaque"):
+        for field_name in ("num_bon", "nom", "plaque", "quantite"):
             self.fields[field_name].required = False
 
     def clean(self):
