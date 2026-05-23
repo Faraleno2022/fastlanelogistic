@@ -93,7 +93,7 @@
                 <th class="text-end">Moy.</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="vehicleStatsBody">
               {% for stat in stats_vehicules %}
                 <tr>
                   <td class="fw-semibold">{{ stat.plaque }}</td>
@@ -159,7 +159,9 @@
                 data-date="{{ f.date|date:'d/m/Y' }}"
                 data-niveau="{{ f.niveau_carburant }}"
                 data-quantite="{{ f.quantite }}"
-                data-rotation="{{ f.rotation }}">
+                data-rotation="{{ f.rotation }}"
+                data-plaque="{{ f.plaque }}"
+                data-chauffeur="{{ f.chauffeur_nom }}">
               <td>{{ f.date|date:"d/m/Y" }}</td>
               <td>{{ f.numero }}</td>
               <td>{{ f.chauffeur_nom }}</td>
@@ -227,24 +229,31 @@ document.addEventListener('DOMContentLoaded', function () {
   const table = document.getElementById('tblFicheCarburant');
   const chartData = {{ chart_conso_camions_json|safe }};
   const chartCanvas = document.getElementById('chartConsoCamions');
+  const vehicleStatsBody = document.getElementById('vehicleStatsBody');
+  const palette = ['#123a63', '#f2b705', '#198754', '#dc3545', '#0d6efd', '#6f42c1', '#20c997', '#fd7e14'];
+  let consumptionChart = null;
+
+  function chartDatasets(datasets) {
+    return datasets.map(function (dataset, index) {
+      const color = palette[index % palette.length];
+      return {
+        label: dataset.label,
+        data: dataset.data,
+        borderColor: color,
+        backgroundColor: color + 'cc',
+        borderWidth: 1,
+        borderRadius: 3,
+        maxBarThickness: 34
+      };
+    });
+  }
+
   if (chartCanvas && window.Chart && chartData.labels.length) {
-    const palette = ['#123a63', '#f2b705', '#198754', '#dc3545', '#0d6efd', '#6f42c1', '#20c997', '#fd7e14'];
-    new Chart(chartCanvas, {
+    consumptionChart = new Chart(chartCanvas, {
       type: 'bar',
       data: {
         labels: chartData.labels,
-        datasets: chartData.datasets.map(function (dataset, index) {
-          const color = palette[index % palette.length];
-          return {
-            label: dataset.label,
-            data: dataset.data,
-            borderColor: color,
-            backgroundColor: color + 'cc',
-            borderWidth: 1,
-            borderRadius: 3,
-            maxBarThickness: 34
-          };
-        })
+        datasets: chartDatasets(chartData.datasets)
       },
       options: {
         responsive: true,
@@ -279,6 +288,64 @@ document.addEventListener('DOMContentLoaded', function () {
     return Math.round(value).toLocaleString('fr-FR');
   }
 
+  function formatDecimal(value) {
+    return Number(value || 0).toLocaleString('fr-FR', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    });
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function (char) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char];
+    });
+  }
+
+  function updateVehicleStats(vehicles) {
+    if (!vehicleStatsBody) return;
+    const rows = Object.values(vehicles).sort(function (a, b) {
+      return b.quantite - a.quantite;
+    });
+    if (!rows.length) {
+      vehicleStatsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Aucune statistique disponible.</td></tr>';
+      return;
+    }
+    vehicleStatsBody.innerHTML = rows.map(function (vehicle) {
+      const chauffeurs = Array.from(vehicle.chauffeurs).sort().join(', ') || 'Non renseigne';
+      const moyenne = vehicle.rotation ? vehicle.quantite / vehicle.rotation : 0;
+      return '<tr>' +
+        '<td class="fw-semibold">' + escapeHtml(vehicle.plaque) + '</td>' +
+        '<td>' + escapeHtml(chauffeurs) + '</td>' +
+        '<td class="text-end">' + format(vehicle.quantite) + '</td>' +
+        '<td class="text-end">' + format(vehicle.rotation) + '</td>' +
+        '<td class="text-end">' + formatDecimal(moyenne) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function updateVehicleChart(dateLabels, vehicles) {
+    if (!consumptionChart) return;
+    const rows = Object.values(vehicles).sort(function (a, b) {
+      return b.quantite - a.quantite;
+    }).slice(0, 8);
+    consumptionChart.data.labels = dateLabels;
+    consumptionChart.data.datasets = chartDatasets(rows.map(function (vehicle) {
+      return {
+        label: vehicle.plaque,
+        data: dateLabels.map(function (dateLabel) {
+          return vehicle.dates[dateLabel] || 0;
+        })
+      };
+    }));
+    consumptionChart.update();
+  }
+
   function rowMatches(row, query) {
     if (!query) return true;
     return row.innerText.toLowerCase().includes(query);
@@ -291,6 +358,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let quantite = 0;
     let rotation = 0;
     let count = 0;
+    const dateLabels = [];
+    const vehicles = {};
 
     table.querySelectorAll('tbody tr[data-row="entry"]').forEach(function (row) {
       const visible = rowMatches(row, query);
@@ -298,14 +367,31 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!visible) return;
       const date = row.dataset.date;
       const bucket = totalsByDate[date] || { niveau: 0, quantite: 0, rotation: 0 };
+      const rowQuantite = number(row.dataset.quantite);
+      const rowRotation = number(row.dataset.rotation);
+      const plaque = (row.dataset.plaque || 'Non renseignee').trim() || 'Non renseignee';
+      const chauffeur = (row.dataset.chauffeur || '').trim();
       bucket.niveau += number(row.dataset.niveau);
-      bucket.quantite += number(row.dataset.quantite);
-      bucket.rotation += number(row.dataset.rotation);
+      bucket.quantite += rowQuantite;
+      bucket.rotation += rowRotation;
       totalsByDate[date] = bucket;
       niveau += number(row.dataset.niveau);
-      quantite += number(row.dataset.quantite);
-      rotation += number(row.dataset.rotation);
+      quantite += rowQuantite;
+      rotation += rowRotation;
       count += 1;
+      if (!dateLabels.includes(date)) dateLabels.push(date);
+      const vehicle = vehicles[plaque] || {
+        plaque: plaque,
+        chauffeurs: new Set(),
+        quantite: 0,
+        rotation: 0,
+        dates: {}
+      };
+      if (chauffeur) vehicle.chauffeurs.add(chauffeur);
+      vehicle.quantite += rowQuantite;
+      vehicle.rotation += rowRotation;
+      vehicle.dates[date] = (vehicle.dates[date] || 0) + rowQuantite;
+      vehicles[plaque] = vehicle;
     });
 
     table.querySelectorAll('tbody tr[data-row="total"]').forEach(function (row) {
@@ -321,6 +407,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('[data-live="quantite"]').textContent = format(quantite);
     document.querySelector('[data-live="rotation"]').textContent = format(rotation);
     document.querySelector('[data-live="count"]').textContent = format(count);
+    updateVehicleStats(vehicles);
+    updateVehicleChart(dateLabels, vehicles);
   }
 
   if (searchInput) searchInput.addEventListener('input', recalc);
