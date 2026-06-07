@@ -1,0 +1,81 @@
+{% load static %}
+
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="#" class="navbar-logo">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo-img">
+        </a>
+
+        <div class="navbar-links">
+            <a href="{% url 'about' %}" class="nav-link">Accueil</a>
+            <a href="{% url 'contact' %}" class="nav-link">Contact</a>
+            {% if request.user.is_authenticated and request.user.is_superuser %}
+                <a href="{% url 'contact_list' %}" class="nav-link">Gerer Les Messages</a>
+                <a href="{% url 'event_list' %}" class="nav-link">Gerer Les Evenements</a>
+                <a href="{% url 'logout' %}" class="nav-link">Deconnexion</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-link">Connexion</a>
+            {% endif %}
+        </div>
+
+        <button class="mobile-menu-button">
+            <div class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </div>
+        </button>
+    </div>
+
+    <div class="mobile-menu">
+        <a href="{% url 'about' %}" class="mobile-nav-link">Accueil</a>
+        <a href="{% url 'contact' %}" class="mobile-nav-link">Contact</a>
+        <a href="{% url 'event_list' %}" class="mobile-nav-link">Evenements</a>
+        {% if request.user.is_authenticated and request.user.is_superuser %}
+            <a href="{% url 'contact_list' %}" class="mobile-nav-link">Gerer Les Messages</a>
+            <a href="{% url 'event_list' %}" class="mobile-nav-link">Gerer Les Evenements</a>
+            <a href="{% url 'logout' %}" class="mobile-nav-link">Deconnexion</a>
+        {% else %}
+            <a href="{% url 'login' %}" class="mobile-nav-link">Connexion</a>
+        {% endif %}
+    </div>
+</nav>
+
+<style>
+    .navbar-links {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .mobile-menu {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    @media (min-width: 768px) {
+        .navbar-links {
+            max-height: none;
+            overflow-y: visible;
+        }
+    }
+
+    .navbar-logo .logo-img {
+        max-height: 80px; /* Taille pour écrans larges */
+        width: auto;
+        height: auto;
+        display: block;
+    }
+
+    @media (max-width: 767px) {
+        .navbar-logo .logo-img {
+            max-height: 60px; /* Taille pour mobiles */
+        }
+    }
+
+    .navbar-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+    }
+</style>

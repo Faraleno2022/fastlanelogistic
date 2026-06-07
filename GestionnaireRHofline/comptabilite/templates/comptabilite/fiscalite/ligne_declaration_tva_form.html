@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Ligne de déclaration TVA" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'comptabilite:dashboard' %}">{% trans "Accueil" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'comptabilite:declaration_tva_list' %}">{% trans "Déclarations" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ declaration.get_absolute_url }}">{{ declaration.get_periode_display }}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Ligne" %}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">{% trans "Ligne de déclaration TVA" %}</h1>
+        </div>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="card">
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row">
+                    {% for field in form %}
+                        {% if field.name != 'declaration' %}
+                        <div class="{% if field.name in 'montant_ht,montant_tva,montant_ttc' %}col-md-4{% else %}col-md-6{% endif %} mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <small class="form-text text-muted d-block mt-1">
+                                {{ field.help_text|safe }}
+                            </small>
+                            {% endif %}
+                            {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ field.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Résumé -->
+                <div class="alert alert-info">
+                    <strong>{% trans "Résumé:" %}</strong><br>
+                    {% trans "Montant HT:" %} <span id="montant_ht_display">0.00</span> €<br>
+                    {% trans "Montant TVA:" %} <span id="montant_tva_display">0.00</span> €<br>
+                    {% trans "Montant TTC:" %} <span id="montant_ttc_display">0.00</span> €
+                </div>
+
+                <!-- Boutons -->
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% trans "Enregistrer" %}
+                    </button>
+                    <a href="{{ declaration.get_absolute_url }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> {% trans "Annuler" %}
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-calculate montants when taux changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const montantHT = document.querySelector('[name="montant_ht"]');
+        const tauxTVA = document.querySelector('[name="taux_tva"]');
+        
+        function updateCalculations() {
+            if (montantHT && tauxTVA) {
+                const ht = parseFloat(montantHT.value) || 0;
+                const tauxValue = parseFloat(tauxTVA.value) || 0;
+                const tva = (ht * tauxValue) / 100;
+                const ttc = ht + tva;
+                
+                document.querySelector('#montant_ht_display').textContent = ht.toFixed(2);
+                document.querySelector('#montant_tva_display').textContent = tva.toFixed(2);
+                document.querySelector('#montant_ttc_display').textContent = ttc.toFixed(2);
+            }
+        }
+        
+        if (montantHT) montantHT.addEventListener('input', updateCalculations);
+        if (tauxTVA) tauxTVA.addEventListener('change', updateCalculations);
+        
+        updateCalculations();
+    });
+</script>
+
+<style>
+    .form-control, .form-select {
+        border-color: #dee2e6;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+</style>
+{% endblock %}

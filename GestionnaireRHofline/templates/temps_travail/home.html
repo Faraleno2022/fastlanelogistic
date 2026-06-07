@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Temps de Travail - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-clock-history"></i> Gestion du Temps de Travail</h1>
+</div>
+
+<div class="row">
+    <!-- Pointages -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-left-primary shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Pointages
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <i class="bi bi-clock"></i> Gestion des pointages
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'temps_travail:pointages' %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-list"></i> Voir les pointages
+                    </a>
+                    <a href="{% url 'temps_travail:creer_pointage' %}" class="btn btn-success btn-sm">
+                        <i class="bi bi-plus-circle"></i> Nouveau pointage
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Congés -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-left-success shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Congés
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <i class="bi bi-calendar-check"></i> Gestion des congés
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'temps_travail:conges' %}" class="btn btn-success btn-sm">
+                        <i class="bi bi-list"></i> Voir les congés
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Absences -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-left-warning shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Absences
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <i class="bi bi-calendar-x"></i> Gestion des absences
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'temps_travail:absences' %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-list"></i> Voir les absences
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques du jour -->
+<div class="row mt-4">
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-info shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total Employés
+                        </div>
+                        <div class="h1 mb-0 font-weight-bold text-gray-800">
+                            {{ stats.total_employes }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-success shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Présents Aujourd'hui
+                        </div>
+                        <div class="h1 mb-0 font-weight-bold text-gray-800">
+                            {{ stats.presents_aujourdhui }}
+                        </div>
+                        <small class="text-muted">{{ stats.taux_presence }}%</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-check-circle fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-danger shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Absents Aujourd'hui
+                        </div>
+                        <div class="h1 mb-0 font-weight-bold text-gray-800">
+                            {{ stats.absents_aujourdhui }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-x-circle fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-warning shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            En Congé
+                        </div>
+                        <div class="h1 mb-0 font-weight-bold text-gray-800">
+                            {{ stats.en_conge }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-calendar-check fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Demandes en attente et Jours fériés -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header" style="background: #e8e8e8;">
+                <h5 class="mb-0"><i class="bi bi-bell"></i> Demandes en Attente</h5>
+            </div>
+            <div class="card-body">
+                {% if stats.demandes_conge_attente > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        <strong>{{ stats.demandes_conge_attente }}</strong> demande(s) de congé en attente d'approbation
+                    </div>
+                    <a href="{% url 'temps_travail:conges' %}?statut=en_attente" class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye"></i> Voir les demandes
+                    </a>
+                {% else %}
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-check-circle text-success"></i> Aucune demande en attente
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header" style="background: #e8e8e8;">
+                <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Prochains Jours Fériés</h5>
+            </div>
+            <div class="card-body">
+                {% if prochains_feries %}
+                    <ul class="list-unstyled mb-0">
+                        {% for ferie in prochains_feries %}
+                        <li class="mb-2">
+                            <i class="bi bi-calendar3"></i> 
+                            <strong>{{ ferie.date_jour_ferie|date:"d/m/Y" }}</strong> - {{ ferie.libelle }}
+                            <span class="badge bg-secondary">{{ ferie.get_type_ferie_display }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'temps_travail:liste_jours_feries' %}" class="btn btn-info btn-sm mt-2">
+                        <i class="bi bi-calendar"></i> Voir le calendrier
+                    </a>
+                {% else %}
+                    <p class="text-muted mb-0">Aucun jour férié à venir</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accès rapides aux rapports -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header" style="background: #e8e8e8;">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Rapports et Analyses</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'temps_travail:rapport_presence' %}" class="btn btn-outline-success w-100">
+                            <i class="bi bi-clipboard-data"></i><br>
+                            Rapport de Présence
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'temps_travail:rapport_heures_supplementaires' %}" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-clock-history"></i><br>
+                            Heures Supplémentaires
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'temps_travail:liste_jours_feries' %}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-calendar-event"></i><br>
+                            Jours Fériés
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

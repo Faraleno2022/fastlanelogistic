@@ -46,3 +46,46 @@ _seed_*.py
 # Secrets
 *.pem
 *.key
+
+# === GestionnaireRHofline (fusionné depuis ex-guineerh) ===
+# Sauvegarde du .git de l'ancien dépôt guineerh (ne pas committer)
+GestionnaireRHofline/.git_old_guineerh_backup/
+
+# Licences applicatives (sensibles)
+*.lic
+license.dat
+licences_generees.txt
+GestionnaireRHofline/license.dat
+GestionnaireRHofline/licence_universelle_1_an.lic
+
+# Bases de données et backups
+GestionnaireRHofline/db.sqlite3
+GestionnaireRHofline/db.sqlite3.*
+GestionnaireRHofline/db_template.sqlite3
+GestionnaireRHofline/backup_*.json
+
+# Build / dist / installers (artefacts)
+GestionnaireRHofline/build/
+GestionnaireRHofline/dist/
+GestionnaireRHofline/dist_nuitka/
+GestionnaireRHofline/Output/
+GestionnaireRHofline/releases/
+GestionnaireRHofline/installer/
+GestionnaireRHofline/python_embed.zip
+
+# Logs et fichiers de travail de build
+GestionnaireRHofline/_build_*.txt
+GestionnaireRHofline/_build_*.log
+GestionnaireRHofline/_iscc_log*.txt
+GestionnaireRHofline/_nuitka_log.txt
+GestionnaireRHofline/_protect_log*.txt
+GestionnaireRHofline/_pyinstaller_log.txt
+GestionnaireRHofline/nuitka-crash-report.xml
+GestionnaireRHofline/logs/
+
+# venv interne au sous-projet
+GestionnaireRHofline/venv/
+GestionnaireRHofline/__pycache__/
+
+# Fichiers .env de production (sensibles)
+GestionnaireRHofline/.env

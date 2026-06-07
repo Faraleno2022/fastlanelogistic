@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Créer une Rubrique - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-plus-circle"></i> Créer une Rubrique de Paie</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'paie:liste_rubriques' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Informations de base -->
+            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informations de Base</h5>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="code_rubrique" class="form-label">Code Rubrique <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="code_rubrique" name="code_rubrique" required placeholder="Ex: PRIME_TRANSPORT">
+                    <small class="text-muted">Code unique (lettres, chiffres, underscore)</small>
+                </div>
+                <div class="col-md-8">
+                    <label for="libelle_rubrique" class="form-label">Libellé <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="libelle_rubrique" name="libelle_rubrique" required placeholder="Ex: Prime de transport">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="type_rubrique" class="form-label">Type de Rubrique <span class="text-danger">*</span></label>
+                <select class="form-select" id="type_rubrique" name="type_rubrique" required>
+                    <option value="">-- Sélectionner --</option>
+                    <option value="gain">Gain (augmente le salaire)</option>
+                    <option value="retenue">Retenue (diminue le salaire)</option>
+                    <option value="cotisation">Cotisation (charges sociales)</option>
+                    <option value="information">Information (affichage uniquement)</option>
+                </select>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Calcul -->
+            <h5 class="mb-3"><i class="bi bi-calculator"></i> Paramètres de Calcul</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="taux_rubrique" class="form-label">Taux (%)</label>
+                    <input type="number" class="form-control" id="taux_rubrique" name="taux_rubrique" step="0.01" placeholder="Ex: 5.50">
+                    <small class="text-muted">Pourcentage à appliquer</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="montant_fixe" class="form-label">Montant Fixe (GNF)</label>
+                    <input type="text" class="form-control" id="montant_fixe" name="montant_fixe" inputmode="decimal" placeholder="Ex: 300 000 ou 300000,50">
+                    <small class="text-muted">Montant fixe par défaut</small>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="formule_calcul" class="form-label">Formule de Calcul</label>
+                <textarea class="form-control" id="formule_calcul" name="formule_calcul" rows="2" placeholder="Ex: SALAIRE_BASE * 0.055"></textarea>
+                <small class="text-muted">Formule personnalisée (optionnel)</small>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Soumission -->
+            <h5 class="mb-3"><i class="bi bi-shield-check"></i> Soumission aux Charges</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="soumis_cnss" name="soumis_cnss">
+                        <label class="form-check-label" for="soumis_cnss">
+                            <strong>Soumis à la CNSS</strong><br>
+                            <small class="text-muted">Cette rubrique entre dans la base de calcul CNSS</small>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="soumis_irg" name="soumis_irg">
+                        <label class="form-check-label" for="soumis_irg">
+                            <strong>Soumis à l'IRG</strong><br>
+                            <small class="text-muted">Cette rubrique est imposable</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Ordre et Affichage -->
+            <h5 class="mb-3"><i class="bi bi-sort-numeric-down"></i> Ordre et Affichage</h5>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="ordre_calcul" class="form-label">Ordre de Calcul</label>
+                    <input type="number" class="form-control" id="ordre_calcul" name="ordre_calcul" value="100">
+                    <small class="text-muted">Plus petit = calculé en premier</small>
+                </div>
+                <div class="col-md-4">
+                    <label for="ordre_affichage" class="form-label">Ordre d'Affichage</label>
+                    <input type="number" class="form-control" id="ordre_affichage" name="ordre_affichage" value="100">
+                    <small class="text-muted">Ordre sur le bulletin</small>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input" type="checkbox" id="affichage_bulletin" name="affichage_bulletin" checked>
+                        <label class="form-check-label" for="affichage_bulletin">
+                            <strong>Afficher sur le bulletin</strong>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="actif" name="actif" checked>
+                    <label class="form-check-label" for="actif">
+                        <strong>Rubrique Active</strong>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Aide -->
+            <div class="alert alert-info">
+                <h6><i class="bi bi-info-circle"></i> Aide</h6>
+                <ul class="mb-0">
+                    <li><strong>Code</strong> : Identifiant unique en majuscules (ex: PRIME_TRANSPORT, SAL_BASE)</li>
+                    <li><strong>Type Gain</strong> : Augmente le salaire (primes, indemnités, heures sup.)</li>
+                    <li><strong>Type Retenue</strong> : Diminue le salaire (avances, prêts, retenues disciplinaires)</li>
+                    <li><strong>Ordre de calcul</strong> : Salaire de base = 10, Primes = 20-50, Cotisations = 100+</li>
+                </ul>
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'paie:liste_rubriques' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Créer la Rubrique
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

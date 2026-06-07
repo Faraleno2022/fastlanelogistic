@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Notes de Frais{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-receipt me-2"></i>Notes de Frais</h2>
+                <div>
+                    <a href="{% url 'paie:gestion_categories_frais' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-tags me-1"></i>Catégories
+                    </a>
+                    <a href="{% url 'paie:recap_frais' %}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar me-1"></i>Récapitulatif
+                    </a>
+                    <a href="{% url 'paie:creer_note_frais' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Nouvelle Note
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card" style="background: #e8e8e8;">
+                <div class="card-body text-center">
+                    <h4>{{ stats.nb_en_attente|default:"0" }}</h4>
+                    <small>En attente de validation</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card" style="background: #e8e8e8;">
+                <div class="card-body text-center">
+                    <h4>{{ stats.total_soumis|floatformat:0|intcomma|default:"0" }} GNF</h4>
+                    <small>Montant soumis</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card" style="background: #e8e8e8;">
+                <div class="card-body text-center">
+                    <h4>{{ stats.total_valide|floatformat:0|intcomma|default:"0" }} GNF</h4>
+                    <small>Montant validé</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card" style="background: #e8e8e8;">
+                <div class="card-body text-center">
+                    <h4>{{ stats.total_rembourse|floatformat:0|intcomma|default:"0" }} GNF</h4>
+                    <small>Montant remboursé</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Employé</label>
+                    <select class="form-select" name="employe">
+                        <option value="">Tous</option>
+                        {% for emp in employes %}
+                        <option value="{{ emp.id }}" {% if filtre_employe == emp.id|stringformat:"s" %}selected{% endif %}>
+                            {{ emp.nom }} {{ emp.prenoms }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select" name="statut">
+                        <option value="">Tous</option>
+                        {% for code, libelle in statuts %}
+                        <option value="{{ code }}" {% if filtre_statut == code %}selected{% endif %}>{{ libelle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Mois</label>
+                    <select class="form-select" name="mois">
+                        <option value="">Tous</option>
+                        {% for m in "123456789101112"|make_list %}
+                        <option value="{{ forloop.counter }}" {% if mois == forloop.counter|stringformat:"s" %}selected{% endif %}>
+                            {{ forloop.counter }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Année</label>
+                    <input type="number" class="form-control" name="annee" value="{{ annee }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des notes -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead style="background: #e8e8e8;">
+                        <tr>
+                            <th>Référence</th>
+                            <th>Employé</th>
+                            <th>Titre</th>
+                            <th>Période</th>
+                            <th class="text-end">Montant</th>
+                            <th>Statut</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for note in notes %}
+                        <tr>
+                            <td><strong>{{ note.reference }}</strong></td>
+                            <td>
+                                {{ note.employe.nom }} {{ note.employe.prenoms }}<br>
+                                <small class="text-muted">{{ note.employe.service.nom|default:"-" }}</small>
+                            </td>
+                            <td>{{ note.titre|truncatechars:30 }}</td>
+                            <td>{{ note.date_debut|date:"d/m/Y" }} - {{ note.date_fin|date:"d/m/Y" }}</td>
+                            <td class="text-end fw-bold">{{ note.montant_total|floatformat:0|intcomma }} GNF</td>
+                            <td>
+                                {% if note.statut == 'brouillon' %}
+                                <span class="badge bg-secondary">Brouillon</span>
+                                {% elif note.statut == 'soumise' %}
+                                <span class="badge bg-warning">Soumise</span>
+                                {% elif note.statut == 'validee' %}
+                                <span class="badge bg-success">Validée</span>
+                                {% elif note.statut == 'rejetee' %}
+                                <span class="badge bg-danger">Rejetée</span>
+                                {% elif note.statut == 'remboursee' %}
+                                <span class="badge bg-primary">Remboursée</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'paie:detail_note_frais' note.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if note.statut == 'soumise' %}
+                                <a href="{% url 'paie:valider_note_frais' note.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% endif %}
+                                {% if note.statut == 'validee' %}
+                                <a href="{% url 'paie:rembourser_note_frais' note.pk %}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-money-bill"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="fas fa-receipt fa-3x mb-3"></i>
+                                <p>Aucune note de frais</p>
+                                <a href="{% url 'paie:creer_note_frais' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>Créer une note
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inviter un Utilisateur - {{ user.entreprise.nom_entreprise }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-envelope-plus"></i> Inviter un Utilisateur par Email</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        Un email d'invitation sera envoyé à l'utilisateur avec un lien d'activation.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">Prénom *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Nom *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <small class="form-text text-muted">
+                                L'invitation sera envoyée à cette adresse email.
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="profil" class="form-label">Profil *</label>
+                            <select class="form-select" id="profil" name="profil" required>
+                                <option value="">Sélectionner un profil...</option>
+                                {% for profil in profils %}
+                                    <option value="{{ profil.id }}">{{ profil.nom_profil }} (Niveau {{ profil.niveau_acces }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <strong>Note:</strong> Un nom d'utilisateur et un mot de passe temporaire seront générés automatiquement.
+                            L'utilisateur devra activer son compte via le lien dans l'email.
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-send"></i> Envoyer l'Invitation
+                            </button>
+                            <a href="{% url 'core:manage_users' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,159 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}Compte de Résultat{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-graph-up me-2"></i>Compte de Résultat</h4>
+    <div>
+        <button class="btn btn-outline-primary" onclick="window.print()">
+            <i class="bi bi-printer me-2"></i>Imprimer
+        </button>
+        <button class="btn btn-success" onclick="exportExcel()">
+            <i class="bi bi-download me-2"></i>Exporter Excel
+        </button>
+    </div>
+</div>
+
+<!-- En-tête entreprise -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body text-center py-3" style="background: linear-gradient(90deg, #EF7707 0%, #FF8C00 100%); color: white; border-radius: 12px;">
+        <h5 class="mb-1">{{ request.user.entreprise.nom_entreprise }}</h5>
+        <p class="mb-0">COMPTE DE RÉSULTAT</p>
+        <small>Exercice {{ exercice.libelle|default:"en cours" }} - Au {{ today|date:"d/m/Y" }}</small>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- CHARGES -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header text-white" style="background-color: #dc3545;">
+                <h6 class="mb-0"><i class="bi bi-arrow-down-right me-2"></i>CHARGES (Classe 6)</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead style="background-color: #f8d7da;">
+                        <tr><th>Compte</th><th>Intitulé</th><th class="text-end">Montant (GNF)</th></tr>
+                    </thead>
+                    <tbody>
+                        <!-- Charges d'exploitation -->
+                        <tr class="table-secondary"><td colspan="3"><strong>Charges d'exploitation</strong></td></tr>
+                        {% for c in charges_exploitation %}
+                        <tr>
+                            <td>{{ c.numero_compte }}</td>
+                            <td>{{ c.intitule }}</td>
+                            <td class="text-end">{{ c.solde|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted small">Aucune charge</td></tr>
+                        {% endfor %}
+                        
+                        <!-- Charges financières -->
+                        <tr class="table-secondary"><td colspan="3"><strong>Charges financières</strong></td></tr>
+                        {% for c in charges_financieres %}
+                        <tr>
+                            <td>{{ c.numero_compte }}</td>
+                            <td>{{ c.intitule }}</td>
+                            <td class="text-end">{{ c.solde|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted small">Aucune charge</td></tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot style="background-color: #dc3545; color: white;">
+                        <tr>
+                            <td colspan="2"><strong>TOTAL CHARGES</strong></td>
+                            <td class="text-end"><strong>{{ total_charges|floatformat:0|default:"0" }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PRODUITS -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header text-white" style="background-color: #198754;">
+                <h6 class="mb-0"><i class="bi bi-arrow-up-right me-2"></i>PRODUITS (Classe 7)</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead style="background-color: #d1e7dd;">
+                        <tr><th>Compte</th><th>Intitulé</th><th class="text-end">Montant (GNF)</th></tr>
+                    </thead>
+                    <tbody>
+                        <!-- Produits d'exploitation -->
+                        <tr class="table-secondary"><td colspan="3"><strong>Produits d'exploitation</strong></td></tr>
+                        {% for c in produits_exploitation %}
+                        <tr>
+                            <td>{{ c.numero_compte }}</td>
+                            <td>{{ c.intitule }}</td>
+                            <td class="text-end">{{ c.solde|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted small">Aucun produit</td></tr>
+                        {% endfor %}
+                        
+                        <!-- Produits financiers -->
+                        <tr class="table-secondary"><td colspan="3"><strong>Produits financiers</strong></td></tr>
+                        {% for c in produits_financiers %}
+                        <tr>
+                            <td>{{ c.numero_compte }}</td>
+                            <td>{{ c.intitule }}</td>
+                            <td class="text-end">{{ c.solde|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted small">Aucun produit</td></tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot style="background-color: #198754; color: white;">
+                        <tr>
+                            <td colspan="2"><strong>TOTAL PRODUITS</strong></td>
+                            <td class="text-end"><strong>{{ total_produits|floatformat:0|default:"0" }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Résultat -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h6 class="text-muted mb-1">Total Charges</h6>
+                        <h4 class="text-danger">{{ total_charges|floatformat:0|default:"0" }} GNF</h4>
+                    </div>
+                    <div class="col-md-4 border-start border-end">
+                        <h6 class="text-muted mb-1">Total Produits</h6>
+                        <h4 class="text-success">{{ total_produits|floatformat:0|default:"0" }} GNF</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted mb-1">
+                            {% if resultat >= 0 %}Bénéfice{% else %}Perte{% endif %}
+                        </h6>
+                        <h4 class="{% if resultat >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            <i class="bi {% if resultat >= 0 %}bi-graph-up-arrow{% else %}bi-graph-down-arrow{% endif %} me-2"></i>
+                            {{ resultat|floatformat:0|default:"0" }} GNF
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportExcel() {
+    // Fonction simple pour exporter les données du compte de résultat en Excel
+    // Pour l'instant, affiche un message d'information
+    alert('Export Excel - Cette fonctionnalité sera bientôt disponible.\n\nPour l\'instant, vous pouvez utiliser l\'impression ou copier les données manuellement.');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Réponse demande de congé{% endblock %}
+{% block header %}Demande de Congé{% endblock %}
+
+{% block content %}
+<p>Bonjour {{ employe.prenoms }},</p>
+
+{% if approuve %}
+<div class="success-box">
+    <strong>Bonne nouvelle !</strong><br>
+    Votre demande de congé a été <strong>approuvée</strong>.
+</div>
+{% else %}
+<div class="danger-box">
+    <strong>Information</strong><br>
+    Votre demande de congé a été <strong>refusée</strong>.
+</div>
+{% endif %}
+
+<table>
+    <tr>
+        <th>Type de congé</th>
+        <td>{{ conge.get_type_conge_display }}</td>
+    </tr>
+    <tr>
+        <th>Période</th>
+        <td>Du {{ conge.date_debut|date:"d/m/Y" }} au {{ conge.date_fin|date:"d/m/Y" }}</td>
+    </tr>
+    <tr>
+        <th>Nombre de jours</th>
+        <td>{{ conge.nombre_jours }} jour(s)</td>
+    </tr>
+</table>
+
+{% if approuve %}
+<p>Profitez bien de votre congé !</p>
+{% else %}
+<p>Pour plus d'informations, veuillez contacter votre responsable ou le service RH.</p>
+{% endif %}
+
+<p style="text-align: center;">
+    <a href="#" class="btn">Accéder à mon espace</a>
+</p>
+{% endblock %}

@@ -1,0 +1,399 @@
+{% load static %}
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Connexion - GuinéeRH | Logiciel de Gestion des Ressources Humaines en Guinée</title>
+
+    
+
+    <!-- SEO Meta Tags -->
+
+    <meta name="description" content="GuinéeRH - Logiciel de gestion des ressources humaines conforme au Code du Travail Guinéen. Paie, CNSS, congés, contrats. Solution RH complète pour entreprises en Guinée.">
+
+    <meta name="keywords" content="logiciel RH Guinée, gestion paie Guinée, CNSS Guinée, ressources humaines Conakry, logiciel paie guinéen, gestion employés Guinée, bulletin de paie Guinée, calcul salaire Guinée">
+
+    <meta name="author" content="GuinéeRH">
+
+    <meta name="robots" content="index, follow">
+
+    <link rel="canonical" href="https://www.guineerh.space/login/">
+
+    
+
+    <!-- Open Graph / Facebook -->
+
+    <meta property="og:type" content="website">
+
+    <meta property="og:url" content="https://www.guineerh.space/">
+
+    <meta property="og:title" content="GuinéeRH - Logiciel de Gestion RH pour la Guinée">
+
+    <meta property="og:description" content="Solution complète de gestion des ressources humaines conforme au Code du Travail Guinéen. Paie, CNSS, congés, contrats et plus.">
+
+    <meta property="og:image" content="https://www.guineerh.space/static/img/og-image.png">
+
+    <meta property="og:locale" content="fr_GN">
+
+    <meta property="og:site_name" content="GuinéeRH">
+
+    
+
+    <!-- Twitter Card -->
+
+    <meta name="twitter:card" content="summary_large_image">
+
+    <meta name="twitter:title" content="GuinéeRH - Logiciel de Gestion RH pour la Guinée">
+
+    <meta name="twitter:description" content="Solution complète de gestion des ressources humaines conforme au Code du Travail Guinéen.">
+
+    <meta name="twitter:image" content="https://www.guineerh.space/static/img/og-image.png">
+
+    
+
+    <!-- Favicon -->
+
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+
+    
+
+    <!-- Structured Data / JSON-LD -->
+
+    <script type="application/ld+json">
+
+    {
+
+        "@context": "https://schema.org",
+
+        "@type": "SoftwareApplication",
+
+        "name": "GuinéeRH",
+
+        "description": "Logiciel de gestion des ressources humaines conforme au Code du Travail Guinéen",
+
+        "applicationCategory": "BusinessApplication",
+
+        "operatingSystem": "Web",
+
+        "offers": {
+
+            "@type": "Offer",
+
+            "price": "0",
+
+            "priceCurrency": "GNF"
+
+        },
+
+        "provider": {
+
+            "@type": "Organization",
+
+            "name": "GuinéeRH",
+
+            "url": "https://www.guineerh.space",
+
+            "address": {
+
+                "@type": "PostalAddress",
+
+                "addressCountry": "GN",
+
+                "addressLocality": "Conakry"
+
+            }
+
+        },
+
+        "featureList": [
+
+            "Gestion de la paie conforme CNSS",
+
+            "Calcul automatique RTS",
+
+            "Gestion des congés",
+
+            "Suivi des contrats",
+
+            "Déclarations CNSS",
+
+            "Gestion des expatriés"
+
+        ]
+
+    }
+
+    </script>
+
+    
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+
+    <style>
+
+        body {
+
+            background: #f0f2f5;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            align-items: center;
+
+        }
+
+        .login-container {
+
+            max-width: 450px;
+
+            margin: 0 auto;
+
+        }
+
+        .login-card {
+
+            background: white;
+
+            border-radius: 15px;
+
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+
+            overflow: hidden;
+
+        }
+
+        .login-header {
+
+            background: linear-gradient(135deg, #212121 0%, #3a3a3a 100%);
+
+            color: white;
+
+            padding: 30px;
+
+            text-align: center;
+
+        }
+
+        .login-header i {
+
+            font-size: 3rem;
+
+            margin-bottom: 10px;
+
+        }
+
+        .login-body {
+
+            padding: 40px;
+
+        }
+
+        .form-control:focus {
+
+            border-color: #EF7707;
+
+            box-shadow: 0 0 0 0.2rem rgba(239, 119, 7, 0.25);
+
+        }
+
+        .btn-login {
+
+            background: linear-gradient(135deg, #EF7707 0%, #d96a06 100%);
+
+            border: none;
+
+            padding: 12px;
+
+            font-weight: 600;
+
+        }
+
+        .btn-login:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow: 0 5px 20px rgba(239, 119, 7, 0.4);
+
+        }
+
+        .guinea-flag {
+
+            display: inline-block;
+
+            width: 30px;
+
+            height: 20px;
+
+            background: linear-gradient(to right, #CE1126 33.33%, #FCD116 33.33%, #FCD116 66.66%, #009460 66.66%);
+
+            border-radius: 3px;
+
+            margin-left: 10px;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="login-container">
+
+            {% include 'partials/messages.html' %}
+
+            
+
+            <div class="login-card">
+
+                <div class="login-header">
+
+                    <i class="fas fa-users-cog"></i>
+
+                    <h3>Gestionnaire RH</h3>
+
+                    <p class="mb-0">République de Guinée <span class="guinea-flag"></span></p>
+
+                </div>
+
+                
+
+                <div class="login-body">
+
+                    <form method="post">
+
+                        {% csrf_token %}
+
+                        
+
+                        <div class="mb-3">
+
+                            <label for="username" class="form-label">
+
+                                <i class="fas fa-user"></i> Nom d'utilisateur
+
+                            </label>
+
+                            <input type="text" class="form-control" id="username" name="username" required autofocus>
+
+                        </div>
+
+                        
+
+                        <div class="mb-3">
+
+                            <label for="password" class="form-label">
+
+                                <i class="fas fa-lock"></i> Mot de passe
+
+                            </label>
+
+                            <input type="password" class="form-control" id="password" name="password" required>
+
+                        </div>
+
+                        
+
+                        <div class="mb-3 form-check">
+
+                            <input type="checkbox" class="form-check-input" id="remember">
+
+                            <label class="form-check-label" for="remember">
+
+                                Se souvenir de moi
+
+                            </label>
+
+                        </div>
+
+                        
+
+                        <button type="submit" class="btn btn-primary btn-login w-100">
+
+                            <i class="fas fa-sign-in-alt"></i> Se connecter
+
+                        </button>
+
+                        
+
+                        <div class="text-center mt-3">
+
+                            <a href="#" class="text-muted small">
+
+                                <i class="fas fa-question-circle"></i> Mot de passe oublié ?
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            
+
+            <div class="text-center mt-4">
+
+                <a href="{% url 'core:register_entreprise' %}" class="btn btn-outline-dark">
+
+                    <i class="fas fa-building"></i> Créer un compte entreprise
+
+                </a>
+
+            </div>
+
+            
+
+            <div class="text-center mt-3">
+
+                <a href="{% url 'core:documentation_legale' %}" class="btn btn-outline-secondary btn-sm">
+
+                    <i class="fas fa-book"></i> Documentation légale paie
+
+                </a>
+
+            </div>
+
+            
+
+            <div class="text-center mt-3 text-muted">
+
+                <small>
+
+                    <i class="fas fa-shield-alt"></i> Système sécurisé - Conforme au Code du Travail Guinéen
+
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+</body>
+
+</html>
+
+
+

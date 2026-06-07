@@ -1,0 +1,53 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}{% if facture %}Modifier{% else %}Nouvelle{% endif %} Facture{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-receipt me-2"></i>{% if facture %}Modifier la facture{% else %}Nouvelle facture{% endif %}</h4>
+    <a href="{% url 'comptabilite:facture_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">N° Facture <span class="text-danger">*</span></label>
+                    {{ form.numero }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Type <span class="text-danger">*</span></label>
+                    {{ form.type_facture }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Tiers <span class="text-danger">*</span></label>
+                    {{ form.tiers }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date facture <span class="text-danger">*</span></label>
+                    {{ form.date_facture }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date échéance</label>
+                    {{ form.date_echeance }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Référence externe</label>
+                    {{ form.reference_externe }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Notes</label>
+                    {{ form.notes }}
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'comptabilite:facture_list' %}" class="btn btn-outline-secondary">Annuler</a>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i>Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

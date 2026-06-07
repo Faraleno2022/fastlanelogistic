@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Barème IRPP {{ annee_selectionnee }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">
+        <i class="bi bi-percent"></i> Barème IRPP - {{ annee_selectionnee }}
+    </h1>
+    <div class="btn-group" role="group">
+        <a class="btn btn-sm btn-primary" href="{% url 'paie:bareme_irpp_ajouter' %}">
+            <i class="bi bi-plus-lg"></i> Nouvelle tranche
+        </a>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'paie:bareme_irpp_dupliquer' %}">
+            <i class="bi bi-copy"></i> Dupliquer
+        </a>
+        <a class="btn btn-sm btn-success" href="{% url 'paie:simulateur_irpp' %}">
+            <i class="bi bi-calculator"></i> Simulateur
+        </a>
+    </div>
+</div>
+
+<!-- Filtre par année -->
+<div class="card mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <label class="col-form-label">Année :</label>
+            </div>
+            <div class="col-auto">
+                <select name="annee" class="form-select form-select-sm" onchange="this.form.submit()">
+                    {% for a in annees %}
+                    <option value="{{ a }}" {% if a == annee_selectionnee %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tableau des tranches -->
+<div class="card shadow">
+    <div class="card-body">
+        {% if tranches %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-orange-light">
+                    <tr>
+                        <th class="text-center" style="width: 80px;">Tranche</th>
+                        <th class="text-end">Borne inférieure</th>
+                        <th class="text-end">Borne supérieure</th>
+                        <th class="text-center">Taux</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-end" style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in tranches %}
+                    <tr>
+                        <td class="text-center">
+                            <span class="badge bg-primary">{{ t.numero_tranche }}</span>
+                        </td>
+                        <td class="text-end font-monospace">{{ t.borne_inferieure|floatformat:0 }} GNF</td>
+                        <td class="text-end font-monospace">
+                            {% if t.borne_superieure %}
+                            {{ t.borne_superieure|floatformat:0 }} GNF
+                            {% else %}
+                            <span class="text-muted">∞ (illimité)</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {% if t.taux_irg == 0 %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                {{ t.taux_irg }}%
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if t.actif %}
+                            <span class="badge bg-success">Actif</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'paie:bareme_irpp_modifier' t.id %}">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'paie:bareme_irpp_supprimer' t.id %}">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Résumé du barème -->
+        <div class="alert alert-info mt-3 mb-0">
+            <i class="bi bi-info-circle"></i>
+            <strong>Barème progressif :</strong> L'impôt est calculé par tranches. 
+            Chaque tranche de revenu est imposée au taux correspondant.
+        </div>
+        {% else %}
+        <div class="alert alert-warning mb-0">
+            <i class="bi bi-exclamation-triangle"></i>
+            Aucune tranche définie pour l'année {{ annee_selectionnee }}.
+            <a href="{% url 'paie:bareme_irpp_dupliquer' %}">Dupliquer depuis une autre année</a> ou
+            <a href="{% url 'paie:bareme_irpp_ajouter' %}">créer une nouvelle tranche</a>.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

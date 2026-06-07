@@ -1,0 +1,59 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Rapport {{ rapport.titre }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-1"><i class="bi bi-file-earmark-bar-graph me-2"></i>{{ rapport.titre }}</h1>
+            <p class="text-muted mb-0">{{ rapport.get_type_rapport_display }}</p>
+        </div>
+        <div class="btn-group">
+            {% if rapport.fichier_rapport %}
+            <a href="{{ rapport.fichier_rapport.url }}" class="btn btn-success" target="_blank"><i class="bi bi-download me-1"></i>Télécharger</a>
+            {% endif %}
+            <a href="{% url 'comptabilite:archivage_rapports' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="card-title mb-0">Informations</h5></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr><th class="text-muted" width="40%">Type</th><td><span class="badge bg-info">{{ rapport.get_type_rapport_display }}</span></td></tr>
+                                <tr><th class="text-muted">Période</th><td>{{ rapport.date_debut|date:"d/m/Y" }} - {{ rapport.date_fin|date:"d/m/Y" }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr><th class="text-muted" width="40%">Documents</th><td><strong>{{ rapport.nombre_documents }}</strong></td></tr>
+                                <tr><th class="text-muted">Taille totale</th><td><strong>{{ rapport.taille_totale_mo|floatformat:2 }} Mo</strong></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    {% if rapport.resume %}
+                    <hr>
+                    <h6>Résumé</h6>
+                    <p>{{ rapport.resume }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Audit</h5></div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Généré le:</strong> {{ rapport.date_generation|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-0"><strong>Par:</strong> {{ rapport.genere_par|default:"-" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

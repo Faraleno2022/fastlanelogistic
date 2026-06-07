@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Nouveau Jour Férié{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-plus me-2"></i>Nouveau Jour Férié</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="libelle" class="form-label">Libellé *</label>
+                            <input type="text" class="form-control" id="libelle" name="libelle" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="date_ferie" class="form-label">Date *</label>
+                            <input type="date" class="form-control" id="date_ferie" name="date_ferie" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="type_ferie" class="form-label">Type *</label>
+                            <select class="form-select" id="type_ferie" name="type_ferie" required>
+                                <option value="national">National</option>
+                                <option value="religieux">Religieux</option>
+                                <option value="local">Local</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="recurrent" name="recurrent">
+                            <label class="form-check-label" for="recurrent">
+                                Récurrent (chaque année)
+                            </label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Enregistrer
+                            </button>
+                            <a href="{% url 'temps_travail:liste_jours_feries' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

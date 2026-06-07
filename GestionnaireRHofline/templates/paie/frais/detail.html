@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Note de Frais {{ note.reference }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'paie:liste_notes_frais' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-receipt me-2"></i>{{ note.reference }}</h2>
+                <div>
+                    {% if note.statut == 'brouillon' or note.statut == 'rejetee' %}
+                    <a href="{% url 'paie:soumettre_note_frais' note.pk %}" class="btn btn-success">
+                        <i class="fas fa-paper-plane me-1"></i>Soumettre
+                    </a>
+                    <a href="{% url 'paie:supprimer_note_frais' note.pk %}" class="btn btn-danger"
+                       onclick="return confirm('Supprimer cette note ?')">
+                        <i class="fas fa-trash me-1"></i>Supprimer
+                    </a>
+                    {% endif %}
+                    {% if note.statut == 'soumise' %}
+                    <a href="{% url 'paie:valider_note_frais' note.pk %}" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>Valider
+                    </a>
+                    {% endif %}
+                    {% if note.statut == 'validee' %}
+                    <a href="{% url 'paie:rembourser_note_frais' note.pk %}" class="btn btn-primary">
+                        <i class="fas fa-money-bill me-1"></i>Rembourser
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Informations -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-muted">Employé</td>
+                                    <td><strong>{{ note.employe.nom }} {{ note.employe.prenoms }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Matricule</td>
+                                    <td>{{ note.employe.matricule }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Département</td>
+                                    <td>{{ note.employe.service.nom_service|default:"-" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-muted">Période</td>
+                                    <td>{{ note.date_debut|date:"d/m/Y" }} - {{ note.date_fin|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Mission</td>
+                                    <td>{{ note.mission|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Statut</td>
+                                    <td>
+                                        {% if note.statut == 'brouillon' %}
+                                        <span class="badge bg-secondary">Brouillon</span>
+                                        {% elif note.statut == 'soumise' %}
+                                        <span class="badge bg-warning">Soumise</span>
+                                        {% elif note.statut == 'validee' %}
+                                        <span class="badge bg-success">Validée</span>
+                                        {% elif note.statut == 'rejetee' %}
+                                        <span class="badge bg-danger">Rejetée</span>
+                                        {% elif note.statut == 'remboursee' %}
+                                        <span class="badge bg-primary">Remboursée</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    {% if note.description %}
+                    <hr>
+                    <p class="mb-0"><strong>Description:</strong> {{ note.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Lignes de frais -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%); d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Lignes de Frais</h6>
+                    {% if note.statut == 'brouillon' or note.statut == 'rejetee' %}
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#ajouterLigneModal">
+                        <i class="fas fa-plus me-1"></i>Ajouter
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-orange-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Catégorie</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Montant</th>
+                                    <th class="text-center">Justif.</th>
+                                    {% if note.statut == 'brouillon' or note.statut == 'rejetee' %}
+                                    <th class="text-center">Action</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ligne in lignes %}
+                                <tr>
+                                    <td>{{ ligne.date_depense|date:"d/m/Y" }}</td>
+                                    <td><span class="badge bg-info">{{ ligne.categorie.libelle }}</span></td>
+                                    <td>{{ ligne.description|truncatechars:40 }}</td>
+                                    <td class="text-end fw-bold">{{ ligne.montant|floatformat:0|intcomma }} GNF</td>
+                                    <td class="text-center">
+                                        {% if ligne.justificatif %}
+                                        <a href="{{ ligne.justificatif.url }}" target="_blank" class="text-success">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                        {% else %}
+                                        <i class="fas fa-times text-muted"></i>
+                                        {% endif %}
+                                    </td>
+                                    {% if note.statut == 'brouillon' or note.statut == 'rejetee' %}
+                                    <td class="text-center">
+                                        <a href="{% url 'paie:supprimer_ligne_frais' note.pk ligne.pk %}" 
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Supprimer cette ligne ?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <p class="mb-0">Aucune ligne de frais</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-dark">
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>TOTAL</strong></td>
+                                    <td class="text-end"><strong>{{ note.montant_total|floatformat:0|intcomma }} GNF</strong></td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commentaire validation -->
+            {% if note.commentaire_validation %}
+            <div class="card shadow-sm">
+                <div class="card-header {% if note.statut == 'rejetee' %}bg-danger{% else %}bg-success{% endif %} text-white">
+                    <h6 class="mb-0"><i class="fas fa-comment me-2"></i>Commentaire de validation</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ note.commentaire_validation }}</p>
+                    {% if note.valideur %}
+                    <small class="text-muted">Par {{ note.valideur.nom }} {{ note.valideur.prenoms }} le {{ note.date_validation|date:"d/m/Y H:i" }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Résumé -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Résumé</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td>Montant total</td>
+                            <td class="text-end fw-bold">{{ note.montant_total|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% if note.montant_valide > 0 %}
+                        <tr>
+                            <td>Montant validé</td>
+                            <td class="text-end text-success fw-bold">{{ note.montant_valide|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% endif %}
+                        {% if note.montant_rembourse > 0 %}
+                        <tr class="table-success">
+                            <td>Montant remboursé</td>
+                            <td class="text-end fw-bold">{{ note.montant_rembourse|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+
+            <!-- Par catégorie -->
+            {% if totaux_categories %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Par Catégorie</h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for cat in totaux_categories %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ cat.categorie__libelle }}</span>
+                            <strong>{{ cat.total|floatformat:0|intcomma }} GNF</strong>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Traçabilité -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-history me-2"></i>Traçabilité</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td class="text-muted">Créée le</td>
+                            <td>{{ note.date_creation|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% if note.date_soumission %}
+                        <tr>
+                            <td class="text-muted">Soumise le</td>
+                            <td>{{ note.date_soumission|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if note.date_validation %}
+                        <tr>
+                            <td class="text-muted">Validée le</td>
+                            <td>{{ note.date_validation|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if note.date_remboursement %}
+                        <tr>
+                            <td class="text-muted">Remboursée le</td>
+                            <td>{{ note.date_remboursement|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter Ligne -->
+<div class="modal fade" id="ajouterLigneModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'paie:ajouter_ligne_frais' note.pk %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter une ligne de frais</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Catégorie</label>
+                        <select class="form-select" name="categorie" id="categorieFraisSelect">
+                            <option value="">Saisir une nouvelle catégorie</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.libelle }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3" id="nouvelleCategorieFraisBloc">
+                        <label class="form-label">Nouvelle catégorie</label>
+                        <input type="text" class="form-control" name="nouvelle_categorie" id="nouvelleCategorieFrais"
+                               maxlength="100" placeholder="Ex: Carburant, Parking, Internet">
+                        <div class="form-text">Renseigner ce champ crée la catégorie et l'utilise pour cette ligne.</div>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" name="nouvelle_categorie_justificatif_obligatoire"
+                                   id="nouvelleCategorieJustif" checked>
+                            <label class="form-check-label" for="nouvelleCategorieJustif">
+                                Justificatif obligatoire pour cette catégorie
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date de la dépense *</label>
+                        <input type="date" class="form-control" name="date_depense" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description *</label>
+                        <input type="text" class="form-control" name="description" required
+                               placeholder="Ex: Taxi aéroport-hôtel">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Montant (GNF) *</label>
+                        <input type="text" class="form-control" name="montant" inputmode="decimal" required placeholder="Ex: 150 000 ou 150000,50">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">N° Facture</label>
+                        <input type="text" class="form-control" name="numero_facture">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Justificatif</label>
+                        <input type="file" class="form-control" name="justificatif" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const select = document.getElementById('categorieFraisSelect');
+    const bloc = document.getElementById('nouvelleCategorieFraisBloc');
+    const input = document.getElementById('nouvelleCategorieFrais');
+
+    function toggleNouvelleCategorie() {
+        const saisieLibre = !select.value;
+        bloc.style.display = saisieLibre ? '' : 'none';
+        input.required = saisieLibre;
+        if (!saisieLibre) {
+            input.value = '';
+        }
+    }
+
+    if (select && bloc && input) {
+        select.addEventListener('change', toggleNouvelleCategorie);
+        toggleNouvelleCategorie();
+    }
+});
+</script>
+{% endblock %}

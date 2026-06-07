@@ -1,0 +1,59 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Nouveau Rapport{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-file-earmark-bar-graph me-2"></i>
+                        Générer un nouveau rapport
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Type de rapport *</label>
+                                {{ form.type_rapport }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Titre *</label>
+                                {{ form.titre }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date début *</label>
+                                {{ form.date_debut }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date fin *</label>
+                                {{ form.date_fin }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Résumé</label>
+                            {{ form.resume }}
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:archivage_rapports' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>Générer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

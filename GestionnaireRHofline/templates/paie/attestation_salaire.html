@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Attestation de Salaire - {{ employe.nom }} {{ employe.prenoms }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4 no-print">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{% url 'paie:historique_bulletins' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print me-2"></i>Imprimer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-5">
+            <!-- En-tête -->
+            <div class="text-center mb-5">
+                <h4 class="text-uppercase fw-bold">{{ entreprise.nom_entreprise }}</h4>
+                <p class="mb-0">{{ entreprise.adresse|default:"" }}</p>
+                <p class="mb-0">NIF: {{ entreprise.nif|default:"N/A" }} | RCCM: {{ entreprise.rccm|default:"N/A" }}</p>
+            </div>
+
+            <div class="text-center mb-5">
+                <h2 class="text-uppercase border-bottom border-dark pb-2 d-inline-block">
+                    ATTESTATION DE SALAIRE
+                </h2>
+            </div>
+
+            <!-- Corps -->
+            <div class="mb-4">
+                <p class="fs-5">
+                    Je soussigné(e), <strong>{{ entreprise.representant_legal|default:"Le Directeur Général" }}</strong>, 
+                    agissant en qualité de représentant légal de <strong>{{ entreprise.nom_entreprise }}</strong>, 
+                    atteste par la présente que :
+                </p>
+            </div>
+
+            <!-- Informations employé -->
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nom et Prénoms :</strong> {{ employe.nom }} {{ employe.prenoms }}</p>
+                            <p><strong>Matricule :</strong> {{ employe.matricule }}</p>
+                            <p><strong>N° CNSS :</strong> {{ employe.num_cnss_individuel|default:"N/A" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Fonction :</strong> {{ employe.poste.intitule|default:"N/A" }}</p>
+                            <p><strong>Date d'embauche :</strong> {{ employe.date_embauche|date:"d/m/Y"|default:"N/A" }}</p>
+                            <p><strong>Type de contrat :</strong> {{ employe.get_type_contrat_display|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="fs-5 mb-4">
+                Est employé(e) au sein de notre entreprise et perçoit une rémunération dont le détail est le suivant :
+            </p>
+
+            <!-- Tableau des salaires -->
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered">
+                    <thead class="table-orange-light">
+                        <tr>
+                            <th>Période</th>
+                            <th class="text-end">Salaire Brut</th>
+                            <th class="text-end">Retenues</th>
+                            <th class="text-end">Salaire Net</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bulletin in bulletins %}
+                        <tr>
+                            <td>{{ bulletin.periode }}</td>
+                            <td class="text-end">{{ bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
+                            <td class="text-end">{{ bulletin.total_retenues|floatformat:0|intcomma }} GNF</td>
+                            <td class="text-end fw-bold">{{ bulletin.net_a_payer|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-secondary">
+                        <tr>
+                            <th>MOYENNE</th>
+                            <th class="text-end">{{ stats.salaire_moyen|floatformat:0|intcomma }} GNF</th>
+                            <th></th>
+                            <th class="text-end">{{ stats.net_moyen|floatformat:0|intcomma }} GNF</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Résumé -->
+            <div class="alert alert-info">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Dernier salaire brut :</strong></p>
+                        <h4>{{ dernier_bulletin.salaire_brut|floatformat:0|intcomma }} GNF</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Dernier salaire net :</strong></p>
+                        <h4>{{ dernier_bulletin.net_a_payer|floatformat:0|intcomma }} GNF</h4>
+                    </div>
+                </div>
+            </div>
+
+            <p class="fs-5 mb-5">
+                Cette attestation est délivrée à l'intéressé(e) pour servir et valoir ce que de droit.
+            </p>
+
+            <!-- Signature -->
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <p>Fait à _________________, le {{ date_attestation|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="mb-5">Le Directeur Général</p>
+                    <p class="mt-5 pt-4 border-top d-inline-block" style="min-width: 200px;">
+                        Signature et cachet
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print { display: none !important; }
+    .card { border: none !important; box-shadow: none !important; }
+    .container { max-width: 100% !important; }
+}
+</style>
+{% endblock %}

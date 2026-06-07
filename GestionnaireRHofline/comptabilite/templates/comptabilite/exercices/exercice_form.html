@@ -1,0 +1,266 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}Nouvel Exercice Comptable - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Nouvel Exercice Comptable</h1>
+            <p class="text-muted mb-0">Créer un exercice fiscal</p>
+        </div>
+        <div>
+            <a href="{% url 'comptabilite:exercice_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <!-- Message de succès -->
+    {% if success %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>Succès!</strong> Exercice comptable créé avec succès.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+
+    <!-- Formulaire -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations de l'exercice</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="exerciceForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.libelle.id_for_label }}" class="form-label">Libellé *</label>
+                                {{ form.libelle }}
+                                {% if form.libelle.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.libelle.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Nom descriptif de l'exercice (ex: Exercice 2024)</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_debut.id_for_label }}" class="form-label">Date Début *</label>
+                                {{ form.date_debut }}
+                                {% if form.date_debut.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.date_debut.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Premier jour de l'exercice</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_fin.id_for_label }}" class="form-label">Date Fin *</label>
+                                {{ form.date_fin }}
+                                {% if form.date_fin.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.date_fin.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Dernier jour de l'exercice</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.statut.id_for_label }}" class="form-label">Statut *</label>
+                                {{ form.statut }}
+                                {% if form.statut.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.statut.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">État actuel de l'exercice</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Exercice Courant</label>
+                                <div class="form-check mt-3">
+                                    {{ form.est_courant }}
+                                    <label class="form-check-label" for="{{ form.est_courant.id_for_label }}">
+                                        Marquer comme exercice courant
+                                    </label>
+                                </div>
+                                <small class="text-muted">Un seul exercice peut être courant à la fois</small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:exercice_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Créer l'exercice
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Statuts des exercices</h6>
+                </div>
+                <div class="card-body">
+                    <h6>Types disponibles</h6>
+                    <ul class="list-unstyled small">
+                        <li><strong>Ouvert:</strong> Exercice actif pour la saisie</li>
+                        <li><strong>Clôturé:</strong> Exercice terminé, consultation seule</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Exercice courant</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        L'exercice courant est l'exercice par défaut utilisé pour les nouvelles écritures comptables.
+                    </p>
+                    <p class="text-muted small">
+                        Quand vous marquez un exercice comme courant, les autres exercices sont automatiquement décochés.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Durée typique</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Les exercices comptables sont généralement :
+                    </p>
+                    <ul class="list-unstyled small">
+                        <li><strong>Annuels:</strong> 1er janvier - 31 décembre</li>
+                        <li><strong>Fiscaux:</strong> Selon l'année fiscale de l'entreprise</li>
+                        <li><strong>Dérogatoires:</strong> Dates personnalisées</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Bonnes pratiques</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li>✅ Créer un exercice avant de commencer les écritures</li>
+                        <li>✅ Ne pas chevaucher les périodes d'exercices</li>
+                        <li>✅ Clôturer l'exercice avant d'en commencer un nouveau</li>
+                        <li>✅ Sauvegarder les données avant clôture</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('exerciceForm');
+    const dateDebutInput = document.getElementById('{{ form.date_debut.id_for_label }}');
+    const dateFinInput = document.getElementById('{{ form.date_fin.id_for_label }}');
+    const libelleInput = document.getElementById('{{ form.libelle.id_for_label }}');
+    const estCourantCheckbox = document.getElementById('{{ form.est_courant.id_for_label }}');
+    
+    // Suggérer automatiquement le libellé basé sur les dates
+    function suggestLibelle() {
+        const dateDebut = dateDebutInput.value;
+        if (dateDebut && !libelleInput.value) {
+            const year = new Date(dateDebut).getFullYear();
+            libelleInput.value = `Exercice ${year}`;
+        }
+    }
+    
+    dateDebutInput.addEventListener('change', suggestLibelle);
+    
+    // Validation des dates
+    function validateDates() {
+        const dateDebut = new Date(dateDebutInput.value);
+        const dateFin = new Date(dateFinInput.value);
+        
+        if (dateDebut && dateFin && dateDebut >= dateFin) {
+            alert('La date de fin doit être postérieure à la date de début.');
+            dateFinInput.value = '';
+            return false;
+        }
+        return true;
+    }
+    
+    dateFinInput.addEventListener('change', validateDates);
+    
+    // Validation du formulaire
+    form.addEventListener('submit', function(e) {
+        const libelle = libelleInput.value.trim();
+        const dateDebut = dateDebutInput.value;
+        const dateFin = dateFinInput.value;
+        const statut = document.getElementById('{{ form.statut.id_for_label }}').value;
+        
+        if (!libelle) {
+            e.preventDefault();
+            alert('Le libellé de l\'exercice est obligatoire');
+            libelleInput.focus();
+            return;
+        }
+        
+        if (!dateDebut) {
+            e.preventDefault();
+            alert('La date de début est obligatoire');
+            dateDebutInput.focus();
+            return;
+        }
+        
+        if (!dateFin) {
+            e.preventDefault();
+            alert('La date de fin est obligatoire');
+            dateFinInput.focus();
+            return;
+        }
+        
+        if (!validateDates()) {
+            e.preventDefault();
+            return;
+        }
+        
+        if (!statut) {
+            e.preventDefault();
+            alert('Le statut de l\'exercice est obligatoire');
+            document.getElementById('{{ form.statut.id_for_label }}').focus();
+            return;
+        }
+        
+        // Confirmer la soumission
+        if (!confirm('Êtes-vous sûr de vouloir créer cet exercice comptable ?')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Avertir si l'exercice courant est changé
+    estCourantCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            const confirmMsg = 'Cet exercice deviendra l\'exercice courant. Les autres exercices ne seront plus courants. Continuer ?';
+            if (!confirm(confirmMsg)) {
+                this.checked = false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

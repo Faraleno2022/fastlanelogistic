@@ -1,0 +1,124 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Contrôle Interne - Dashboard{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-shield-check text-primary"></i> Contrôle Interne & Conformité
+        </h1>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-exclamation-triangle text-primary fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Risques identifiés</h6>
+                            <h3 class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-clipboard-check text-success fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Procédures</h6>
+                            <h3 class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-x-circle text-warning fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Non-conformités</h6>
+                            <h3 class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-arrow-repeat text-info fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Workflows actifs</h6>
+                            <h3 class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'comptabilite:controle_risques' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-exclamation-triangle"></i> Matrice des risques
+                        </a>
+                        <a href="{% url 'comptabilite:controle_procedures' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-clipboard-check"></i> Procédures de contrôle
+                        </a>
+                        <a href="{% url 'comptabilite:controle_non_conformites' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-x-circle"></i> Non-conformités
+                        </a>
+                        <a href="{% url 'comptabilite:controle_delegations' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-check"></i> Délégations de pouvoirs
+                        </a>
+                        <a href="{% url 'comptabilite:controle_workflows' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-repeat"></i> Workflows d'approbation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> À propos du module</h5>
+                </div>
+                <div class="card-body">
+                    <p>Le module <strong>Contrôle Interne & Conformité</strong> permet de :</p>
+                    <ul>
+                        <li>Gérer la matrice des risques</li>
+                        <li>Définir les procédures de contrôle</li>
+                        <li>Suivre les non-conformités et actions correctives</li>
+                        <li>Configurer les délégations de pouvoirs</li>
+                        <li>Mettre en place des workflows d'approbation</li>
+                        <li>Assurer la ségrégation des tâches</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

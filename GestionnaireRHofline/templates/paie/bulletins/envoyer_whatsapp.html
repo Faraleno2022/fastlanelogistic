@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Envoyer bulletin par WhatsApp{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-whatsapp"></i> Envoyer par WhatsApp</h1>
+    <a href="{% url 'paie:detail_bulletin' bulletin.pk %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-whatsapp"></i> Bulletin {{ bulletin.numero_bulletin }}
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Destinataire :</strong> {{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}<br>
+                    <strong>Période :</strong> {{ bulletin.periode }}<br>
+                    <strong>Net à payer :</strong> {{ bulletin.net_a_payer|floatformat:0|intcomma }} GNF
+                </div>
+                
+                <form id="whatsappForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Numéro WhatsApp *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+224</span>
+                            <input type="tel" name="telephone" id="telephone" class="form-control" 
+                                   value="{{ telephone_defaut|default:'' }}" required
+                                   placeholder="6XX XX XX XX">
+                        </div>
+                        {% if not telephone_defaut %}
+                        <small class="text-warning">⚠️ Aucun téléphone enregistré pour cet employé</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea name="message" id="message" class="form-control" rows="8">{{ message_defaut }}</textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" id="btnWhatsApp" class="btn btn-success btn-lg">
+                            <i class="bi bi-whatsapp"></i> Ouvrir WhatsApp
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Comment ça marche ?</div>
+            <div class="card-body">
+                <ol class="small">
+                    <li>Vérifiez le numéro de téléphone</li>
+                    <li>Personnalisez le message si nécessaire</li>
+                    <li>Cliquez sur "Ouvrir WhatsApp"</li>
+                    <li>WhatsApp s'ouvrira avec le message pré-rempli</li>
+                    <li>Envoyez le message et joignez le PDF manuellement</li>
+                </ol>
+                <hr>
+                <p class="small text-muted">
+                    <i class="bi bi-info-circle"></i> Le lien de téléchargement du PDF est inclus dans le message.
+                </p>
+                {% if lien_pdf %}
+                <div class="alert alert-success small mt-2">
+                    <strong>📄 Lien PDF public :</strong><br>
+                    <a href="{{ lien_pdf }}" target="_blank" class="text-break">{{ lien_pdf }}</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('btnWhatsApp').addEventListener('click', function() {
+    const telephone = document.getElementById('telephone').value.replace(/\s/g, '');
+    const message = document.getElementById('message').value;
+    
+    if (!telephone) {
+        alert('Veuillez saisir un numéro de téléphone');
+        return;
+    }
+    
+    // Nettoyer le numéro
+    let numero = telephone.replace(/[^0-9]/g, '');
+    if (!numero.startsWith('224')) {
+        numero = '224' + numero;
+    }
+    
+    // Encoder le message
+    const messageEncode = encodeURIComponent(message);
+    
+    // Ouvrir WhatsApp
+    window.open(`https://wa.me/${numero}?text=${messageEncode}`, '_blank');
+});
+</script>
+{% endblock %}

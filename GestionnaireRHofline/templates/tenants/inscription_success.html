@@ -1,0 +1,125 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription réussie - GestionnaireRH</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .success-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .success-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+        .domain-box {
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 1rem;
+        }
+        .domain-url {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #EF7707;
+        }
+        @keyframes checkmark {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .animated {
+            animation: checkmark 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="success-card p-5 text-center">
+                    <div class="success-icon animated mb-4">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    
+                    <h2 class="fw-bold text-success mb-3">Félicitations !</h2>
+                    <p class="lead text-muted mb-4">
+                        Votre espace <strong>{{ client.nom_entreprise }}</strong> a été créé avec succès.
+                    </p>
+                    
+                    <div class="domain-box mb-4">
+                        <p class="mb-1 text-muted small">Votre adresse d'accès :</p>
+                        <p class="domain-url mb-0">
+                            <i class="bi bi-link-45deg me-1"></i>
+                            {{ domain.domain }}
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-info text-start">
+                        <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Prochaines étapes :</h6>
+                        <ol class="mb-0 ps-3">
+                            <li>Accédez à votre espace via l'URL ci-dessus</li>
+                            <li>Connectez-vous avec votre email administrateur</li>
+                            <li>Configurez votre entreprise (logo, paramètres)</li>
+                            <li>Ajoutez vos employés</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body">
+                                    <i class="bi bi-building fs-2 text-primary"></i>
+                                    <h6 class="mt-2">{{ client.nom_entreprise }}</h6>
+                                    <small class="text-muted">{{ client.email }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-success">
+                                <div class="card-body">
+                                    <i class="bi bi-box fs-2 text-success"></i>
+                                    <h6 class="mt-2">Plan {{ client.get_plan_abonnement_display }}</h6>
+                                    <small class="text-muted">Max {{ client.max_utilisateurs }} utilisateurs</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <a href="http://{{ domain.domain }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Accéder à mon espace
+                    </a>
+                    
+                    <p class="mt-4 text-muted small">
+                        <i class="bi bi-envelope me-1"></i>
+                        Un email de confirmation a été envoyé à votre adresse.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

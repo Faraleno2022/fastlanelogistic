@@ -1,0 +1,132 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Validations{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0"><i class="bi bi-check-circle me-2"></i>Validations</h1>
+            <p class="text-muted mb-0">Validation des documents archivés</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning bg-opacity-10 border-warning">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ nb_en_attente|default:0 }}</h3>
+                    <small class="text-muted">En attente</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success bg-opacity-10 border-success">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ nb_valides|default:0 }}</h3>
+                    <small class="text-muted">Validés</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger bg-opacity-10 border-danger">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ nb_rejetes|default:0 }}</h3>
+                    <small class="text-muted">Rejetés</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <select name="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Filtrer</button>
+                    <a href="{% url 'comptabilite:archivage_validations' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Document</th>
+                            <th>Niveau</th>
+                            <th>Statut</th>
+                            <th>Validateur</th>
+                            <th>Date validation</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in validations %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'comptabilite:archivage_document_detail' v.document.pk %}" class="fw-bold">{{ v.document.reference }}</a>
+                                <small class="text-muted d-block">{{ v.document.titre|truncatechars:40 }}</small>
+                            </td>
+                            <td>Niveau {{ v.niveau_validation }}</td>
+                            <td>
+                                {% if v.statut == 'en_attente' %}
+                                <span class="badge bg-warning text-dark">En attente</span>
+                                {% elif v.statut == 'valide' %}
+                                <span class="badge bg-success">Validé</span>
+                                {% elif v.statut == 'rejete' %}
+                                <span class="badge bg-danger">Rejeté</span>
+                                {% else %}
+                                <span class="badge bg-info">À compléter</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ v.validateur|default:"-" }}</td>
+                            <td>{{ v.date_validation|date:"d/m/Y H:i"|default:"-" }}</td>
+                            <td class="text-center">
+                                {% if v.statut == 'en_attente' %}
+                                <a href="{% url 'comptabilite:archivage_validation_update' v.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Traiter</a>
+                                {% else %}
+                                <a href="{% url 'comptabilite:archivage_validation_update' v.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Aucune validation trouvée
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

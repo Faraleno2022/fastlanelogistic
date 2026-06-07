@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Détail sanction - {{ employe.nom }} {{ employe.prenoms }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">Sanction - {{ sanction.get_type_sanction_display }}</h1>
+    <div class="btn-group" role="group">
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'employes:sanction_list' employe.id %}">Retour</a>
+        <a class="btn btn-sm btn-outline-danger" href="{% url 'employes:sanction_delete' sanction.id %}">Supprimer</a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Employé</dt>
+            <dd class="col-sm-9">{{ employe.nom }} {{ employe.prenoms }}</dd>
+
+            <dt class="col-sm-3">Type</dt>
+            <dd class="col-sm-9">{{ sanction.get_type_sanction_display }}</dd>
+
+            <dt class="col-sm-3">Statut</dt>
+            <dd class="col-sm-9">{{ sanction.get_statut_display }}</dd>
+
+            <dt class="col-sm-3">Motif</dt>
+            <dd class="col-sm-9">{{ sanction.motif }}</dd>
+
+            <dt class="col-sm-3">Date des faits</dt>
+            <dd class="col-sm-9">{{ sanction.date_faits|date:"d/m/Y" }}</dd>
+
+            <dt class="col-sm-3">Date convocation</dt>
+            <dd class="col-sm-9">{{ sanction.date_convocation|date:"d/m/Y"|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Date entretien</dt>
+            <dd class="col-sm-9">{{ sanction.date_entretien|date:"d/m/Y"|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Date notification</dt>
+            <dd class="col-sm-9">{{ sanction.date_notification|date:"d/m/Y"|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Observations</dt>
+            <dd class="col-sm-9">{{ sanction.observations|default:"-" }}</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}

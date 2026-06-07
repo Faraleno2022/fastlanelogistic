@@ -1,0 +1,328 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}{% if facture %}Modifier{% else %}Nouvelle{% endif %} Facture {% if type_facture == 'vente' %}de Vente{% elif type_facture == 'achat' %}d'Achat{% else %}{% endif %} - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                {% if facture %}Modifier la Facture{% else %}Nouvelle Facture{% endif %}
+                {% if type_facture == 'vente' %}
+                    <span class="badge bg-success">Vente</span>
+                {% elif type_facture == 'achat' %}
+                    <span class="badge bg-warning">Achat</span>
+                {% endif %}
+            </h1>
+            <p class="text-muted mb-0">
+                {% if facture %}
+                    Modifier la facture {{ facture.numero_facture }}
+                {% else %}
+                    {% if type_facture == 'vente' %}
+                        Créer une nouvelle facture de vente
+                    {% elif type_facture == 'achat' %}
+                        Créer une nouvelle facture d'achat
+                    {% else %}
+                        Créer une nouvelle facture
+                    {% endif %}
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'comptabilite:facture_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <!-- Messages de succès -->
+    {% if success %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            {% if facture %}
+                La facture a été modifiée avec succès!
+            {% else %}
+                La facture a été créée avec succès!
+            {% endif %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endif %}
+
+    <!-- Formulaire -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations de la Facture</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Informations générales -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Informations générales</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.numero.id_for_label }}" class="form-label">
+                                        Numéro Facture <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.numero }}
+                                    {% if form.numero.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.numero.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Numéro unique de la facture</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.tiers.id_for_label }}" class="form-label">
+                                        Tiers <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.tiers }}
+                                    {% if form.tiers.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.tiers.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        {% if type_facture == 'vente' %}
+                                            Client pour cette facture de vente
+                                        {% elif type_facture == 'achat' %}
+                                            Fournisseur pour cette facture d'achat
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.type_facture.id_for_label }}" class="form-label">
+                                        Type de Facture <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.type_facture }}
+                                    {% if form.type_facture.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.type_facture.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Dates</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.date_facture.id_for_label }}" class="form-label">
+                                        Date Facture <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.date_facture }}
+                                    {% if form.date_facture.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.date_facture.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.date_echeance.id_for_label }}" class="form-label">Date d'échéance</label>
+                                    {{ form.date_echeance }}
+                                    {% if form.date_echeance.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.date_echeance.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Date limite de paiement</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Montants -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h6 class="text-muted mb-3">Montants</h6>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.montant_ht.id_for_label }}" class="form-label">
+                                        Montant HT <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.montant_ht }}
+                                        <span class="input-group-text">GNF</span>
+                                    </div>
+                                    {% if form.montant_ht.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.montant_ht.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.montant_tva.id_for_label }}" class="form-label">
+                                        Montant TVA <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.montant_tva }}
+                                        <span class="input-group-text">GNF</span>
+                                    </div>
+                                    {% if form.montant_tva.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.montant_tva.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.montant_ttc.id_for_label }}" class="form-label">
+                                        Montant TTC <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.montant_ttc }}
+                                        <span class="input-group-text">GNF</span>
+                                    </div>
+                                    {% if form.montant_ttc.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.montant_ttc.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'comptabilite:facture_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle me-2"></i>Annuler
+                                </a>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="calculateTTC()">
+                                    <i class="bi bi-calculator me-2"></i>Calculer TTC
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    {% if facture %}Modifier{% else %}Créer{% endif %} la Facture
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aide -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Aide
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Types de Factures</h6>
+                        <ul class="small text-muted">
+                            <li><strong>Vente:</strong> Factures envoyées à vos clients</li>
+                            <li><strong>Achat:</strong> Factures reçues de vos fournisseurs</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Calcul TVA</h6>
+                        <ul class="small text-muted">
+                            <li>Montant TTC = Montant HT × (1 + Taux TVA)</li>
+                            <li>Taux standard: 18%</li>
+                            <li>Exonération possible: 0%</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6>Numérotation</h6>
+                        <ul class="small text-muted">
+                            <li>Format recommandé: FV-YYYY-NNNN</li>
+                            <li>FV: Facture Vente, FA: Facture Achat</li>
+                            <li>YYYY: Année, NNNN: Numéro séquentiel</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-info small">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        <strong>Astuce:</strong> Le calcul automatique de la TVA vous fait gagner du temps!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Résumé -->
+            <div class="card mt-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-calculator me-2"></i>Résumé
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5 class="mb-1 text-primary" id="summaryHT">0 GNF</h5>
+                            <p class="text-muted small mb-0">Montant HT</p>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="mb-1 text-success" id="summaryTTC">0 GNF</h5>
+                            <p class="text-muted small mb-0">Montant TTC</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <h6 class="mb-1 text-info" id="summaryTVA">0 GNF</h6>
+                        <p class="text-muted small mb-0">Montant TVA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Calculer le résumé au chargement
+    updateSummary();
+    
+    // Mettre à jour le résumé quand les montants changent
+    $('#id_montant_ht, #id_montant_tva, #id_montant_ttc').on('input', updateSummary);
+});
+
+function updateSummary() {
+    const montantHT = parseFloat($('#id_montant_ht').val()) || 0;
+    const montantTVA = parseFloat($('#id_montant_tva').val()) || 0;
+    const montantTTC = parseFloat($('#id_montant_ttc').val()) || 0;
+    
+    $('#summaryHT').text(montantHT.toLocaleString('fr-FR') + ' GNF');
+    $('#summaryTTC').text(montantTTC.toLocaleString('fr-FR') + ' GNF');
+    $('#summaryTVA').text(montantTVA.toLocaleString('fr-FR') + ' GNF');
+}
+
+function calculateTTC() {
+    const montantHT = parseFloat($('#id_montant_ht').val()) || 0;
+    const montantTVA = parseFloat($('#id_montant_tva').val()) || 0;
+    
+    const montantTTC = montantHT + montantTVA;
+    
+    $('#id_montant_ttc').val(montantTTC.toFixed(2));
+    updateSummary();
+    
+    // Animation de succès
+    const btn = event.target;
+    btn.classList.add('btn-success');
+    btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Calculé!';
+    setTimeout(() => {
+        btn.classList.remove('btn-success');
+        btn.innerHTML = '<i class="bi bi-calculator me-2"></i>Calculer TTC';
+    }, 1500);
+}
+</script>
+{% endblock %}

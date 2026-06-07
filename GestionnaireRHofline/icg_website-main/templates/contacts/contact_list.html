@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-bg: #121212;
+        --secondary-bg: #1e1e1e;
+        --card-bg: #242424;
+        --accent-color: #ff6b00;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+    }
+
+    .contacts-container {
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        background: var(--primary-bg);
+        min-height: 100vh;
+    }
+
+    .contacts-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--accent-color);
+    }
+
+    .contacts-header h1 {
+        color: var(--accent-color);
+        font-size: 2rem;
+    }
+
+    .contacts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .contact-card {
+        background: var(--card-bg);
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--accent-color);
+    }
+
+    .contact-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(255, 107, 0, 0.2);
+    }
+
+    .contact-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .contact-subject {
+        font-size: 1rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 500;
+    }
+
+    .contact-meta {
+        margin-bottom: 1rem;
+    }
+
+    .contact-meta-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+    }
+
+    .contact-meta-item i {
+        color: var(--accent-color);
+        margin-right: 0.5rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .contact-message {
+        background: rgba(255, 107, 0, 0.1);
+        padding: 1rem;
+        border-radius: 5px;
+        margin-top: 1rem;
+        color: var(--text-primary);
+        border-left: 2px solid var(--accent-color);
+    }
+
+    .empty-contacts {
+        text-align: center;
+        padding: 3rem;
+        grid-column: 1 / -1;
+        color: var(--text-secondary);
+    }
+
+    .contact-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 1.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        font-weight: 500;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-view {
+        background: rgba(255, 107, 0, 0.2);
+        color: var(--accent-color);
+        border: 1px solid var(--accent-color);
+    }
+
+    .btn-view:hover {
+        background: rgba(255, 107, 0, 0.3);
+    }
+
+    .btn-delete {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+
+    .btn-delete:hover {
+        background: rgba(220, 53, 69, 0.3);
+    }
+
+    @media (max-width: 1024px) {
+        .contacts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contacts-container">
+    <div class="contacts-header">
+        <h1>Messages reçus</h1>
+    </div>
+
+    <div class="contacts-grid">
+        {% for contact in contacts %}
+        <div class="contact-card">
+            <h3 class="contact-name">{{ contact.contact_name }}</h3>
+            <p class="contact-subject">{{ contact.contact_subject }}</p>
+
+            <div class="contact-meta">
+                <div class="contact-meta-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>{{ contact.contact_email }}</span>
+                </div>
+                {% if contact.contact_phone_number %}
+                <div class="contact-meta-item">
+                    <i class="fas fa-phone"></i>
+                    <span>{{ contact.contact_phone_number }}</span>
+                </div>
+                {% endif %}
+                {# NOUVEAU : Affichage de la date de réception #}
+                <div class="contact-meta-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Reçu le: {{ contact.received_at|date:"d M Y H:i" }}</span> {# Format: 25 Mai 2025 16:00 #}
+                </div>
+            </div>
+
+            <div class="contact-message">
+                <p>{{ contact.contact_message|truncatewords:30 }}</p>
+            </div>
+
+            {% if request.user.is_superuser %}
+            <div class="contact-actions">
+                <a href="{% url 'contact_detail' contact.id %}" class="btn btn-view">
+                    <i class="fas fa-eye"></i> Voir
+                </a>
+                <a href="{% url 'contact_delete' contact.id %}" class="btn btn-delete">
+                    <i class="fas fa-trash"></i> Supprimer
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="empty-contacts">
+            <p>Aucun message reçu pour le moment</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

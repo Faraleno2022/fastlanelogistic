@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Demande de Congé{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-calendar-plus me-2"></i>Nouvelle Demande de Congé</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Rappel configuration -->
+                    <div class="alert alert-light border mb-4">
+                        <strong><i class="bi bi-info-circle me-1"></i>Règles applicables :</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Acquisition : <strong>{{ config.jours_conges_par_mois }} jours/mois</strong></li>
+                            <li>Bonus ancienneté : +{{ config.jours_conges_anciennete }} jours par {{ config.tranche_anciennete_annees }} ans</li>
+                        </ul>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employe" class="form-label">Employé *</label>
+                                <select name="employe" id="employe" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    {% for emp in employes %}
+                                    <option value="{{ emp.id }}">{{ emp.nom_complet }} ({{ emp.matricule }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="type_conge" class="form-label">Type de congé *</label>
+                                <select name="type_conge" id="type_conge" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    {% for value, label in types_conge %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="date_debut" class="form-label">Date début *</label>
+                                <input type="date" name="date_debut" id="date_debut" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="date_fin" class="form-label">Date fin *</label>
+                                <input type="date" name="date_fin" id="date_fin" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="nombre_jours" class="form-label">Nombre de jours *</label>
+                                <input type="number" name="nombre_jours" id="nombre_jours" class="form-control" min="1" value="1" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="motif" class="form-label">Motif</label>
+                            <textarea name="motif" id="motif" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="justificatif" class="form-label">Justificatif (optionnel)</label>
+                            <input type="file" name="justificatif" id="justificatif" class="form-control">
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>Soumettre la demande
+                            </button>
+                            <a href="{% url 'conges:liste' %}" class="btn btn-outline-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateDebut = document.getElementById('date_debut');
+    const dateFin = document.getElementById('date_fin');
+    const nombreJours = document.getElementById('nombre_jours');
+
+    function calculerJours() {
+        if (dateDebut.value && dateFin.value) {
+            const debut = new Date(dateDebut.value);
+            const fin = new Date(dateFin.value);
+            const diff = Math.ceil((fin - debut) / (1000 * 60 * 60 * 24)) + 1;
+            if (diff > 0) {
+                nombreJours.value = diff;
+            }
+        }
+    }
+
+    dateDebut.addEventListener('change', calculerJours);
+    dateFin.addEventListener('change', calculerJours);
+});
+</script>
+{% endblock %}

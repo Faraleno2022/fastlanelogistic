@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Gestion des Absences{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-user-times me-2"></i>Gestion des Absences</h2>
+                <div>
+                    <a href="{% url 'temps_travail:recap_absences' %}" class="btn btn-outline-info me-2">
+                        <i class="fas fa-chart-bar me-1"></i>Récapitulatif
+                    </a>
+                    <a href="{% url 'temps_travail:declarer_absence' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Déclarer une absence
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3>{{ stats.total_jours|floatformat:0|default:"0" }}</h3>
+                    <p class="mb-0">Jours d'absence</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3>{{ stats.nb_absences|default:"0" }}</h3>
+                    <p class="mb-0">Absences</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3>{{ stats.nb_justifiees|default:"0" }}</h3>
+                    <p class="mb-0">Justifiées</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3>{{ stats.nb_non_justifiees|default:"0" }}</h3>
+                    <p class="mb-0">Non justifiées</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label">Année</label>
+                    <select class="form-select" name="annee" onchange="this.form.submit()">
+                        {% for a in "2024 2025 2026"|make_list %}
+                        <option value="202{{ forloop.counter0|add:4 }}" {% if annee == forloop.counter0|add:2024 %}selected{% endif %}>202{{ forloop.counter0|add:4 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Employé</label>
+                    <select class="form-select" name="employe">
+                        <option value="">Tous</option>
+                        {% for emp in employes %}
+                        <option value="{{ emp.id }}" {% if filtre_employe == emp.id|stringformat:"s" %}selected{% endif %}>{{ emp.nom }} {{ emp.prenoms }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" name="type">
+                        <option value="">Tous</option>
+                        {% for code, libelle in types_absence %}
+                        <option value="{{ code }}" {% if filtre_type == code %}selected{% endif %}>{{ libelle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Justifiée</label>
+                    <select class="form-select" name="justifie">
+                        <option value="">Tous</option>
+                        <option value="1" {% if filtre_justifie == '1' %}selected{% endif %}>Oui</option>
+                        <option value="0" {% if filtre_justifie == '0' %}selected{% endif %}>Non</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-orange-light">
+                        <tr>
+                            <th>Employé</th>
+                            <th>Type</th>
+                            <th>Période</th>
+                            <th class="text-center">Jours</th>
+                            <th>Statut</th>
+                            <th class="text-center">Retenue</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for absence in absences %}
+                        <tr>
+                            <td>
+                                <strong>{{ absence.employe.nom }} {{ absence.employe.prenoms }}</strong><br>
+                                <small class="text-muted">{{ absence.employe.service.nom_service|default:"-" }}</small>
+                            </td>
+                            <td>
+                                <span class="badge" style="background-color: 
+                                    {% if absence.type_absence == 'maladie' %}#ffc107
+                                    {% elif absence.type_absence == 'accident_travail' %}#dc3545
+                                    {% elif absence.type_absence == 'absence_injustifiee' %}#343a40
+                                    {% else %}#6c757d{% endif %}">
+                                    {{ absence.get_type_absence_display }}
+                                </span>
+                            </td>
+                            <td>{{ absence.date_absence|date:"d/m/Y" }}</td>
+                            <td class="text-center fw-bold">{{ absence.duree_jours|floatformat:0 }}</td>
+                            <td>
+                                {% if absence.justifie %}
+                                <span class="badge bg-success">Justifiée</span>
+                                {% else %}
+                                <span class="badge bg-danger">Non justifiée</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if absence.impact_paie == 'non_paye' %}
+                                <i class="fas fa-check text-danger"></i>
+                                {% else %}
+                                <i class="fas fa-times text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'temps_travail:detail_absence' absence.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if not absence.justifie %}
+                                <a href="{% url 'temps_travail:justifier_absence' absence.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% endif %}
+                                <form action="{% url 'temps_travail:supprimer_absence' absence.pk %}" method="post" style="display: inline;"
+                                      onsubmit="return confirm('Supprimer cette absence ?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="fas fa-calendar-check fa-3x mb-3"></i>
+                                <p>Aucune absence enregistrée</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

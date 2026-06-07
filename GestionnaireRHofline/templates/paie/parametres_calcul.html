@@ -1,0 +1,488 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Paramètres de calcul de paie{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-calculator me-2"></i>Paramètres de calcul de paie
+                {% if not peut_modifier %}
+                <span class="badge bg-warning text-dark ms-2" title="Vous êtes en lecture seule">
+                    <i class="bi bi-lock-fill me-1"></i>Lecture seule — Contactez l'admin
+                </span>
+                {% endif %}
+            </h2>
+        </div>
+        <div class="d-flex gap-2">
+            {% if nb_historique %}
+            <a href="{% url 'paie:historique_parametres' %}" class="btn btn-outline-info">
+                <i class="bi bi-clock-history me-1"></i>Historique
+                <span class="badge bg-info text-dark ms-1">{{ nb_historique }}</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'paie:home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    {% if not peut_modifier %}
+    <div class="alert alert-warning d-flex align-items-center mb-3">
+        <i class="bi bi-shield-lock-fill me-2 fs-5"></i>
+        <div>
+            <strong>Accès en lecture seule.</strong>
+            Vous pouvez consulter les paramètres mais seul un administrateur peut les modifier.
+        </div>
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+
+        <!-- Colonne formulaires -->
+        <div class="col-lg-8">
+            <form method="post" id="formParametres" {% if not peut_modifier %}onsubmit="return false;"{% endif %}>
+                {% csrf_token %}
+
+                {% if peut_modifier %}
+                <div class="alert alert-success border d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                    <div>
+                        <strong>Modèle standard GuinéeRH</strong>
+                        <div class="small mb-0">
+                            Base 75% / indemnités 25%, CNSS plafonnée, RTS standard, VF/ONFPP avec déduction CGI.
+                        </div>
+                    </div>
+                    <button type="submit" name="action" value="appliquer_modele_standard" class="btn btn-success">
+                        <i class="bi bi-check2-circle me-1"></i>Appliquer le modèle standard
+                    </button>
+                </div>
+                {% endif %}
+
+                <!-- Section 1 : Indemnités forfaitaires -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shield-check me-2"></i>Exonération des indemnités forfaitaires
+                        </h5>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mode d'exonération</label>
+                            <select name="mode_exoneration_indemnites" class="form-select"
+                                    id="id_mode_exoneration" onchange="toggleExonerationFields()">
+                                {% for value, label in modes_exoneration %}
+                                <option value="{{ value }}"
+                                    {% if params.mode_exoneration_indemnites == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                CGI Art. (strict) : les indemnités sont exonérées dans la limite d'un plafond du brut.
+                            </div>
+                        </div>
+
+                        <div id="block_plafond_pct" class="mb-3">
+                            <label class="form-label fw-bold">Plafond (% du brut)</label>
+                            <div class="input-group" style="max-width:200px">
+                                <input type="number" name="plafond_exoneration_pct"
+                                       class="form-control"
+                                       value="{{ params.plafond_exoneration_pct }}"
+                                       min="0" max="25" step="0.5">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div class="form-text text-warning">
+                                <i class="bi bi-shield-lock"></i> Maximum légal CGI Guinée : 25 % — verrouillé
+                            </div>
+                        </div>
+
+                        <div id="block_formule_exoneration" class="mb-3" style="display:none">
+                            <label class="form-label fw-bold">Formule personnalisée d'exonération</label>
+                            <div class="input-group">
+                                <textarea name="formule_exoneration" class="form-control font-monospace"
+                                          rows="2" placeholder="Ex: min(indemnites, brut * 0.25)"
+                                          id="id_formule_exoneration">{{ params.formule_exoneration }}</textarea>
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="testerFormule('id_formule_exoneration', 'result_exoneration')">
+                                    <i class="bi bi-play-fill"></i> Tester
+                                </button>
+                            </div>
+                            <div id="result_exoneration" class="mt-2"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Section 2 : Base VF / TA -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-building me-2"></i>Base de calcul VF / TA (charges patronales)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mode de calcul de la base VF/TA</label>
+                            <select name="mode_base_vf" class="form-select"
+                                    id="id_mode_base_vf" onchange="toggleBaseVfFields()">
+                                {% for value, label in modes_base_vf %}
+                                <option value="{{ value }}"
+                                    {% if params.mode_base_vf == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Recommandé : modèle standard GuinéeRH, soit brut moins déduction CGI plafonnée.
+                            </div>
+                        </div>
+
+                        <div id="block_formule_base_vf" class="mb-3" style="display:none">
+                            <label class="form-label fw-bold">Formule personnalisée base VF/TA</label>
+                            <div class="input-group">
+                                <textarea name="formule_base_vf" class="form-control font-monospace"
+                                          rows="2" placeholder="Ex: brut - 150000 if brut >= 2500000 else brut"
+                                          id="id_formule_base_vf">{{ params.formule_base_vf }}</textarea>
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="testerFormule('id_formule_base_vf', 'result_base_vf')">
+                                    <i class="bi bi-play-fill"></i> Tester
+                                </button>
+                            </div>
+                            <div id="result_base_vf" class="mt-2"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mode de calcul de la base ONFPP</label>
+                            <select name="mode_base_onfpp" class="form-select" id="id_mode_base_onfpp">
+                                {% for value, label in modes_base_onfpp %}
+                                <option value="{{ value }}"
+                                    {% if params.mode_base_onfpp == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Par defaut, ONFPP reste sur la base VF/TA optimisee. Le mode strict fiscal applique ONFPP sur le brut total.
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Section 3 : Base RTS -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-percent me-2"></i>Base RTS (Retenue à la Source)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox"
+                                   name="utiliser_formule_base_rts"
+                                   id="id_utiliser_formule_base_rts"
+                                   {% if params.utiliser_formule_base_rts %}checked{% endif %}
+                                   onchange="toggleBaseRtsFields()">
+                            <label class="form-check-label fw-bold" for="id_utiliser_formule_base_rts">
+                                Utiliser une formule personnalisée pour la base RTS
+                            </label>
+                        </div>
+
+                        <div class="alert alert-light border mb-3">
+                            <small>
+                                <strong>Calcul standard :</strong>
+                                Base RTS = Brut &minus; CNSS &minus; Exonération indemnités
+                                (+ réintégration excédent si plafond dépassé)
+                            </small>
+                        </div>
+
+                        <div id="block_formule_base_rts" style="display:none">
+                            <label class="form-label fw-bold">Formule personnalisée base RTS</label>
+                            <div class="input-group">
+                                <textarea name="formule_base_rts" class="form-control font-monospace"
+                                          rows="2"
+                                          placeholder="Ex: brut - cnss - min(indemnites, brut * 0.25)"
+                                          id="id_formule_base_rts">{{ params.formule_base_rts }}</textarea>
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="testerFormule('id_formule_base_rts', 'result_base_rts')">
+                                    <i class="bi bi-play-fill"></i> Tester
+                                </button>
+                            </div>
+                            <div id="result_base_rts" class="mt-2"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {% if peut_modifier %}
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Raison de la modification (optionnel)</label>
+                    <input type="text" name="raison" class="form-control form-control-sm"
+                           placeholder="Ex: Mise à jour CGI 2026, décision DG du 15/03/2026…"
+                           maxlength="200">
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Enregistrer les paramètres
+                    </button>
+                    <a href="{% url 'paie:home' %}" class="btn btn-outline-secondary">Annuler</a>
+                </div>
+                {% else %}
+                <div class="alert alert-secondary d-flex align-items-center">
+                    <i class="bi bi-lock-fill me-2"></i>
+                    <span>Modification désactivée — <strong>Lecture seule</strong>. Contactez l'administrateur.</span>
+                </div>
+                {% endif %}
+
+            </form>
+        </div>
+
+        <!-- Colonne aide -->
+        <div class="col-lg-4">
+
+            <!-- Variables disponibles -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle me-1"></i>Variables disponibles</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Variable</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for var, desc in variables_disponibles %}
+                            <tr>
+                                <td>
+                                    <code class="text-primary cursor-pointer"
+                                          onclick="insererVariable('{{ var }}')"
+                                          title="Cliquer pour copier">{{ var }}</code>
+                                </td>
+                                <td><small>{{ desc }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Exemples de formules -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb me-1"></i>Exemples de formules</h6>
+                </div>
+                <div class="card-body">
+
+                    <p class="fw-bold text-muted small mb-1">Exonération indemnités :</p>
+                    {% for label, formule in exemples_formules.exoneration %}
+                    <div class="mb-2">
+                        <small class="text-muted">{{ label }}</small><br>
+                        <code class="small bg-light p-1 rounded d-block">{{ formule }}</code>
+                    </div>
+                    {% endfor %}
+
+                    <hr>
+
+                    <p class="fw-bold text-muted small mb-1">Base VF/TA :</p>
+                    {% for label, formule in exemples_formules.base_vf %}
+                    <div class="mb-2">
+                        <small class="text-muted">{{ label }}</small><br>
+                        <code class="small bg-light p-1 rounded d-block">{{ formule }}</code>
+                    </div>
+                    {% endfor %}
+
+                    <hr>
+
+                    <p class="fw-bold text-muted small mb-1">Base RTS :</p>
+                    {% for label, formule in exemples_formules.base_rts %}
+                    <div class="mb-2">
+                        <small class="text-muted">{{ label }}</small><br>
+                        <code class="small bg-light p-1 rounded d-block">{{ formule }}</code>
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <!-- Fonctions disponibles -->
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="bi bi-braces me-1"></i>Fonctions autorisées</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-1">
+                        <code>min(a, b)</code> &mdash; minimum de deux valeurs<br>
+                        <code>max(a, b)</code> &mdash; maximum de deux valeurs<br>
+                        <code>abs(x)</code> &mdash; valeur absolue<br>
+                        <code>round(x, n)</code> &mdash; arrondi à n décimales<br>
+                        <code>int(x)</code> &mdash; partie entière<br>
+                        <code>float(x)</code> &mdash; conversion décimale
+                    </p>
+                    <p class="small text-muted mb-0">
+                        Opérateurs : <code>+ - * / // % **</code><br>
+                        Conditionnel : <code>x if condition else y</code>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+const URL_TESTER = '{% url "paie:tester_formule" %}';
+
+// --- Affichage conditionnel des blocs ---
+
+function toggleExonerationFields() {
+    const mode = document.getElementById('id_mode_exoneration').value;
+    document.getElementById('block_plafond_pct').style.display =
+        mode === 'plafond_pct' ? 'block' : 'none';
+    document.getElementById('block_formule_exoneration').style.display =
+        mode === 'formule' ? 'block' : 'none';
+}
+
+function toggleBaseVfFields() {
+    const mode = document.getElementById('id_mode_base_vf').value;
+    document.getElementById('block_formule_base_vf').style.display =
+        mode === 'formule' ? 'block' : 'none';
+}
+
+function toggleBaseRtsFields() {
+    const checked = document.getElementById('id_utiliser_formule_base_rts').checked;
+    document.getElementById('block_formule_base_rts').style.display =
+        checked ? 'block' : 'none';
+}
+
+// Initialiser au chargement
+document.addEventListener('DOMContentLoaded', function () {
+    toggleExonerationFields();
+    toggleBaseVfFields();
+    toggleBaseRtsFields();
+});
+
+// --- Test AJAX des formules ---
+
+function testerFormule(textareaId, resultDivId) {
+    const formule = document.getElementById(textareaId).value.trim();
+    const resultDiv = document.getElementById(resultDivId);
+
+    if (!formule) {
+        resultDiv.innerHTML = '<div class="alert alert-warning py-1 px-2 small">Saisissez une formule.</div>';
+        return;
+    }
+
+    resultDiv.innerHTML = '<div class="text-muted small"><i class="bi bi-hourglass-split"></i> Calcul en cours...</div>';
+
+    fetch(URL_TESTER, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN,
+        },
+        body: JSON.stringify({ formule: formule }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.succes) {
+            const montant = new Intl.NumberFormat('fr-FR', {
+                maximumFractionDigits: 0
+            }).format(data.resultat);
+            resultDiv.innerHTML = `
+                <div class="alert alert-success py-1 px-2 small">
+                    <i class="bi bi-check-circle me-1"></i>
+                    <strong>Résultat (exemple) :</strong> ${montant} GNF
+                    <button type="button" class="btn btn-link btn-sm p-0 ms-2"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#vars_${textareaId}">
+                        Voir variables test
+                    </button>
+                    <div id="vars_${textareaId}" class="collapse mt-1">
+                        ${formatVariables(data.variables_test)}
+                    </div>
+                </div>`;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger py-1 px-2 small">
+                    <i class="bi bi-x-circle me-1"></i>
+                    <strong>Erreur :</strong> ${data.erreur}
+                </div>`;
+        }
+    })
+    .catch(() => {
+        resultDiv.innerHTML = '<div class="alert alert-danger py-1 px-2 small">Erreur réseau.</div>';
+    });
+}
+
+function formatVariables(vars) {
+    let html = '<table class="table table-sm table-bordered mb-0" style="font-size:0.78rem">';
+    html += '<tr><th>Variable</th><th>Valeur</th></tr>';
+    for (const [k, v] of Object.entries(vars)) {
+        const formatted = new Intl.NumberFormat('fr-FR').format(v);
+        html += `<tr><td><code>${k}</code></td><td>${formatted}</td></tr>`;
+    }
+    html += '</table>';
+    return html;
+}
+
+// --- Copier une variable dans le textarea actif ---
+// Protection lecture seule côté client
+{% if not peut_modifier %}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#formParametres select, #formParametres textarea, #formParametres input').forEach(el => {
+        el.disabled = true;
+    });
+});
+{% endif %}
+
+let lastFocusedTextarea = null;
+document.querySelectorAll('textarea.font-monospace').forEach(ta => {
+    ta.addEventListener('focus', () => { lastFocusedTextarea = ta; });
+});
+
+function insererVariable(variable) {
+    if (lastFocusedTextarea) {
+        const start = lastFocusedTextarea.selectionStart;
+        const end = lastFocusedTextarea.selectionEnd;
+        const val = lastFocusedTextarea.value;
+        lastFocusedTextarea.value = val.substring(0, start) + variable + val.substring(end);
+        lastFocusedTextarea.selectionStart = lastFocusedTextarea.selectionEnd = start + variable.length;
+        lastFocusedTextarea.focus();
+    } else {
+        navigator.clipboard.writeText(variable).then(() => {
+            // Notification discrète
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed bottom-0 end-0 p-3';
+            toast.style.zIndex = 9999;
+            toast.innerHTML = `<div class="toast show align-items-center text-bg-secondary border-0">
+                <div class="d-flex"><div class="toast-body small">"${variable}" copié !</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        onclick="this.closest('.position-fixed').remove()"></button>
+                </div></div>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        });
+    }
+}
+</script>
+{% endblock %}

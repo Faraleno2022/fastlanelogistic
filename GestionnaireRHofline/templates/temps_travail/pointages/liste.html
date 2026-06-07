@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pointages{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-clock me-2"></i>Pointages du {{ date_pointage|date:"d/m/Y" }}</h2>
+                <a href="{% url 'temps_travail:creer_pointage' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Nouveau Pointage
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total</h6>
+                    <h3 class="text-primary">{{ stats.total }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Présents</h6>
+                    <h3 class="text-success">{{ stats.presents }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-danger">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Absents</h6>
+                    <h3 class="text-danger">{{ stats.absents }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Retards</h6>
+                    <h3 class="text-warning">{{ stats.retards }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="date" name="date" value="{{ date_pointage|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="employe" class="form-label">Employé</label>
+                            <select class="form-select" id="employe" name="employe">
+                                <option value="">Tous</option>
+                                {% for emp in employes %}
+                                <option value="{{ emp.id }}">{{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="statut" class="form-label">Statut</label>
+                            <select class="form-select scrollable-select" id="statut" name="statut">
+                                <option value="">Tous</option>
+                                <option value="present">Présent</option>
+                                <option value="present_am">Présent AM</option>
+                                <option value="present_pm">Présent PM</option>
+                                <option value="present_am_pm">Présent AM et PM</option>
+                                <option value="absent">Absent</option>
+                                <option value="retard">Retard</option>
+                                <option value="absence_justifiee">Absence justifiée</option>
+                                <option value="malade">Malade</option>
+                                <option value="p">P</option>
+                                <option value="a">A</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Filtrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des pointages -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0">Liste des Pointages</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Matricule</th>
+                                    <th>Nom et Prénoms</th>
+                                    <th>Entrée</th>
+                                    <th>Sortie</th>
+                                    <th>Heures Travaillées</th>
+                                    <th>Heures Sup.</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pointage in pointages %}
+                                <tr>
+                                    <td>{{ pointage.employe.matricule }}</td>
+                                    <td>{{ pointage.employe.nom }} {{ pointage.employe.prenoms }}</td>
+                                    <td>{{ pointage.heure_entree|default:"-" }}</td>
+                                    <td>{{ pointage.heure_sortie|default:"-" }}</td>
+                                    <td>{{ pointage.heures_travaillees|default:"0"|floatformat:2 }}h</td>
+                                    <td>{{ pointage.heures_supplementaires|default:"0"|floatformat:2 }}h</td>
+                                    <td>
+                                        {% if pointage.statut_pointage == 'present' %}
+                                        <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Présent</span>
+                                        {% elif pointage.statut_pointage == 'present_am' %}
+                                        <span class="badge bg-info"><i class="fas fa-sun me-1"></i>Présent AM</span>
+                                        {% elif pointage.statut_pointage == 'present_pm' %}
+                                        <span class="badge bg-info"><i class="fas fa-moon me-1"></i>Présent PM</span>
+                                        {% elif pointage.statut_pointage == 'present_am_pm' %}
+                                        <span class="badge bg-info"><i class="fas fa-calendar-day me-1"></i>Présent AM et PM</span>
+                                        {% elif pointage.statut_pointage == 'absent' %}
+                                        <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Absent</span>
+                                        {% elif pointage.statut_pointage == 'retard' %}
+                                        <span class="badge bg-warning"><i class="fas fa-clock me-1"></i>Retard</span>
+                                        {% elif pointage.statut_pointage == 'absence_justifiee' %}
+                                        <span class="badge bg-primary"><i class="fas fa-shield-alt me-1"></i>Absence justifiée</span>
+                                        {% elif pointage.statut_pointage == 'malade' %}
+                                        <span class="badge bg-warning"><i class="fas fa-heartbeat me-1"></i>Malade</span>
+                                        {% elif pointage.statut_pointage == 'p' %}
+                                        <span class="badge bg-secondary">P</span>
+                                        {% elif pointage.statut_pointage == 'a' %}
+                                        <span class="badge bg-secondary">A</span>
+                                        {% else %}
+                                        <span class="badge bg-dark">{{ pointage.get_statut_pointage_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'temps_travail:detail_pointage' pointage.pk %}" class="btn btn-sm btn-info" title="Détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'temps_travail:modifier_pointage' pointage.pk %}" class="btn btn-sm btn-warning" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'temps_travail:supprimer_pointage' pointage.pk %}" class="btn btn-sm btn-danger" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        Aucun pointage pour cette date
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

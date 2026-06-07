@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer Élément de Salaire - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-trash"></i> Supprimer un Élément de Salaire
+    </h1>
+</div>
+
+<div class="card shadow border-danger">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirmation de Suppression</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-danger">
+            <h6><i class="bi bi-exclamation-triangle"></i> Attention !</h6>
+            <p class="mb-0">Vous êtes sur le point de supprimer définitivement cet élément de salaire. Cette action est <strong>irréversible</strong>.</p>
+        </div>
+
+        <h6>Détails de l'élément à supprimer :</h6>
+        <table class="table table-bordered">
+            <tr>
+                <th width="30%">Employé</th>
+                <td><strong>{{ element.employe.nom_complet }}</strong> ({{ element.employe.matricule }})</td>
+            </tr>
+            <tr>
+                <th>Rubrique</th>
+                <td><strong>{{ element.rubrique.libelle_rubrique }}</strong> ({{ element.rubrique.code_rubrique }})</td>
+            </tr>
+            <tr>
+                <th>Type</th>
+                <td>
+                    {% if element.rubrique.type_rubrique == 'gain' %}
+                        <span class="badge bg-success">Gain</span>
+                    {% else %}
+                        <span class="badge bg-danger">Retenue</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Montant/Taux</th>
+                <td>
+                    {% if element.montant %}
+                        <strong>{{ element.montant|floatformat:0 }} GNF</strong>
+                    {% elif element.taux %}
+                        <strong>{{ element.taux }}%</strong> (Base: {{ element.base_calcul }})
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Période</th>
+                <td>
+                    Du {{ element.date_debut|date:"d/m/Y" }}
+                    {% if element.date_fin %}
+                        au {{ element.date_fin|date:"d/m/Y" }}
+                    {% else %}
+                        (permanent)
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Statut</th>
+                <td>
+                    {% if element.actif %}
+                        <span class="badge bg-success">Actif</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactif</span>
+                    {% endif %}
+                    {% if element.recurrent %}
+                        <span class="badge bg-info">Récurrent</span>
+                    {% else %}
+                        <span class="badge bg-warning">Ponctuel</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'paie:elements_salaire_employe' element.employe.id %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Confirmer la Suppression
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

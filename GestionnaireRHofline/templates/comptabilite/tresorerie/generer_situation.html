@@ -1,0 +1,96 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Générer Situation de Trésorerie{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-plus-circle text-primary"></i> Générer Situation de Trésorerie
+        </h1>
+        <a href="{% url 'comptabilite:situation_tresorerie_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Situation du {{ date|date:"d/m/Y" }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Cette action va générer la situation de trésorerie consolidée pour la date du <strong>{{ date|date:"d/m/Y" }}</strong>.
+                    </div>
+
+                    <h6 class="mb-3">Comptes bancaires actifs :</h6>
+                    {% if comptes %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Compte</th>
+                                    <th>Banque</th>
+                                    <th class="text-end">Solde</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for compte in comptes %}
+                                <tr>
+                                    <td>{{ compte.numero_compte }}</td>
+                                    <td>{{ compte.nom_banque }}</td>
+                                    <td class="text-end">{{ compte.solde_initial|floatformat:0 }} GNF</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="2">Total</th>
+                                    <th class="text-end">{{ solde_total|floatformat:0 }} GNF</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Aucun compte bancaire actif. Veuillez d'abord créer des comptes bancaires.
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" {% if not comptes %}disabled{% endif %}>
+                                <i class="bi bi-check-circle"></i> Générer la situation
+                            </button>
+                            <a href="{% url 'comptabilite:situation_tresorerie_list' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Information</h5>
+                </div>
+                <div class="card-body">
+                    <p>La génération de la situation de trésorerie va :</p>
+                    <ul>
+                        <li>Consolider les soldes de tous les comptes bancaires</li>
+                        <li>Calculer les encaissements et décaissements du jour</li>
+                        <li>Mettre à jour les prévisions de trésorerie</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

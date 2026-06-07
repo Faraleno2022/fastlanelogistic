@@ -1,0 +1,304 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ offre.intitule_poste }} - {{ offre.entreprise.nom_entreprise }}</title>
+    
+    <!-- Meta description -->
+    <meta name="description" content="🎯 {{ offre.intitule_poste }} chez {{ offre.entreprise.nom_entreprise }} | {{ offre.type_contrat }} | {{ offre.profil_recherche|striptags|truncatewords:50 }}">
+    
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:site_name" content="{{ offre.entreprise.nom_entreprise }}">
+    <meta property="og:title" content="🚀 {{ offre.intitule_poste }} - {{ offre.entreprise.nom_entreprise }} recrute!">
+    <meta property="og:description" content="📋 Profil recherché: {{ offre.profil_recherche|striptags }} | 💼 {{ offre.type_contrat }} | 📍 {{ offre.nombre_postes }} poste(s){% if offre.date_limite_candidature %} | ⏰ Limite: {{ offre.date_limite_candidature|date:'d/m/Y' }}{% endif %} | ✅ Postulez maintenant!">
+    {% if offre.image %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ offre.image.url }}">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="{{ offre.intitule_poste }}">
+    {% elif offre.entreprise.logo %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ offre.entreprise.logo.url }}">
+    <meta property="og:image:alt" content="{{ offre.entreprise.nom_entreprise }}">
+    {% endif %}
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta name="twitter:title" content="🚀 {{ offre.intitule_poste }} - {{ offre.entreprise.nom_entreprise }} recrute!">
+    <meta name="twitter:description" content="📋 Profil recherché: {{ offre.profil_recherche|striptags|truncatewords:30 }} | 💼 {{ offre.type_contrat }} | ✅ Postulez maintenant!">
+    {% if offre.image %}
+    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ offre.image.url }}">
+    {% elif offre.entreprise.logo %}
+    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ offre.entreprise.logo.url }}">
+    {% endif %}
+    
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <style>
+        :root {
+            --orange-main: #EF7707;
+            --gray-light: #939393;
+            --gray-dark: #212121;
+        }
+        body { background: #f5f7fa; }
+        .offer-header {
+            background: linear-gradient(135deg, var(--gray-dark) 0%, #3a3a3a 100%);
+            color: white;
+            padding: 3rem 0;
+        }
+        .offer-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-top: -2rem;
+        }
+        .section-title {
+            color: var(--orange-main);
+            border-bottom: 2px solid var(--orange-main);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .btn-apply {
+            background: linear-gradient(135deg, var(--orange-main) 0%, #d96a06 100%);
+            border: none;
+            padding: 1rem 2rem;
+        }
+        .info-badge {
+            background: rgba(239,119,7,0.1);
+            color: var(--orange-main);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .share-section {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .share-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+        .share-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            color: white;
+        }
+        .share-btn.whatsapp { background: #25D366; }
+        .share-btn.facebook { background: #1877F2; }
+        .share-btn.linkedin { background: #0A66C2; }
+        .share-btn.twitter { background: #000000; }
+        .share-btn.email { background: #EA4335; }
+        .share-btn.copy { background: #6c757d; cursor: pointer; }
+        .share-btn.copy.copied { background: var(--orange-main); }
+    </style>
+</head>
+<body>
+    <div class="offer-header">
+        <div class="container">
+            <a href="/" class="text-white text-decoration-none mb-3 d-inline-block">
+                <i class="bi bi-arrow-left me-2"></i>Retour à l'accueil
+            </a>
+            <div class="mt-2">
+                {% if offre.entreprise.logo %}
+                <img src="{{ offre.entreprise.logo.url }}" alt="{{ offre.entreprise.nom_entreprise }}" loading="eager" decoding="async"
+                     style="width: 50px; height: 50px; object-fit: contain; border-radius: 0.3rem;" class="mb-1">
+                {% endif %}
+                <small class="text-white-50 d-block" style="font-size: 0.7rem;">{{ offre.entreprise.nom_entreprise }}</small>
+                <h6 class="mb-0" style="font-size: 0.9rem;">{{ offre.intitule_poste }}</h6>
+                <div class="text-white-50" style="font-size: 0.65rem;">
+                    <small><i class="bi bi-hash me-1"></i>Réf: {{ offre.reference_poste|default:offre.reference_offre }}</small>
+                </div>
+                <div class="d-flex gap-1 mt-1 overflow-auto pb-1" style="white-space: nowrap; -webkit-overflow-scrolling: touch;">
+                    {% if offre.type_contrat %}<span class="info-badge bg-white" style="font-size: 0.6rem; padding: 0.15rem 0.4rem; flex-shrink: 0;"><i class="bi bi-briefcase"></i>{{ offre.type_contrat }}</span>{% endif %}
+                    {% if offre.secteur_activite %}<span class="info-badge bg-white" style="font-size: 0.6rem; padding: 0.15rem 0.4rem; flex-shrink: 0;"><i class="bi bi-building"></i>{{ offre.get_secteur_activite_display|default:offre.secteur_activite }}</span>{% endif %}
+                    {% if offre.service %}<span class="info-badge bg-white" style="font-size: 0.6rem; padding: 0.15rem 0.4rem; flex-shrink: 0;"><i class="bi bi-diagram-3"></i>{{ offre.service.nom_service }}</span>{% endif %}
+                    <span class="info-badge bg-white" style="font-size: 0.6rem; padding: 0.15rem 0.4rem; flex-shrink: 0;"><i class="bi bi-people"></i>{{ offre.nombre_postes }} poste{{ offre.nombre_postes|pluralize }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+        <div class="offer-card p-4">
+            {% if offre.image %}
+            <div class="mb-4" style="margin: -1rem -1rem 1.5rem -1rem;">
+                <img src="{{ offre.image.url }}" alt="{{ offre.intitule_poste }}" loading="lazy" decoding="async"
+                     style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 1rem 1rem 0 0;">
+            </div>
+            {% endif %}
+            <div class="row">
+                <div class="col-lg-8">
+                    {% if offre.description_poste %}
+                    <div class="mb-4">
+                        <h4 class="section-title"><i class="bi bi-file-text me-2"></i>Description du poste</h4>
+                        <p>{{ offre.description_poste|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if offre.profil_recherche %}
+                    <div class="mb-4">
+                        <h4 class="section-title"><i class="bi bi-person-check me-2"></i>Profil recherché</h4>
+                        <p>{{ offre.profil_recherche|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if offre.competences_requises %}
+                    <div class="mb-4">
+                        <h4 class="section-title"><i class="bi bi-list-check me-2"></i>Compétences requises</h4>
+                        <p>{{ offre.competences_requises|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if offre.avantages %}
+                    <div class="mb-4">
+                        <h4 class="section-title"><i class="bi bi-gift me-2"></i>Avantages</h4>
+                        <p>{{ offre.avantages|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="bg-light p-4 rounded-3 sticky-top" style="top: 1rem;">
+                        <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>Informations</h5>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Expérience requise</small>
+                            <strong>
+                                {% if offre.experience_requise %}
+                                {{ offre.experience_requise }} an{{ offre.experience_requise|pluralize }}
+                                {% else %}
+                                Non spécifiée
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Formation</small>
+                            <strong>
+                                {% if offre.formation_requise %}
+                                {{ offre.formation_requise }}
+                                {% else %}
+                                Non spécifiée
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Rémunération</small>
+                            <strong>
+                                {% if offre.salaire_propose_min and offre.salaire_propose_max %}
+                                {{ offre.salaire_propose_min|floatformat:0 }} - {{ offre.salaire_propose_max|floatformat:0 }} GNF
+                                {% elif offre.salaire_propose_min %}
+                                À partir de {{ offre.salaire_propose_min|floatformat:0 }} GNF
+                                {% else %}
+                                Non spécifiée
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Date de publication</small>
+                            <strong>{{ offre.date_publication|date:"d/m/Y" }}</strong>
+                        </div>
+
+                        {% if offre.date_limite_candidature %}
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Date limite</small>
+                            <strong class="text-danger">{{ offre.date_limite_candidature|date:"d/m/Y" }}</strong>
+                        </div>
+                        {% endif %}
+
+                        <hr>
+                        {% if est_expiree %}
+                        <div class="alert alert-danger text-center mb-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i><strong>Offre expirée</strong>
+                            <p class="mb-0 small mt-1">La date limite de candidature est dépassée.</p>
+                        </div>
+                        <button class="btn btn-secondary w-100 btn-lg" disabled style="cursor: not-allowed;">
+                            <i class="bi bi-x-circle me-2"></i>Candidature fermée
+                        </button>
+                        {% else %}
+                        <a href="{% url 'recrutement:postuler' offre.uuid %}" class="btn btn-success btn-apply w-100 btn-lg">
+                            <i class="bi bi-send me-2"></i>Postuler maintenant
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Section Partage -->
+                        <div class="share-section">
+                            <h6 class="mb-3"><i class="bi bi-share me-2"></i>Partager cette offre</h6>
+                            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                <a href="https://wa.me/?text={{ offre.intitule_poste|urlencode }}%20-%20{{ offre.entreprise.nom_entreprise|urlencode }}%20{{ request.build_absolute_uri }}" 
+                                   target="_blank" class="share-btn whatsapp" title="Partager sur WhatsApp">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" 
+                                   target="_blank" class="share-btn facebook" title="Partager sur Facebook">
+                                    <i class="bi bi-facebook"></i>
+                                </a>
+                                <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri }}" 
+                                   target="_blank" class="share-btn linkedin" title="Partager sur LinkedIn">
+                                    <i class="bi bi-linkedin"></i>
+                                </a>
+                                <a href="https://twitter.com/intent/tweet?text={{ offre.intitule_poste|urlencode }}%20-%20{{ offre.entreprise.nom_entreprise|urlencode }}&url={{ request.build_absolute_uri }}" 
+                                   target="_blank" class="share-btn twitter" title="Partager sur X (Twitter)">
+                                    <i class="bi bi-twitter-x"></i>
+                                </a>
+                                <a href="mailto:?subject={{ offre.intitule_poste|urlencode }}%20-%20Offre%20d'emploi&body=Découvrez%20cette%20offre%20d'emploi%20:%20{{ request.build_absolute_uri }}" 
+                                   class="share-btn email" title="Envoyer par email">
+                                    <i class="bi bi-envelope"></i>
+                                </a>
+                                <button onclick="copyLink()" class="share-btn copy" id="copyBtn" title="Copier le lien">
+                                    <i class="bi bi-link-45deg" id="copyIcon"></i>
+                                </button>
+                            </div>
+                            <div id="copyMessage" class="text-center mt-2 text-success small" style="display: none;">
+                                <i class="bi bi-check-circle"></i> Lien copié !
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href).then(function() {
+                var btn = document.getElementById('copyBtn');
+                var icon = document.getElementById('copyIcon');
+                var msg = document.getElementById('copyMessage');
+                
+                btn.classList.add('copied');
+                icon.classList.remove('bi-link-45deg');
+                icon.classList.add('bi-check');
+                msg.style.display = 'block';
+                
+                setTimeout(function() {
+                    btn.classList.remove('copied');
+                    icon.classList.remove('bi-check');
+                    icon.classList.add('bi-link-45deg');
+                    msg.style.display = 'none';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rubriques de Paie - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-list-check"></i> Rubriques de Paie</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'paie:creer_rubrique' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouvelle Rubrique
+        </a>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total</div>
+                <div class="h5 mb-0">{{ stats.total }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-success shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Gains</div>
+                <div class="h5 mb-0">{{ stats.gains }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-danger shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Retenues</div>
+                <div class="h5 mb-0">{{ stats.retenues }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-info shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Cotisations</div>
+                <div class="h5 mb-0">{{ stats.cotisations }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Type de Rubrique</label>
+                <select name="type" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="gain">Gains</option>
+                    <option value="retenue">Retenues</option>
+                    <option value="cotisation">Cotisations</option>
+                    <option value="information">Informations</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des rubriques -->
+<div class="card shadow">
+    <div class="card-body">
+        {% if rubriques %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Libellé</th>
+                        <th>Type</th>
+                        <th>Taux/Montant</th>
+                        <th>CNSS</th>
+                        <th>IRG</th>
+                        <th>Ordre</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rubrique in rubriques %}
+                    <tr>
+                        <td><strong>{{ rubrique.code_rubrique }}</strong></td>
+                        <td>{{ rubrique.libelle_rubrique }}</td>
+                        <td>
+                            {% if rubrique.type_rubrique == 'gain' %}
+                                <span class="badge bg-success">Gain</span>
+                            {% elif rubrique.type_rubrique == 'retenue' %}
+                                <span class="badge bg-danger">Retenue</span>
+                            {% elif rubrique.type_rubrique == 'cotisation' %}
+                                <span class="badge bg-info">Cotisation</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Info</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if rubrique.taux_rubrique %}
+                                {{ rubrique.taux_rubrique }}%
+                            {% elif rubrique.montant_fixe %}
+                                {{ rubrique.montant_fixe|floatformat:0 }} GNF
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if rubrique.soumis_cnss %}
+                                <i class="bi bi-check-circle text-success"></i>
+                            {% else %}
+                                <i class="bi bi-x-circle text-muted"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if rubrique.soumis_irg %}
+                                <i class="bi bi-check-circle text-success"></i>
+                            {% else %}
+                                <i class="bi bi-x-circle text-muted"></i>
+                            {% endif %}
+                        </td>
+                        <td>{{ rubrique.ordre_calcul }}</td>
+                        <td>
+                            {% if rubrique.actif %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'paie:detail_rubrique' rubrique.id %}" class="btn btn-sm btn-outline-primary" title="Détails">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'paie:supprimer_rubrique' rubrique.id %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Aucune rubrique trouvée.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Légende -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h6><i class="bi bi-info-circle"></i> Légende</h6>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>CNSS</strong> : Rubrique soumise aux cotisations CNSS</p>
+                <p><strong>IRG</strong> : Rubrique soumise à l'impôt sur le revenu</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Ordre</strong> : Ordre de calcul et d'affichage</p>
+                <p><strong>Statut</strong> : Active = utilisable, Inactive = archivée</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

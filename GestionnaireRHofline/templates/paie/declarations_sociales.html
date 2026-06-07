@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Déclarations Sociales{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-file-alt me-2"></i>Déclarations Sociales</h2>
+                <a href="{% url 'paie:declarations_sociales_pdf' %}?annee={{ annee }}{% if mois %}&mois={{ mois }}{% endif %}" class="btn btn-danger no-print">
+                    <i class="fas fa-file-pdf me-2"></i>Télécharger PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4 no-print">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="annee" class="form-label">Année</label>
+                            <select class="form-select" id="annee" name="annee">
+                                {% for a in annees %}
+                                <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="mois" class="form-label">Mois</label>
+                            <select class="form-select" id="mois" name="mois">
+                                <option value="">Toute l'année</option>
+                                <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+                                <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+                                <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+                                <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+                                <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+                                <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+                                <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+                                <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+                                <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+                                <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+                                <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+                                <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Filtrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons d'export — section séparée, toujours visible -->
+    <div class="row mb-4 no-print">
+        <div class="col-12">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <!-- Export CNSS -->
+                <div class="dropdown">
+                    <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-excel me-1"></i> Export CNSS
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'paie:export_cnss_excel' %}?annee={{ annee }}{% if mois %}&mois={{ mois }}{% endif %}">
+                            <i class="fas fa-file-excel me-2 text-success"></i>Excel (.xlsx)
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'paie:export_cnss_pdf' %}?annee={{ annee }}{% if mois %}&mois={{ mois }}{% endif %}">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>PDF
+                        </a></li>
+                    </ul>
+                </div>
+                <!-- Export DMU -->
+                {% if mois %}
+                <div class="dropdown">
+                    <button class="btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-alt me-1"></i> Export DMU
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'paie:export_dmu_excel' %}?annee={{ annee }}&mois={{ mois }}">
+                            <i class="fas fa-file-excel me-2 text-success"></i>Excel (.xlsx)
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'paie:export_dmu_pdf' %}?annee={{ annee }}&mois={{ mois }}">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>PDF
+                        </a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <button class="btn btn-secondary" disabled title="Sélectionnez un mois pour la DMU">
+                    <i class="fas fa-file-alt me-1"></i> Export DMU
+                </button>
+                <small class="text-warning"><i class="fas fa-info-circle me-1"></i>Sélectionnez un mois pour exporter la DMU</small>
+                {% endif %}
+                <!-- Déclaration eTax -->
+                {% if mois %}
+                <a class="btn btn-primary" href="{% url 'paie:declaration_etax' %}?annee={{ annee }}&mois={{ mois }}">
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Déclaration eTax
+                </a>
+                {% else %}
+                <button class="btn btn-secondary" disabled title="Sélectionnez un mois pour eTax">
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Déclaration eTax
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Déclaration CNSS -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h4 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Déclaration CNSS</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <h5>Période: Année {{ annee }}{% if mois %} - Mois {{ mois }}{% endif %}</h5>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center mb-4">
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Nombre de Salariés</h6>
+                                <h3 class="text-primary">{{ declaration_cnss.total_salaries }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Salaire brut</h6>
+                                <h4>{{ declaration_cnss.masse_salariale|floatformat:0|intcomma }} GNF</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Cotisation Employé (5%)</h6>
+                                <h4>{{ declaration_cnss.cotisation_employe|floatformat:0|intcomma }} GNF</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Cotisation Employeur (18%)</h6>
+                                <h4>{{ declaration_cnss.cotisation_employeur|floatformat:0|intcomma }} GNF</h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <h5 class="mb-0">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            Total à verser à la CNSS: 
+                            <strong>{{ declaration_cnss.total_cotisation|floatformat:0|intcomma }} GNF</strong>
+                        </h5>
+                    </div>
+                    
+                    <!-- Informations sur les règles CNSS -->
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-info-circle me-2"></i>Règles de calcul CNSS (Guinée)</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="mb-0 small">
+                                    <li><strong>Plancher (SMIG):</strong> {{ declaration_cnss.plancher|floatformat:0|intcomma }} GNF</li>
+                                    <li><strong>Plafond:</strong> {{ declaration_cnss.plafond|floatformat:0|intcomma }} GNF</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="mb-0 small">
+                                    <li><strong>Taux employé:</strong> {{ declaration_cnss.taux_employe }}% (Retraite 2,5% + Maladie 2,5%)</li>
+                                    <li><strong>Taux employeur:</strong> {{ declaration_cnss.taux_employeur }}% (PF 6% + AT/MP 4% + Retraite 4% + Maladie 4%)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <small class="text-muted">
+                            <i class="fas fa-calculator me-1"></i>
+                            L'assiette de cotisation est comprise entre le plancher (SMIG) et le plafond. 
+                            Si le salaire est inférieur au SMIG, on cotise sur le SMIG. 
+                            Si le salaire dépasse le plafond, on cotise sur le plafond.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Déclaration RTS -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-percentage me-2"></i>Déclaration RTS (Impôt sur le Revenu)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Nombre de Salariés</h6>
+                                <h3 class="text-warning">{{ declaration_irg.total_salaries }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Masse Imposable</h6>
+                                <h4>{{ declaration_irg.masse_imposable|floatformat:0|intcomma }} GNF</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">RTS Retenu à la Source</h6>
+                                <h4>{{ declaration_irg.total_irg|floatformat:0|intcomma }} GNF</h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h5 class="mb-0">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            Total à verser au Trésor Public: 
+                            <strong>{{ declaration_irg.total_irg|floatformat:0|intcomma }} GNF</strong>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Récapitulatif Total -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-calculator me-2"></i>Récapitulatif Total des Charges</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-md-4 mb-2">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Mode fiscal appliqué</h6>
+                                <h5 class="mb-0">{{ mode_fiscal_label }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Base VF / ONFPP</h6>
+                                <h5 class="mb-0">{{ declaration_charges.base_vf|floatformat:0|intcomma }} / {{ declaration_charges.base_onfpp|floatformat:0|intcomma }} GNF</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="p-3 bg-light rounded montant-card">
+                                <h6 class="text-muted">Optimisation base</h6>
+                                <h5 class="mb-0">{{ taux_optimisation_global }}%</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table table-bordered">
+                        <thead class="table-orange-light">
+                            <tr>
+                                <th>Organisme</th>
+                                <th class="text-end">Montant à Verser</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>CNSS (Total)</strong></td>
+                                <td class="text-end">{{ declaration_cnss.total_cotisation|floatformat:0 }} GNF</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td><strong>Total DGI (RTS + VF)</strong></td>
+                                <td class="text-end"><strong>{{ total_dgi|floatformat:0|intcomma }} GNF</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>RTS (Trésor Public)</strong></td>
+                                <td class="text-end">{{ declaration_irg.total_irg|floatformat:0 }} GNF</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">VF</td>
+                                <td class="text-end">{{ declaration_charges.vf|floatformat:0 }} GNF</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total ONFPP</strong></td>
+                                <td class="text-end">{{ declaration_charges.onfpp|floatformat:0 }} GNF</td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td><strong>Total DMU (RTS + VF + ONFPP)</strong></td>
+                                <td class="text-end"><strong>{{ total_dmu|floatformat:0|intcomma }} GNF</strong></td>
+                            </tr>
+                            <tr class="table-danger">
+                                <th>TOTAL GÉNÉRAL (CNSS + DMU)</th>
+                                <th class="text-end">{{ total_general|floatformat:0|intcomma }} GNF</th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Détail par employé -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Détail par Employé</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-sm detail-table">
+                            <thead class="table-orange-light">
+                                <tr>
+                                    <th>Matricule</th>
+                                    <th>Nom et Prénoms</th>
+                                    <th>Période</th>
+                                    <th class="text-end">Brut</th>
+                                    <th class="text-end">CNSS Employé</th>
+                                    <th class="text-end">CNSS Employeur</th>
+                                    <th class="text-end">RTS</th>
+                                    <th class="text-end">Net</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employe in detail_employes %}
+                                <tr>
+                                    <td>{{ employe.matricule }}</td>
+                                    <td>{{ employe.nom_complet }}</td>
+                                    <td>{{ employe.periode }}</td>
+                                    <td class="text-end">{{ employe.brut|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ employe.cnss_employe|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ employe.cnss_employeur|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ employe.irg|floatformat:0|intcomma }}</td>
+                                    <td class="text-end text-success">{{ employe.net|floatformat:0|intcomma }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        Aucune donnée disponible
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes légales -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm bg-light">
+                <div class="card-body">
+                    <h6><i class="fas fa-info-circle me-2"></i>Notes Importantes</h6>
+                    <ul class="mb-0 small">
+                        <li><strong>CNSS:</strong> Les cotisations doivent être versées avant le 20 du mois suivant</li>
+                        <li><strong>RTS:</strong> L'impôt retenu à la source doit être reversé au Trésor Public avant le 10 du mois suivant</li>
+                        <li><strong>Conservation:</strong> Ces déclarations doivent être conservées pendant 10 ans minimum</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Réduction des polices pour les montants */
+    .montant-card h4 {
+        font-size: 0.95rem !important;
+    }
+    .montant-card h3 {
+        font-size: 1.1rem !important;
+    }
+    .montant-card h6 {
+        font-size: 0.75rem !important;
+    }
+    .alert h5 {
+        font-size: 0.9rem !important;
+    }
+    .table td, .table th {
+        font-size: 0.8rem !important;
+        padding: 0.4rem !important;
+    }
+    .detail-table td, .detail-table th {
+        font-size: 0.75rem !important;
+        padding: 0.3rem !important;
+    }
+    
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        .card {
+            page-break-inside: avoid;
+        }
+        
+        table {
+            font-size: 8pt;
+        }
+        .montant-card h4 {
+            font-size: 9pt !important;
+        }
+        .montant-card h3 {
+            font-size: 10pt !important;
+        }
+    }
+</style>
+{% endblock %}
+

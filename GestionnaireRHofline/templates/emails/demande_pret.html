@@ -1,0 +1,49 @@
+{% extends 'emails/base_email.html' %}
+{% load humanize %}
+
+{% block title %}Demande de prêt{% endblock %}
+{% block header %}Demande de Prêt{% endblock %}
+
+{% block content %}
+<p>Bonjour,</p>
+
+<p>Une nouvelle demande de prêt a été soumise et nécessite votre validation.</p>
+
+<div class="info-box">
+    <strong>Employé:</strong> {{ employe.nom }} {{ employe.prenoms }}<br>
+    <strong>Matricule:</strong> {{ employe.matricule }}<br>
+    <strong>Département:</strong> {{ employe.service.nom_service|default:"-" }}
+</div>
+
+<table>
+    <tr>
+        <th>Type de prêt</th>
+        <td>{{ pret.get_type_pret_display }}</td>
+    </tr>
+    <tr>
+        <th>Montant demandé</th>
+        <td><strong>{{ pret.montant_pret|floatformat:0 }} GNF</strong></td>
+    </tr>
+    <tr>
+        <th>Nombre d'échéances</th>
+        <td>{{ pret.nombre_echeances }} mois</td>
+    </tr>
+    <tr>
+        <th>Mensualité estimée</th>
+        <td>{{ pret.montant_echeance|floatformat:0 }} GNF</td>
+    </tr>
+    {% if pret.motif %}
+    <tr>
+        <th>Motif</th>
+        <td>{{ pret.motif }}</td>
+    </tr>
+    {% endif %}
+</table>
+
+<p style="text-align: center;">
+    <a href="#" class="btn btn-success">Approuver</a>
+    <a href="#" class="btn btn-danger">Refuser</a>
+</p>
+
+<p>Connectez-vous au système RH pour traiter cette demande.</p>
+{% endblock %}

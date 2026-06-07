@@ -1,0 +1,135 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Budget analytique {{ budget.periode }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-pie-chart text-primary"></i> Budget {{ budget.periode }}
+            </h1>
+            <p class="text-muted mb-0">Détails du budget analytique pour {{ budget.centre_couts|default:budget.section }}.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:analytique_budget_update' budget.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:analytique_budgets' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Résumé budgétaire</h5>
+                    <span class="badge {% if budget.type_budget == 'initial' %}bg-primary{% elif budget.type_budget == 'revise' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                        {{ budget.get_type_budget_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <h6 class="text-muted text-uppercase small">Budget charges</h6>
+                            <p class="fs-4 fw-semibold text-danger mb-0">{{ budget.budget_charges|floatformat:2 }} GNF</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted text-uppercase small">Budget produits</h6>
+                            <p class="fs-4 fw-semibold text-success mb-0">{{ budget.budget_produits|floatformat:2 }} GNF</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted text-uppercase small">Solde prévisionnel</h6>
+                            {% with solde=budget.budget_produits|add:"-"|add:budget.budget_charges %}
+                            <p class="fs-4 fw-semibold {% if budget.budget_produits >= budget.budget_charges %}text-success{% else %}text-danger{% endif %} mb-0">
+                                {{ budget.budget_produits|floatformat:2 }} GNF
+                            </p>
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <hr>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Exercice comptable</dt>
+                        <dd class="col-sm-8">{{ budget.exercice }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Période</dt>
+                        <dd class="col-sm-8">{{ budget.periode }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Centre de coûts</dt>
+                        <dd class="col-sm-8">{{ budget.centre_couts|default:"-" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Section analytique</dt>
+                        <dd class="col-sm-8">
+                            {% if budget.section %}
+                            <a href="{% url 'comptabilite:analytique_section_detail' budget.section.pk %}">{{ budget.section }}</a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Analyse budgétaire</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small text-uppercase">Répartition charges / produits</label>
+                                <div class="progress" style="height: 25px;">
+                                    {% widthratio budget.budget_charges budget.budget_charges|add:budget.budget_produits 100 as charges_pct %}
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ charges_pct }}%;" aria-valuenow="{{ charges_pct }}" aria-valuemin="0" aria-valuemax="100">
+                                        Charges {{ charges_pct }}%
+                                    </div>
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {% widthratio budget.budget_produits budget.budget_charges|add:budget.budget_produits 100 %}%;">
+                                        Produits
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small">
+                                Ce budget définit les prévisions de charges et produits pour la période <strong>{{ budget.periode }}</strong>.
+                                Comparez régulièrement avec les réalisations pour identifier les écarts.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Type : {{ budget.get_type_budget_display }}</p>
+                    <p class="mb-1">Créé le : {{ budget.date_creation|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-1">Modifié le : {{ budget.date_modification|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-0">Identifiant : {{ budget.id }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Actions suggérées</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <ul class="mb-0">
+                        <li>Comparez ce budget avec les imputations réelles de la période.</li>
+                        <li>Créez un budget révisé si les prévisions initiales ont changé.</li>
+                        <li>Analysez les variances pour identifier les écarts significatifs.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

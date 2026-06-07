@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Congés{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-calendar-check me-2"></i>Gestion des Congés</h2>
+        <div>
+            <a href="{% url 'conges:soldes' %}" class="btn btn-outline-info me-2">
+                <i class="bi bi-pie-chart me-1"></i>Soldes
+            </a>
+            <a href="{% url 'conges:demander' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Nouvelle demande
+            </a>
+        </div>
+    </div>
+
+    <!-- Info configuration -->
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Configuration entreprise :</strong>
+        {{ config.jours_conges_par_mois }} jours/mois 
+        ({{ config.get_mode_conges_display }})
+        {% if config.mode_conges == 'convention' %}
+        = 30 jours/an
+        {% else %}
+        = 18 jours/an
+        {% endif %}
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous</option>
+                        {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if statut_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select">
+                        <option value="">Tous</option>
+                        {% for value, label in types_conge %}
+                        <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Employé</label>
+                    <select name="employe" class="form-select">
+                        <option value="">Tous</option>
+                        {% for emp in employes %}
+                        <option value="{{ emp.id }}" {% if employe_filter == emp.id|stringformat:"s" %}selected{% endif %}>{{ emp.nom_complet }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des congés -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Employé</th>
+                            <th>Type</th>
+                            <th>Période</th>
+                            <th>Jours</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for conge in conges %}
+                        <tr>
+                            <td>{{ conge.employe.nom_complet }}</td>
+                            <td>{{ conge.get_type_conge_display }}</td>
+                            <td>{{ conge.date_debut|date:"d/m/Y" }} - {{ conge.date_fin|date:"d/m/Y" }}</td>
+                            <td><span class="badge bg-primary">{{ conge.nombre_jours }}</span></td>
+                            <td>
+                                {% if conge.statut_demande == 'en_attente' %}
+                                <span class="badge bg-warning text-dark">En attente</span>
+                                {% elif conge.statut_demande == 'approuve' %}
+                                <span class="badge bg-success">Approuvé</span>
+                                {% elif conge.statut_demande == 'rejete' %}
+                                <span class="badge bg-danger">Rejeté</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ conge.get_statut_demande_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if conge.statut_demande == 'en_attente' %}
+                                <a href="{% url 'conges:approuver' conge.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-check-lg"></i> Traiter
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                Aucune demande de congé
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

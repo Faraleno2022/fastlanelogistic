@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if modification %}Modifier{% else %}Ajouter{% endif %} une tranche IRPP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">
+        <i class="bi bi-percent"></i> 
+        {% if modification %}Modifier la tranche {{ tranche.numero_tranche }}{% else %}Nouvelle tranche IRPP{% endif %}
+    </h1>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'paie:bareme_irpp_liste' %}">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Numéro de tranche *</label>
+                    <input type="number" name="numero_tranche" class="form-control" required min="1"
+                           value="{% if tranche %}{{ tranche.numero_tranche }}{% endif %}">
+                    <small class="text-muted">Ordre de la tranche (1, 2, 3...)</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Année de validité *</label>
+                    <input type="number" name="annee_validite" class="form-control" required min="2020" max="2100"
+                           value="{% if tranche %}{{ tranche.annee_validite }}{% else %}{{ annee_defaut }}{% endif %}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Taux (%) *</label>
+                    <div class="input-group">
+                        <input type="number" name="taux_irg" class="form-control" required min="0" max="100" step="0.01"
+                               value="{% if tranche %}{{ tranche.taux_irg }}{% endif %}">
+                        <span class="input-group-text">%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Borne inférieure (GNF) *</label>
+                    <input type="number" name="borne_inferieure" class="form-control" required min="0" step="1"
+                           value="{% if tranche %}{{ tranche.borne_inferieure|floatformat:0 }}{% endif %}">
+                    <small class="text-muted">Revenu minimum de la tranche</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Borne supérieure (GNF)</label>
+                    <input type="number" name="borne_superieure" class="form-control" min="0" step="1"
+                           value="{% if tranche.borne_superieure %}{{ tranche.borne_superieure|floatformat:0 }}{% endif %}">
+                    <small class="text-muted">Laisser vide pour la dernière tranche (illimité)</small>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Date début validité *</label>
+                    <input type="date" name="date_debut_validite" class="form-control" required
+                           value="{% if tranche %}{{ tranche.date_debut_validite|date:'Y-m-d' }}{% else %}{{ date_defaut }}{% endif %}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Date fin validité</label>
+                    <input type="date" name="date_fin_validite" class="form-control"
+                           value="{% if tranche.date_fin_validite %}{{ tranche.date_fin_validite|date:'Y-m-d' }}{% endif %}">
+                    <small class="text-muted">Laisser vide si toujours valide</small>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="form-check">
+                    <input type="checkbox" name="actif" class="form-check-input" id="actif"
+                           {% if tranche.actif or not modification %}checked{% endif %}>
+                    <label class="form-check-label" for="actif">Tranche active</label>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i> {% if modification %}Enregistrer{% else %}Créer{% endif %}
+                </button>
+                <a href="{% url 'paie:bareme_irpp_liste' %}" class="btn btn-outline-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Prêts à Prélever{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'paie:liste_prets' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-calendar-check me-2"></i>Prêts à Prélever</h2>
+            <p class="text-muted">Échéances du mois {{ mois }}/{{ annee }}</p>
+        </div>
+    </div>
+
+    <!-- Totaux -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h2 class="mb-0">{{ totaux.nb_echeances }}</h2>
+                    <p class="mb-0">Échéances à prélever</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h2 class="mb-0">{{ totaux.total_montant|floatformat:0|intcomma|default:"0" }} GNF</h2>
+                    <p class="mb-0">Montant total à prélever</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des échéances -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Échéances du mois</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-orange-light">
+                        <tr>
+                            <th>N° Prêt</th>
+                            <th>Employé</th>
+                            <th>Matricule</th>
+                            <th>Échéance</th>
+                            <th>Date</th>
+                            <th class="text-end">Montant</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ech in echeances %}
+                        <tr class="{% if ech.statut == 'en_retard' %}table-danger{% endif %}">
+                            <td>
+                                <a href="{% url 'paie:detail_pret' ech.pret.pk %}">{{ ech.pret.numero_pret }}</a>
+                            </td>
+                            <td>{{ ech.pret.employe.nom }} {{ ech.pret.employe.prenoms }}</td>
+                            <td>{{ ech.pret.employe.matricule }}</td>
+                            <td>{{ ech.numero_echeance }}/{{ ech.pret.nombre_echeances }}</td>
+                            <td>{{ ech.date_echeance|date:"d/m/Y" }}</td>
+                            <td class="text-end fw-bold">{{ ech.montant_echeance|floatformat:0|intcomma }} GNF</td>
+                            <td>
+                                {% if ech.statut == 'en_retard' %}
+                                <span class="badge bg-danger">En retard</span>
+                                {% else %}
+                                <span class="badge bg-warning">À prélever</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                                <p>Aucune échéance à prélever ce mois</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if echeances %}
+                    <tfoot class="table-dark">
+                        <tr>
+                            <th colspan="5">TOTAL À PRÉLEVER</th>
+                            <th class="text-end">{{ totaux.total_montant|floatformat:0|intcomma|default:"0" }} GNF</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-4">
+        <i class="fas fa-info-circle me-2"></i>
+        Ces montants seront automatiquement déduits lors du calcul de la paie du mois.
+    </div>
+</div>
+{% endblock %}

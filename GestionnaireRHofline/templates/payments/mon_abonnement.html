@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Mon abonnement - GuinéeRH{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-gem text-primary"></i> Mon abonnement</h2>
+            <p class="text-muted">Gérez votre abonnement et vos paiements</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Abonnement actuel -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0"><i class="bi bi-card-checklist"></i> Abonnement actuel</h5>
+                </div>
+                <div class="card-body">
+                    {% if abonnement %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h3 class="mb-1">{{ abonnement.plan.nom }}</h3>
+                                <p class="text-muted mb-0">{{ abonnement.plan.description }}</p>
+                            </div>
+                            <div class="col-md-6 text-md-end mb-3">
+                                {% if abonnement.est_actif %}
+                                    <span class="badge bg-success fs-6 mb-2"><i class="bi bi-check-circle"></i> Actif</span>
+                                {% else %}
+                                    <span class="badge bg-danger fs-6 mb-2"><i class="bi bi-x-circle"></i> Expiré</span>
+                                {% endif %}
+                                <div class="text-muted">
+                                    {% if abonnement.jours_restants > 0 %}
+                                        <strong>{{ abonnement.jours_restants }}</strong> jours restants
+                                    {% else %}
+                                        Expiré depuis {{ abonnement.date_fin|date:"d/m/Y" }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row">
+                            <div class="col-sm-6 col-md-3 mb-3">
+                                <small class="text-muted d-block">Date de début</small>
+                                <strong>{{ abonnement.date_debut|date:"d/m/Y" }}</strong>
+                            </div>
+                            <div class="col-sm-6 col-md-3 mb-3">
+                                <small class="text-muted d-block">Date d'expiration</small>
+                                <strong>{{ abonnement.date_fin|date:"d/m/Y" }}</strong>
+                            </div>
+                            <div class="col-sm-6 col-md-3 mb-3">
+                                <small class="text-muted d-block">Utilisateurs max</small>
+                                <strong>{{ abonnement.plan.max_utilisateurs }}</strong>
+                            </div>
+                            <div class="col-sm-6 col-md-3 mb-3">
+                                <small class="text-muted d-block">Employés max</small>
+                                <strong>{{ abonnement.plan.max_employes }}</strong>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6 class="mb-3">Fonctionnalités incluses</h6>
+                        <div class="row">
+                            <div class="col-6 col-md-4 mb-2">
+                                {% if abonnement.plan.module_paie %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                {% endif %}
+                                Module Paie
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                {% if abonnement.plan.module_conges %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                {% endif %}
+                                Gestion Congés
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                {% if abonnement.plan.module_recrutement %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                {% endif %}
+                                Recrutement
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                {% if abonnement.plan.module_formation %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                {% endif %}
+                                Formation
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                {% if abonnement.plan.support_prioritaire %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                {% endif %}
+                                Support prioritaire
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="{% url 'payments:plans' %}" class="btn btn-primary">
+                                <i class="bi bi-arrow-up-circle"></i> 
+                                {% if abonnement.est_actif %}Changer de plan{% else %}Renouveler{% endif %}
+                            </a>
+                            <a href="{% url 'payments:historique' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-receipt"></i> Historique
+                            </a>
+                        </div>
+                        
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-gem display-1 text-muted"></i>
+                            <h4 class="mt-3">Aucun abonnement actif</h4>
+                            <p class="text-muted">Souscrivez à un plan pour accéder à toutes les fonctionnalités</p>
+                            <a href="{% url 'payments:plans' %}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-cart-plus"></i> Voir les plans
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions rapides -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-lightning"></i> Actions rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'payments:plans' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-gem"></i> Voir tous les plans
+                        </a>
+                        <a href="{% url 'payments:historique' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-receipt"></i> Historique des paiements
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            {% if abonnement and abonnement.derniere_transaction %}
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Dernière transaction</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Référence</small>
+                        <div><code>{{ abonnement.derniere_transaction.reference }}</code></div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Date</small>
+                        <div>{{ abonnement.derniere_transaction.date_paiement|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Montant</small>
+                        <div class="fw-bold text-success">{{ abonnement.derniere_transaction.montant|intcomma }} GNF</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

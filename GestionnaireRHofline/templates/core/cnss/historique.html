@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Historique CNSS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-clock-history"></i> Historique des déclarations CNSS</h1>
+    <a href="{% url 'core:cnss_dashboard' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead><tr><th>Période</th><th>Référence</th><th class="text-end">Salariés</th><th class="text-end">Total</th><th>Statut</th><th>Date</th><th></th></tr></thead>
+            <tbody>
+            {% for t in transmissions %}
+            <tr>
+                <td>{{ t.periode_mois|stringformat:"02d" }}/{{ t.periode_annee }}</td>
+                <td><code>{{ t.reference }}</code></td>
+                <td class="text-end">{{ t.nombre_salaries }}</td>
+                <td class="text-end">{{ t.total_cotisations|floatformat:0 }} GNF</td>
+                <td><span class="badge bg-{% if t.statut == 'accepte' %}success{% elif t.statut == 'transmis' %}info{% else %}secondary{% endif %}">{{ t.get_statut_display }}</span></td>
+                <td>{{ t.date_generation|date:"d/m/Y" }}</td>
+                <td><a href="{% url 'core:cnss_detail' t.id %}" class="btn btn-sm btn-outline-primary">Voir</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center text-muted">Aucune déclaration</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

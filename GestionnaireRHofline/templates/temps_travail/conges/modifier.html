@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier Congé{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-edit me-2"></i>Modifier la demande de congé</h2>
+                <a href="{% url 'temps_travail:conges' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Modification du congé</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Employé:</strong> {{ conge.employe.nom }} {{ conge.employe.prenoms }}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="type_conge" class="form-label">Type de congé *</label>
+                            <select class="form-select" id="type_conge" name="type_conge" required>
+                                <option value="annuel" {% if conge.type_conge == 'annuel' %}selected{% endif %}>Congé annuel</option>
+                                <option value="maladie" {% if conge.type_conge == 'maladie' %}selected{% endif %}>Congé maladie</option>
+                                <option value="maternite" {% if conge.type_conge == 'maternite' %}selected{% endif %}>Congé maternité</option>
+                                <option value="paternite" {% if conge.type_conge == 'paternite' %}selected{% endif %}>Congé paternité</option>
+                                <option value="sans_solde" {% if conge.type_conge == 'sans_solde' %}selected{% endif %}>Congé sans solde</option>
+                                <option value="exceptionnel" {% if conge.type_conge == 'exceptionnel' %}selected{% endif %}>Congé exceptionnel</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_debut" class="form-label">Date de début *</label>
+                                <input type="date" class="form-control" id="date_debut" name="date_debut" 
+                                       value="{{ conge.date_debut|date:'Y-m-d' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="date_fin" class="form-label">Date de fin *</label>
+                                <input type="date" class="form-control" id="date_fin" name="date_fin" 
+                                       value="{{ conge.date_fin|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="motif" class="form-label">Motif</label>
+                            <textarea class="form-control" id="motif" name="motif" rows="3">{{ conge.motif }}</textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                            </button>
+                            <a href="{% url 'temps_travail:conges' %}" class="btn btn-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Statut actuel:</strong> <span class="badge bg-warning">En attente</span></p>
+                    <p><strong>Nombre de jours:</strong> {{ conge.nombre_jours }}</p>
+                    <p><strong>Année de référence:</strong> {{ conge.annee_reference }}</p>
+                    <hr>
+                    <p class="text-muted small">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Seules les demandes en attente peuvent être modifiées.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

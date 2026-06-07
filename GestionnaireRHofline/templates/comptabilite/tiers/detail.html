@@ -1,0 +1,57 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}Tiers {{ tiers.code }}{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-person me-2"></i>{{ tiers.raison_sociale }}</h4>
+    <div>
+        <a href="{% url 'comptabilite:tiers_update' tiers.pk %}" class="btn btn-warning"><i class="bi bi-pencil me-1"></i>Modifier</a>
+        <a href="{% url 'comptabilite:tiers_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><h6 class="mb-0">Informations</h6></div>
+            <div class="card-body">
+                <p><strong>Code:</strong> {{ tiers.code }}</p>
+                <p><strong>Type:</strong> {{ tiers.get_type_tiers_display }}</p>
+                <p><strong>NIF:</strong> {{ tiers.nif|default:"-" }}</p>
+                <p><strong>Téléphone:</strong> {{ tiers.telephone|default:"-" }}</p>
+                <p><strong>Email:</strong> {{ tiers.email|default:"-" }}</p>
+                <p><strong>Adresse:</strong> {{ tiers.adresse|default:"-" }}</p>
+                <hr>
+                <p><strong>Solde:</strong> <span class="fs-5">{{ tiers.solde|floatformat:0 }} GNF</span></p>
+                <p><strong>Plafond crédit:</strong> {{ tiers.plafond_credit|floatformat:0 }} GNF</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><h6 class="mb-0">Dernières factures</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>N°</th><th>Date</th><th>Type</th><th class="text-end">Montant</th><th>Statut</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for f in factures %}
+                        <tr>
+                            <td><a href="{% url 'comptabilite:facture_detail' f.pk %}">{{ f.numero }}</a></td>
+                            <td>{{ f.date_facture|date:"d/m/Y" }}</td>
+                            <td>{{ f.get_type_facture_display }}</td>
+                            <td class="text-end">{{ f.montant_ttc|floatformat:0 }} GNF</td>
+                            <td><span class="badge bg-{% if f.statut == 'payee' %}success{% elif f.statut == 'validee' %}primary{% else %}secondary{% endif %}">{{ f.get_statut_display }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center py-4 text-muted">Aucune facture</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

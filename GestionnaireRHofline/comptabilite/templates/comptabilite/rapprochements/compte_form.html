@@ -1,0 +1,196 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Nouveau Compte Bancaire" %} - {{ block.super }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-university text-primary"></i>
+                        {% trans "Nouveau Compte Bancaire" %}
+                    </h1>
+                    <p class="text-muted mb-0">{% trans "Créer un nouveau compte bancaire" %}</p>
+                </div>
+                <div>
+                    <a href="{% url 'comptabilite:compte-bancaire-list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> {% trans "Retour à la liste" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit text-primary"></i>
+                        {% trans "Informations du compte" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">
+                                    {% trans "Code du compte" %} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.code.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.banque.id_for_label }}" class="form-label">
+                                    {% trans "Banque" %} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.banque }}
+                                {% if form.banque.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.banque.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.libelle.id_for_label }}" class="form-label">
+                                {% trans "Libellé" %} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.libelle }}
+                            {% if form.libelle.errors %}
+                                <div class="text-danger small">
+                                    {{ form.libelle.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.iban.id_for_label }}" class="form-label">
+                                    {% trans "IBAN" %}
+                                </label>
+                                {{ form.iban }}
+                                {% if form.iban.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.iban.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.bic.id_for_label }}" class="form-label">
+                                    {% trans "BIC/SWIFT" %}
+                                </label>
+                                {{ form.bic }}
+                                {% if form.bic.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.bic.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.solde_initial.id_for_label }}" class="form-label">
+                                    {% trans "Solde initial" %} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.solde_initial }}
+                                {% if form.solde_initial.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.solde_initial.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.compte_comptable.id_for_label }}" class="form-label">
+                                    {% trans "Compte comptable associé" %}
+                                </label>
+                                {{ form.compte_comptable }}
+                                {% if form.compte_comptable.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.compte_comptable.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.est_actif }}
+                                <label class="form-check-label" for="{{ form.est_actif.id_for_label }}">
+                                    {% trans "Compte actif" %}
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:compte-bancaire-list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> {% trans "Annuler" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> {% trans "Enregistrer" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aide -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle text-info"></i>
+                        {% trans "Aide" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">{% trans "Code du compte" %}</h6>
+                        <p class="small text-muted">
+                            {% trans "Code unique pour identifier le compte bancaire." %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">{% trans "Solde initial" %}</h6>
+                        <p class="small text-muted">
+                            {% trans "Solde du compte à la date de création." %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">{% trans "IBAN" %}</h6>
+                        <p class="small text-muted">
+                            {% trans "Numéro IBAN international du compte." %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">{% trans "BIC/SWIFT" %}</h6>
+                        <p class="small text-muted">
+                            {% trans "Code d'identification bancaire." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

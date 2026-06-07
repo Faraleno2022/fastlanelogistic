@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Créer une Formation - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-book"></i> Créer une Formation</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'formation:catalogue' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour au catalogue
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Informations générales -->
+            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informations Générales</h5>
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <label for="intitule" class="form-label">Intitulé de la Formation <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="intitule" name="intitule" required placeholder="Ex: Formation en Management d'équipe">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Options</label>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="actif" name="actif" checked>
+                        <label class="form-check-label" for="actif">Formation active</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="publiee" name="publiee">
+                        <label class="form-check-label" for="publiee"><i class="bi bi-globe text-primary"></i> Publier sur la page d'accueil</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="type_formation" class="form-label">Type de Formation <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="type_formation" name="type_formation" list="types_formation_list" required placeholder="Sélectionner ou saisir...">
+                    <datalist id="types_formation_list">
+                        <option value="interne">Interne</option>
+                        <option value="externe">Externe</option>
+                        <option value="en_ligne">En ligne</option>
+                        <option value="certifiante">Certifiante</option>
+                    </datalist>
+                    <small class="text-muted">Choisissez dans la liste ou saisissez un nouveau type</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="domaine" class="form-label">Domaine <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="domaine" name="domaine" list="domaines_list" required placeholder="Sélectionner ou saisir...">
+                    <datalist id="domaines_list">
+                        <option value="technique">Technique</option>
+                        <option value="management">Management</option>
+                        <option value="securite">Sécurité</option>
+                        <option value="informatique">Informatique</option>
+                        <option value="langues">Langues</option>
+                        <option value="soft_skills">Soft Skills</option>
+                        <option value="reglementaire">Réglementaire</option>
+                    </datalist>
+                    <small class="text-muted">Choisissez dans la liste ou saisissez un nouveau domaine</small>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Description -->
+            <h5 class="mb-3"><i class="bi bi-file-text"></i> Description</h5>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description de la Formation</label>
+                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Décrivez brièvement la formation..."></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="objectifs" class="form-label">Objectifs Pédagogiques</label>
+                <textarea class="form-control" id="objectifs" name="objectifs" rows="3" placeholder="Listez les objectifs de la formation..."></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="contenu" class="form-label">Contenu du Programme</label>
+                <textarea class="form-control" id="contenu" name="contenu" rows="4" placeholder="Détaillez le contenu de la formation..."></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="prerequis" class="form-label">Prérequis</label>
+                <textarea class="form-control" id="prerequis" name="prerequis" rows="2" placeholder="Indiquez les prérequis nécessaires..."></textarea>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Durée et Coût -->
+            <h5 class="mb-3"><i class="bi bi-clock"></i> Durée et Coût</h5>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="duree_jours" class="form-label">Durée en Jours <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="duree_jours" name="duree_jours" min="1" required placeholder="Ex: 3">
+                </div>
+                <div class="col-md-4">
+                    <label for="duree_heures" class="form-label">Durée en Heures <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="duree_heures" name="duree_heures" min="1" required placeholder="Ex: 21">
+                </div>
+                <div class="col-md-4">
+                    <label for="cout" class="form-label">Coût Unitaire (GNF)</label>
+                    <input type="number" class="form-control" id="cout" name="cout" step="1000" placeholder="Ex: 500000">
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Organisme -->
+            <h5 class="mb-3"><i class="bi bi-building"></i> Organisme Formateur</h5>
+            <div class="mb-3">
+                <label for="organisme" class="form-label">Nom de l'Organisme ou du Formateur</label>
+                <input type="text" class="form-control" id="organisme" name="organisme" placeholder="Ex: Centre de Formation ABC">
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Image -->
+            <h5 class="mb-3"><i class="bi bi-image"></i> Image de Présentation</h5>
+            <div class="mb-3">
+                <label for="image" class="form-label">Image de la formation</label>
+                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                <small class="text-muted">Formats acceptés : JPG, PNG, GIF. Cette image sera affichée sur la page d'accueil si la formation est publiée.</small>
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'formation:catalogue' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Créer la Formation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <i class="bi bi-info-circle"></i> <strong>Note :</strong> Un code unique sera généré automatiquement (FORM-XXX).
+</div>
+
+<!-- Aide -->
+<div class="card mt-3">
+    <div class="card-header bg-light">
+        <h6 class="mb-0"><i class="bi bi-question-circle"></i> Aide</h6>
+    </div>
+    <div class="card-body">
+        <h6>Types de Formation :</h6>
+        <ul>
+            <li><strong>Interne</strong> : Formation dispensée en interne par vos formateurs</li>
+            <li><strong>Externe</strong> : Formation dispensée par un organisme externe</li>
+            <li><strong>En ligne</strong> : Formation e-learning ou à distance</li>
+            <li><strong>Certifiante</strong> : Formation délivrant une certification</li>
+        </ul>
+        
+        <h6>Domaines :</h6>
+        <ul>
+            <li><strong>Technique</strong> : Compétences techniques métier</li>
+            <li><strong>Management</strong> : Leadership, gestion d'équipe</li>
+            <li><strong>Sécurité</strong> : HSE, sécurité au travail</li>
+            <li><strong>Informatique</strong> : IT, logiciels, bureautique</li>
+            <li><strong>Langues</strong> : Langues étrangères</li>
+            <li><strong>Soft Skills</strong> : Communication, travail d'équipe</li>
+            <li><strong>Réglementaire</strong> : Conformité, réglementation</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+

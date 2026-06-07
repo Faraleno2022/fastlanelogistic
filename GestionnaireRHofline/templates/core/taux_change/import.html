@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Importer Taux de Change{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="#">Paramètres</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'core:liste_taux_change' %}">Taux de change</a></li>
+        <li class="breadcrumb-item active">Importer</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Importer des taux de change depuis un fichier CSV</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="csv_file" class="form-label">Fichier CSV <span class="text-danger">*</span></label>
+                            <input type="file" name="csv_file" id="csv_file" class="form-control" 
+                                   accept=".csv" required>
+                            <div class="form-text">
+                                Le fichier doit être au format CSV avec les colonnes suivantes
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">Format du fichier CSV</h6>
+                            <p class="mb-2">Le fichier doit contenir les colonnes suivantes (dans cet ordre) :</p>
+                            <ul class="mb-2">
+                                <li><strong>devise_source</strong> : Code de la devise source (ex: USD, EUR)</li>
+                                <li><strong>devise_cible</strong> : Code de la devise cible (ex: GNF)</li>
+                                <li><strong>taux</strong> : Taux de change (nombre décimal)</li>
+                                <li><strong>date_taux</strong> : Date au format YYYY-MM-DD</li>
+                                <li><strong>source</strong> (optionnel) : Source du taux (ex: BCRG)</li>
+                            </ul>
+                            <p class="mb-0">La première ligne doit contenir les noms des colonnes.</p>
+                        </div>
+                        
+                        <div class="card bg-light mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Exemple de fichier CSV</h6>
+                            </div>
+                            <div class="card-body">
+                                <pre class="mb-0">devise_source,devise_cible,taux,date_taux,source
+USD,GNF,8600.00,2024-01-15,BCRG
+EUR,GNF,9500.00,2024-01-15,BCRG
+USD,EUR,0.905263,2024-01-15,Marché international
+XOF,GNF,14.50,2024-01-15,BCRG</pre>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">Notes importantes</h6>
+                            <ul class="mb-0">
+                                <li>Les devises doivent exister dans le système avant l'import</li>
+                                <li>Si un taux existe déjà pour une combinaison devise/date, il sera mis à jour</li>
+                                <li>Les erreurs d'import seront affichées ligne par ligne</li>
+                                <li>L'encodage du fichier doit être UTF-8</li>
+                            </ul>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'core:liste_taux_change' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-upload"></i> Importer le fichier
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Lien pour télécharger un modèle -->
+                    <div class="mt-4 text-center">
+                        <p class="text-muted">
+                            Besoin d'un modèle ? 
+                            <a href="{% url 'core:exporter_taux_change' %}" class="link-primary">
+                                Télécharger un exemple avec les taux actuels
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

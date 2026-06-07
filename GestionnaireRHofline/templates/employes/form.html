@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+{% if object %}Modifier employé{% else %}Nouvel employé{% endif %} - Gestionnaire RH Guinée
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .nav-tabs .nav-link {
+        color: #495057;
+    }
+    .nav-tabs .nav-link.active {
+        color: #EF7707;
+        font-weight: 600;
+    }
+    .tab-content {
+        padding: 20px;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+    }
+    .required-field::after {
+        content: " *";
+        color: red;
+    }
+    /* Styles pour la capture caméra */
+    #camera-container {
+        display: none;
+        margin-top: 10px;
+    }
+    #camera-preview {
+        width: 100%;
+        max-width: 320px;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+    }
+    #camera-canvas {
+        display: none;
+    }
+    .camera-controls {
+        margin-top: 10px;
+    }
+    .photo-preview-container {
+        margin-top: 10px;
+    }
+    .photo-preview-container img {
+        max-width: 200px;
+        border-radius: 8px;
+        border: 2px solid #EF7707;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person-{% if object %}gear{% else %}plus{% endif %}"></i>
+        {% if object %}
+            Modifier l'employé : {{ object.nom }} {{ object.prenoms }}
+        {% else %}
+            Nouvel employé
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'employes:list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-person"></i> 
+                    Informations de l'employé
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Information :</strong> Les champs marqués d'un astérisque (<span class="text-danger">*</span>) sont obligatoires.
+                    Le matricule sera généré automatiquement si vous le laissez vide.
+                </div>
+
+                <form method="post" enctype="multipart/form-data" id="employe-form">
+                    {% csrf_token %}
+                    {% crispy form %}
+                    
+                    <hr>
+                    <div class="d-flex justify-content-between mb-5">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save"></i> Enregistrer
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg" onclick="window.history.back()">
+                            <i class="bi bi-x-lg"></i> Annuler
+                        </button>
+                    </div>
+                </form>
+
+<!-- Barre de sauvegarde fixe en bas -->
+<div class="fixed-bottom bg-white border-top shadow-lg py-2 px-4 d-flex justify-content-between align-items-center" style="z-index: 1020;">
+    <span class="text-muted">
+        <i class="bi bi-file-earmark-person"></i>
+        {% if object %}{{ object.matricule }} - {{ object.nom }} {{ object.prenoms }}{% else %}Nouvel employé{% endif %}
+    </span>
+    <div>
+        <a href="{% url 'employes:list' %}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <button type="submit" form="employe-form" class="btn btn-primary">
+            <i class="bi bi-save"></i> Enregistrer
+        </button>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Retirer la classe d'erreur quand l'utilisateur corrige
+    $('input, select').on('change', function() {
+        if ($(this).val()) {
+            $(this).removeClass('is-invalid');
+        }
+    });
+    
+    // Gestion du mode de paiement
+    $('#id_mode_paiement').on('change', function() {
+        let mode = $(this).val();
+        
+        // Afficher/masquer les champs selon le mode
+        if (mode === 'Virement') {
+            $('.field-nom_banque, .field-agence_banque, .field-numero_compte, .field-rib').show();
+            $('.field-operateur_mobile_money, .field-numero_mobile_money').hide();
+        } else if (mode === 'Mobile Money') {
+            $('.field-nom_banque, .field-agence_banque, .field-numero_compte, .field-rib').hide();
+            $('.field-operateur_mobile_money, .field-numero_mobile_money').show();
+        } else {
+            $('.field-nom_banque, .field-agence_banque, .field-numero_compte, .field-rib').hide();
+            $('.field-operateur_mobile_money, .field-numero_mobile_money').hide();
+        }
+    }).trigger('change');
+    
+    // Calcul automatique de l'âge
+    $('#id_date_naissance').on('change', function() {
+        let dateNaissance = new Date($(this).val());
+        let today = new Date();
+        let age = today.getFullYear() - dateNaissance.getFullYear();
+        let m = today.getMonth() - dateNaissance.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dateNaissance.getDate())) {
+            age--;
+        }
+        
+        if (age > 0 && age < 120) {
+            $(this).after('<small class="form-text text-muted ms-2">Âge: ' + age + ' ans</small>');
+        }
+    });
+    
+    // Validation du numéro CNSS (format guinéen)
+    $('#id_num_cnss_individuel').on('blur', function() {
+        let cnss = $(this).val();
+        if (cnss && cnss.length < 10) {
+            $(this).addClass('is-invalid');
+            $(this).after('<div class="invalid-feedback">Le numéro CNSS doit contenir au moins 10 caractères</div>');
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        }
+    });
+    
+    // Preview de la photo
+    $('#id_photo').on('change', function(e) {
+        let file = e.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                $('.photo-preview-container').remove();
+                let preview = '<div class="photo-preview-container mt-2"><img src="' + e.target.result + '" class="img-thumbnail"></div>';
+                $('#id_photo').closest('.mb-3, .form-group').append(preview);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // ===== CAPTURE PHOTO VIA CAMÉRA =====
+    let cameraStream = null;
+    
+    // Ajouter le bouton caméra après le champ photo
+    const cameraHTML = `
+        <div class="mt-2">
+            <button type="button" id="btn-open-camera" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-camera"></i> Prendre une photo
+            </button>
+        </div>
+        <div id="camera-container">
+            <video id="camera-preview" autoplay playsinline></video>
+            <canvas id="camera-canvas"></canvas>
+            <div class="camera-controls">
+                <button type="button" id="btn-capture" class="btn btn-success btn-sm">
+                    <i class="bi bi-camera-fill"></i> Capturer
+                </button>
+                <button type="button" id="btn-close-camera" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-x-lg"></i> Fermer
+                </button>
+            </div>
+        </div>
+    `;
+    $('#id_photo').closest('.mb-3, .form-group').append(cameraHTML);
+    
+    // Ouvrir la caméra
+    $('#btn-open-camera').on('click', async function() {
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+            });
+            $('#camera-preview').get(0).srcObject = cameraStream;
+            $('#camera-container').slideDown();
+            $(this).hide();
+        } catch (err) {
+            alert('Impossible d\'accéder à la caméra. Vérifiez les permissions.');
+            console.error('Erreur caméra:', err);
+        }
+    });
+    
+    // Capturer la photo
+    $('#btn-capture').on('click', function() {
+        const video = $('#camera-preview').get(0);
+        const canvas = $('#camera-canvas').get(0);
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        
+        // Convertir en fichier
+        canvas.toBlob(function(blob) {
+            const file = new File([blob], 'photo_employe.jpg', { type: 'image/jpeg' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            $('#id_photo').get(0).files = dataTransfer.files;
+            
+            // Afficher preview
+            $('.photo-preview-container').remove();
+            const preview = `<div class="photo-preview-container mt-2"><img src="${canvas.toDataURL('image/jpeg')}" class="img-thumbnail"></div>`;
+            $('#id_photo').closest('.mb-3, .form-group').append(preview);
+            
+            // Fermer la caméra
+            $('#btn-close-camera').click();
+        }, 'image/jpeg', 0.9);
+    });
+    
+    // Fermer la caméra
+    $('#btn-close-camera').on('click', function() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+        $('#camera-container').slideUp();
+        $('#btn-open-camera').show();
+    });
+    
+    // Confirmation avant annulation
+    $('button[name="cancel"]').on('click', function(e) {
+        if (!confirm('Êtes-vous sûr de vouloir annuler ? Les modifications non enregistrées seront perdues.')) {
+            e.preventDefault();
+        }
+    });
+    
+});
+</script>
+{% endblock %}
+

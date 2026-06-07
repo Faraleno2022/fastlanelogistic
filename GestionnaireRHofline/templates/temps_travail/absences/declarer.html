@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Déclarer une Absence{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'temps_travail:liste_absences' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-user-times me-2"></i>Déclarer une Absence</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="employe" class="form-label">Employé *</label>
+                            <select class="form-select" id="employe" name="employe" required>
+                                <option value="">Sélectionner un employé</option>
+                                {% for emp in employes %}
+                                <option value="{{ emp.id }}">{{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="type_absence" class="form-label">Type d'absence *</label>
+                            <select class="form-select" id="type_absence" name="type_absence" required>
+                                {% for code, libelle in types_absence %}
+                                <option value="{{ code }}">{{ libelle }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date_absence" class="form-label">Date de l'absence *</label>
+                                <input type="date" class="form-control" id="date_absence" name="date_absence" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="duree_jours" class="form-label">Durée (jours) *</label>
+                                <input type="number" class="form-control" id="duree_jours" name="duree_jours" 
+                                       value="1" min="0.5" step="0.5" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observations" class="form-label">Observations</label>
+                            <textarea class="form-control" id="observations" name="observations" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'temps_travail:liste_absences' %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Droits légaux (Code du Travail)</h6>
+                </div>
+                <div class="card-body small">
+                    <table class="table table-sm mb-0">
+                        <tr><td>Mariage</td><td class="text-end">4 jours</td></tr>
+                        <tr><td>Naissance enfant</td><td class="text-end">3 jours</td></tr>
+                        <tr><td>Décès famille</td><td class="text-end">4 jours</td></tr>
+                        <tr><td>Maternité</td><td class="text-end">14 semaines</td></tr>
+                        <tr><td>Paternité</td><td class="text-end">3 jours</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Retenue sur salaire</h6>
+                </div>
+                <div class="card-body small">
+                    <p>Une retenue sur salaire sera automatiquement appliquée pour:</p>
+                    <ul class="mb-0">
+                        <li>Absence injustifiée</li>
+                        <li>Mise à pied</li>
+                        <li>Grève</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

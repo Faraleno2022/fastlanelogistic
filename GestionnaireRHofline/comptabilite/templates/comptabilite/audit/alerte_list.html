@@ -1,0 +1,149 @@
+{% extends "comptabilite/base_module.html" %}
+{% load static %}
+
+{% block title %}Alertes de Non-Conformité{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0">Alertes de Non-Conformité</h1>
+        <p class="text-muted mt-2">Suivi des anomalies identifiées lors des audits</p>
+    </div>
+    <a href="{% url 'comptabilite:alerte_create' %}" class="btn btn-danger">
+        <i class="bi bi-exclamation-circle"></i> Nouvelle Alerte
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Sévérité</label>
+                <select name="severite" class="form-control">
+                    <option value="">--- Toutes ---</option>
+                    <option value="MINEURE" {% if request.GET.severite == 'MINEURE' %}selected{% endif %}>Mineure</option>
+                    <option value="MAJEURE" {% if request.GET.severite == 'MAJEURE' %}selected{% endif %}>Majeure</option>
+                    <option value="CRITIQUE" {% if request.GET.severite == 'CRITIQUE' %}selected{% endif %}>Critique</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Statut</label>
+                <select name="statut" class="form-control">
+                    <option value="">--- Tous ---</option>
+                    <option value="DETECTEE" {% if request.GET.statut == 'DETECTEE' %}selected{% endif %}>Détectée</option>
+                    <option value="EN_CORRECTION" {% if request.GET.statut == 'EN_CORRECTION' %}selected{% endif %}>En correction</option>
+                    <option value="CORRIGEE" {% if request.GET.statut == 'CORRIGEE' %}selected{% endif %}>Corrigée</option>
+                    <option value="VERIFIEE" {% if request.GET.statut == 'VERIFIEE' %}selected{% endif %}>Vérifiée</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Domaine</label>
+                <input type="text" name="domaine" class="form-control" placeholder="TVA, Comptabilité..." value="{{ request.GET.domaine }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="opacity: 0;">Bouton</label>
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tableau des alertes -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Numéro</th>
+                    <th>Titre</th>
+                    <th>Sévérité</th>
+                    <th>Statut</th>
+                    <th>Domaine</th>
+                    <th>Corr. Prévue</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alerte in object_list %}
+                <tr>
+                    <td>
+                        <code class="bg-light px-2 py-1">{{ alerte.numero_alerte }}</code>
+                    </td>
+                    <td>
+                        <strong>{{ alerte.titre }}</strong>
+                        {% if alerte.description %}
+                        <br><small class="text-muted">{{ alerte.description|truncatewords:10 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ alerte.get_severite_badge }}">
+                            {{ alerte.get_severite_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ alerte.get_statut_badge }}">
+                            {{ alerte.get_statut_display }}
+                        </span>
+                    </td>
+                    <td>{{ alerte.domaine }}</td>
+                    <td>
+                        {% if alerte.date_correction_prevue %}
+                        {{ alerte.date_correction_prevue|date:"d/m/Y" }}
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'comptabilite:alerte_update' alerte.pk %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        Aucune alerte trouvée
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination" class="mt-4">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">Première</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédente</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item disabled">
+            <span class="page-link">
+                Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivante</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernière</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

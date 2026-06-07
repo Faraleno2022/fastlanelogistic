@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .header { background: linear-gradient(to right, #ce1126, #fcd116, #009a49); padding: 20px; text-align: center; }
+        .header h1 { color: white; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .content { padding: 20px; }
+        .info-box { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .montant { font-size: 24px; color: #28a745; font-weight: bold; }
+        .footer { background: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Bulletin de Paie</h1>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour <strong>{{ employe.prenoms }} {{ employe.nom }}</strong>,</p>
+        
+        <p>Veuillez trouver ci-joint votre bulletin de paie pour la période <strong>{{ bulletin.periode }}</strong>.</p>
+        
+        <div class="info-box">
+            <p><strong>Récapitulatif :</strong></p>
+            <ul>
+                <li>Numéro bulletin : {{ bulletin.numero_bulletin }}</li>
+                <li>Salaire brut : {{ bulletin.salaire_brut|floatformat:0 }} GNF</li>
+                <li>Retenues : {{ bulletin.cnss_employe|floatformat:0 }} GNF (CNSS) + {{ bulletin.irg|floatformat:0 }} GNF (IRG)</li>
+            </ul>
+            <p class="montant">Net à payer : {{ bulletin.net_a_payer|floatformat:0 }} GNF</p>
+        </div>
+        
+        <p>Ce bulletin est conforme à la législation guinéenne en vigueur.</p>
+        
+        <p>Cordialement,<br>
+        <strong>Service des Ressources Humaines</strong><br>
+        {% if entreprise %}{{ entreprise.nom }}{% endif %}</p>
+    </div>
+    
+    <div class="footer">
+        <p>République de Guinée - Travail • Justice • Solidarité</p>
+        <p>Ce message et ses pièces jointes sont confidentiels.</p>
+    </div>
+</body>
+</html>

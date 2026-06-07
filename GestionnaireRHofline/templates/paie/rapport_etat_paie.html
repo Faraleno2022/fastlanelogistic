@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}État de Paie — {{ mois_label }} {{ annee }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-table me-2 text-info"></i>État de Paie</h2>
+                <p class="text-muted mb-0">Récapitulatif mensuel détaillé — {{ mois_label }} {{ annee }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                {% if rows %}
+                <a href="{% url 'paie:rapport_etat_paie_excel' %}?{{ request.GET.urlencode }}"
+                   class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel me-1"></i>Export Excel
+                </a>
+                <a href="{% url 'paie:rapport_etat_paie_pdf' %}?{{ request.GET.urlencode }}"
+                   class="btn btn-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                </a>
+                {% endif %}
+                <a href="{% url 'paie:home' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <i class="fas fa-filter me-2"></i>Filtres
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Année</label>
+                    <select name="annee" class="form-select">
+                        {% for a in annees_dispo %}
+                        <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                        {% empty %}
+                        <option value="{{ annee }}" selected>{{ annee }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Mois</label>
+                    <select name="mois" class="form-select" required>
+                        {% for m in mois_liste %}
+                        <option value="{{ m }}" {% if mois == m|stringformat:"s" %}selected{% endif %}>
+                            {% if m == 1 %}Janvier{% elif m == 2 %}Février{% elif m == 3 %}Mars
+                            {% elif m == 4 %}Avril{% elif m == 5 %}Mai{% elif m == 6 %}Juin
+                            {% elif m == 7 %}Juillet{% elif m == 8 %}Août{% elif m == 9 %}Septembre
+                            {% elif m == 10 %}Octobre{% elif m == 11 %}Novembre{% else %}Décembre{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Service</label>
+                    <select name="service" class="form-select">
+                        <option value="">Tous les services</option>
+                        {% for s in services %}
+                        <option value="{{ s.pk }}" {% if service_id == s.pk|stringformat:"s" %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if rows %}
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-1">Effectif</h6>
+                    <h3 class="text-primary mb-0">{{ nb_employes }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-1">Total Brut</h6>
+                    <h5 class="text-success mb-0">{{ totaux.brut|floatformat:0|intcomma }} GNF</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-info">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-1">Total Net à Payer</h6>
+                    <h5 class="text-info mb-0">{{ totaux.net_a_payer|floatformat:0|intcomma }} GNF</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-1">Total Charges (RTS+CNSS+VF)</h6>
+                    <h5 class="text-warning mb-0">
+                        {% widthratio totaux.rts 1 1 as t_rts %}
+                        {% widthratio totaux.cnss 1 1 as t_cnss %}
+                        {% widthratio totaux.vf 1 1 as t_vf %}
+                        {{ totaux.rts|floatformat:0|intcomma }} GNF
+                    </h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau 24 colonnes -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between">
+            <span><i class="fas fa-table me-2"></i>Détail par employé — {{ nb_employes }} employés</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 70vh; overflow: auto;">
+                <table class="table table-sm table-bordered table-hover mb-0" style="font-size: 0.78rem;">
+                    <thead class="table-dark" style="position: sticky; top: 0; z-index: 2;">
+                        <tr>
+                            {% for h in headers %}
+                            <th class="text-center text-nowrap px-1" style="font-size: 0.7rem;">{{ h }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                        <tr>
+                            <td class="text-center">{{ row.num }}</td>
+                            <td class="text-nowrap">{{ row.profession }}</td>
+                            <td class="text-nowrap">{{ row.prenom }}</td>
+                            <td class="text-nowrap fw-bold">{{ row.nom }}</td>
+                            <td class="text-center">{{ row.matricule }}</td>
+                            <td class="text-end">{{ row.salaire_base|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ row.rts|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ row.cnss|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ row.vf|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ row.prime_discipline|floatformat:0|intcomma }}</td>
+                            <td class="text-center">{{ row.heures_sup|floatformat:1 }}</td>
+                            <td class="text-end">{{ row.montant_hs|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ row.cherte_vie|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ row.ind_transport|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ row.ind_logement|floatformat:0|intcomma }}</td>
+                            <td class="text-end fw-bold">{{ row.brut|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ row.salaire_net|floatformat:0|intcomma }}</td>
+                            <td class="text-center">{{ row.jours_mois }}</td>
+                            <td class="text-center">{{ row.jours_travailles }}</td>
+                            <td class="text-center">{{ row.dim_travailles }}</td>
+                            <td class="text-end">{{ row.paie_dim|floatformat:0|intcomma }}</td>
+                            <td class="text-center">{{ row.jours_repos }}</td>
+                            <td class="text-center {% if row.jours_absents > 0 %}text-danger fw-bold{% endif %}">{{ row.jours_absents }}</td>
+                            <td class="text-center">{{ row.feries_payes }}</td>
+                            <td class="text-end fw-bold text-success">{{ row.net_a_payer|floatformat:0|intcomma }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-secondary fw-bold" style="position: sticky; bottom: 0; z-index: 2;">
+                        <tr>
+                            <td colspan="5" class="text-center">TOTAUX</td>
+                            <td class="text-end">{{ totaux.salaire_base|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ totaux.rts|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ totaux.cnss|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ totaux.vf|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ totaux.prime_discipline|floatformat:0|intcomma }}</td>
+                            <td class="text-center">{{ totaux.heures_sup|floatformat:1 }}</td>
+                            <td class="text-end">{{ totaux.montant_hs|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ totaux.cherte_vie|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ totaux.ind_transport|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ totaux.ind_logement|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ totaux.brut|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ totaux.salaire_net|floatformat:0|intcomma }}</td>
+                            <td class="text-center">{{ totaux.jours_mois|floatformat:0 }}</td>
+                            <td class="text-center">{{ totaux.jours_travailles|floatformat:0 }}</td>
+                            <td class="text-center">{{ totaux.dim_travailles|floatformat:0 }}</td>
+                            <td class="text-end">{{ totaux.paie_dim|floatformat:0|intcomma }}</td>
+                            <td class="text-center">{{ totaux.jours_repos|floatformat:0 }}</td>
+                            <td class="text-center">{{ totaux.jours_absents|floatformat:0 }}</td>
+                            <td class="text-center">{{ totaux.feries_payes|floatformat:0 }}</td>
+                            <td class="text-end text-success">{{ totaux.net_a_payer|floatformat:0|intcomma }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center mt-4">
+        <i class="fas fa-info-circle me-2"></i>
+        Aucune donnée pour la période sélectionnée. Vérifiez qu'il existe des bulletins calculés pour ce mois.
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

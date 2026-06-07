@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}{% if modification %}Modifier{% else %}Ajouter{% endif %} registre{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">{% if modification %}Modifier registre{% else %}Nouveau registre{% endif %}</h1>
+    <a href="{% url 'core:registres_liste' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Type de registre *</label>
+                    <select name="type_registre" class="form-select" required>
+                        <option value="personnel" {% if registre.type_registre == 'personnel' %}selected{% endif %}>Registre du personnel</option>
+                        <option value="paie" {% if registre.type_registre == 'paie' %}selected{% endif %}>Registre de paie</option>
+                        <option value="conges" {% if registre.type_registre == 'conges' %}selected{% endif %}>Registre des congés</option>
+                        <option value="accidents" {% if registre.type_registre == 'accidents' %}selected{% endif %}>Registre des accidents</option>
+                        <option value="delegues" {% if registre.type_registre == 'delegues' %}selected{% endif %}>Registre des délégués</option>
+                        <option value="medical" {% if registre.type_registre == 'medical' %}selected{% endif %}>Registre médical</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Référence</label>
+                    <input type="text" name="reference" class="form-control" value="{{ registre.reference|default:'' }}">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Date d'ouverture</label>
+                    <input type="date" name="date_ouverture" class="form-control" value="{% if registre.date_ouverture %}{{ registre.date_ouverture|date:'Y-m-d' }}{% endif %}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Dernière mise à jour</label>
+                    <input type="date" name="derniere_mise_a_jour" class="form-control" value="{% if registre.derniere_mise_a_jour %}{{ registre.derniere_mise_a_jour|date:'Y-m-d' }}{% endif %}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Responsable</label>
+                    <input type="text" name="responsable" class="form-control" value="{{ registre.responsable|default:'' }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Emplacement</label>
+                <input type="text" name="emplacement" class="form-control" value="{{ registre.emplacement|default:'' }}">
+            </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input type="checkbox" name="conforme" class="form-check-input" id="conforme" {% if registre.conforme %}checked{% endif %}>
+                    <label class="form-check-label" for="conforme">Registre conforme</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Observations</label>
+                <textarea name="observations" class="form-control" rows="2">{{ registre.observations|default:'' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

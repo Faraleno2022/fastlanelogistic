@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Éléments de Salaire — Gestionnaire RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-cash-coin me-2"></i>Éléments de Salaire</h1>
+    <div class="btn-toolbar gap-2">
+        <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalAvancerDates">
+            <i class="bi bi-calendar-arrow-right"></i> Avancer au mois
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-plus-circle"></i> Définir salaire employé
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" style="max-height: 300px; overflow-y: auto;">
+                {% for emp in employes %}
+                <li>
+                    <a class="dropdown-item" href="{% url 'paie:elements_salaire_employe' emp.id %}">
+                        {{ emp.matricule }} — {{ emp.nom }} {{ emp.prenoms }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ── Barre de recherche + filtres ─────────────────────────────────── -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold small mb-1">
+                    <i class="bi bi-search me-1"></i>Rechercher un employé
+                </label>
+                <input type="text" name="q" class="form-control"
+                       placeholder="Nom, prénom ou matricule…"
+                       value="{{ q_nom }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small mb-1">Statut</label>
+                <select name="statut" class="form-select">
+                    <option value="tous"   {% if statut_f == 'tous'   %}selected{% endif %}>Tous les statuts</option>
+                    <option value="actif"  {% if statut_f == 'actif'  %}selected{% endif %}>Actifs</option>
+                    <option value="inactif"{% if statut_f == 'inactif'%}selected{% endif %}>Inactifs</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small mb-1">Par page</label>
+                <select name="par_page" class="form-select">
+                    <option value="10"  {% if par_page == 10  %}selected{% endif %}>10</option>
+                    <option value="20"  {% if par_page == 20  %}selected{% endif %}>20</option>
+                    <option value="50"  {% if par_page == 50  %}selected{% endif %}>50</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+                <a href="{% url 'paie:liste_elements_salaire' %}" class="btn btn-outline-secondary" title="Réinitialiser">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Résumé ─────────────────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted small">
+        <i class="bi bi-people me-1"></i>
+        <strong>{{ total_employes }}</strong> employé{{ total_employes|pluralize }} trouvé{{ total_employes|pluralize }}
+        {% if q_nom %} pour « <em>{{ q_nom }}</em> »{% endif %}
+        — Page <strong>{{ employes_page.number }}</strong> / <strong>{{ total_pages }}</strong>
+    </span>
+    <span class="text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        Cliquer sur une carte pour gérer les éléments de l'employé
+    </span>
+</div>
+
+<!-- ── Grille des employés ────────────────────────────────────────── -->
+<div class="row g-3">
+    {% for emp in employes_page %}
+    <div class="col-xl-4 col-md-6">
+        <div class="card h-100 shadow-sm border-0"
+             style="border-left: 4px solid {% if emp.statut_employe == 'actif' %}#EF7707{% else %}#6c757d{% endif %} !important; border-left-style: solid !important;">
+            <!-- En-tête employé -->
+            <div class="card-header d-flex justify-content-between align-items-start py-2"
+                 style="background: linear-gradient(135deg, {% if emp.statut_employe == 'actif' %}#EF7707 0%, #FF8C00{% else %}#6c757d 0%, #868e96{% endif %} 100%); color: #fff;">
+                <div>
+                    <div class="fw-bold">{{ emp.nom }} {{ emp.prenoms }}</div>
+                    <small class="opacity-75">{{ emp.matricule }}</small>
+                </div>
+                <div class="text-end">
+                    {% if emp.statut_employe == 'actif' %}
+                        <span class="badge bg-white text-success fw-semibold">Actif</span>
+                    {% else %}
+                        <span class="badge bg-white text-secondary fw-semibold">{{ emp.statut_employe|capfirst }}</span>
+                    {% endif %}
+                    <br>
+                    <small class="opacity-75">
+                        <i class="bi bi-layers me-1"></i>{{ emp.nb_elements_actifs }} élément{{ emp.nb_elements_actifs|pluralize }} actif{{ emp.nb_elements_actifs|pluralize }}
+                    </small>
+                </div>
+            </div>
+
+            <!-- Corps : aperçu des éléments -->
+            <div class="card-body p-0">
+                {% if emp.elements_actifs_liste %}
+                <ul class="list-group list-group-flush">
+                    {% for el in emp.elements_actifs_liste|slice:":4" %}
+                    <li class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-semibold small">{{ el.rubrique.libelle_rubrique }}</span>
+                            {% if el.rubrique.type_rubrique == 'gain' %}
+                                <span class="badge bg-success-subtle text-success ms-1" style="font-size:.65rem;">gain</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger ms-1" style="font-size:.65rem;">retenue</span>
+                            {% endif %}
+                        </div>
+                        <span class="text-end small text-muted">
+                            {% if el.montant %}
+                                <strong class="text-dark">{{ el.montant|floatformat:0|intcomma }}</strong> GNF
+                            {% elif el.taux %}
+                                {{ el.taux }}%
+                            {% else %}—{% endif %}
+                        </span>
+                    </li>
+                    {% endfor %}
+                    {% if emp.elements_actifs_liste|length > 4 %}
+                    <li class="list-group-item px-3 py-1 text-center text-muted small bg-light">
+                        <i class="bi bi-three-dots"></i>
+                        {{ emp.elements_actifs_liste|length|add:"-4" }} autre{{ emp.elements_actifs_liste|length|add:"-4"|pluralize }} élément{{ emp.elements_actifs_liste|length|add:"-4"|pluralize }}…
+                    </li>
+                    {% endif %}
+                </ul>
+                {% if emp.total_gains %}
+                <div class="px-3 py-2 border-top bg-light d-flex justify-content-between align-items-center">
+                    <small class="text-muted">Total brut estimé</small>
+                    <strong class="text-success">{{ emp.total_gains|floatformat:0|intcomma }} GNF</strong>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-3 d-block mb-1 opacity-50"></i>
+                    <small>Aucun élément de salaire actif</small>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Pied : actions -->
+            <div class="card-footer bg-transparent border-top-0 pt-0 pb-3 px-3">
+                <div class="d-grid gap-1">
+                    <a href="{% url 'paie:elements_salaire_employe' emp.id %}"
+                       class="btn btn-sm {% if emp.nb_elements_actifs > 0 %}btn-outline-primary{% else %}btn-primary{% endif %}">
+                        <i class="bi bi-eye me-1"></i>
+                        {% if emp.nb_elements_actifs > 0 %}Gérer les éléments{% else %}Définir le salaire{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center gap-3">
+            <i class="bi bi-info-circle fs-4"></i>
+            <div>
+                {% if q_nom %}
+                    Aucun employé trouvé pour « <strong>{{ q_nom }}</strong> ».
+                    <a href="{% url 'paie:liste_elements_salaire' %}">Réinitialiser la recherche</a>
+                {% else %}
+                    Aucun employé trouvé. Commencez par créer des employés dans
+                    <a href="{% url 'employes:list' %}">la gestion des employés</a>.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ── Pagination ─────────────────────────────────────────────────── -->
+{% if employes_page.has_other_pages %}
+<nav aria-label="Pagination employés" class="mt-4">
+    <ul class="pagination justify-content-center flex-wrap gap-1">
+        <!-- Première page -->
+        {% if employes_page.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1&q={{ q_nom }}&statut={{ statut_f }}&par_page={{ par_page }}" title="Première page">
+                <i class="bi bi-chevron-double-left"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ employes_page.previous_page_number }}&q={{ q_nom }}&statut={{ statut_f }}&par_page={{ par_page }}">
+                <i class="bi bi-chevron-left"></i> Précédent
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-left"></i></span></li>
+        <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i> Précédent</span></li>
+        {% endif %}
+
+        <!-- Pages numérotées (±2 autour de la page courante) -->
+        {% for i in employes_page.paginator.page_range %}
+            {% if i == employes_page.number %}
+                <li class="page-item active"><span class="page-link" style="background:#EF7707;border-color:#EF7707;">{{ i }}</span></li>
+            {% elif i >= employes_page.number|add:"-2" and i <= employes_page.number|add:"2" %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}&q={{ q_nom }}&statut={{ statut_f }}&par_page={{ par_page }}">{{ i }}</a>
+                </li>
+            {% elif i == 1 or i == employes_page.paginator.num_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}&q={{ q_nom }}&statut={{ statut_f }}&par_page={{ par_page }}">{{ i }}</a>
+                </li>
+            {% elif i == employes_page.number|add:"-3" or i == employes_page.number|add:"3" %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Suivant / Dernière -->
+        {% if employes_page.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ employes_page.next_page_number }}&q={{ q_nom }}&statut={{ statut_f }}&par_page={{ par_page }}">
+                Suivant <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ total_pages }}&q={{ q_nom }}&statut={{ statut_f }}&par_page={{ par_page }}" title="Dernière page">
+                <i class="bi bi-chevron-double-right"></i>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Suivant <i class="bi bi-chevron-right"></i></span></li>
+        <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-right"></i></span></li>
+        {% endif %}
+    </ul>
+    <p class="text-center text-muted small mt-1">
+        Page {{ employes_page.number }} sur {{ total_pages }}
+        ({{ total_employes }} employé{{ total_employes|pluralize }} au total)
+    </p>
+</nav>
+{% endif %}
+
+<!-- ── Modal : Avancer au mois ───────────────────────────────────── -->
+<div class="modal fade" id="modalAvancerDates" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning bg-opacity-10 border-warning">
+                <h5 class="modal-title">
+                    <i class="bi bi-calendar-arrow-right text-warning"></i> Avancer les dates au nouveau mois
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nouvelle date de début <span class="text-danger">*</span></label>
+                    <input type="date" id="adv_date_debut" class="form-control" required>
+                    <div class="form-text">Par défaut : 1er du mois prochain</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nouvelle date de fin <span class="text-muted fw-normal">(optionnel)</span></label>
+                    <input type="date" id="adv_date_fin" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Appliquer à</label>
+                    <select id="adv_employe" class="form-select">
+                        <option value="">Tous les employés</option>
+                        {% for emp in employes %}
+                        <option value="{{ emp.id }}">{{ emp.matricule }} — {{ emp.nom }} {{ emp.prenoms }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="adv_actif_seulement" checked>
+                    <label class="form-check-label" for="adv_actif_seulement">Éléments actifs seulement</label>
+                </div>
+                <div id="adv_resultat" class="alert d-none"></div>
+                {% csrf_token %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-warning" id="adv_btn_appliquer">
+                    <i class="bi bi-calendar-check"></i> Appliquer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const CSRF    = '{{ csrf_token }}';
+    const API_URL = "{% url 'paie:api_avancer_dates_elements' %}";
+
+    function premierJourMoisProchain() {
+        const now = new Date();
+        const y = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
+        const m = now.getMonth() === 11 ? 1 : now.getMonth() + 2;
+        return `${y}-${String(m).padStart(2,'0')}-01`;
+    }
+    function dernierJourMoisProchain() {
+        const now = new Date();
+        const y = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
+        const m = now.getMonth() === 11 ? 1 : now.getMonth() + 2;
+        return `${y}-${String(m).padStart(2,'0')}-${String(new Date(y,m,0).getDate()).padStart(2,'0')}`;
+    }
+
+    const modal = document.getElementById('modalAvancerDates');
+    if (modal) {
+        modal.addEventListener('show.bs.modal', () => {
+            document.getElementById('adv_date_debut').value = premierJourMoisProchain();
+            document.getElementById('adv_date_fin').value   = dernierJourMoisProchain();
+            document.getElementById('adv_resultat').className = 'alert d-none';
+        });
+    }
+
+    document.getElementById('adv_btn_appliquer')?.addEventListener('click', function () {
+        const dateDebut = document.getElementById('adv_date_debut').value;
+        const dateFin   = document.getElementById('adv_date_fin').value || null;
+        const employeId = document.getElementById('adv_employe').value  || null;
+        const actifSeul = document.getElementById('adv_actif_seulement').checked;
+        const elRes     = document.getElementById('adv_resultat');
+        const btn       = this;
+
+        if (!dateDebut) {
+            elRes.className = 'alert alert-danger';
+            elRes.textContent = 'Veuillez saisir une date de début.';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> En cours…';
+
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({
+                date_debut: dateDebut,
+                date_fin: dateFin,
+                employe_id: employeId ? parseInt(employeId) : null,
+                actif_seulement: actifSeul,
+            }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                elRes.className = 'alert alert-danger';
+                elRes.textContent = data.error;
+            } else {
+                elRes.className = 'alert alert-success';
+                elRes.innerHTML = `<i class="bi bi-check-circle me-1"></i> ${data.message}`;
+                setTimeout(() => location.reload(), 1500);
+            }
+        })
+        .catch(() => {
+            elRes.className = 'alert alert-danger';
+            elRes.textContent = 'Erreur réseau. Veuillez réessayer.';
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-calendar-check"></i> Appliquer';
+        });
+    });
+})();
+</script>
+{% endblock %}

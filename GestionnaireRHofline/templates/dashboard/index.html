@@ -1,0 +1,786 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Tableau de bord - Gestionnaire RH Guinée{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contrat-card {
+        border-radius: 10px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: default;
+    }
+    .contrat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
+    }
+    .contrat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .contrat-pct {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .progress-thin {
+        height: 6px;
+        border-radius: 3px;
+    }
+    .detail-table td, .detail-table th {
+        vertical-align: middle;
+    }
+    .badge-contrat {
+        font-size: 0.8rem;
+        padding: 0.35em 0.65em;
+    }
+    .service-payroll-table {
+        border: 1px solid #cbd5e1;
+        border-collapse: collapse;
+        min-width: 980px;
+    }
+    .service-payroll-table th,
+    .service-payroll-table td {
+        border: 1px solid #cbd5e1 !important;
+        vertical-align: middle;
+        padding: 0.65rem 0.75rem;
+    }
+    .service-payroll-table thead th {
+        background-color: #f1f5f9;
+        color: #1f2937;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-align: center;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .service-payroll-table tbody td {
+        text-align: center;
+        white-space: nowrap;
+    }
+    .service-payroll-table .service-name {
+        text-align: left;
+        min-width: 180px;
+        white-space: normal;
+    }
+    .service-payroll-table .amount-cell {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+    .service-payroll-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-speedometer2"></i> Tableau de bord</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-download"></i> Export
+            </button>
+            <a href="{% url 'dashboard:telecharger_manuel' %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-book"></i> Manuel d'utilisation
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtre période -->
+<form method="get" class="row g-2 align-items-end mb-3 p-3 bg-light rounded shadow-sm">
+    <div class="col-auto">
+        <label for="filtre-mois" class="form-label small mb-1 text-muted">
+            <i class="bi bi-calendar3"></i> Mois
+        </label>
+        <select name="mois" id="filtre-mois" class="form-select form-select-sm">
+            <option value="" {% if not mois_filtre %}selected{% endif %}>Tous les mois</option>
+            {% for num, nom in mois_labels %}
+                <option value="{{ num }}" {% if num == mois_filtre %}selected{% endif %}>{{ nom }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <label for="filtre-annee" class="form-label small mb-1 text-muted">
+            <i class="bi bi-calendar-event"></i> Année
+        </label>
+        <select name="annee" id="filtre-annee" class="form-select form-select-sm">
+            <option value="" {% if not annee_filtre %}selected{% endif %}>Toutes les années</option>
+            {% for an in annees_disponibles %}
+                <option value="{{ an }}" {% if an == annee_filtre %}selected{% endif %}>{{ an }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-primary">
+            <i class="bi bi-funnel"></i> Filtrer
+        </button>
+        <a href="{% url 'dashboard:index' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-counterclockwise"></i> Tout afficher
+        </a>
+    </div>
+</form>
+
+<!-- Cartes statistiques principales -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Effectif Total
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_employes }}</div>
+                        <small class="text-muted">
+                            <i class="bi bi-gender-male"></i> {{ employes_hommes }} H |
+                            <i class="bi bi-gender-female"></i> {{ employes_femmes }} F
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Salaire Brut
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ salaire_brut|floatformat:0|intcomma }} GNF
+                        </div>
+                        <small class="text-muted">{{ periode_label }}</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-currency-exchange fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Coût Employeur
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ masse_salariale|floatformat:0|intcomma }} GNF
+                        </div>
+                        <small class="text-muted">Brut + charges patronales · {{ periode_label }}</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-cash-stack fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Congés en cours
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ conges_en_cours }}</div>
+                        <small class="text-muted">
+                            <i class="bi bi-hourglass-split"></i> {{ conges_en_attente }} en attente
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-calendar-check fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Bulletins de paie
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ bulletins_calcules }}</div>
+                        <small class="text-muted">
+                            <i class="bi bi-check-circle text-success"></i> {{ bulletins_valides }} validé{{ bulletins_valides|pluralize }}
+                            {% if bulletins_en_attente > 0 %}
+                                · <span class="text-warning">{{ bulletins_en_attente }} en attente</span>
+                            {% endif %}
+                            · {{ periode_label }}
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-file-earmark-text fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Soldes de paie filtrés -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Net à payer
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ total_net_a_payer|floatformat:0|intcomma }} GNF
+                        </div>
+                        <small class="text-muted">{{ periode_label }}</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-wallet2 fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Cotisations & Taxes -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h5 class="mb-3"><i class="bi bi-bank"></i> Cotisations & Taxes ({{ periode_label }})</h5>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-primary shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">CNSS 5% (Employé)</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    {{ total_cnss_5|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">Part salariale</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-info shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">CNSS 18% (Employeur)</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    {{ total_cnss_18|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">Part patronale</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-success shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Déclaration sociale (CNSS 23%)</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    {{ total_declaration_sociale|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">Employé + Employeur</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-warning shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">RTS</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    {{ total_trs|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">Retenue sur Traitements et Salaires</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-danger shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">VF</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    {{ total_vf|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">Versement Forfaitaire</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-secondary shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">ONFPP</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    {{ total_onfpp|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">Contribution formation</small>
+            </div>
+        </div>
+    </div>
+
+    {% if total_employes < 30 %}
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-danger shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">TA</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    {{ total_ta|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">Taxe d'Apprentissage</small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-dark shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">DMU - Déclaration Mensuelle Unique</div>
+                <div class="h4 mb-0 font-weight-bold text-gray-800">
+                    {{ total_dmu|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">RTS + VF</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-primary shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">eTax</div>
+                <div class="h4 mb-0 font-weight-bold text-gray-800">
+                    {{ total_etax|floatformat:0|intcomma }} GNF
+                </div>
+                <small class="text-muted">RTS + VF</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risque fiscal + Répartition service -->
+<div class="row mb-4">
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="card shadow h-100 border-left-{{ risque_fiscal.badge }}">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-{{ risque_fiscal.badge }}">
+                    <i class="bi {{ risque_fiscal.icon }}"></i> Risque fiscal
+                </h6>
+                <span class="badge bg-{{ risque_fiscal.badge }}">{{ risque_fiscal.niveau }}</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div>
+                        <div class="h3 mb-0 font-weight-bold">{{ risque_fiscal.score }}/100</div>
+                        <small class="text-muted">{{ risque_fiscal.statut }} · {{ risque_fiscal.bulletins }} bulletin{{ risque_fiscal.bulletins|pluralize }}</small>
+                    </div>
+                    <i class="bi {{ risque_fiscal.icon }} fs-1 text-{{ risque_fiscal.badge }}"></i>
+                </div>
+                <div class="progress progress-thin mb-3">
+                    <div class="progress-bar bg-{{ risque_fiscal.badge }}" role="progressbar"
+                         style="width: {{ risque_fiscal.score }}%;"
+                         aria-valuenow="{{ risque_fiscal.score }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            {% for controle in risque_fiscal.controles %}
+                            <tr>
+                                <td>
+                                    {% if controle.ok %}
+                                        <i class="bi bi-check-circle text-success"></i>
+                                    {% else %}
+                                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                                    {% endif %}
+                                    {{ controle.nom }}
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-{% if controle.ok %}success{% else %}warning text-dark{% endif %}">
+                                        {{ controle.valeur }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-building"></i> Répartition paie par service
+                </h6>
+                <small class="text-muted">{{ periode_label }}</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm table-bordered detail-table service-payroll-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Eff.</th>
+                                <th>Brut</th>
+                                <th>Net</th>
+                                <th>CNSS 23%</th>
+                                <th>RTS</th>
+                                <th>VF</th>
+                                <th>ONFPP/TA</th>
+                                <th>Coût</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for service in repartition_service_paie %}
+                            <tr>
+                                <td class="service-name">
+                                    <strong>{{ service.nom }}</strong>
+                                    <div class="small text-muted">{{ service.hommes }} H · {{ service.femmes }} F</div>
+                                </td>
+                                <td>{{ service.effectif }}</td>
+                                <td class="amount-cell">{{ service.brut|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">{{ service.net|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">{{ service.cnss_23|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">{{ service.rts|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">{{ service.vf|floatformat:0|intcomma }}</td>
+                                <td class="amount-cell">
+                                    {% if total_employes >= 30 %}
+                                        {{ service.onfpp|floatformat:0|intcomma }}
+                                    {% else %}
+                                        {{ service.ta|floatformat:0|intcomma }}
+                                    {% endif %}
+                                </td>
+                                <td class="amount-cell"><strong>{{ service.masse_salariale|floatformat:0|intcomma }}</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">
+                                    Aucun bulletin calculé pour cette période.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertes -->
+{% if alertes %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h5><i class="bi bi-bell"></i> Alertes</h5>
+        {% for alerte in alertes %}
+        <div class="alert alert-{{ alerte.type }} alert-dismissible fade show" role="alert">
+            <i class="{{ alerte.icon }}"></i> {{ alerte.message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION CONTRATS — Classification détaillée
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h5 class="mb-3">
+            <i class="bi bi-file-earmark-text"></i> Répartition des contrats
+            <span class="badge bg-primary ms-2">{{ total_employes }} employé{{ total_employes|pluralize }}</span>
+        </h5>
+    </div>
+
+    <!-- Mini-cartes par type de contrat -->
+    {% for c in contrats_detail %}
+    <div class="col-xl-3 col-md-4 col-sm-6 mb-3">
+        <div class="card contrat-card shadow-sm h-100">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="contrat-icon me-3" style="background: {{ c.color }}20; color: {{ c.color }};">
+                        <i class="bi {{ c.icon }}"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 text-truncate" style="max-width: 140px;" title="{{ c.label }}">{{ c.code }}</h6>
+                            <span class="h5 mb-0 font-weight-bold" style="color: {{ c.color }};">{{ c.count }}</span>
+                        </div>
+                        <small class="text-muted">{{ c.label }}</small>
+                    </div>
+                </div>
+                <div class="progress progress-thin">
+                    <div class="progress-bar" role="progressbar"
+                         style="width: {{ c.pct }}%; background-color: {{ c.color }};"
+                         aria-valuenow="{{ c.pct }}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+                <div class="text-end mt-1">
+                    <span class="contrat-pct" style="color: {{ c.color }};">{{ c.pct }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Carte employés sans contrat -->
+    {% if contrats_sans > 0 %}
+    <div class="col-xl-3 col-md-4 col-sm-6 mb-3">
+        <div class="card contrat-card shadow-sm h-100 border-danger">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="contrat-icon me-3" style="background: #fee2e2; color: #dc2626;">
+                        <i class="bi bi-file-earmark-x"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Non défini</h6>
+                            <span class="h5 mb-0 font-weight-bold text-danger">{{ contrats_sans }}</span>
+                        </div>
+                        <small class="text-danger">Sans type de contrat</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Graphiques contrats + Tableau détaillé -->
+<div class="row mb-4">
+    <!-- Graphique Doughnut -->
+    <div class="col-xl-5 col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-pie-chart"></i> Répartition graphique
+                </h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <div style="max-width: 320px; width: 100%;">
+                    <canvas id="contratChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau détaillé -->
+    <div class="col-xl-7 col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-table"></i> Détail par type de contrat
+                </h6>
+                <a href="{% url 'employes:liste_contrats' %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-list-ul"></i> Voir tous
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover detail-table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Type</th>
+                                <th>Libellé complet</th>
+                                <th class="text-center">Effectif</th>
+                                <th class="text-center">%</th>
+                                <th>Répartition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in contrats_detail %}
+                            <tr>
+                                <td>
+                                    <span class="badge badge-contrat" style="background-color: {{ c.color }};">
+                                        <i class="bi {{ c.icon }} me-1"></i>{{ c.code }}
+                                    </span>
+                                </td>
+                                <td>{{ c.label }}</td>
+                                <td class="text-center">
+                                    <strong>{{ c.count }}</strong>
+                                </td>
+                                <td class="text-center">
+                                    <span class="contrat-pct" style="color: {{ c.color }};">{{ c.pct }}%</span>
+                                </td>
+                                <td style="min-width: 120px;">
+                                    <div class="progress progress-thin">
+                                        <div class="progress-bar" style="width: {{ c.pct }}%; background-color: {{ c.color }};"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if contrats_sans > 0 %}
+                            <tr class="table-danger">
+                                <td>
+                                    <span class="badge bg-danger badge-contrat">
+                                        <i class="bi bi-file-earmark-x me-1"></i>N/A
+                                    </span>
+                                </td>
+                                <td>Sans type de contrat</td>
+                                <td class="text-center"><strong>{{ contrats_sans }}</strong></td>
+                                <td class="text-center">—</td>
+                                <td>—</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <td colspan="2"><strong>TOTAL</strong></td>
+                                <td class="text-center"><strong>{{ total_employes }}</strong></td>
+                                <td class="text-center"><strong>100%</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employés en congé -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-calendar-x"></i> Employés en congé aujourd'hui
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if employes_en_conge %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Matricule</th>
+                                <th>Nom complet</th>
+                                <th>Service</th>
+                                <th>Type</th>
+                                <th>Période</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for conge in employes_en_conge %}
+                            <tr>
+                                <td>{{ conge.employe.matricule }}</td>
+                                <td>{{ conge.employe.nom }} {{ conge.employe.prenoms }}</td>
+                                <td>{{ conge.employe.service.nom_service|default:"-" }}</td>
+                                <td><span class="badge bg-info">{{ conge.type_conge }}</span></td>
+                                <td>{{ conge.date_debut|date:"d/m" }} - {{ conge.date_fin|date:"d/m" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Aucun employé en congé aujourd'hui</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accès rapides -->
+<div class="row">
+    <div class="col-12">
+        <h5 class="mb-3"><i class="bi bi-lightning"></i> Accès rapides</h5>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'employes:create' %}" class="btn btn-outline-primary w-100">
+            <i class="bi bi-person-plus"></i><br>Nouvel employé
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'temps_travail:creer_pointage' %}" class="btn btn-outline-success w-100">
+            <i class="bi bi-clock-history"></i><br>Saisir pointage
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'paie:liste_periodes' %}" class="btn btn-outline-warning w-100">
+            <i class="bi bi-calculator"></i><br>Gérer paie
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'dashboard:rapports' %}" class="btn btn-outline-info w-100">
+            <i class="bi bi-graph-up"></i><br>Voir rapports
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
+<script>
+// Données contrats depuis le contexte Django
+const contratLabels = [{% for c in contrats_actifs %}'{{ c.code }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+const contratData   = [{% for c in contrats_actifs %}{{ c.count }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+const contratColors = [{% for c in contrats_actifs %}'{{ c.color }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+const ctx = document.getElementById('contratChart');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: contratLabels,
+        datasets: [{
+            data: contratData,
+            backgroundColor: contratColors.map(c => c + 'CC'),
+            borderColor: contratColors,
+            borderWidth: 2,
+            hoverOffset: 8,
+        }]
+    },
+    options: {
+        responsive: true,
+        cutout: '55%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    font: { size: 12 }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                        return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Déclarations CVAE{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-file-earmark-ruled text-primary"></i> Déclarations CVAE
+            </h1>
+            <p class="text-muted mb-0">Gérez vos déclarations de Cotisation sur la Valeur Ajoutée des Entreprises.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:fiscalite_declaration_cvae_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle déclaration
+            </a>
+            <a href="{% url 'comptabilite:fiscalite_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Total CVAE</h6>
+                        <i class="bi bi-cash text-primary"></i>
+                    </div>
+                    <p class="display-6 fw-bold mb-0">{{ total_cvae|floatformat:0 }} GNF</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Déclarations</h6>
+                        <i class="bi bi-file-text text-info"></i>
+                    </div>
+                    <p class="display-6 fw-bold mb-0">{{ page_obj.paginator.count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if declarations %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Référence</th>
+                            <th>Année</th>
+                            <th>Statut</th>
+                            <th class="text-end">Valeur ajoutée</th>
+                            <th class="text-end">CVAE Nette</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for decl in declarations %}
+                        <tr>
+                            <td class="fw-semibold">{{ decl.reference }}</td>
+                            <td>{{ decl.annee }}</td>
+                            <td>
+                                {% if decl.statut == 'brouillon' %}
+                                <span class="badge bg-secondary">Brouillon</span>
+                                {% elif decl.statut == 'valide' %}
+                                <span class="badge bg-primary">Validé</span>
+                                {% elif decl.statut == 'depose' %}
+                                <span class="badge bg-success">Déposé</span>
+                                {% elif decl.statut == 'paye' %}
+                                <span class="badge bg-dark">Payé</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">{{ decl.valeur_ajoutee|floatformat:2 }}</td>
+                            <td class="text-end fw-semibold">{{ decl.cvae_nette|floatformat:2 }}</td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'comptabilite:fiscalite_declaration_cvae_detail' decl.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'comptabilite:fiscalite_declaration_cvae_update' decl.pk %}" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-file-earmark-ruled text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Aucune déclaration CVAE trouvée</h5>
+                <p class="text-muted mb-3">Créez votre première déclaration CVAE.</p>
+                <a href="{% url 'comptabilite:fiscalite_declaration_cvae_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nouvelle déclaration
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

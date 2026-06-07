@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}{% if modification %}Modifier{% else %}Ajouter{% endif %} document{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">{% if modification %}Modifier{% else %}Nouveau{% endif %} permis/visa - {{ expatrie.employe.nom_complet }}</h1>
+    <a href="{% url 'core:expatrie_detail' expatrie.id %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Type de document *</label>
+                    <select name="type_document" class="form-select" required>
+                        <option value="visa_travail" {% if permis.type_document == 'visa_travail' %}selected{% endif %}>Visa de travail</option>
+                        <option value="permis_travail" {% if permis.type_document == 'permis_travail' %}selected{% endif %}>Permis de travail</option>
+                        <option value="carte_sejour" {% if permis.type_document == 'carte_sejour' %}selected{% endif %}>Carte de séjour</option>
+                        <option value="passeport" {% if permis.type_document == 'passeport' %}selected{% endif %}>Passeport</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Numéro du document</label>
+                    <input type="text" name="numero_document" class="form-control" value="{{ permis.numero_document|default:'' }}">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Date d'émission</label>
+                    <input type="date" name="date_emission" class="form-control" value="{% if permis.date_emission %}{{ permis.date_emission|date:'Y-m-d' }}{% endif %}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date d'expiration</label>
+                    <input type="date" name="date_expiration" class="form-control" value="{% if permis.date_expiration %}{{ permis.date_expiration|date:'Y-m-d' }}{% endif %}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="en_cours" {% if permis.statut == 'en_cours' %}selected{% endif %}>En cours de validité</option>
+                        <option value="expire" {% if permis.statut == 'expire' %}selected{% endif %}>Expiré</option>
+                        <option value="en_renouvellement" {% if permis.statut == 'en_renouvellement' %}selected{% endif %}>En renouvellement</option>
+                        <option value="refuse" {% if permis.statut == 'refuse' %}selected{% endif %}>Refusé</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Autorité d'émission</label>
+                <input type="text" name="autorite_emission" class="form-control" value="{{ permis.autorite_emission|default:'' }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Observations</label>
+                <textarea name="notes" class="form-control" rows="2">{{ permis.observations|default:'' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

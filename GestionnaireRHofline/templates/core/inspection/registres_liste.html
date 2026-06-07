@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Registres obligatoires{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-journal-text"></i> Registres obligatoires</h1>
+    <div class="btn-group">
+        <a href="{% url 'core:registre_ajouter' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
+        <a href="{% url 'core:inspection_dashboard' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+    </div>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead><tr><th>Type</th><th>Référence</th><th>Responsable</th><th>Mise à jour</th><th>Statut</th><th></th></tr></thead>
+            <tbody>
+            {% for r in registres %}
+            <tr>
+                <td>{{ r.get_type_registre_display }}</td>
+                <td>{{ r.reference|default:"-" }}</td>
+                <td>{{ r.responsable|default:"-" }}</td>
+                <td>{{ r.derniere_mise_a_jour|date:"d/m/Y"|default:"-" }}</td>
+                <td><span class="badge bg-{% if r.conforme %}success{% else %}danger{% endif %}">{% if r.conforme %}Conforme{% else %}Non conforme{% endif %}</span></td>
+                <td><a href="{% url 'core:registre_modifier' r.id %}" class="btn btn-sm btn-outline-primary">Modifier</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">Aucun registre</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

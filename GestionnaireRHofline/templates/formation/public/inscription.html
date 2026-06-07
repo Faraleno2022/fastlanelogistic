@@ -1,0 +1,277 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - {{ formation.intitule }} - GestionnaireRH</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <style>
+        :root {
+            --orange-main: #EF7707;
+            --gray-dark: #212121;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+        }
+        .navbar-glass {
+            background: rgba(45, 45, 55, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        .hero-inscription {
+            background: linear-gradient(135deg, var(--orange-main), var(--gray-dark));
+            color: white;
+            padding: 80px 0 40px;
+        }
+        .card-form {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-top: -60px;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #333;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--orange-main);
+            box-shadow: 0 0 0 0.2rem rgba(239,119,7,0.15);
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, var(--orange-main), #ff8c00);
+            border: none;
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239,119,7,0.3);
+        }
+        .formation-summary {
+            background: linear-gradient(135deg, rgba(239,119,7,0.1), rgba(239,119,7,0.05));
+            border-radius: 16px;
+            padding: 25px;
+        }
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .summary-item i {
+            color: var(--orange-main);
+            width: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-glass">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'core:index' %}">
+                <span style="color: var(--orange-main);">Gestionnaire</span><span style="color: #fff;">RH</span>
+            </a>
+            <div class="ms-auto">
+                <a href="{% url 'core:login' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Connexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-inscription">
+        <div class="container">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb" style="--bs-breadcrumb-divider-color: rgba(255,255,255,0.5);">
+                    <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-white-50">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'formation:formation_public' formation.pk %}" class="text-white-50">{{ formation.intitule|truncatewords:3 }}</a></li>
+                    <li class="breadcrumb-item active text-white">Inscription</li>
+                </ol>
+            </nav>
+            <h1 class="display-6 fw-bold mb-2">Inscription à la formation</h1>
+            <p class="lead opacity-75 mb-0">{{ formation.intitule }}</p>
+        </div>
+    </section>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <section class="pb-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card card-form">
+                        <div class="card-body p-4 p-lg-5">
+                            <div class="row">
+                                <!-- Formulaire -->
+                                <div class="col-lg-7">
+                                    <h4 class="mb-4"><i class="bi bi-person-plus text-primary me-2"></i>Vos informations</h4>
+                                    
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="nom" class="form-label">Nom <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" id="nom" name="nom" required placeholder="Votre nom">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="prenom" class="form-label">Prénom <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" id="prenom" name="prenom" required placeholder="Votre prénom">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                                <input type="email" class="form-control" id="email" name="email" required placeholder="votre@email.com">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="telephone" class="form-label">Téléphone <span class="text-danger">*</span></label>
+                                                <input type="tel" class="form-control" id="telephone" name="telephone" required placeholder="+224 6XX XXX XXX">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="entreprise" class="form-label">Entreprise / Organisation</label>
+                                                <input type="text" class="form-control" id="entreprise" name="entreprise" placeholder="Nom de votre entreprise">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="fonction" class="form-label">Fonction / Poste</label>
+                                                <input type="text" class="form-control" id="fonction" name="fonction" placeholder="Votre fonction">
+                                            </div>
+                                        </div>
+                                        
+                                        {% if sessions %}
+                                        <div class="mb-3">
+                                            <label for="session" class="form-label">Session souhaitée</label>
+                                            <select class="form-select" id="session" name="session">
+                                                <option value="">-- Choisir une session (optionnel) --</option>
+                                                {% for session in sessions %}
+                                                <option value="{{ session.pk }}">
+                                                    {{ session.date_debut|date:"d/m/Y" }} au {{ session.date_fin|date:"d/m/Y" }}
+                                                    {% if session.lieu %} - {{ session.lieu }}{% endif %}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="mb-4">
+                                            <label for="motivation" class="form-label">Motivation / Commentaire</label>
+                                            <textarea class="form-control" id="motivation" name="motivation" rows="3" 
+                                                      placeholder="Décrivez brièvement vos attentes ou votre motivation pour cette formation..."></textarea>
+                                        </div>
+                                        
+                                        <div class="form-check mb-4">
+                                            <input class="form-check-input" type="checkbox" id="conditions" required>
+                                            <label class="form-check-label" for="conditions">
+                                                J'accepte que mes données soient utilisées pour le traitement de mon inscription <span class="text-danger">*</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="d-flex gap-3">
+                                            <a href="{% url 'formation:formation_public' formation.pk %}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-arrow-left me-1"></i> Retour
+                                            </a>
+                                            <button type="submit" class="btn btn-submit text-white flex-grow-1">
+                                                <i class="bi bi-check-circle me-2"></i>Confirmer mon inscription
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <!-- Résumé -->
+                                <div class="col-lg-5 mt-4 mt-lg-0">
+                                    <div class="formation-summary">
+                                        <h5 class="mb-4"><i class="bi bi-bookmark-check text-primary me-2"></i>Résumé de la formation</h5>
+                                        
+                                        <h6 class="fw-bold mb-3">{{ formation.intitule }}</h6>
+                                        
+                                        <div class="summary-item">
+                                            <i class="bi bi-clock"></i>
+                                            <span>{{ formation.duree_jours }} jour{{ formation.duree_jours|pluralize }} ({{ formation.duree_heures }}h)</span>
+                                        </div>
+                                        
+                                        <div class="summary-item">
+                                            <i class="bi bi-bookmark"></i>
+                                            <span>{{ formation.get_type_formation_display }}</span>
+                                        </div>
+                                        
+                                        <div class="summary-item">
+                                            <i class="bi bi-folder"></i>
+                                            <span>{{ formation.get_domaine_display }}</span>
+                                        </div>
+                                        
+                                        {% if formation.organisme_formateur %}
+                                        <div class="summary-item">
+                                            <i class="bi bi-building"></i>
+                                            <span>{{ formation.organisme_formateur }}</span>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <hr>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold">Tarif</span>
+                                            {% if formation.cout_unitaire %}
+                                            <span class="fs-5 fw-bold text-success">{{ formation.cout_unitaire|floatformat:0 }} GNF</span>
+                                            {% else %}
+                                            <span class="fs-5 fw-bold text-success">Gratuit</span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {% if formation.description %}
+                                        <hr>
+                                        <p class="small text-muted mb-0">{{ formation.description|truncatewords:30 }}</p>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mt-4 p-3 bg-light rounded-3">
+                                        <h6 class="mb-2"><i class="bi bi-question-circle text-info me-2"></i>Besoin d'aide ?</h6>
+                                        <p class="small text-muted mb-2">Contactez-nous pour toute question</p>
+                                        <a href="https://wa.me/224622613559?text=Bonjour, je souhaite avoir des informations sur la formation : {{ formation.intitule|urlencode }}" 
+                                           target="_blank" class="btn btn-sm btn-success w-100">
+                                            <i class="bi bi-whatsapp me-1"></i> Nous contacter
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">© 2024 GestionnaireRH - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+:root {
+    --icg-orange: #f97316;
+    --icg-dark: #121212;
+    --icg-darkgray: #1e1e1e;
+    --icg-text: #e0e0e0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--icg-dark);
+    color: var(--icg-text);
+    line-height: 1.6;
+}
+
+.hero {
+    min-height: 90vh;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),center/cover;
+    display: flex;
+    align-items: center;
+}
+
+.hero-content {
+    max-width: 800px;
+}
+
+h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.orange {
+    color: var(--icg-orange);
+}
+
+/* Styles des cartes de service */
+.service-section {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 2rem;
+    padding: 3rem;
+    margin: 2rem 0;
+    border-left: 4px solid var(--icg-orange);
+}
+
+.service-icon {
+    font-size: 2.5rem;
+    color: var(--icg-orange);
+}
+
+.expertise-list li {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.expertise-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    background-color: var(--icg-orange);
+    border-radius: 50%;
+}

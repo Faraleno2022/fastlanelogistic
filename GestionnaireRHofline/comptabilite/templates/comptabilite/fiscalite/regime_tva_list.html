@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Régimes TVA" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">{% trans "Régimes TVA" %}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'comptabilite:regime_tva_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> {% trans "Nouveau régime" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Tableau des régimes -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{% trans "Code" %}</th>
+                        <th>{% trans "Nom" %}</th>
+                        <th>{% trans "Type" %}</th>
+                        <th>{% trans "Nombre de taux" %}</th>
+                        <th>{% trans "Statut" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for regime in regimes %}
+                    <tr>
+                        <td><strong>{{ regime.code }}</strong></td>
+                        <td>{{ regime.nom }}</td>
+                        <td>{{ regime.get_type_regime_display }}</td>
+                        <td>{{ regime.taux.count }}</td>
+                        <td>
+                            {% if regime.actif %}
+                                <span class="badge bg-success">{% trans "Actif" %}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{% trans "Inactif" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'comptabilite:regime_tva_detail' pk=regime.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'comptabilite:regime_tva_update' pk=regime.id %}" 
+                               class="btn btn-sm btn-outline-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <p class="text-muted">{% trans "Aucun régime TVA" %}</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    {% trans "Précédente" %}
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    {% trans "Suivante" %}
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

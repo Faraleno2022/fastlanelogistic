@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-bg: #121212;
+        --secondary-bg: #1e1e1e;
+        --card-bg: #242424;
+        --accent-color: #ff6b00;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --error-color: #dc3545;
+    }
+
+    .login-container {
+        max-width: 400px;
+        margin: 5rem auto;
+        padding: 2rem;
+        background: var(--card-bg);
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        border-left: 4px solid var(--accent-color);
+    }
+
+    .login-title {
+        color: var(--accent-color);
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.8rem;
+        background: var(--secondary-bg);
+        color: var(--text-primary);
+        border: 1px solid var(--text-secondary);
+        border-radius: 5px;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 5px rgba(255, 107, 0, 0.5);
+    }
+
+    .form-button {
+        width: 100%;
+        padding: 0.8rem;
+        background-color: var(--accent-color);
+        color: var(--text-primary);
+        border: none;
+        border-radius: 5px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .form-button:hover {
+        background-color: #e05d00;
+    }
+
+    .error-message {
+        color: var(--error-color);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .login-links {
+        margin-top: 1.5rem;
+        text-align: center;
+    }
+
+    .login-links a {
+        color: var(--accent-color);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s;
+    }
+
+    .login-links a:hover {
+        color: #e05d00;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h2 class="login-title">Connexion</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="username" class="form-label">Nom d'utilisateur</label>
+            <input type="text" id="username" name="username" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="password" class="form-label">Mot de passe</label>
+            <input type="password" id="password" name="password" class="form-input" required>
+        </div>
+        <button type="submit" class="form-button">Se connecter</button>
+        {% if form.errors %}
+            <div class="error-message">
+                Nom d'utilisateur et/ou mot de passe incorrect(s).
+            </div>
+        {% endif %}
+        
+    </form>
+</div>
+{% endblock %}

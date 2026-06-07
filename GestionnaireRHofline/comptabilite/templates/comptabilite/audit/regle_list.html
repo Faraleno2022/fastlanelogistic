@@ -1,0 +1,151 @@
+{% extends "comptabilite/base_module.html" %}
+{% load static %}
+
+{% block title %}Règles de Conformité{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0">Règles de Conformité</h1>
+        <p class="text-muted mt-2">Ensemble des critères de conformité à vérifier</p>
+    </div>
+    <a href="{% url 'comptabilite:regle_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nouvelle Règle
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Module</label>
+                <select name="module" class="form-control">
+                    <option value="">--- Tous les modules ---</option>
+                    {% for module in modules %}
+                    <option value="{{ module }}" {% if request.GET.module == module %}selected{% endif %}>
+                        {{ module }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Criticité</label>
+                <select name="criticite" class="form-control">
+                    <option value="">--- Toutes les criticités ---</option>
+                    <option value="BASSE" {% if request.GET.criticite == 'BASSE' %}selected{% endif %}>Basse</option>
+                    <option value="MOYENNE" {% if request.GET.criticite == 'MOYENNE' %}selected{% endif %}>Moyenne</option>
+                    <option value="HAUTE" {% if request.GET.criticite == 'HAUTE' %}selected{% endif %}>Haute</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Statut</label>
+                <select name="actif" class="form-control">
+                    <option value="">--- Tous ---</option>
+                    <option value="actif" {% if request.GET.actif == 'actif' %}selected{% endif %}>Actif</option>
+                    <option value="inactif" {% if request.GET.actif == 'inactif' %}selected{% endif %}>Inactif</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tableau des règles -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Code</th>
+                    <th>Nom</th>
+                    <th>Module</th>
+                    <th>Criticité</th>
+                    <th>Périodicité</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for regle in object_list %}
+                <tr>
+                    <td>
+                        <code class="bg-light px-2 py-1">{{ regle.code }}</code>
+                    </td>
+                    <td>
+                        <strong>{{ regle.nom }}</strong>
+                        {% if regle.description %}
+                        <br><small class="text-muted">{{ regle.description|truncatewords:10 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark">{{ regle.module_concerne }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{% if regle.criticite == 'HAUTE' %}danger{% elif regle.criticite == 'MOYENNE' %}warning{% else %}info{% endif %}">
+                            {{ regle.get_criticite_display }}
+                        </span>
+                    </td>
+                    <td>{{ regle.get_periodicite_display }}</td>
+                    <td>
+                        {% if regle.actif %}
+                        <span class="badge bg-success">Actif</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'comptabilite:regle_update' regle.pk %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        Aucune règle trouvée
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination" class="mt-4">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">Première</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédente</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item disabled">
+            <span class="page-link">
+                Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivante</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernière</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

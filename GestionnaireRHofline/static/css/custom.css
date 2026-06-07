@@ -1,0 +1,383 @@
+/* Gestionnaire RH Guinée - Styles personnalisés */
+/* Thème Orange / Gris Anthracite */
+
+:root {
+    --primary-color: #EF7707;      /* Orange */
+    --secondary-color: #212121;    /* Gris Anthracite */
+    --success-color: #28a745;      /* Vert */
+    --danger-color: #dc3545;       /* Rouge */
+    --warning-color: #EF7707;      /* Orange */
+    --info-color: #17a2b8;         /* Bleu info */
+    --orange-main: #EF7707;
+    --gray-light: #939393;
+    --gray-dark: #212121;
+}
+
+/* Body avec navbar fixe */
+body {
+    padding-top: 56px; /* Hauteur de la navbar */
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 56px;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    overflow-y: auto;
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #333;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid transparent;
+}
+
+.sidebar .nav-link:hover {
+    color: var(--primary-color);
+    background-color: #f8f9fa;
+    border-left-color: var(--primary-color);
+}
+
+.sidebar .nav-link.active {
+    color: var(--primary-color);
+    background-color: #e9ecef;
+    border-left-color: var(--primary-color);
+}
+
+.sidebar .nav-link i {
+    margin-right: 0.5rem;
+}
+
+/* Main content */
+main {
+    padding-top: 48px;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(239, 119, 7, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, rgba(239, 119, 7, 0.08) 0%, rgba(33, 33, 33, 0.05) 100%);
+    border-bottom: 2px solid var(--primary-color);
+    font-weight: 600;
+}
+
+.border-left-primary {
+    border-left: 4px solid var(--primary-color) !important;
+}
+
+.border-left-success {
+    border-left: 4px solid var(--success-color) !important;
+}
+
+.border-left-info {
+    border-left: 4px solid var(--info-color) !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid var(--warning-color) !important;
+}
+
+/* Tables */
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--orange-main) 0%, #d96a06 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #c56506 0%, var(--orange-main) 100%);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #1e7e34 0%, #28a745 100%);
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+}
+
+/* Forms */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(239, 119, 7, 0.25);
+}
+
+/* Alerts */
+.alert {
+    border-radius: 10px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    border-left-color: var(--success-color);
+}
+
+.alert-danger {
+    border-left-color: var(--danger-color);
+}
+
+.alert-warning {
+    border-left-color: var(--warning-color);
+}
+
+.alert-info {
+    border-left-color: var(--info-color);
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(90deg, var(--gray-dark) 0%, #3a3a3a 100%) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 20px;
+}
+
+.page-link {
+    color: var(--primary-color);
+}
+
+.page-link:hover {
+    color: var(--secondary-color);
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.2em;
+}
+
+/* ============================================
+   RESPONSIVE SIDEBAR - Mobile & Tablette
+   ============================================ */
+
+/* Overlay pour fermer la sidebar */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.show {
+    display: block;
+}
+
+/* Bouton toggle sidebar */
+.sidebar-toggle {
+    padding: 0.25rem 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1;
+    background: transparent;
+    border: none;
+    text-decoration: none;
+}
+
+.sidebar-toggle:hover,
+.sidebar-toggle:focus {
+    color: var(--orange-main) !important;
+    text-decoration: none;
+}
+
+/* Mobile et tablette (< 768px) */
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: fixed;
+        top: 56px;
+        left: -280px;
+        width: 280px;
+        height: calc(100vh - 56px);
+        padding: 0;
+        z-index: 100;
+        transition: left 0.3s ease-in-out;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar.show {
+        left: 0;
+    }
+    
+    .sidebar .position-sticky {
+        position: relative !important;
+        padding-top: 1rem;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding-top: 20px;
+    }
+    
+    /* Améliorer les liens de la sidebar sur mobile */
+    .sidebar .nav-link {
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .sidebar .nav-link i {
+        width: 24px;
+        text-align: center;
+    }
+    
+    .sidebar .sidebar-heading {
+        padding: 0.75rem 1.25rem;
+        margin-top: 0.5rem;
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+    
+    /* Bouton fermer dans la sidebar */
+    .sidebar-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.5rem;
+        color: #666;
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 101;
+    }
+    
+    .sidebar-close:hover {
+        color: var(--orange-main);
+    }
+}
+
+/* Tablette (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .sidebar {
+        width: 220px;
+    }
+    
+    .main-content {
+        margin-left: 220px;
+    }
+    
+    .sidebar .nav-link {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Desktop (>= 992px) */
+@media (min-width: 992px) {
+    .sidebar {
+        display: block !important;
+    }
+    
+    .sidebar-toggle {
+        display: none !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .sidebar, .navbar, .btn, .no-print {
+        display: none !important;
+    }
+    
+    main {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+/* Utilities */
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+
+.shadow {
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--orange-main) 0%, var(--gray-dark) 100%);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--gray-dark) 0%, var(--orange-main) 100%);
+}

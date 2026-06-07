@@ -1,0 +1,108 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Garanties{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0"><i class="bi bi-shield-check me-2"></i>Garanties</h1>
+            <p class="text-muted mb-0">Points garantis définis dans les contrats</p>
+        </div>
+    </div>
+
+    <!-- Liste -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Contrat</th>
+                            <th>Type</th>
+                            <th>Type garantie</th>
+                            <th>Durée</th>
+                            <th>Période</th>
+                            <th>Montant garanti</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for g in garanties %}
+                        <tr>
+                            <td>
+                                {% if g.contrat_fournisseur %}
+                                <a href="{% url 'comptabilite:contrats_fournisseur_detail' g.contrat_fournisseur.pk %}">
+                                    {{ g.contrat_fournisseur.numero_contrat }}
+                                </a>
+                                {% elif g.contrat_client %}
+                                <a href="{% url 'comptabilite:contrats_client_detail' g.contrat_client.pk %}">
+                                    {{ g.contrat_client.numero_contrat }}
+                                </a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if g.contrat_fournisseur %}
+                                <span class="badge bg-info">Fournisseur</span>
+                                {% else %}
+                                <span class="badge bg-success">Client</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ g.get_type_garantie_display }}</span>
+                            </td>
+                            <td>{{ g.duree_garantie_mois }} mois</td>
+                            <td>
+                                {% if g.date_debut_garantie and g.date_fin_garantie %}
+                                <small>{{ g.date_debut_garantie|date:"d/m/Y" }} - {{ g.date_fin_garantie|date:"d/m/Y" }}</small>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if g.montant_garanti %}
+                                {{ g.montant_garanti|floatformat:0 }} GNF
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ g.description|truncatechars:50 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Aucune garantie trouvée
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+            </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

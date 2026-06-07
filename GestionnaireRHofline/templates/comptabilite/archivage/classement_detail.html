@@ -1,0 +1,68 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Classement {{ classement.code }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-1"><i class="bi bi-folder me-2"></i>{{ classement.code }}</h1>
+            <p class="text-muted mb-0">{{ classement.libelle }}</p>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'comptabilite:archivage_classement_update' classement.pk %}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>Modifier</a>
+            <a href="{% url 'comptabilite:archivage_classements' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="card-title mb-0">Informations</h5></div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr><th class="text-muted" width="40%">Type</th><td><span class="badge bg-info">{{ classement.get_type_classement_display }}</span></td></tr>
+                        <tr><th class="text-muted">Parent</th><td>{{ classement.parent.libelle|default:"-" }}</td></tr>
+                        <tr><th class="text-muted">Niveau</th><td>{{ classement.niveau }}</td></tr>
+                        <tr><th class="text-muted">Chemin</th><td><code>{{ classement.chemin }}</code></td></tr>
+                        <tr><th class="text-muted">Rétention</th><td>{{ classement.duree_retention_annees }} ans</td></tr>
+                        <tr><th class="text-muted">Statut</th><td>{% if classement.est_actif %}<span class="badge bg-success">Actif</span>{% else %}<span class="badge bg-secondary">Inactif</span>{% endif %}</td></tr>
+                    </table>
+                    {% if classement.description %}
+                    <hr>
+                    <p>{{ classement.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            {% if sous_classements %}
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="card-title mb-0">Sous-classements</h5></div>
+                <ul class="list-group list-group-flush">
+                    {% for sc in sous_classements %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <a href="{% url 'comptabilite:archivage_classement_detail' sc.pk %}">{{ sc.code }} - {{ sc.libelle }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            {% if documents %}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Documents récents</h5></div>
+                <ul class="list-group list-group-flush">
+                    {% for doc in documents %}
+                    <li class="list-group-item">
+                        <a href="{% url 'comptabilite:archivage_document_detail' doc.pk %}">{{ doc.reference }}</a>
+                        <small class="text-muted d-block">{{ doc.titre|truncatechars:50 }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

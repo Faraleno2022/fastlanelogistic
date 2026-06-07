@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ rubrique.libelle_rubrique }} - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-list-check"></i> {{ rubrique.libelle_rubrique }}
+        <br><small class="text-muted">{{ rubrique.code_rubrique }}</small>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'paie:liste_rubriques' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<!-- Informations principales -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th width="40%">Code</th>
+                        <td><strong>{{ rubrique.code_rubrique }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Libellé</th>
+                        <td>{{ rubrique.libelle_rubrique }}</td>
+                    </tr>
+                    <tr>
+                        <th>Type</th>
+                        <td>
+                            {% if rubrique.type_rubrique == 'gain' %}
+                                <span class="badge bg-success">Gain</span>
+                            {% elif rubrique.type_rubrique == 'retenue' %}
+                                <span class="badge bg-danger">Retenue</span>
+                            {% elif rubrique.type_rubrique == 'cotisation' %}
+                                <span class="badge bg-info">Cotisation</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Information</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Statut</th>
+                        <td>
+                            {% if rubrique.actif %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-calculator"></i> Calcul</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th width="40%">Taux</th>
+                        <td>
+                            {% if rubrique.taux_rubrique %}
+                                <strong>{{ rubrique.taux_rubrique }}%</strong>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Montant Fixe</th>
+                        <td>
+                            {% if rubrique.montant_fixe %}
+                                <strong>{{ rubrique.montant_fixe|floatformat:0 }} GNF</strong>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Formule</th>
+                        <td>
+                            {% if rubrique.formule_calcul %}
+                                <code>{{ rubrique.formule_calcul }}</code>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Ordre de Calcul</th>
+                        <td>{{ rubrique.ordre_calcul }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Soumission et Affichage -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="bi bi-shield-check"></i> Soumission</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    {% if rubrique.soumis_cnss %}
+                        <i class="bi bi-check-circle text-success"></i> <strong>Soumis à la CNSS</strong>
+                    {% else %}
+                        <i class="bi bi-x-circle text-muted"></i> Non soumis à la CNSS
+                    {% endif %}
+                </div>
+                <div>
+                    {% if rubrique.soumis_irg %}
+                        <i class="bi bi-check-circle text-success"></i> <strong>Soumis à l'IRG</strong>
+                    {% else %}
+                        <i class="bi bi-x-circle text-muted"></i> Non soumis à l'IRG
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-eye"></i> Affichage</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Ordre d'affichage :</strong> {{ rubrique.ordre_affichage }}
+                </div>
+                <div>
+                    {% if rubrique.affichage_bulletin %}
+                        <i class="bi bi-check-circle text-success"></i> <strong>Affiché sur le bulletin</strong>
+                    {% else %}
+                        <i class="bi bi-x-circle text-muted"></i> Non affiché sur le bulletin
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Utilisation -->
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-people"></i> Utilisation ({{ nb_employes }} employé(s))</h5>
+    </div>
+    <div class="card-body">
+        {% if elements %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Employé</th>
+                        <th>Montant/Taux</th>
+                        <th>Date Début</th>
+                        <th>Date Fin</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for element in elements %}
+                    <tr>
+                        <td>
+                            <strong>{{ element.employe.matricule }}</strong><br>
+                            <small>{{ element.employe.nom }} {{ element.employe.prenoms }}</small>
+                        </td>
+                        <td>
+                            {% if element.montant %}
+                                {{ element.montant|floatformat:0 }} GNF
+                            {% elif element.taux %}
+                                {{ element.taux }}%
+                            {% endif %}
+                        </td>
+                        <td>{{ element.date_debut|date:"d/m/Y" }}</td>
+                        <td>{{ element.date_fin|date:"d/m/Y"|default:"-" }}</td>
+                        <td>
+                            {% if element.actif %}
+                                <span class="badge bg-success">Actif</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'paie:elements_salaire_employe' element.employe.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Cette rubrique n'est utilisée par aucun employé pour le moment.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

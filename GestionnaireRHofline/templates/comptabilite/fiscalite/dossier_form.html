@@ -1,0 +1,127 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouveau{% endif %} dossier fiscal{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-folder text-primary"></i>
+                {% if object %}Modifier le dossier fiscal{% else %}Créer un dossier fiscal{% endif %}
+            </h1>
+        </div>
+        <a href="{% url 'comptabilite:fiscalite_dossiers' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <h6 class="text-muted text-uppercase mb-3">Identification</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Exercice comptable *</label>
+                                {{ form.exercice }}
+                                {% for error in form.exercice.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Référence *</label>
+                                {{ form.reference }}
+                                {% for error in form.reference.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Année fiscale *</label>
+                                {{ form.annee_fiscale }}
+                                {% for error in form.annee_fiscale.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Statut</label>
+                                {{ form.statut }}
+                                {% for error in form.statut.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted text-uppercase mb-3">Dates</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Date d'ouverture *</label>
+                                {{ form.date_ouverture }}
+                                {% for error in form.date_ouverture.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Date clôture exercice *</label>
+                                {{ form.date_cloture_exercice }}
+                                {% for error in form.date_cloture_exercice.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Date limite dépôt *</label>
+                                {{ form.date_limite_depot }}
+                                {% for error in form.date_limite_depot.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted text-uppercase mb-3">Montants</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Résultat comptable (GNF)</label>
+                                {{ form.resultat_comptable }}
+                                {% for error in form.resultat_comptable.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Résultat fiscal (GNF)</label>
+                                {{ form.resultat_fiscal }}
+                                {% for error in form.resultat_fiscal.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Observations</label>
+                            {{ form.observations }}
+                            {% for error in form.observations.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:fiscalite_dossiers' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Conseils</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <ul class="mb-0">
+                        <li>Le dossier fiscal centralise toutes les déclarations d'un exercice.</li>
+                        <li>Renseignez la date limite de dépôt pour suivre les échéances.</li>
+                        <li>Les résultats comptable et fiscal seront mis à jour automatiquement.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

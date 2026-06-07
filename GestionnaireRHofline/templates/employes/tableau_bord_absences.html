@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Tableau de Bord Absences - {{ mois_label }} {{ annee }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2><i class="fas fa-calendar-times me-2 text-danger"></i>Tableau de Bord Absences</h2>
+                <p class="text-muted mb-0">{{ mois_label }} {{ annee }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'employes:tableau_bord_absences_pdf' %}?annee={{ annee }}&mois={{ mois }}{% if service_id %}&service={{ service_id }}{% endif %}"
+                   class="btn btn-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <i class="fas fa-filter me-2"></i>Filtres
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Année</label>
+                    <select name="annee" class="form-select">
+                        {% for a in annees_dispo %}
+                        <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Mois</label>
+                    <select name="mois" class="form-select">
+                        {% for m in mois_liste %}
+                        <option value="{{ m }}" {% if m == mois %}selected{% endif %}>
+                            {% if m == 1 %}Janvier{% elif m == 2 %}Février{% elif m == 3 %}Mars
+                            {% elif m == 4 %}Avril{% elif m == 5 %}Mai{% elif m == 6 %}Juin
+                            {% elif m == 7 %}Juillet{% elif m == 8 %}Août{% elif m == 9 %}Septembre
+                            {% elif m == 10 %}Octobre{% elif m == 11 %}Novembre{% else %}Décembre{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Service</label>
+                    <select name="service" class="form-select">
+                        <option value="">Tous les services</option>
+                        {% for s in services %}
+                        <option value="{{ s.pk }}" {% if service_id == s.pk|stringformat:"s" %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alertes -->
+    {% if alertes %}
+    <div class="alert alert-danger border-danger mb-4">
+        <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Alertes Absences Non Justifiées</h6>
+        <p class="mb-2 small">Les employés suivants ont au moins 3 absences non justifiées ce mois :</p>
+        <div class="d-flex flex-wrap gap-2">
+            {% for a in alertes %}
+            <span class="badge bg-danger fs-6 p-2">
+                {{ a.nom }} ({{ a.matricule }}) — {{ a.non_justifiees }} abs. non justifiées
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- KPI -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary h-100">
+                <div class="card-body text-center">
+                    <div class="text-muted small"><i class="fas fa-users me-1"></i>Employés actifs</div>
+                    <h3 class="text-primary mb-0">{{ nb_employes }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-danger h-100">
+                <div class="card-body text-center">
+                    <div class="text-muted small"><i class="fas fa-calendar-minus me-1"></i>Jours d'absence</div>
+                    <h3 class="text-danger mb-0">{{ total_jours_absences }}</h3>
+                    <small class="text-muted">sur {{ nb_jours_mois }} jours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning h-100">
+                <div class="card-body text-center">
+                    <div class="text-muted small"><i class="fas fa-percent me-1"></i>Taux d'absentéisme</div>
+                    <h3 class="text-warning mb-0">{{ taux_absenteisme|floatformat:2 }}%</h3>
+                    <small class="text-muted">du temps de travail théorique</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-info h-100">
+                <div class="card-body text-center">
+                    <div class="text-muted small"><i class="fas fa-coins me-1"></i>Coût estimé</div>
+                    <h4 class="text-info mb-0">{{ cout_estime|floatformat:0|intcomma }}</h4>
+                    <small class="text-muted">GNF</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Répartition par type -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-chart-pie me-2"></i>Répartition par Type d'Absence
+                </div>
+                <div class="card-body">
+                    <canvas id="chartType" height="200"></canvas>
+                    {% if par_type %}
+                    <div class="mt-3">
+                        {% for t in par_type %}
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small">{{ t.label }}</span>
+                            <span class="badge bg-secondary">{{ t.jours }} j ({{ t.nb }} abs.)</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">Aucune absence</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Répartition par service -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-secondary text-white">
+                    <i class="fas fa-building me-2"></i>Répartition par Service
+                </div>
+                <div class="card-body p-0">
+                    {% if par_service %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Service</th>
+                                    <th class="text-center">Nb absences</th>
+                                    <th class="text-center">Jours perdus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sv in par_service %}
+                                <tr>
+                                    <td>{{ sv.nom }}</td>
+                                    <td class="text-center">{{ sv.nb }}</td>
+                                    <td class="text-center text-danger fw-bold">{{ sv.jours }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">Aucune absence</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendrier mensuel -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <i class="fas fa-calendar-alt me-2"></i>Calendrier des Absences — {{ mois_label }} {{ annee }}
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm text-center" style="min-width: 900px;">
+                    <thead class="table-light">
+                        <tr>
+                            {% for j in jours_semaine %}
+                            <th class="{% if j == 'Sam' or j == 'Dim' %}text-muted{% endif %}">{{ j }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% comment %}Génération du calendrier{% endcomment %}
+                        <tr>
+                            {% for i in "1234567"|make_list %}
+                            {% with col_idx=forloop.counter0 %}
+                            {% if col_idx < premier_semaine and forloop.parentloop.first %}
+                            <td class="bg-light"></td>
+                            {% endif %}
+                            {% endwith %}
+                            {% endfor %}
+                            <!-- Le calendrier réel est rendu via JS pour simplicité -->
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Calendrier rendu en JS -->
+            <div id="cal-container"></div>
+        </div>
+    </div>
+
+    <!-- Tableau détaillé par employé -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <i class="fas fa-list me-2"></i>Détail par Employé
+        </div>
+        <div class="card-body p-0">
+            {% if absences_par_employe %}
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employé</th>
+                            <th>Matricule</th>
+                            <th>Service</th>
+                            <th class="text-center">Nb absences</th>
+                            <th class="text-center">Jours perdus</th>
+                            <th class="text-center">Non justifiées</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in absences_par_employe %}
+                        <tr class="{% if emp.non_justifiees >= 3 %}table-danger{% endif %}">
+                            <td class="fw-bold">{{ emp.nom }}</td>
+                            <td>{{ emp.matricule }}</td>
+                            <td>{{ emp.service }}</td>
+                            <td class="text-center">{{ emp.nb_absences }}</td>
+                            <td class="text-center text-danger fw-bold">{{ emp.jours }}</td>
+                            <td class="text-center">
+                                {% if emp.non_justifiees >= 3 %}
+                                <span class="badge bg-danger">{{ emp.non_justifiees }} <i class="fas fa-exclamation"></i></span>
+                                {% else %}
+                                <span class="text-muted">{{ emp.non_justifiees }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <p>Aucune absence enregistrée pour cette période.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Graphique répartition par type
+{% if par_type %}
+const ctxType = document.getElementById('chartType').getContext('2d');
+new Chart(ctxType, {
+    type: 'doughnut',
+    data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+            data: {{ chart_jours|safe }},
+            backgroundColor: {{ chart_couleurs|safe }},
+            borderWidth: 2,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    label: function(c) {
+                        return c.label + ': ' + c.parsed + ' jours';
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+// Calendrier mensuel dynamique
+(function() {
+    const container = document.getElementById('cal-container');
+    const data = {{ calendrier_json|default:"{}"|safe }};
+    const nbJours = {{ nb_jours_mois }};
+    const premierSemaine = {{ premier_semaine }};  // 0=lundi
+
+    let html = '<table class="table table-bordered table-sm text-center" style="min-width:900px;table-layout:fixed;">';
+    html += '<thead class="table-light"><tr>';
+    ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].forEach(j => {
+        html += `<th class="${j==='Sam'||j==='Dim'?'text-muted':''}">${j}</th>`;
+    });
+    html += '</tr></thead><tbody><tr>';
+
+    // Cellules vides au début
+    for (let i = 0; i < premierSemaine; i++) {
+        html += '<td class="bg-light"></td>';
+    }
+
+    let col = premierSemaine;
+    for (let jour = 1; jour <= nbJours; jour++) {
+        if (col === 7) { html += '</tr><tr>'; col = 0; }
+        const absences = data[jour] || [];
+        const isWeekend = col >= 5;
+        html += `<td class="align-top p-1 ${isWeekend?'bg-light':''}" style="min-height:60px;vertical-align:top;">`;
+        html += `<div class="fw-bold small ${isWeekend?'text-muted':'text-dark'}">${jour}</div>`;
+        absences.slice(0, 3).forEach(a => {
+            html += `<span class="badge bg-${a.couleur} d-block text-truncate mb-1" style="font-size:0.65em;" title="${a.employe} - ${a.type}">${a.employe.split(' ')[0]}</span>`;
+        });
+        if (absences.length > 3) {
+            html += `<span class="badge bg-secondary" style="font-size:0.6em;">+${absences.length-3}</span>`;
+        }
+        html += '</td>';
+        col++;
+    }
+    // Remplir dernière ligne
+    while (col < 7 && col > 0) {
+        html += '<td class="bg-light"></td>';
+        col++;
+    }
+    html += '</tr></tbody></table>';
+    container.innerHTML = html;
+})();
+</script>
+{% endblock %}

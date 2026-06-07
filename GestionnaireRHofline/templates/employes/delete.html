@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer employé - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-trash"></i> Supprimer un employé
+    </h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmation de suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h5><i class="bi bi-exclamation-octagon"></i> Attention !</h5>
+                    <p>Vous êtes sur le point de supprimer définitivement l'employé suivant :</p>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-auto">
+                                {% if object.photo %}
+                                <img src="{{ object.photo.url }}" alt="{{ object.nom }}" 
+                                     class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                                {% else %}
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                     style="width: 80px; height: 80px; font-size: 2rem;">
+                                    {{ object.nom.0 }}{{ object.prenoms.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col">
+                                <h4>{{ object.civilite }} {{ object.nom }} {{ object.prenoms }}</h4>
+                                <p class="mb-1">
+                                    <strong>Matricule :</strong> {{ object.matricule }}<br>
+                                    <strong>Service :</strong> {{ object.service.nom_service|default:"-" }}<br>
+                                    <strong>Poste :</strong> {{ object.poste.intitule_poste|default:"-" }}<br>
+                                    <strong>Type de contrat :</strong> {{ object.type_contrat }}<br>
+                                    <strong>Date d'embauche :</strong> {{ object.date_embauche|date:"d/m/Y" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6><i class="bi bi-info-circle"></i> Données qui seront supprimées ({{ total_donnees }} éléments) :</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                {% if donnees_liees.contrats %}<li><strong>{{ donnees_liees.contrats }}</strong> contrat(s)</li>{% endif %}
+                                {% if donnees_liees.bulletins_paie %}<li><strong>{{ donnees_liees.bulletins_paie }}</strong> bulletin(s) de paie</li>{% endif %}
+                                {% if donnees_liees.elements_salaire %}<li><strong>{{ donnees_liees.elements_salaire }}</strong> élément(s) de salaire</li>{% endif %}
+                                {% if donnees_liees.conges %}<li><strong>{{ donnees_liees.conges }}</strong> congé(s)</li>{% endif %}
+                                {% if donnees_liees.pointages %}<li><strong>{{ donnees_liees.pointages }}</strong> pointage(s)</li>{% endif %}
+                                {% if donnees_liees.absences %}<li><strong>{{ donnees_liees.absences }}</strong> absence(s)</li>{% endif %}
+                                {% if donnees_liees.documents %}<li><strong>{{ donnees_liees.documents }}</strong> document(s)</li>{% endif %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                {% if donnees_liees.formations %}<li><strong>{{ donnees_liees.formations }}</strong> formation(s)</li>{% endif %}
+                                {% if donnees_liees.evaluations %}<li><strong>{{ donnees_liees.evaluations }}</strong> évaluation(s)</li>{% endif %}
+                                {% if donnees_liees.carrieres %}<li><strong>{{ donnees_liees.carrieres }}</strong> mouvement(s) de carrière</li>{% endif %}
+                                {% if donnees_liees.sanctions %}<li><strong>{{ donnees_liees.sanctions }}</strong> sanction(s)</li>{% endif %}
+                                {% if donnees_liees.visites_medicales %}<li><strong>{{ donnees_liees.visites_medicales }}</strong> visite(s) médicale(s)</li>{% endif %}
+                                {% if donnees_liees.avances_salaire %}<li><strong>{{ donnees_liees.avances_salaire }}</strong> avance(s) sur salaire</li>{% endif %}
+                                {% if donnees_liees.arrets_travail %}<li><strong>{{ donnees_liees.arrets_travail }}</strong> arrêt(s) de travail</li>{% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="mb-0 text-danger"><strong><i class="bi bi-exclamation-triangle"></i> Cette action est irréversible !</strong></p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="confirmation" class="form-label">
+                            Pour confirmer, tapez <strong>SUPPRIMER</strong> dans le champ ci-dessous :
+                        </label>
+                        <input type="text" class="form-control" id="confirmation" 
+                               placeholder="Tapez SUPPRIMER pour confirmer" required>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'employes:detail' object.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                            <i class="bi bi-trash"></i> Confirmer la suppression
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Activer le bouton de suppression seulement si "SUPPRIMER" est tapé
+    $('#confirmation').on('input', function() {
+        if ($(this).val() === 'SUPPRIMER') {
+            $('#deleteBtn').prop('disabled', false);
+        } else {
+            $('#deleteBtn').prop('disabled', true);
+        }
+    });
+
+    // Confirmation finale avant soumission
+    $('form').on('submit', function(e) {
+        if (!confirm('Êtes-vous absolument certain de vouloir supprimer cet employé ? Cette action est IRRÉVERSIBLE !')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}
+

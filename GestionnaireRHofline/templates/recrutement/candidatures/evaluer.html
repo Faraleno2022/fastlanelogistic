@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Évaluer la Candidature - {{ candidature.nom_complet }} - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-clipboard-check"></i> Évaluer la Candidature</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'recrutement:detail_candidature' candidature.pk %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Informations candidat -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Candidat</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ candidature.nom_complet }}</h5>
+                <p class="card-text">
+                    <strong>Email :</strong> {{ candidature.email }}<br>
+                    <strong>Téléphone :</strong> {{ candidature.telephone|default:"-" }}<br>
+                    <strong>Date candidature :</strong> {{ candidature.date_candidature|date:"d/m/Y" }}
+                </p>
+                
+                <hr>
+                
+                <h6><i class="bi bi-briefcase"></i> Offre</h6>
+                <p class="mb-1"><strong>{{ candidature.offre.intitule_poste }}</strong></p>
+                <small class="text-muted">Réf: {{ candidature.offre.reference_offre }}</small>
+                
+                <hr>
+                
+                <h6><i class="bi bi-tag"></i> Statut actuel</h6>
+                <span class="badge 
+                    {% if candidature.statut_candidature == 'nouvelle' %}bg-info
+                    {% elif candidature.statut_candidature == 'en_cours' %}bg-primary
+                    {% elif candidature.statut_candidature == 'preselectionne' %}bg-warning
+                    {% elif candidature.statut_candidature == 'entretien' %}bg-info
+                    {% elif candidature.statut_candidature == 'retenue' %}bg-success
+                    {% elif candidature.statut_candidature == 'rejetee' %}bg-danger
+                    {% else %}bg-secondary{% endif %} fs-6">
+                    {{ candidature.get_statut_candidature_display }}
+                </span>
+                
+                {% if candidature.cv %}
+                <hr>
+                <a href="{{ candidature.cv.url }}" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="bi bi-file-pdf"></i> Voir le CV
+                </a>
+                {% endif %}
+                
+                {% if candidature.lettre_motivation %}
+                <a href="{{ candidature.lettre_motivation.url }}" target="_blank" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                    <i class="bi bi-file-text"></i> Lettre de motivation
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Formulaire d'évaluation -->
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="bi bi-star"></i> Évaluation</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Score -->
+                    <div class="mb-4">
+                        <label for="score" class="form-label"><i class="bi bi-graph-up"></i> Score d'évaluation (0-100)</label>
+                        <input type="number" class="form-control form-control-lg" id="score" name="score" 
+                               min="0" max="100" value="{{ candidature.score_evaluation|default:'' }}"
+                               placeholder="Attribuer un score de 0 à 100">
+                        <div class="form-text">Évaluez le candidat sur une échelle de 0 à 100</div>
+                    </div>
+                    
+                    <!-- Commentaires -->
+                    <div class="mb-4">
+                        <label for="commentaires" class="form-label"><i class="bi bi-chat-text"></i> Commentaires d'évaluation</label>
+                        <textarea class="form-control" id="commentaires" name="commentaires" rows="5"
+                                  placeholder="Notez vos observations sur le candidat, ses points forts, ses points faibles...">{{ candidature.commentaires|default:'' }}</textarea>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Actions -->
+                    <h6 class="mb-3"><i class="bi bi-lightning"></i> Décision</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <button type="submit" name="action" value="preselectionner" class="btn btn-warning w-100 py-3">
+                                <i class="bi bi-star d-block fs-4 mb-1"></i>
+                                Présélectionner
+                            </button>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <button type="submit" name="action" value="convoquer" class="btn btn-info w-100 py-3 text-white">
+                                <i class="bi bi-calendar-event d-block fs-4 mb-1"></i>
+                                Convoquer
+                            </button>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <button type="submit" name="action" value="retenir" class="btn btn-success w-100 py-3">
+                                <i class="bi bi-check-circle d-block fs-4 mb-1"></i>
+                                Retenir
+                            </button>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <button type="submit" name="action" value="rejeter" class="btn btn-danger w-100 py-3">
+                                <i class="bi bi-x-circle d-block fs-4 mb-1"></i>
+                                Rejeter
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Bouton simple pour sauvegarder sans changer le statut -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'recrutement:detail_candidature' candidature.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Enregistrer l'évaluation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Guide d'évaluation -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Guide d'évaluation</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Échelle de score :</h6>
+                        <ul class="small">
+                            <li><strong>80-100 :</strong> Excellent - À retenir en priorité</li>
+                            <li><strong>60-79 :</strong> Bon - Candidat intéressant</li>
+                            <li><strong>40-59 :</strong> Moyen - À approfondir</li>
+                            <li><strong>0-39 :</strong> Insuffisant - Ne correspond pas</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Actions possibles :</h6>
+                        <ul class="small">
+                            <li><span class="badge bg-warning">Présélectionner</span> - Mettre en shortlist</li>
+                            <li><span class="badge bg-info">Convoquer</span> - Planifier un entretien</li>
+                            <li><span class="badge bg-success">Retenir</span> - Candidat sélectionné</li>
+                            <li><span class="badge bg-danger">Rejeter</span> - Refuser la candidature</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

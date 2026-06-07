@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nouvelle Mission{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:liste_missions' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-plus-circle me-2"></i>Nouvelle Mission</h2>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations générales</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employe" class="form-label">Employé *</label>
+                                <select class="form-select" id="employe" name="employe" required>
+                                    <option value="">Sélectionner</option>
+                                    {% for emp in employes %}
+                                    <option value="{{ emp.id }}">{{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="type_mission" class="form-label">Type de mission *</label>
+                                <select class="form-select" id="type_mission" name="type_mission" required>
+                                    {% for code, libelle in types_mission %}
+                                    <option value="{{ code }}">{{ libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="objet" class="form-label">Objet de la mission *</label>
+                            <input type="text" class="form-control" id="objet" name="objet" required
+                                   placeholder="Ex: Audit des procédures comptables">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Destination et dates</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="lieu_depart" class="form-label">Lieu de départ</label>
+                                <input type="text" class="form-control" id="lieu_depart" name="lieu_depart" value="Conakry">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="destination" class="form-label">Destination *</label>
+                                <input type="text" class="form-control" id="destination" name="destination" required
+                                       placeholder="Ex: Labé">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="pays" class="form-label">Pays</label>
+                                <input type="text" class="form-control" id="pays" name="pays" value="Guinée">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date_debut" class="form-label">Date de début *</label>
+                                <input type="date" class="form-control" id="date_debut" name="date_debut" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_fin" class="form-label">Date de fin *</label>
+                                <input type="date" class="form-control" id="date_fin" name="date_fin" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="moyen_transport" class="form-label">Moyen de transport</label>
+                                <select class="form-select" id="moyen_transport" name="moyen_transport">
+                                    {% for code, libelle in moyens_transport %}
+                                    <option value="{{ code }}">{{ libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" class="form-check-input" id="avec_hebergement" name="avec_hebergement">
+                                    <label class="form-check-label" for="avec_hebergement">Avec hébergement</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3" id="hotel_section" style="display: none;">
+                            <label for="hotel" class="form-label">Hôtel / Hébergement</label>
+                            <input type="text" class="form-control" id="hotel" name="hotel" placeholder="Nom de l'hôtel">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-money-bill me-2"></i>Budget et indemnités</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="budget_previsionnel" class="form-label">Budget prévisionnel (GNF)</label>
+                                <input type="number" class="form-control" id="budget_previsionnel" name="budget_previsionnel"
+                                       value="0" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="indemnite_journaliere" class="form-label">Indemnité journalière (GNF)</label>
+                                <input type="number" class="form-control" id="indemnite_journaliere" name="indemnite_journaliere"
+                                       value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card bg-light mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Barèmes indicatifs</h6>
+                    </div>
+                    <div class="card-body small">
+                        {% if baremes %}
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Zone</th>
+                                    <th>Per diem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in baremes %}
+                                <tr>
+                                    <td>{{ b.get_zone_display }}</td>
+                                    <td>{{ b.indemnite_journaliere|floatformat:0 }} GNF</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted mb-0">Aucun barème défini</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-2"></i>Créer la mission
+                    </button>
+                    <a href="{% url 'employes:liste_missions' %}" class="btn btn-secondary">Annuler</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('avec_hebergement').addEventListener('change', function() {
+    document.getElementById('hotel_section').style.display = this.checked ? 'block' : 'none';
+});
+</script>
+{% endblock %}

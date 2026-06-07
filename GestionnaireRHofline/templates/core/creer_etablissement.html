@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Nouvel Établissement{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-building-add me-2"></i>Nouvel Établissement</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="code_etablissement" class="form-label">Code *</label>
+                                <input type="text" class="form-control" id="code_etablissement" 
+                                       name="code_etablissement" required placeholder="Ex: SIEGE-01">
+                            </div>
+                            <div class="col-md-8">
+                                <label for="nom_etablissement" class="form-label">Nom *</label>
+                                <input type="text" class="form-control" id="nom_etablissement" 
+                                       name="nom_etablissement" required placeholder="Ex: Siège social Conakry">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="type_etablissement" class="form-label">Type</label>
+                                <select class="form-select" id="type_etablissement" name="type_etablissement">
+                                    <option value="">Sélectionner...</option>
+                                    {% for code, label in types %}
+                                    <option value="{{ code }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ville" class="form-label">Ville</label>
+                                <input type="text" class="form-control" id="ville" name="ville" 
+                                       placeholder="Ex: Conakry">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="adresse" class="form-label">Adresse</label>
+                            <textarea class="form-control" id="adresse" name="adresse" rows="2" 
+                                      placeholder="Adresse complète"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="telephone" class="form-label">Téléphone</label>
+                            <input type="text" class="form-control" id="telephone" name="telephone" 
+                                   placeholder="Ex: +224 XXX XXX XXX">
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Enregistrer
+                            </button>
+                            <a href="{% url 'core:gestion_structure' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Liasse fiscale {{ liasse.reference }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-files text-primary"></i> {{ liasse.reference }}
+            </h1>
+            <p class="text-muted mb-0">{{ liasse.get_type_liasse_display }} - {{ liasse.annee }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:fiscalite_liasse_update' liasse.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:fiscalite_liasses' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Référence</dt>
+                        <dd class="col-sm-8">{{ liasse.reference }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Type de liasse</dt>
+                        <dd class="col-sm-8">{{ liasse.get_type_liasse_display }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Année</dt>
+                        <dd class="col-sm-8">{{ liasse.annee }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Dossier fiscal</dt>
+                        <dd class="col-sm-8">
+                            {% if liasse.dossier_fiscal %}
+                            <a href="{% url 'comptabilite:fiscalite_dossier_detail' liasse.dossier_fiscal.pk %}">{{ liasse.dossier_fiscal }}</a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Statut</dt>
+                        <dd class="col-sm-8">
+                            {% if liasse.statut == 'en_cours' %}
+                            <span class="badge bg-secondary">En cours</span>
+                            {% elif liasse.statut == 'complete' %}
+                            <span class="badge bg-info">Complète</span>
+                            {% elif liasse.statut == 'validee' %}
+                            <span class="badge bg-primary">Validée</span>
+                            {% elif liasse.statut == 'deposee' %}
+                            <span class="badge bg-success">Déposée</span>
+                            {% endif %}
+                        </dd>
+
+                        {% if liasse.date_validation %}
+                        <dt class="col-sm-4 text-muted">Validé par</dt>
+                        <dd class="col-sm-8">{{ liasse.valide_par }} le {{ liasse.date_validation|date:"d/m/Y H:i" }}</dd>
+                        {% endif %}
+
+                        {% if liasse.date_depot %}
+                        <dt class="col-sm-4 text-muted">Date de dépôt</dt>
+                        <dd class="col-sm-8">{{ liasse.date_depot|date:"d/m/Y" }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Annexes fiscales</h5>
+                </div>
+                <div class="card-body">
+                    {% if liasse.annexes.exists %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>N° Formulaire</th>
+                                    <th>Libellé</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for annexe in liasse.annexes.all %}
+                                <tr>
+                                    <td>{{ annexe.numero_formulaire }}</td>
+                                    <td>{{ annexe.libelle }}</td>
+                                    <td>
+                                        {% if annexe.est_complete %}
+                                        <span class="badge bg-success">Complète</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark">En cours</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Aucune annexe pour cette liasse.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Métadonnées</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Créé le : {{ liasse.date_creation|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-0">Modifié le : {{ liasse.date_modification|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+
+            {% if liasse.fichier_pdf %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-file-pdf"></i> Document PDF</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{{ liasse.fichier_pdf.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="bi bi-download"></i> Télécharger la liasse
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

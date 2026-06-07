@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Dupliquer le barème IRPP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">
+        <i class="bi bi-copy"></i> Dupliquer le barème IRPP
+    </h1>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'paie:bareme_irpp_liste' %}">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            Cette fonction permet de copier toutes les tranches d'une année vers une autre année.
+            Utile pour préparer le barème de l'année suivante.
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row mb-4">
+                <div class="col-md-5">
+                    <label class="form-label">Année source *</label>
+                    <select name="annee_source" class="form-select" required>
+                        {% for a in annees %}
+                        <option value="{{ a }}">{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Barème à copier</small>
+                </div>
+                <div class="col-md-2 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-arrow-right fs-3 text-primary"></i>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Année cible *</label>
+                    <input type="number" name="annee_cible" class="form-control" required
+                           min="2020" max="2100" value="{{ annee_suivante }}">
+                    <small class="text-muted">Nouvelle année</small>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-copy"></i> Dupliquer le barème
+                </button>
+                <a href="{% url 'paie:bareme_irpp_liste' %}" class="btn btn-outline-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,162 @@
+/* static/css/style.css */
+
+/* Définition des variables de couleurs globales */
+:root {
+    --primary-bg: #121212; /* Fond principal très sombre */
+    --secondary-bg: #1e1e1e; /* Fond légèrement plus clair pour les éléments */
+    --card-bg: #242424;     /* Fond pour les cartes/blocs */
+    --accent-color: #ff6b00; /* Orange vif pour les accents */
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --border-color-dark: #3a3a3a;
+    --subtle-shadow: rgba(0, 0, 0, 0.2);
+    --focus-border-color: #6a6a6a;
+    --button-hover-bg: #e05d00;
+    --table-bg-grey: #333333;
+
+    /* Variables de couleurs du footer (mises à jour d'après ton code) */
+    --footer-bg: #2c3e50; /* Gris Anthracite Profond pour le footer */
+    --footer-text: #e0e0e0; /* Texte légèrement plus clair */
+    --footer-link-hover: #fff; /* Blanc au survol */
+    --footer-accent: #f9a825; /* Ligne orange "cool" / icônes sociales au survol */
+    --footer-contact-link: #b0c4de; /* Gris-bleu clair pour les liens cliquables */
+    --footer-border: rgba(255, 255, 255, 0.1);
+}
+
+/* Styles pour toute la page - REND LA PAGE ENTIÈREMENT SOMBRE */
+html, body {
+    height: 100%; /* S'assure que le body prend toute la hauteur */
+    margin: 0;
+    padding: 0;
+    background-color: var(--primary-bg); /* FOND SOMBRE APPLIQUÉ À TOUTE LA PAGE */
+    color: var(--text-primary); /* Texte blanc par défaut */
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+}
+
+/* Assure-toi que main n'a pas de padding/margin qui créerait un espace clair */
+main {
+    flex-grow: 1; /* Permet à la zone de contenu de prendre l'espace disponible (si body est flex) */
+    margin-top: 0; /* Assure qu'il n'y a pas de marge supérieure indésirable */
+    padding-top: 0; /* Assure qu'il n'y a pas de padding supérieur indésirable */
+}
+
+/* Footer styles */
+.site-footer {
+    background-color: var(--footer-bg); /* Utilise la variable pour le fond du footer */
+    color: var(--footer-text); /* Utilise la variable pour le texte du footer */
+    padding: 50px 20px 30px;
+    text-align: center;
+    font-size: 0.9em;
+    margin-top: 50px;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 30px;
+    text-align: left;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px;
+    margin-bottom: 20px;
+    padding: 0 15px;
+}
+
+.footer-section h3 {
+    color: var(--footer-link-hover); /* Titres du footer en blanc (du hover) */
+    margin-bottom: 20px;
+    font-size: 1.3em;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.footer-section h3::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 40px;
+    height: 3px;
+    background-color: var(--footer-accent); /* Ligne orange "cool" */
+    border-radius: 2px;
+}
+
+.footer-section p,
+.footer-section ul {
+    color: var(--footer-text); /* Texte légèrement plus clair */
+    line-height: 1.8;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-section ul li a {
+    color: var(--footer-text); /* Liens du footer en texte légèrement plus clair */
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.footer-section ul li a:hover {
+    color: var(--footer-link-hover); /* Texte blanc au survol */
+    text-decoration: none;
+}
+
+.social-icons {
+    margin-top: 20px;
+}
+
+.social-icons a {
+    color: var(--footer-link-hover); /* Icônes sociales en blanc */
+    font-size: 1.6em;
+    margin: 0 12px;
+    transition: color 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: var(--footer-accent); /* Icônes sociales orange au survol */
+}
+
+/* Contact links (phone, email) */
+.footer-section .contact-link {
+    color: var(--footer-contact-link); /* Gris-bleu clair pour les liens cliquables */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-section .contact-link:hover {
+    color: var(--footer-link-hover); /* Blanc au survol */
+    text-decoration: underline;
+}
+
+.footer-bottom {
+    margin-top: 40px;
+    padding-top: 25px;
+    border-top: 1px solid var(--footer-border);
+    font-size: 0.8em;
+    color: #a9a9a9; /* Gris moyen pour le copyright */
+    text-align: center;
+}
+
+/* Responsive for footer */
+@media (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .footer-section h3::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}

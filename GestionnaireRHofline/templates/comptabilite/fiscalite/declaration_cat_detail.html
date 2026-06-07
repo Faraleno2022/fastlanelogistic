@@ -1,0 +1,86 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Déclaration CAT {{ declaration.reference }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-file-earmark-text text-primary"></i> {{ declaration.reference }}
+            </h1>
+            <p class="text-muted mb-0">Déclaration CAT - {{ declaration.mois|stringformat:"02d" }}/{{ declaration.annee }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:fiscalite_declaration_cat_update' declaration.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:fiscalite_declarations_cat' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Détails de la déclaration</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Période</dt>
+                        <dd class="col-sm-8">{{ declaration.mois|stringformat:"02d" }}/{{ declaration.annee }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Montant prestations</dt>
+                        <dd class="col-sm-8">{{ declaration.montant_prestations|floatformat:2 }} GNF</dd>
+
+                        <dt class="col-sm-4 text-muted">Taux CAT</dt>
+                        <dd class="col-sm-8">{{ declaration.taux_cat }}%</dd>
+
+                        <dt class="col-sm-4 text-muted">CAT brute</dt>
+                        <dd class="col-sm-8">{{ declaration.cat_brute|floatformat:2 }} GNF</dd>
+
+                        <dt class="col-sm-4 text-muted">Exonérations</dt>
+                        <dd class="col-sm-8">{{ declaration.exonerations|floatformat:2 }} GNF</dd>
+
+                        <dt class="col-sm-4 text-muted">CAT nette</dt>
+                        <dd class="col-sm-8 fw-bold text-primary">{{ declaration.cat_nette|floatformat:2 }} GNF</dd>
+
+                        <dt class="col-sm-4 text-muted">Statut</dt>
+                        <dd class="col-sm-8">
+                            {% if declaration.statut == 'brouillon' %}
+                            <span class="badge bg-secondary">Brouillon</span>
+                            {% elif declaration.statut == 'valide' %}
+                            <span class="badge bg-primary">Validé</span>
+                            {% elif declaration.statut == 'depose' %}
+                            <span class="badge bg-success">Déposé</span>
+                            {% elif declaration.statut == 'paye' %}
+                            <span class="badge bg-dark">Payé</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Créé le : {{ declaration.date_creation|date:"d/m/Y H:i" }}</p>
+                    {% if declaration.date_depot %}
+                    <p class="mb-1">Déposé le : {{ declaration.date_depot|date:"d/m/Y" }}</p>
+                    {% endif %}
+                    {% if declaration.date_paiement %}
+                    <p class="mb-1">Payé le : {{ declaration.date_paiement|date:"d/m/Y" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

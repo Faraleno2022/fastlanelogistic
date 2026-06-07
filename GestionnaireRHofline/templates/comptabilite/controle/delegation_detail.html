@@ -1,0 +1,124 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Délégation {{ delegation.delegataire }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-person-badge text-primary"></i> Délégation de pouvoirs
+            </h1>
+            <p class="text-muted mb-0">{{ delegation.delegant }} → {{ delegation.delegataire }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:controle_delegation_update' delegation.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:controle_delegations' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Délégant</dt>
+                        <dd class="col-sm-8">{{ delegation.delegant }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Délégataire</dt>
+                        <dd class="col-sm-8">{{ delegation.delegataire }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Type de pouvoir</dt>
+                        <dd class="col-sm-8">{{ delegation.get_type_pouvoir_display }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Domaine</dt>
+                        <dd class="col-sm-8">{{ delegation.domaine }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Description</dt>
+                        <dd class="col-sm-8">{{ delegation.description|linebreaks }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Statut</dt>
+                        <dd class="col-sm-8">
+                            {% if delegation.statut == 'active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif delegation.statut == 'suspendue' %}
+                            <span class="badge bg-warning text-dark">Suspendue</span>
+                            {% elif delegation.statut == 'expiree' %}
+                            <span class="badge bg-secondary">Expirée</span>
+                            {% else %}
+                            <span class="badge bg-danger">Révoquée</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0">Limites</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2"><strong>Montant maximum :</strong> 
+                                {% if delegation.montant_max %}
+                                {{ delegation.montant_max|floatformat:0 }} GNF
+                                {% else %}
+                                Illimité
+                                {% endif %}
+                            </p>
+                            {% if delegation.conditions %}
+                            <p class="mb-0"><strong>Conditions :</strong><br>{{ delegation.conditions|linebreaks }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0">Période de validité</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2"><strong>Date de début :</strong> {{ delegation.date_debut|date:"d/m/Y" }}</p>
+                            <p class="mb-0"><strong>Date de fin :</strong> {{ delegation.date_fin|date:"d/m/Y"|default:"Indéterminée" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Métadonnées</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Créé par : {{ delegation.cree_par|default:"-" }}</p>
+                    <p class="mb-0">Créé le : {{ delegation.date_creation|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+
+            {% if delegation.document_delegation %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-file-earmark-pdf"></i> Document</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{{ delegation.document_delegation.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="bi bi-download"></i> Télécharger
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

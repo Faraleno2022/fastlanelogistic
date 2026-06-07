@@ -1,0 +1,129 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Tableau de Bord Comptabilité" %}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-3">
+                <i class="fas fa-chart-line text-primary"></i>
+                {% trans "Tableau de Bord Comptabilité" %}
+            </h1>
+            <p class="text-muted">{% trans "Bienvenue dans le module de comptabilité" %}</p>
+        </div>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">0</h4>
+                            <p class="mb-0">{% trans "Comptes Bancaires" %}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-university fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="{% url 'comptabilite:compte-bancaire-list' %}" class="text-white text-decoration-none">
+                        {% trans "Voir tout" %} <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">0</h4>
+                            <p class="mb-0">{% trans "Rapprochements en Cours" %}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-balance-scale fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="{% url 'comptabilite:rapprochement-list' %}" class="text-white text-decoration-none">
+                        {% trans "Voir tout" %} <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">0</h4>
+                            <p class="mb-0">{% trans "Opérations à Lettrer" %}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exchange-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="{% url 'comptabilite:rapprochement-list' %}" class="text-white text-decoration-none">
+                        {% trans "Voir tout" %} <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">0</h4>
+                            <p class="mb-0">{% trans "Écritures Validées" %}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="{% url 'comptabilite:ecriture_list' %}" class="text-white text-decoration-none">
+                        {% trans "Voir tout" %} <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message d'accueil -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-line fa-4x text-primary mb-3"></i>
+                    <h4 class="text-primary">{% trans "Module Comptabilité" %}</h4>
+                    <p class="text-muted">
+                        {% trans "Ce module est en cours de développement. Les fonctionnalités disponibles incluent la gestion des rapprochements bancaires." %}
+                    </p>
+                    <div class="mt-3">
+                        <a href="{% url 'comptabilite:compte-bancaire-list' %}" class="btn btn-primary me-2">
+                            <i class="fas fa-university"></i> {% trans "Comptes Bancaires" %}
+                        </a>
+                        <a href="{% url 'comptabilite:rapprochement-list' %}" class="btn btn-success me-2">
+                            <i class="fas fa-balance-scale"></i> {% trans "Rapprochements" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

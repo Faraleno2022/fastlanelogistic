@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Déclaration eTax{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-file-invoice-dollar me-2"></i>Déclaration eTax</h2>
+            <p class="text-muted mb-0">Préparation des montants fiscaux mensuels pour saisie ou import manuel sur eTax Guinée.</p>
+        </div>
+        <a href="{% url 'paie:declarations_sociales' %}?annee={{ annee }}&mois={{ mois }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Déclarations
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Année</label>
+                    <select name="annee" class="form-select">
+                        {% for a in annees %}
+                        <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                        {% empty %}
+                        <option value="{{ annee }}">{{ annee }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Mois</label>
+                    <select name="mois" class="form-select">
+                        {% for key, label in mois_labels.items %}
+                        <option value="{{ key }}" {% if key == mois %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="p-3 bg-light border rounded">
+                <div class="small text-muted">Effectif déclaré</div>
+                <div class="h4 mb-0">{{ data.effectif }}</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="p-3 bg-light border rounded">
+                <div class="small text-muted">Salaire brut</div>
+                <div class="h5 mb-0">{{ data.total_brut|floatformat:0|intcomma }} GNF</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="p-3 bg-light border rounded">
+                <div class="small text-muted">RTS</div>
+                <div class="h5 mb-0 text-primary">{{ data.total_rts|floatformat:0|intcomma }} GNF</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="p-3 bg-light border rounded">
+                <div class="small text-muted">eTax (RTS + VF)</div>
+                <div class="h5 mb-0">{{ data.total_fiscal|floatformat:0|intcomma }} GNF</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info border d-flex align-items-start gap-2 mb-4">
+        <i class="fas fa-info-circle mt-1"></i>
+        <div>
+            <strong>Portee {{ data.portee_label|lower }} :</strong> {{ data.periode_label }}.
+            eTax correspond strictement a RTS + VF. {{ data.mode_ta_onfpp_note }}
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Récapitulatif mensuel</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-bordered mb-0">
+                        <tbody>
+                            <tr><th>Base imposable RTS</th><td class="text-end">{{ data.total_base_rts|floatformat:0|intcomma }} GNF</td></tr>
+                            <tr><th>RTS</th><td class="text-end">{{ data.total_rts|floatformat:0|intcomma }} GNF</td></tr>
+                            <tr><th>Versement forfaitaire</th><td class="text-end">{{ data.total_vf|floatformat:0|intcomma }} GNF</td></tr>
+                            <tr class="table-primary"><th>Total eTax (RTS + VF)</th><th class="text-end">{{ data.total_fiscal|floatformat:0|intcomma }} GNF</th></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Actions eTax</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2 mb-3">
+                        <form method="post" action="{% url 'paie:generer_declaration_etax' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="annee" value="{{ annee }}">
+                            <input type="hidden" name="mois" value="{{ mois }}">
+                            <button type="submit" class="btn btn-info text-white w-100">
+                                <i class="fas fa-save me-2"></i>Générer / actualiser l'historique
+                            </button>
+                        </form>
+                        <a class="btn btn-outline-success" href="{% url 'paie:declaration_etax_excel' %}?annee={{ annee }}&mois={{ mois }}">
+                            <i class="fas fa-file-excel me-2"></i>Télécharger Excel
+                        </a>
+                        <a class="btn btn-outline-danger" href="{% url 'paie:declaration_etax_pdf' %}?annee={{ annee }}&mois={{ mois }}">
+                            <i class="fas fa-file-pdf me-2"></i>Télécharger PDF
+                        </a>
+                    </div>
+                    <div class="alert alert-light border mb-0">
+                        <strong>Flux recommandé:</strong> générer les fichiers, se connecter sur eTax, saisir ou importer les montants, puis renseigner ici la référence et le reçu.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if declaration %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Suivi de la déclaration {{ declaration.reference }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'paie:mettre_a_jour_declaration_etax' declaration.pk %}" enctype="multipart/form-data" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-3">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        {% for code, label in statuts %}
+                        <option value="{{ code }}" {% if declaration.statut == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Référence eTax</label>
+                    <input type="text" name="reference_etax" class="form-control" value="{{ declaration.reference_etax|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date déclaration</label>
+                    <input type="date" name="date_declaration" class="form-control" value="{{ declaration.date_declaration|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date paiement</label>
+                    <input type="date" name="date_paiement" class="form-control" value="{{ declaration.date_paiement|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Reçu PDF eTax</label>
+                    <input type="file" name="fichier_recu" class="form-control" accept="application/pdf,image/*">
+                    {% if declaration.fichier_recu %}
+                    <small><a href="{{ declaration.fichier_recu.url }}" target="_blank">Reçu enregistré</a></small>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Commentaire</label>
+                    <textarea name="observations" rows="2" class="form-control">{{ declaration.observations|default:'' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-2"></i>Enregistrer le suivi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Détail salariés</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover">
+                    <thead class="table-orange-light">
+                        <tr>
+                            <th>Matricule</th>
+                            <th>Nom et prénoms</th>
+                            <th class="text-end">Brut</th>
+                            <th class="text-end">Base RTS</th>
+                            <th class="text-end">RTS</th>
+                            <th class="text-end">CNSS emp.</th>
+                            <th class="text-end">CNSS pat.</th>
+                            <th class="text-end">VF</th>
+                            <th class="text-end">TA</th>
+                            <th class="text-end">ONFPP</th>
+                            <th class="text-end">Net</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in data.detail_employes %}
+                        <tr>
+                            <td>{{ emp.matricule }}</td>
+                            <td>{{ emp.nom_complet }}</td>
+                            <td class="text-end">{{ emp.brut|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ emp.base_rts|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ emp.rts|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ emp.cnss_employe|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ emp.cnss_employeur|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ emp.vf|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ emp.ta|floatformat:0|intcomma }}</td>
+                            <td class="text-end">{{ emp.onfpp|floatformat:0|intcomma }}</td>
+                            <td class="text-end text-success">{{ emp.net|floatformat:0|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="11" class="text-center text-muted py-4">Aucun bulletin calculé pour cette période.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historique eTax récent</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Période</th>
+                            <th>Référence</th>
+                            <th>Statut</th>
+                            <th>Référence eTax</th>
+                            <th class="text-end">Total fiscal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in historique %}
+                        <tr>
+                            <td>{{ item.mois|stringformat:"02d" }}/{{ item.annee }}</td>
+                            <td>{{ item.reference }}</td>
+                            <td>{{ item.get_statut_display }}</td>
+                            <td>{{ item.reference_etax|default:"-" }}</td>
+                            <td class="text-end">{{ item.total_fiscal|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted">Aucune déclaration eTax enregistrée.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

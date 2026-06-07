@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Prolonger Absence{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'temps_travail:detail_absence' absence.pk %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-plus-circle me-2"></i>Prolonger l'Absence</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-info">
+                            <strong>Absence initiale:</strong><br>
+                            {{ absence.employe.nom }} {{ absence.employe.prenoms }} - {{ absence.get_type_absence_display }}<br>
+                            Date: {{ absence.date_absence|date:"d/m/Y" }} ({{ absence.duree_jours|floatformat:0 }} jour(s))
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="date_absence" class="form-label">Date de la prolongation *</label>
+                            <input type="date" class="form-control" id="date_absence" name="date_absence" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="duree_jours" class="form-label">Durée (jours) *</label>
+                            <input type="number" class="form-control" id="duree_jours" name="duree_jours" 
+                                   value="1" min="0.5" step="0.5" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observations" class="form-label">Observations</label>
+                            <textarea class="form-control" id="observations" name="observations" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'temps_travail:detail_absence' absence.pk %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-plus me-2"></i>Créer la prolongation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

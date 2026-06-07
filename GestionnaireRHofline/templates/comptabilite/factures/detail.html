@@ -1,0 +1,93 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}Facture {{ facture.numero }}{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-receipt me-2"></i>Facture {{ facture.numero }}</h4>
+    <div>
+        {% if facture.statut == 'brouillon' %}
+        <a href="{% url 'comptabilite:facture_valider' facture.pk %}" class="btn btn-success"><i class="bi bi-check-circle me-1"></i>Valider</a>
+        <a href="{% url 'comptabilite:facture_update' facture.pk %}" class="btn btn-warning"><i class="bi bi-pencil me-1"></i>Modifier</a>
+        {% elif facture.statut == 'validee' %}
+        <a href="{% url 'comptabilite:reglement_create' %}?facture={{ facture.pk }}" class="btn btn-success"><i class="bi bi-cash me-1"></i>Encaisser</a>
+        {% endif %}
+        <a href="{% url 'comptabilite:facture_print' facture.pk %}" class="btn btn-outline-secondary" target="_blank"><i class="bi bi-printer me-1"></i>Imprimer</a>
+        <a href="{% url 'comptabilite:facture_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><h6 class="mb-0">Informations</h6></div>
+            <div class="card-body">
+                <p><strong>Type:</strong> {% if facture.type_facture == 'vente' %}<span class="badge bg-success">Vente</span>{% else %}<span class="badge bg-warning">Achat</span>{% endif %}</p>
+                <p><strong>Tiers:</strong> {{ facture.tiers.raison_sociale }}</p>
+                <p><strong>Date:</strong> {{ facture.date_facture|date:"d/m/Y" }}</p>
+                <p><strong>Échéance:</strong> {{ facture.date_echeance|date:"d/m/Y"|default:"-" }}</p>
+                <p><strong>Statut:</strong> 
+                    {% if facture.statut == 'brouillon' %}<span class="badge bg-secondary">Brouillon</span>
+                    {% elif facture.statut == 'validee' %}<span class="badge bg-primary">Validée</span>
+                    {% elif facture.statut == 'payee' %}<span class="badge bg-success">Payée</span>
+                    {% else %}<span class="badge bg-danger">Annulée</span>{% endif %}
+                </p>
+                <hr>
+                <p><strong>Montant HT:</strong> {{ facture.montant_ht|floatformat:0 }} GNF</p>
+                <p><strong>TVA:</strong> {{ facture.montant_tva|floatformat:0 }} GNF</p>
+                <p><strong>Montant TTC:</strong> <span class="fs-5 text-primary">{{ facture.montant_ttc|floatformat:0 }} GNF</span></p>
+                <p><strong>Payé:</strong> {{ facture.montant_paye|floatformat:0 }} GNF</p>
+                <p><strong>Reste à payer:</strong> <span class="text-danger">{{ facture.reste_a_payer|floatformat:0 }} GNF</span></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white"><h6 class="mb-0">Lignes de facture</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>Désignation</th><th class="text-end">Qté</th><th class="text-end">P.U.</th><th class="text-end">TVA</th><th class="text-end">Total TTC</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in facture.lignes.all %}
+                        <tr>
+                            <td>{{ ligne.designation }}</td>
+                            <td class="text-end">{{ ligne.quantite|floatformat:2 }}</td>
+                            <td class="text-end">{{ ligne.prix_unitaire|floatformat:0 }}</td>
+                            <td class="text-end">{{ ligne.taux_tva }}%</td>
+                            <td class="text-end">{{ ligne.montant_ttc|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center py-4 text-muted">Aucune ligne</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% if facture.reglements.exists %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><h6 class="mb-0">Règlements</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>Date</th><th>Mode</th><th>Référence</th><th class="text-end">Montant</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for reg in facture.reglements.all %}
+                        <tr>
+                            <td>{{ reg.date_reglement|date:"d/m/Y" }}</td>
+                            <td>{{ reg.get_mode_paiement_display }}</td>
+                            <td>{{ reg.reference|default:"-" }}</td>
+                            <td class="text-end">{{ reg.montant|floatformat:0 }} GNF</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

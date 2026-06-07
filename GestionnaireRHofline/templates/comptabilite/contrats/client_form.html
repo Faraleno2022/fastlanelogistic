@@ -1,0 +1,162 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouveau{% endif %} Contrat Client{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-file-earmark-person me-2"></i>
+                        {% if object %}Modifier le contrat {{ object.numero_contrat }}{% else %}Nouveau contrat client{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3"><i class="bi bi-info-circle me-1"></i>Identification</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Client *</label>
+                                    {{ form.client }}
+                                    {% if form.client.errors %}<div class="text-danger small">{{ form.client.errors.0 }}</div>{% endif %}
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">N° Contrat *</label>
+                                        {{ form.numero_contrat }}
+                                        {% if form.numero_contrat.errors %}<div class="text-danger small">{{ form.numero_contrat.errors.0 }}</div>{% endif %}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Référence client</label>
+                                        {{ form.reference_client }}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Type de contrat *</label>
+                                    {{ form.type_contrat }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Objet *</label>
+                                    {{ form.objet }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    {{ form.description }}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3"><i class="bi bi-currency-exchange me-1"></i>Montants</h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Montant total</label>
+                                        {{ form.montant_total }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Montant annuel</label>
+                                        {{ form.montant_annuel }}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Devise</label>
+                                    {{ form.devise }}
+                                </div>
+                                
+                                <h6 class="text-primary mb-3 mt-4"><i class="bi bi-calendar me-1"></i>Période</h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Date signature *</label>
+                                        {{ form.date_signature }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Durée (mois)</label>
+                                        {{ form.duree_mois }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Date début *</label>
+                                        {{ form.date_debut }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Date fin *</label>
+                                        {{ form.date_fin }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3"><i class="bi bi-arrow-repeat me-1"></i>Renouvellement</h6>
+                                
+                                <div class="mb-3 form-check">
+                                    {{ form.renouvellement_auto }}
+                                    <label class="form-check-label">Renouvellement automatique</label>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Préavis résiliation (jours)</label>
+                                    {{ form.preavis_resiliation_jours }}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3"><i class="bi bi-gear me-1"></i>Gestion</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Statut</label>
+                                    {{ form.statut }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Responsable commercial</label>
+                                    {{ form.responsable }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Document contrat</label>
+                                    {{ form.document_contrat }}
+                                    {% if object.document_contrat %}
+                                    <small class="text-muted d-block mt-1">
+                                        Fichier actuel: <a href="{{ object.document_contrat.url }}" target="_blank">{{ object.document_contrat.name }}</a>
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:contrats_clients' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>{% if object %}Enregistrer{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Politiques de Rétention{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0"><i class="bi bi-clock-history me-2"></i>Politiques de Rétention</h1>
+            <p class="text-muted mb-0">Durées de conservation des documents</p>
+        </div>
+        <a href="{% url 'comptabilite:archivage_politique_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Nouvelle politique
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Type de document</th>
+                            <th>Durée conservation</th>
+                            <th>Base légale</th>
+                            <th>Action expiration</th>
+                            <th>Alerte avant</th>
+                            <th>Statut</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in politiques %}
+                        <tr>
+                            <td><a href="{% url 'comptabilite:archivage_politique_detail' p.pk %}" class="fw-bold">{{ p.get_type_document_display }}</a></td>
+                            <td><span class="badge bg-primary">{{ p.duree_conservation_annees }} ans</span></td>
+                            <td>{{ p.get_base_legale_display }}</td>
+                            <td>
+                                {% if p.action_expiration == 'archiver' %}
+                                <span class="badge bg-info">Archiver</span>
+                                {% elif p.action_expiration == 'detruire' %}
+                                <span class="badge bg-danger">Détruire</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Réviser</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ p.alerte_avant_expiration_jours }} jours</td>
+                            <td>
+                                {% if p.est_actif %}
+                                <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactif</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'comptabilite:archivage_politique_detail' p.pk %}" class="btn btn-outline-primary"><i class="bi bi-eye"></i></a>
+                                    <a href="{% url 'comptabilite:archivage_politique_update' p.pk %}" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Aucune politique trouvée
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

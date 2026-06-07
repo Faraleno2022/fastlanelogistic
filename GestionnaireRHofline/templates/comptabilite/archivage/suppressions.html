@@ -1,0 +1,136 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Suppressions{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0"><i class="bi bi-trash me-2"></i>Suppressions</h1>
+            <p class="text-muted mb-0">Demandes de suppression de documents</p>
+        </div>
+        <a href="{% url 'comptabilite:archivage_suppression_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Nouvelle demande
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning bg-opacity-10 border-warning">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ nb_planifiees|default:0 }}</h3>
+                    <small class="text-muted">Planifiées</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info bg-opacity-10 border-info">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ nb_en_attente|default:0 }}</h3>
+                    <small class="text-muted">En attente validation</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success bg-opacity-10 border-success">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ nb_executees|default:0 }}</h3>
+                    <small class="text-muted">Exécutées</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <select name="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Filtrer</button>
+                    <a href="{% url 'comptabilite:archivage_suppressions' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Document</th>
+                            <th>Type</th>
+                            <th>Date planifiée</th>
+                            <th>Statut</th>
+                            <th>Validé par</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in suppressions %}
+                        <tr>
+                            <td>
+                                {% if s.document %}
+                                <a href="{% url 'comptabilite:archivage_document_detail' s.document.pk %}" class="fw-bold">{{ s.document.reference }}</a>
+                                {% else %}
+                                <span class="text-muted">Document supprimé</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-secondary">{{ s.get_type_suppression_display }}</span></td>
+                            <td>{{ s.date_planifiee|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if s.statut == 'planifiee' %}
+                                <span class="badge bg-secondary">Planifiée</span>
+                                {% elif s.statut == 'en_attente_validation' %}
+                                <span class="badge bg-warning text-dark">En attente</span>
+                                {% elif s.statut == 'validee' %}
+                                <span class="badge bg-info">Validée</span>
+                                {% elif s.statut == 'executee' %}
+                                <span class="badge bg-success">Exécutée</span>
+                                {% else %}
+                                <span class="badge bg-dark">Annulée</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ s.validee_par|default:"-" }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'comptabilite:archivage_suppression_update' s.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Aucune demande trouvée
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

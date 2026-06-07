@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Paie - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-money-bill-wave me-2"></i>Gestion de la Paie</h2>
+            <p class="text-muted">Système conforme à la législation guinéenne</p>
+        </div>
+    </div>
+
+    <!-- Statistiques principales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Période Actuelle</h6>
+                    <h4 class="text-primary">
+                        {% if stats.periode_actuelle %}
+                            {{ stats.periode_actuelle }}
+                        {% else %}
+                            Aucune
+                        {% endif %}
+                    </h4>
+                    <small class="text-muted">
+                        {% if stats.periode_actuelle %}
+                            <span class="badge bg-info">{{ stats.periode_actuelle.statut_periode }}</span>
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Employés Actifs</h6>
+                    <h3>{{ stats.total_employes }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Bulletins du Mois</h6>
+                    <h3>{{ stats.bulletins_mois }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Masse Salariale</h6>
+                    <h5 class="text-success">{{ stats.montant_total_brut|floatformat:0|default:"0" }} GNF</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accès rapide -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Périodes de Paie</h5>
+                </div>
+                <div class="card-body">
+                    <p>Gérer les périodes mensuelles de paie</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'paie:liste_periodes' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>Voir les Périodes
+                        </a>
+                        <a href="{% url 'paie:creer_periode' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Nouvelle Période
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Bulletins de Paie</h5>
+                </div>
+                <div class="card-body">
+                    <p>Consulter et imprimer les bulletins</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'paie:liste_bulletins' %}" class="btn btn-outline-success">
+                            <i class="fas fa-list me-2"></i>Voir les Bulletins
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-book me-2"></i>Livre & Déclarations</h5>
+                </div>
+                <div class="card-body">
+                    <p>Documents légaux et déclarations</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'paie:livre_paie' %}" class="btn btn-outline-info">
+                            <i class="fas fa-book me-2"></i>Livre de Paie
+                        </a>
+                        <a href="{% url 'paie:declarations_sociales' %}" class="btn btn-info text-white">
+                            <i class="fas fa-file-alt me-2"></i>Déclarations Sociales
+                        </a>
+                        <a href="{% url 'paie:declaration_etax' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Déclaration eTax
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rapports -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Rapports &amp; Analyses</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'paie:rapport_masse_salariale' %}" class="btn btn-primary">
+                            <i class="fas fa-chart-bar me-1"></i>Rapport Masse Salariale
+                        </a>
+                        <a href="{% url 'paie:rapport_etat_paie' %}" class="btn btn-outline-info">
+                            <i class="fas fa-table me-1"></i>État de Paie
+                        </a>
+                        <a href="{% url 'paie:rapport_feuille_presence' %}" class="btn btn-outline-success">
+                            <i class="fas fa-calendar-check me-1"></i>Feuille de Présence
+                        </a>
+                        <a href="{% url 'employes:tableau_bord_absences' %}" class="btn btn-outline-danger">
+                            <i class="fas fa-calendar-times me-1"></i>Tableau de Bord Absences
+                        </a>
+                        <a href="{% url 'paie:simulation_comparative' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-balance-scale me-1"></i>Simulation multi-barèmes RTS
+                        </a>
+                        <a href="{% url 'paie:historique_simulations' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-history me-1"></i>Historique simulations
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paramètres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-secondary">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-sliders me-2"></i>Paramètres avancés</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'paie:config_entreprise' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-gear me-1"></i>Configuration heures sup / congés
+                        </a>
+                        <a href="{% url 'paie:parametres_calcul' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-calculator me-1"></i>Paramètres de calcul (formules)
+                        </a>
+                        <a href="{% url 'paie:bareme_irpp_liste' %}" class="btn btn-outline-warning">
+                            <i class="bi bi-percent me-1"></i>Barème RTS
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fonctionnalités -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-check-circle text-success me-2"></i>Fonctionnalités Intégrées</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Calculs Automatiques</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Salaire brut (base + primes + indemnités)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>CNSS Employé : 5% du salaire brut</li>
+                                <li><i class="fas fa-check text-success me-2"></i>CNSS Employeur : 18% du salaire brut</li>
+                                <li><i class="fas fa-check text-success me-2"></i>INAM : 2.5% de la masse salariale</li>
+                                <li><i class="fas fa-check text-success me-2"></i>IRG selon barème progressif guinéen</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Déductions familiales et abattements</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Documents Générés</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Bulletins de paie individuels</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Livre de paie conforme</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Déclaration CNSS</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Déclaration IRG</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Déclaration INAM</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Cumuls annuels</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

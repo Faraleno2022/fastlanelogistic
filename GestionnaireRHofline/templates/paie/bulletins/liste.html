@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Bulletins de Paie{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-file-invoice me-2"></i>Bulletins de Paie</h2>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <i class="fas fa-filter me-2"></i>Filtres - <small class="text-muted">Consultez les bulletins de toutes les périodes (y compris clôturées)</small>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            <label for="annee" class="form-label">Année</label>
+                            <select class="form-select" id="annee" name="annee">
+                                <option value="">Toutes</option>
+                                {% for a in annees_disponibles %}
+                                <option value="{{ a }}" {% if annee_selectionnee == a|stringformat:"s" %}selected{% endif %}>
+                                    {{ a }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="periode" class="form-label">Période</label>
+                            <select class="form-select" id="periode" name="periode">
+                                <option value="">Toutes les périodes</option>
+                                {% for p in periodes %}
+                                <option value="{{ p.pk }}" {% if request.GET.periode == p.pk|stringformat:"s" %}selected{% endif %}>
+                                    {{ p }} {% if p.statut_periode == 'cloturee' %}(Clôturée){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="employe" class="form-label">Employé</label>
+                            <select class="form-select" id="employe" name="employe">
+                                <option value="">Tous les employés</option>
+                                {% for emp in employes %}
+                                <option value="{{ emp.pk }}" {% if request.GET.employe == emp.pk|stringformat:"s" %}selected{% endif %}>
+                                    {{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="statut" class="form-label">Statut</label>
+                            <select class="form-select" id="statut" name="statut">
+                                <option value="">Tous</option>
+                                <option value="brouillon" {% if request.GET.statut == 'brouillon' %}selected{% endif %}>Brouillon</option>
+                                <option value="calcule" {% if request.GET.statut == 'calcule' %}selected{% endif %}>Calculé</option>
+                                <option value="valide" {% if request.GET.statut == 'valide' %}selected{% endif %}>Validé</option>
+                                <option value="paye" {% if request.GET.statut == 'paye' %}selected{% endif %}>Payé</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Rechercher
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des bulletins -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">
+                            <strong>{{ total_bulletins }}</strong> bulletin(s) trouvé(s)
+                            {% if bulletins.paginator.num_pages > 1 %}
+                            - Page {{ bulletins.number }} sur {{ bulletins.paginator.num_pages }}
+                            {% endif %}
+                        </span>
+                        <div class="d-flex gap-2">
+                            {% if request.GET.periode %}
+                            <a href="{% url 'paie:bulletins_groupes_pdf' %}?periode_id={{ request.GET.periode }}"
+                               class="btn btn-danger btn-sm" target="_blank">
+                                <i class="fas fa-print me-1"></i>Imprimer tous les bulletins
+                            </a>
+                            {% elif request.GET.annee and request.GET.mois %}
+                            <a href="{% url 'paie:bulletins_groupes_pdf' %}?annee={{ request.GET.annee }}&mois={{ request.GET.mois }}"
+                               class="btn btn-danger btn-sm" target="_blank">
+                                <i class="fas fa-print me-1"></i>Imprimer tous les bulletins
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-orange-light">
+                                <tr>
+                                    <th>N° Bulletin</th>
+                                    <th>Période</th>
+                                    <th>Matricule</th>
+                                    <th>Employé</th>
+                                    <th>Brut</th>
+                                    <th>Net</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bulletin in bulletins %}
+                                <tr>
+                                    <td><code>{{ bulletin.numero_bulletin }}</code></td>
+                                    <td>{{ bulletin.periode }}</td>
+                                    <td>{{ bulletin.employe.matricule }}</td>
+                                    <td>{{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}</td>
+                                    <td>{{ bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
+                                    <td class="text-success"><strong>{{ bulletin.net_a_payer|floatformat:0|intcomma }} GNF</strong></td>
+                                    <td>
+                                        {% if bulletin.statut_bulletin == 'brouillon' %}
+                                            <span class="badge bg-secondary">Brouillon</span>
+                                        {% elif bulletin.statut_bulletin == 'calcule' %}
+                                            <span class="badge bg-primary">Calculé</span>
+                                        {% elif bulletin.statut_bulletin == 'valide' %}
+                                            <span class="badge bg-success">Validé</span>
+                                        {% elif bulletin.statut_bulletin == 'paye' %}
+                                            <span class="badge bg-dark">Payé</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'paie:detail_bulletin' bulletin.pk %}" 
+                                           class="btn btn-sm btn-outline-primary" title="Détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'paie:telecharger_bulletin_pdf' bulletin.pk %}"
+                                           class="btn btn-sm btn-danger" title="PDF standard GuineeRH">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                        Aucun bulletin trouvé
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if bulletins.paginator.num_pages > 1 %}
+                    <nav aria-label="Pagination des bulletins" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if bulletins.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}{% if request.GET.periode %}&periode={{ request.GET.periode }}{% endif %}{% if request.GET.employe %}&employe={{ request.GET.employe }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ bulletins.previous_page_number }}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}{% if request.GET.periode %}&periode={{ request.GET.periode }}{% endif %}{% if request.GET.employe %}&employe={{ request.GET.employe }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i> Précédent
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in bulletins.paginator.page_range %}
+                                {% if bulletins.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > bulletins.number|add:'-3' and num < bulletins.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}{% if request.GET.periode %}&periode={{ request.GET.periode }}{% endif %}{% if request.GET.employe %}&employe={{ request.GET.employe }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if bulletins.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ bulletins.next_page_number }}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}{% if request.GET.periode %}&periode={{ request.GET.periode }}{% endif %}{% if request.GET.employe %}&employe={{ request.GET.employe }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}">
+                                    Suivant <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ bulletins.paginator.num_pages }}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}{% if request.GET.periode %}&periode={{ request.GET.periode }}{% endif %}{% if request.GET.employe %}&employe={{ request.GET.employe }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

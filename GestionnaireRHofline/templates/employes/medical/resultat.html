@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Enregistrer Résultat Visite{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:detail_visite' visite.pk %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-clipboard-check me-2"></i>Enregistrer le Résultat</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Visite de {{ visite.employe.nom }} {{ visite.employe.prenoms }}</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td class="text-muted">Type</td>
+                            <td>{{ visite.get_type_visite_display }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Date</td>
+                            <td>{{ visite.date_visite|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Médecin</td>
+                            <td>{{ visite.medecin|default:"Non spécifié" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Résultats de la visite</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Aptitude *</label>
+                            <select class="form-select" name="aptitude" required>
+                                <option value="">Sélectionner</option>
+                                {% for code, libelle in aptitudes %}
+                                <option value="{{ code }}">{{ libelle }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Réserves éventuelles</label>
+                            <textarea class="form-control" name="reserves" rows="3"
+                                      placeholder="Détail des réserves si applicable..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Recommandations</label>
+                            <textarea class="form-control" name="recommandations" rows="3"
+                                      placeholder="Recommandations du médecin..."></textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Date prochaine visite</label>
+                                <input type="date" class="form-control" name="date_prochaine_visite">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Certificat médical</label>
+                                <input type="file" class="form-control" name="fichier_certificat" accept=".pdf,.jpg,.jpeg,.png">
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'employes:detail_visite' visite.pk %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

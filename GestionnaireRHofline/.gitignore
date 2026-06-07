@@ -1,0 +1,141 @@
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static_root
+
+# Security - IMPORTANT!
+.env
+.env.local
+.env.production
+*.pem
+*.key
+*.crt
+*.p12
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Backup files
+*.bak
+*.backup
+*.sql
+*.dump
+
+# Temporary files
+*.tmp
+*.temp
+__pycache__/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Sensitive data
+secrets/
+private/
+credentials/
+
+# Cache
+.cache/
+*.cache
+
+# Node modules (si vous utilisez npm)
+node_modules/
+staticfiles/
+fix_settings.py
+
+# Scripts temporaires de diagnostic
+check*.py
+creer_*.py
+run_*.py
+fix_*.py
+find.py
+test_conges.py
+
+# Fichiers de backup
+backup_*.json
+
+# Base de données locale
+db.sqlite3
+
+# PDFs de test
+test_*.pdf
+.trial_start
+bulletin_corrige_CAMARA.pdf
+uwsgi.ini
+
+# Build outputs
+Output/
+dist_nuitka/
+installer/
+runtime_hooks/
+nul
+
+# Build logs
+_build_*.txt
+_iscc_*.txt
+_protect_*.txt
+_nuitka_log.txt
+_pyinstaller_log.txt
+build_log.txt
+
+# Temporary scripts
+_*.py
+_*.bat
+
+# Other
+.claude/
+db_template.sqlite3
+GuineeRH_Document_Commercial.docx
+generate_doc_commercial.js
+templates/widgets/

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Simulation de paiement - GuinéeRH{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="alert alert-warning text-center mb-4">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Mode Test</strong> - Cette page simule un paiement PayDunya
+            </div>
+            
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white text-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-credit-card-2-front"></i> Simulation PayDunya
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="https://paydunya.com/images/logo.png" alt="PayDunya" height="50" onerror="this.outerHTML='<h4 class=text-primary>PayDunya</h4>'">
+                    </div>
+                    
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-3">Détails de la facture</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Entreprise</span>
+                                <strong>{{ transaction.entreprise.nom_entreprise }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Plan</span>
+                                <strong>{{ transaction.plan.nom }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Durée</span>
+                                <strong>{{ transaction.duree_mois }} mois</strong>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between fs-5">
+                                <span>Total à payer</span>
+                                <strong class="text-primary">{{ transaction.montant|intcomma }} GNF</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-center text-muted mb-4">
+                        Choisissez une action pour simuler le résultat du paiement :
+                    </p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-3">
+                            <button type="submit" name="action" value="pay" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> Simuler un paiement réussi
+                            </button>
+                            <button type="submit" name="action" value="cancel" class="btn btn-outline-danger">
+                                <i class="bi bi-x-circle"></i> Annuler le paiement
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center text-muted small">
+                    Référence : {{ transaction.reference }}
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="bi bi-info-circle"></i>
+                    En production, vous serez redirigé vers la vraie page de paiement PayDunya.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

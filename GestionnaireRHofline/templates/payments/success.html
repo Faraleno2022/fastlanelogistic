@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Paiement réussi - GuinéeRH{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow text-center">
+                <div class="card-body py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+                    </div>
+                    <h2 class="text-success mb-3">Paiement réussi !</h2>
+                    
+                    {% if transaction %}
+                    <p class="text-muted mb-4">
+                        Merci pour votre paiement. Votre abonnement <strong>{{ transaction.plan.nom }}</strong> est maintenant actif.
+                    </p>
+                    
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-3">Détails de la transaction</h6>
+                            <div class="row text-start">
+                                <div class="col-6 mb-2">
+                                    <small class="text-muted">Référence</small>
+                                    <div class="fw-bold">{{ transaction.reference }}</div>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <small class="text-muted">Montant</small>
+                                    <div class="fw-bold">{{ transaction.montant|intcomma }} GNF</div>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <small class="text-muted">Plan</small>
+                                    <div class="fw-bold">{{ transaction.plan.nom }}</div>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <small class="text-muted">Durée</small>
+                                    <div class="fw-bold">{{ transaction.duree_mois }} mois</div>
+                                </div>
+                                {% if transaction.date_expiration_abonnement %}
+                                <div class="col-12 mt-2">
+                                    <small class="text-muted">Valable jusqu'au</small>
+                                    <div class="fw-bold text-success">{{ transaction.date_expiration_abonnement|date:"d/m/Y" }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-4">
+                        Votre paiement a été traité avec succès.
+                    </p>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'dashboard:index' %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-house"></i> Accéder au tableau de bord
+                        </a>
+                        <a href="{% url 'payments:mon_abonnement' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-gem"></i> Voir mon abonnement
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

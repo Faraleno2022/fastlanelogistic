@@ -1,0 +1,44 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}{% if journal %}Modifier{% else %}Nouveau{% endif %} Journal{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-book me-2"></i>{% if journal %}Modifier le journal{% else %}Nouveau journal{% endif %}</h4>
+    <a href="{% url 'comptabilite:journal_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Code <span class="text-danger">*</span></label>
+                    {{ form.code }}
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Libellé <span class="text-danger">*</span></label>
+                    {{ form.libelle }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Type <span class="text-danger">*</span></label>
+                    {{ form.type_journal }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Compte contrepartie</label>
+                    {{ form.compte_contrepartie }}
+                </div>
+                <div class="col-12">
+                    <div class="form-check">{{ form.est_actif }}<label class="form-check-label">Journal actif</label></div>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'comptabilite:journal_list' %}" class="btn btn-outline-secondary">Annuler</a>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i>Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

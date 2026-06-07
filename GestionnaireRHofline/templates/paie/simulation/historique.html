@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Historique des simulations{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="mb-0"><i class="fas fa-history me-2 text-secondary"></i>Historique des simulations</h2>
+      <p class="text-muted mb-0 small">Simulations fiscales comparatives sauvegardées</p>
+    </div>
+    <a href="{% url 'paie:simulation_comparative' %}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus me-1"></i>Nouvelle simulation
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show">
+        {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if simulations %}
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Date</th>
+              <th>Label</th>
+              <th class="text-end">Brut</th>
+              <th class="text-end">Indemnités</th>
+              <th>Barèmes comparés</th>
+              <th>Utilisateur</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sim in simulations %}
+            <tr>
+              <td>
+                <span class="fw-semibold">{{ sim.date_simulation|date:"d/m/Y" }}</span>
+                <small class="text-muted d-block">{{ sim.date_simulation|date:"H:i" }}</small>
+              </td>
+              <td>{{ sim.label|default:"—" }}</td>
+              <td class="text-end">{{ sim.salaire_brut|intcomma }} GNF</td>
+              <td class="text-end">{{ sim.total_indemnites|intcomma }} GNF</td>
+              <td>
+                {% for b in sim.baremes_compares %}
+                  <span class="badge bg-secondary me-1">{{ b }}</span>
+                {% endfor %}
+              </td>
+              <td>
+                {% if sim.utilisateur %}
+                  {{ sim.utilisateur.get_full_name|default:sim.utilisateur.username }}
+                {% else %}—{% endif %}
+              </td>
+              <td class="text-center">
+                <div class="btn-group btn-group-sm">
+                  <a href="{% url 'paie:detail_simulation' sim.pk %}" class="btn btn-outline-primary" title="Voir">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{% url 'paie:export_simulation_csv' sim.pk %}" class="btn btn-outline-success" title="CSV">
+                    <i class="fas fa-file-csv"></i>
+                  </a>
+                  <form method="post" action="{% url 'paie:supprimer_simulation' sim.pk %}"
+                        onsubmit="return confirm('Supprimer cette simulation ?');" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% if simulations.has_other_pages %}
+    <div class="card-footer">
+      <nav>
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+          {% if simulations.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ simulations.previous_page_number }}">‹ Précédent</a>
+          </li>
+          {% endif %}
+          <li class="page-item disabled">
+            <span class="page-link">Page {{ simulations.number }} / {{ simulations.paginator.num_pages }}</span>
+          </li>
+          {% if simulations.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ simulations.next_page_number }}">Suivant ›</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+
+  {% else %}
+  <div class="card shadow-sm">
+    <div class="card-body text-center py-5">
+      <i class="fas fa-history fa-4x text-muted mb-3"></i>
+      <h5 class="text-muted">Aucune simulation sauvegardée</h5>
+      <p class="text-muted mb-3">Lancez une simulation et cliquez sur <strong>Sauvegarder</strong> pour l'archiver ici.</p>
+      <a href="{% url 'paie:simulation_comparative' %}" class="btn btn-primary">
+        <i class="fas fa-play me-1"></i>Lancer une simulation
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

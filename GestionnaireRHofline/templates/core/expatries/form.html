@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}{% if modification %}Modifier{% else %}Ajouter{% endif %} expatrié{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">{% if modification %}Modifier expatrié{% else %}Nouvel expatrié{% endif %}</h1>
+    <a href="{% url 'core:expatries_liste' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% if not modification %}
+            <div class="mb-3">
+                <label class="form-label">Employé *</label>
+                <select name="employe" class="form-select" required>
+                    <option value="">-- Sélectionner --</option>
+                    {% for emp in employes %}<option value="{{ emp.id }}">{{ emp.nom_complet }} ({{ emp.matricule }})</option>{% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nationalité</label>
+                    <input type="text" name="nationalite" class="form-control" value="{{ expatrie.nationalite|default:'' }}" placeholder="Ex: Française">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Pays d'origine *</label>
+                    <input type="text" name="pays_origine" class="form-control" required value="{{ expatrie.pays_origine|default:'' }}" placeholder="Ex: France">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Type de contrat *</label>
+                    <select name="type_contrat_expat" class="form-select" required>
+                        <option value="detachement" {% if expatrie.type_contrat_expat == 'detachement' %}selected{% endif %}>Détachement</option>
+                        <option value="expatriation" {% if expatrie.type_contrat_expat == 'expatriation' or not expatrie %}selected{% endif %}>Expatriation</option>
+                        <option value="local_plus" {% if expatrie.type_contrat_expat == 'local_plus' %}selected{% endif %}>Local Plus</option>
+                        <option value="vip" {% if expatrie.type_contrat_expat == 'vip' %}selected{% endif %}>VIP/Impatrié</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="actif" {% if expatrie.statut == 'actif' or not expatrie %}selected{% endif %}>Actif</option>
+                        <option value="termine" {% if expatrie.statut == 'termine' %}selected{% endif %}>Terminé</option>
+                        <option value="suspendu" {% if expatrie.statut == 'suspendu' %}selected{% endif %}>Suspendu</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Date d'arrivée en Guinée</label>
+                    <input type="date" name="date_arrivee" class="form-control" value="{% if expatrie.date_arrivee %}{{ expatrie.date_arrivee|date:'Y-m-d' }}{% endif %}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Durée prévue (mois)</label>
+                    <input type="number" name="duree_prevue_mois" class="form-control" min="1" value="{{ expatrie.duree_prevue_mois|default:'' }}" placeholder="Ex: 24">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Date début mission *</label>
+                    <input type="date" name="date_debut_mission" class="form-control" required value="{% if expatrie.date_debut_mission %}{{ expatrie.date_debut_mission|date:'Y-m-d' }}{% endif %}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Date fin mission prévue</label>
+                    <input type="date" name="date_fin_mission_prevue" class="form-control" value="{% if expatrie.date_fin_mission_prevue %}{{ expatrie.date_fin_mission_prevue|date:'Y-m-d' }}{% endif %}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Motif de l'expatriation</label>
+                <input type="text" name="motif_expatriation" class="form-control" value="{{ expatrie.motif_expatriation|default:'' }}" placeholder="Ex: Mission technique, Direction projet...">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Contact d'urgence (pays d'origine)</label>
+                <input type="text" name="contact_urgence_pays" class="form-control" value="{{ expatrie.contact_urgence_pays|default:'' }}" placeholder="Nom et téléphone">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Observations</label>
+                <textarea name="observations" class="form-control" rows="2">{{ expatrie.observations|default:'' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

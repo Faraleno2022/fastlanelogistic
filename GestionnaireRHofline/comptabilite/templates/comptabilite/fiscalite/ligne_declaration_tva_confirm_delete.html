@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Supprimer une ligne" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">{% trans "Confirmation de suppression" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        {% trans "Êtes-vous certain de vouloir supprimer cette ligne?" %}
+                    </p>
+                    <p class="mb-0">
+                        <strong>{% trans "Code:" %}</strong> {{ object.code }}<br>
+                        <strong>{% trans "Libellé:" %}</strong> {{ object.libelle }}<br>
+                        <strong>{% trans "Montant:" %}</strong> {{ object.montant_ht|floatformat:2 }} €
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> {% trans "Supprimer" %}
+                        </button>
+                    </form>
+                    <a href="{{ object.declaration.get_absolute_url }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> {% trans "Retour" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

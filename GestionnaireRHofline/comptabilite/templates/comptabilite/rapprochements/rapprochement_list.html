@@ -1,0 +1,172 @@
+{% extends "comptabilite/base/list.html" %}
+{% load i18n %}
+
+{% block title %}Rapprochements bancaires - {{ block.super }}{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <h1>Rapprochements bancaires</h1>
+    <div class="header-actions">
+        <a href="{% url 'comptabilite:rapprochement-create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nouveau rapprochement
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block filters %}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <select name="compte_bancaire" class="form-select">
+                    <option value="">Tous les comptes</option>
+                    {% for compte in comptes %}
+                    <option value="{{ compte.id }}" 
+                            {% if request.GET.compte_bancaire|stringformat:"s" == compte.id|stringformat:"s" %}selected{% endif %}>
+                        {{ compte.numero_compte }} - {{ compte.intitule_tiers }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="statut" class="form-select">
+                    <option value="">Tous statuts</option>
+                    <option value="EN_COURS" {% if request.GET.statut == "EN_COURS" %}selected{% endif %}>En cours</option>
+                    <option value="FINALIZE" {% if request.GET.statut == "FINALIZE" %}selected{% endif %}>Finalisé</option>
+                    <option value="DIVERGENCE" {% if request.GET.statut == "DIVERGENCE" %}selected{% endif %}>Divergence</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_debut" class="form-control" 
+                       placeholder="Du" value="{{ request.GET.date_debut }}">
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_fin" class="form-control" 
+                       placeholder="Au" value="{{ request.GET.date_fin }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-filter"></i> Filtrer
+                </button>
+            </div>
+            <div class="col-md-1">
+                <a href="?export=csv" class="btn btn-outline-success w-100">
+                    <i class="fas fa-download"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block table_content %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Compte</th>
+                    <th>Date rapprochement</th>
+                    <th>Solde comptable</th>
+                    <th>Solde bancaire</th>
+                    <th>Écart</th>
+                    <th>Statut</th>
+                    <th>Opérations</th>
+                    <th style="width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rapp in object_list %}
+                <tr>
+                    <td>
+                        <strong>{{ rapp.compte_bancaire.numero_compte }}</strong><br>
+                        <small class="text-muted">{{ rapp.compte_bancaire.intitule_tiers }}</small>
+                    </td>
+                    <td>{{ rapp.date_rapprochement|date:"d/m/Y" }}</td>
+                    <td class="text-end">
+                        <code>{{ rapp.solde_comptable|floatformat:2 }}</code>
+                    </td>
+                    <td class="text-end">
+                        <code>{{ rapp.solde_bancaire|floatformat:2 }}</code>
+                    </td>
+                    <td class="text-end">
+                        {% with ecart=rapp.solde_comptable|add:rapp.solde_bancaire|add:"-" %}
+                        {% if ecart == 0 %}
+                            <span class="badge bg-success">0.00</span>
+                        {% else %}
+                            <span class="badge bg-warning">{{ ecart|floatformat:2 }}</span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        {% if rapp.statut == "EN_COURS" %}
+                            <span class="badge bg-info">En cours</span>
+                        {% elif rapp.statut == "FINALIZE" %}
+                            <span class="badge bg-success">Finalisé</span>
+                        {% else %}
+                            <span class="badge bg-danger">Divergence</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small>
+                            {{ rapp.operations.count }} opération(s)
+                            {% if rapp.operations_lettrees %}
+                            / {{ rapp.operations_lettrees }} lettrée(s)
+                            {% endif %}
+                        </small>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{% url 'comptabilite:rapprochement-detail' rapp.id %}" 
+                               class="btn btn-outline-primary" 
+                               title="{% trans 'Voir détails' %}">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'comptabilite:rapprochement-update' rapp.id %}" 
+                               class="btn btn-outline-warning"
+                               title="{% trans 'Éditer' %}">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'comptabilite:rapprochement-delete' rapp.id %}" 
+                               class="btn btn-outline-danger"
+                               title="{% trans 'Supprimer' %}">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        {% trans "Aucun rapprochement" %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if object_list %}
+    <div class="card-footer bg-light">
+        <div class="row">
+            <div class="col-md-6">
+                <small class="text-muted">
+                    Total comptable: <strong>{{ total_comptable|floatformat:2 }}</strong><br>
+                    Total bancaire: <strong>{{ total_bancaire|floatformat:2 }}</strong>
+                </small>
+            </div>
+            <div class="col-md-6 text-end">
+                <small class="text-muted">
+                    Rapprochements finalisés: <strong>{{ finalized_count }}</strong>
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if is_paginated %}
+{% include "comptabilite/pagination.html" %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,436 @@
+/* Variables Thème */
+:root {
+    --hse-dark: #1A1D24;
+    --hse-darker: #12151A;
+    --hse-card: #252A33;
+    --hse-text: #E0E0E0;
+    --hse-muted: #9E9E9E;
+    --hse-orange: #FF6D00;
+    --hse-orange-dark: #E65100;
+    --hse-border: #3A404C;
+    --hse-green-success: #28a745; /* Ajout pour le bouton Valider */
+    --hse-green-success-dark: #218838; /* Ajout pour le bouton Valider */
+}
+
+/* Structure Générale */
+body {
+    background: var(--hse-darker);
+    color: var(--hse-text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+}
+
+.hse-form-container {
+    background: var(--hse-darker);
+    color: var(--hse-text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    max-width: 900px; /* Taille maximale augmentée pour plus d'espace */
+    margin: 40px auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    border: 1px solid var(--hse-border);
+}
+
+/* Hero Section */
+.hse-hero {
+    height: 350px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.hse-hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)); /* Dégradé sombre */
+}
+
+.hse-hero-content {
+    position: relative; /* Pour être au-dessus du pseudo-élément ::before */
+    z-index: 1;
+    background: rgba(26, 29, 36, 0.9);
+    padding: 2rem 3rem;
+    text-align: center;
+    max-width: 800px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Ombre pour la carte */
+}
+
+.hse-hero h1 {
+    font-size: 2.8rem; /* Taille augmentée */
+    margin-bottom: 1rem;
+    color: white; /* Titre blanc */
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+}
+
+.hse-hero-content p {
+    font-size: 1.1rem;
+    color: var(--hse-muted);
+}
+
+.hse-orange {
+    color: var(--hse-orange);
+    font-weight: 600;
+}
+
+/* Formulaire Wrapper */
+.hse-form-wrapper {
+    background: var(--hse-card);
+    max-width: 860px; /* S'adapte au conteneur */
+    margin: -50px auto 3rem; /* Remonte sur l'image */
+    padding: 2.5rem; /* Plus de padding */
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.5); /* Ombre plus profonde */
+    border-top: 4px solid var(--hse-orange);
+    position: relative; /* Pour que le margin-top négatif fonctionne */
+    z-index: 2; /* S'assurer qu'il est au-dessus de l'héro */
+}
+
+.hse-form-section {
+    margin-bottom: 2.5rem; /* Plus d'espace entre les sections */
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--hse-border);
+}
+
+.hse-form-section:last-of-type { /* last-of-type pour être sûr */
+    border-bottom: none;
+}
+
+.hse-form-section h2 {
+    font-size: 1.6rem; /* Taille augmentée */
+    margin-bottom: 1.8rem; /* Plus d'espace */
+    display: flex;
+    align-items: center;
+    color: var(--hse-text);
+    border-bottom: 2px solid var(--hse-orange); /* Ligne orange sous le titre */
+    padding-bottom: 10px;
+}
+
+.hse-icon {
+    color: var(--hse-orange);
+    margin-right: 12px; /* Plus d'espace */
+    font-size: 1.3rem; /* Taille augmentée */
+}
+
+/* Groupes de Champs */
+.hse-form-group {
+    margin-bottom: 1.8rem; /* Plus d'espace */
+}
+
+.hse-form-group label {
+    display: block;
+    margin-bottom: 0.8rem; /* Plus d'espace */
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    color: var(--hse-text);
+    font-size: 1.05rem;
+}
+
+/* Styles des inputs et textarea (appliqués via JS avec la classe hse-input) */
+.hse-input {
+    width: 100%;
+    padding: 12px 15px; /* Plus de padding */
+    background: var(--hse-dark);
+    border: 1px solid var(--hse-border);
+    border-radius: 8px; /* Plus arrondi */
+    color: var(--hse-text);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box; /* Important pour le padding et la bordure */
+}
+
+.hse-input::placeholder {
+    color: var(--hse-muted);
+    opacity: 0.7;
+}
+
+.hse-input:focus {
+    outline: none;
+    border-color: var(--hse-orange);
+    box-shadow: 0 0 0 4px rgba(255, 109, 0, 0.3); /* Ombre de focus plus prononcée */
+    background: #20232A; /* Légèrement plus clair au focus */
+}
+
+.hse-form-group textarea.hse-input {
+    min-height: 150px; /* Hauteur minimale augmentée */
+    resize: vertical;
+}
+
+.hse-field-hint {
+    font-size: 0.9rem;
+    color: var(--hse-muted);
+    margin-top: 0.6rem;
+    font-style: italic;
+}
+
+/* Ligne de formulaire (Row) */
+.hse-form-row {
+    display: flex;
+    gap: 2rem; /* Plus d'espace entre les colonnes */
+}
+
+.hse-half {
+    flex: 1;
+}
+
+/* Upload de Fichier */
+.hse-file-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem; /* Espace entre éléments de l'upload */
+    padding: 2rem;
+    border: 2px dashed var(--hse-border); /* Bordure dashed */
+    border-radius: 10px;
+    background: var(--hse-dark);
+}
+
+.hse-preview-container {
+    width: 100%;
+    max-width: 500px;
+    height: 250px; /* Hauteur préview augmentée */
+    background: var(--hse-darker);
+    border: 2px solid var(--hse-border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex; /* Pour centrer l'image */
+    justify-content: center;
+    align-items: center;
+}
+
+.hse-preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* 'contain' pour ne pas couper l'image */
+}
+
+.hse-upload-label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+/* Style du bouton d'upload (qui est en fait un span) */
+.hse-upload-btn {
+    background: var(--hse-orange);
+    color: white;
+    padding: 12px 25px; /* Plus de padding */
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px; /* Plus d'espace icône/texte */
+    transition: background 0.3s ease, transform 0.2s ease;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(255, 109, 0, 0.3);
+}
+
+.hse-upload-btn:hover {
+    background: var(--hse-orange-dark);
+    transform: translateY(-2px);
+}
+
+/* Cache l'input file réel de Django */
+.hse-input-file {
+    display: none; /* Cacher l'input file réel */
+}
+
+
+.hse-file-info {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--hse-muted);
+}
+
+/* Compteur de caractères */
+.hse-char-counter {
+    text-align: right;
+    font-size: 0.9rem;
+    color: var(--hse-muted);
+    margin-top: 0.6rem;
+}
+
+.hse-char-counter span {
+    font-weight: bold;
+    color: var(--hse-orange); /* Utilise la variable CSS */
+}
+
+/* Guide de contenu */
+.hse-content-guide {
+    background: var(--hse-dark);
+    border-left: 5px solid var(--hse-orange);
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    border-radius: 8px;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
+}
+
+.hse-content-guide p {
+    margin-top: 0;
+    font-weight: 600;
+    color: var(--hse-text);
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+}
+
+.hse-content-guide ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.hse-content-guide ul li {
+    margin-bottom: 0.5rem;
+    color: var(--hse-muted);
+    font-size: 0.95rem;
+}
+
+.hse-content-guide ul li::before {
+    content: "\2713"; /* Coche ✔ */
+    color: var(--hse-orange);
+    display: inline-block;
+    width: 1.2em;
+    margin-left: -1.2em;
+    font-weight: bold;
+}
+
+/* Actions du formulaire */
+.hse-form-actions {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.hse-submit-btn {
+    background: var(--hse-green-success); /* Bouton vert pour l'action principale */
+    color: white;
+    border: none;
+    padding: 15px 30px; /* Plus grand */
+    font-size: 1.15rem; /* Plus grand */
+    font-weight: 600;
+    border-radius: 8px; /* Plus arrondi */
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4); /* Ombre verte */
+}
+
+.hse-submit-btn:hover {
+    background: var(--hse-green-success-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.6);
+}
+
+.hse-validation-note {
+    font-size: 0.95rem;
+    color: var(--hse-muted);
+    margin-top: 1.5rem;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Domaines d'expertise */
+.hse-domains {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem; /* Réduit un peu le gap pour les petits écrans */
+    padding: 2.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--hse-dark); /* Fond plus sombre */
+    border-top: 1px solid var(--hse-border);
+    border-radius: 0 0 12px 12px; /* Coins arrondis en bas seulement */
+}
+
+.hse-domain {
+    text-align: center;
+    background: var(--hse-card);
+    padding: 1.5rem;
+    border-radius: 8px;
+    flex: 1;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hse-domain:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.hse-domain i {
+    font-size: 2.8rem; /* Icônes plus grandes */
+    color: var(--hse-orange);
+    margin-bottom: 1rem;
+    transition: color 0.3s ease;
+}
+
+.hse-domain:hover i {
+    color: var(--hse-orange-dark);
+}
+
+.hse-domain h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--hse-text);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hse-form-container {
+        margin: 20px 15px;
+    }
+    .hse-hero {
+        height: 250px;
+    }
+    .hse-hero-content {
+        padding: 1rem;
+    }
+    .hse-hero h1 {
+        font-size: 2rem;
+    }
+    .hse-hero-content p {
+        font-size: 0.9rem;
+    }
+    .hse-form-wrapper {
+        padding: 1.5rem;
+        margin-top: -30px; /* Moins de chevauchement */
+    }
+    .hse-form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+    }
+    .hse-form-section h2 {
+        font-size: 1.4rem;
+    }
+    .hse-form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .hse-domains {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+    .hse-domain {
+        margin-bottom: 1rem; /* Espace entre les blocs */
+    }
+    .hse-domain:last-child {
+        margin-bottom: 0;
+    }
+}

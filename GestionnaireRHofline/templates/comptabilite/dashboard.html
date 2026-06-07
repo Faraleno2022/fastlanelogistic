@@ -1,0 +1,241 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}Comptabilité - Tableau de bord{% endblock %}
+
+{% block compta_content %}
+<div class="compta-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1"><i class="bi bi-calculator me-2"></i>Module Comptabilité</h4>
+        <small>{{ request.user.entreprise.nom_entreprise }}</small>
+    </div>
+    <div>
+        {% if exercice_courant %}
+        <span class="badge bg-light text-dark">
+            <i class="bi bi-calendar-check me-1"></i>{{ exercice_courant.libelle }}
+        </span>
+        {% else %}
+        <a href="{% url 'comptabilite:exercice_create' %}" class="btn btn-warning btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Créer un exercice
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card-compta">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ stats.nb_ecritures }}</h3>
+                    <small class="text-muted">Écritures</small>
+                </div>
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card-compta">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ stats.nb_factures_impayees }}</h3>
+                    <small class="text-muted">Factures impayées</small>
+                </div>
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-receipt"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card-compta">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ stats.nb_tiers }}</h3>
+                    <small class="text-muted">Tiers actifs</small>
+                </div>
+                <div class="stat-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card-compta">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ stats.nb_comptes }}</h3>
+                    <small class="text-muted">Comptes actifs</small>
+                </div>
+                <div class="stat-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-list-columns"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h6 class="mb-0"><i class="bi bi-lightning me-2"></i>Actions rapides</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{% url 'comptabilite:ecriture_create' %}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-plus-circle me-1"></i>Nouvelle écriture
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'comptabilite:facture_create' %}?type=vente" class="btn btn-outline-success w-100">
+                            <i class="bi bi-receipt me-1"></i>Facture vente
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'comptabilite:facture_create' %}?type=achat" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-cart me-1"></i>Facture achat
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'comptabilite:tiers_create' %}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-person-plus me-1"></i>Nouveau tiers
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h6 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>États financiers</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{% url 'comptabilite:grand_livre' %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-book me-1"></i>Grand livre
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'comptabilite:balance' %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-bar-chart me-1"></i>Balance
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'comptabilite:bilan' %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-pie-chart me-1"></i>Bilan
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'comptabilite:compte_resultat' %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-graph-up me-1"></i>Compte résultat
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Dernières écritures -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>Dernières écritures</h6>
+                <a href="{% url 'comptabilite:ecriture_list' %}" class="btn btn-sm btn-link">Voir tout</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>N°</th>
+                                <th>Date</th>
+                                <th>Libellé</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ecriture in dernieres_ecritures %}
+                            <tr>
+                                <td><a href="{% url 'comptabilite:ecriture_detail' ecriture.pk %}">{{ ecriture.numero_ecriture }}</a></td>
+                                <td>{{ ecriture.date_ecriture|date:"d/m/Y" }}</td>
+                                <td>{{ ecriture.libelle|truncatechars:30 }}</td>
+                                <td>
+                                    {% if ecriture.est_validee %}
+                                    <span class="badge bg-success">Validée</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Brouillon</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    Aucune écriture
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Factures en attente -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-receipt me-2"></i>Factures en attente</h6>
+                <a href="{% url 'comptabilite:facture_list' %}" class="btn btn-sm btn-link">Voir tout</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>N°</th>
+                                <th>Tiers</th>
+                                <th>Montant</th>
+                                <th>Échéance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for facture in factures_en_attente %}
+                            <tr>
+                                <td><a href="{% url 'comptabilite:facture_detail' facture.pk %}">{{ facture.numero }}</a></td>
+                                <td>{{ facture.tiers.raison_sociale|truncatechars:20 }}</td>
+                                <td>{{ facture.montant_ttc|floatformat:0 }} GNF</td>
+                                <td>
+                                    {% if facture.date_echeance %}
+                                    {{ facture.date_echeance|date:"d/m/Y" }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="bi bi-check-circle fs-1 d-block mb-2"></i>
+                                    Aucune facture en attente
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

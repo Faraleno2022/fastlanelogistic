@@ -1,0 +1,315 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ formation.intitule }} - Formation - GestionnaireRH</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <style>
+        :root {
+            --orange-main: #EF7707;
+            --gray-dark: #212121;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+        }
+        .navbar-glass {
+            background: rgba(45, 45, 55, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        .hero-formation {
+            background: linear-gradient(135deg, var(--orange-main), var(--gray-dark));
+            color: white;
+            padding: 80px 0 60px;
+        }
+        .badge-type {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-weight: 500;
+        }
+        .card-detail {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgba(239,119,7,0.1), rgba(239,119,7,0.05));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--orange-main);
+        }
+        .btn-inscription {
+            background: linear-gradient(135deg, var(--orange-main), #ff8c00);
+            border: none;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-inscription:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239,119,7,0.3);
+        }
+        .session-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        .session-card:hover {
+            border-color: var(--orange-main);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-glass">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'core:index' %}">
+                <span style="color: var(--orange-main);">Gestionnaire</span><span style="color: #fff;">RH</span>
+            </a>
+            <div class="ms-auto">
+                <a href="{% url 'core:login' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Connexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-formation">
+        <div class="container">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb" style="--bs-breadcrumb-divider-color: rgba(255,255,255,0.5);">
+                    <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-white-50">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:index' %}#formations" class="text-white-50">Formations</a></li>
+                    <li class="breadcrumb-item active text-white">{{ formation.intitule|truncatewords:5 }}</li>
+                </ol>
+            </nav>
+            
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="mb-3">
+                        <span class="badge badge-type me-2">{{ formation.get_type_formation_display }}</span>
+                        <span class="badge badge-type">{{ formation.get_domaine_display }}</span>
+                    </div>
+                    <h1 class="display-5 fw-bold mb-3">{{ formation.intitule }}</h1>
+                    {% if formation.description %}
+                    <p class="lead opacity-75">{{ formation.description|truncatewords:30 }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                    {% if formation.cout_unitaire %}
+                    <div class="mb-2">
+                        <span class="fs-3 fw-bold">{{ formation.cout_unitaire|floatformat:0 }} GNF</span>
+                        <small class="d-block opacity-75">par participant</small>
+                    </div>
+                    {% else %}
+                    <div class="mb-2">
+                        <span class="fs-3 fw-bold">Gratuit</span>
+                    </div>
+                    {% endif %}
+                    <a href="{% url 'formation:inscription_formation_public' formation.pk %}" class="btn btn-light btn-lg">
+                        <i class="bi bi-mortarboard me-2"></i>S'inscrire
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Content -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <!-- Main Content -->
+                <div class="col-lg-8">
+                    {% if formation.image %}
+                    <div class="card card-detail mb-4">
+                        <img src="{{ formation.image.url }}" alt="{{ formation.intitule }}" class="card-img-top" style="max-height: 400px; object-fit: cover; border-radius: 16px 16px 0 0;">
+                    </div>
+                    {% endif %}
+
+                    {% if formation.description %}
+                    <div class="card card-detail mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3"><i class="bi bi-file-text text-primary me-2"></i>Description</h5>
+                            <p class="card-text">{{ formation.description|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if formation.objectifs %}
+                    <div class="card card-detail mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3"><i class="bi bi-bullseye text-success me-2"></i>Objectifs pédagogiques</h5>
+                            <p class="card-text">{{ formation.objectifs|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if formation.contenu %}
+                    <div class="card card-detail mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3"><i class="bi bi-list-check text-info me-2"></i>Contenu du programme</h5>
+                            <p class="card-text">{{ formation.contenu|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if formation.prerequis %}
+                    <div class="card card-detail mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3"><i class="bi bi-clipboard-check text-warning me-2"></i>Prérequis</h5>
+                            <p class="card-text">{{ formation.prerequis|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="card card-detail mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4"><i class="bi bi-info-circle text-primary me-2"></i>Informations</h5>
+                            
+                            <div class="info-item">
+                                <div class="info-icon"><i class="bi bi-clock"></i></div>
+                                <div>
+                                    <small class="text-muted d-block">Durée</small>
+                                    <strong>{{ formation.duree_jours }} jour{{ formation.duree_jours|pluralize }} ({{ formation.duree_heures }}h)</strong>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-icon"><i class="bi bi-bookmark"></i></div>
+                                <div>
+                                    <small class="text-muted d-block">Type</small>
+                                    <strong>{{ formation.get_type_formation_display }}</strong>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-icon"><i class="bi bi-folder"></i></div>
+                                <div>
+                                    <small class="text-muted d-block">Domaine</small>
+                                    <strong>{{ formation.get_domaine_display }}</strong>
+                                </div>
+                            </div>
+                            
+                            {% if formation.organisme_formateur %}
+                            <div class="info-item">
+                                <div class="info-icon"><i class="bi bi-building"></i></div>
+                                <div>
+                                    <small class="text-muted d-block">Organisme</small>
+                                    <strong>{{ formation.organisme_formateur }}</strong>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="info-item">
+                                <div class="info-icon"><i class="bi bi-cash"></i></div>
+                                <div>
+                                    <small class="text-muted d-block">Tarif</small>
+                                    {% if formation.cout_unitaire %}
+                                    <strong class="text-success">{{ formation.cout_unitaire|floatformat:0 }} GNF</strong>
+                                    {% else %}
+                                    <strong class="text-success">Gratuit</strong>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sessions disponibles -->
+                    {% if sessions %}
+                    <div class="card card-detail mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4"><i class="bi bi-calendar-event text-success me-2"></i>Prochaines sessions</h5>
+                            {% for session in sessions %}
+                            <div class="session-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong class="d-block">{{ session.date_debut|date:"d/m/Y" }}</strong>
+                                        <small class="text-muted">au {{ session.date_fin|date:"d/m/Y" }}</small>
+                                    </div>
+                                    <span class="badge bg-success">Disponible</span>
+                                </div>
+                                {% if session.lieu %}
+                                <div class="mt-2">
+                                    <small class="text-muted"><i class="bi bi-geo-alt"></i> {{ session.lieu }}</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Bouton d'inscription -->
+                    <div class="d-grid">
+                        <a href="{% url 'formation:inscription_formation_public' formation.pk %}" class="btn btn-inscription btn-lg text-white">
+                            <i class="bi bi-mortarboard me-2"></i>S'inscrire à cette formation
+                        </a>
+                    </div>
+                    
+                    <!-- Partage -->
+                    <div class="card card-detail mt-4">
+                        <div class="card-body text-center">
+                            <h6 class="mb-3">Partager cette formation</h6>
+                            <a href="https://wa.me/?text={{ formation.intitule|urlencode }}%20-%20{{ request.build_absolute_uri }}" 
+                               target="_blank" class="btn btn-outline-success btn-sm me-2">
+                                <i class="bi bi-whatsapp"></i> WhatsApp
+                            </a>
+                            <a href="mailto:?subject={{ formation.intitule|urlencode }}&body=Découvrez cette formation : {{ request.build_absolute_uri }}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-envelope"></i> Email
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">© 2024 GestionnaireRH - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

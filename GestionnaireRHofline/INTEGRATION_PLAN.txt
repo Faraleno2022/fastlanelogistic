@@ -1,0 +1,99 @@
+================================================================================
+PLAN D'INTÉGRATION - Gestionnaire RH Guinée Django
+================================================================================
+
+ÉTAT ACTUEL:
+✅ Base de données PostgreSQL (57 tables)
+✅ Modèles Django créés
+✅ Documentation complète
+❌ Views, URLs, Forms, Templates manquants
+
+================================================================================
+PRIORITÉS D'INTÉGRATION
+================================================================================
+
+PHASE 1 - FONDATIONS (Semaine 1)
+---------------------------------
+1. Module Authentification
+   - Login/Logout views
+   - Gestion utilisateurs
+   - Permissions
+
+2. Module Configuration
+   - Société
+   - Établissements
+   - Services/Postes
+
+PHASE 2 - EMPLOYÉS (Semaine 2)
+-------------------------------
+3. Module Employés
+   - CRUD complet
+   - Formulaires multi-étapes
+   - Upload photos/documents
+   - Recherche avancée
+
+4. Module Contrats
+   - Gestion contrats
+   - Alertes échéances
+
+PHASE 3 - TEMPS (Semaine 3)
+----------------------------
+5. Module Pointage
+   - Saisie pointages
+   - Validation
+   - Calcul heures
+
+6. Module Congés
+   - Demandes
+   - Workflow validation
+   - Soldes
+
+PHASE 4 - PAIE (Semaines 4-5)
+------------------------------
+7. Module Paie
+   - Paramétrage
+   - Calcul bulletins
+   - Génération PDF
+   - Livre de paie
+
+8. Module Prêts
+   - Acomptes
+   - Prêts avec échéanciers
+
+PHASE 5 - COMPLÉMENTS (Semaine 6)
+----------------------------------
+9. Dashboard
+10. Rapports
+11. Déclarations sociales
+
+================================================================================
+FICHIERS À CRÉER PAR MODULE
+================================================================================
+
+Pour chaque module (ex: employes):
+├── views.py          # Vues Django
+├── urls.py           # Routes
+├── forms.py          # Formulaires
+├── serializers.py    # API REST (optionnel)
+├── templates/
+│   └── employes/
+│       ├── list.html
+│       ├── detail.html
+│       ├── form.html
+│       └── delete.html
+└── static/
+    └── employes/
+        ├── css/
+        └── js/
+
+================================================================================
+COMMENCER PAR
+================================================================================
+
+1. Créer settings.py complet
+2. Créer urls.py principal
+3. Créer base templates
+4. Module authentification
+5. Dashboard simple
+
+================================================================================

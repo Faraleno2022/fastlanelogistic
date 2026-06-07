@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ offre.intitule_poste }} - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-megaphone"></i> {{ offre.intitule_poste }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'recrutement:offres' %}" class="btn btn-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'recrutement:modifier_offre' offre.uuid %}" class="btn btn-warning me-2">
+            <i class="bi bi-pencil"></i> Modifier
+        </a>
+        <a href="{% url 'recrutement:creer_candidature' %}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Nouvelle Candidature
+        </a>
+    </div>
+</div>
+
+<!-- Informations principales -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informations de l'offre</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Référence:</strong> {{ offre.reference_offre }}</p>
+                        <p><strong>Intitulé du poste:</strong> {{ offre.intitule_poste }}</p>
+                        <p><strong>Service:</strong> {{ offre.service.nom_service|default:"-" }}</p>
+                        <p><strong>Type de contrat:</strong> {{ offre.type_contrat|default:"-" }}</p>
+                        <p><strong>Nombre de postes:</strong> {{ offre.nombre_postes }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Date de publication:</strong> {{ offre.date_publication|date:"d/m/Y" }}</p>
+                        <p><strong>Date limite:</strong> {{ offre.date_limite_candidature|date:"d/m/Y"|default:"-" }}</p>
+                        <p><strong>Expérience requise:</strong> {{ offre.experience_requise|default:"-" }} ans</p>
+                        <p><strong>Formation requise:</strong> {{ offre.formation_requise|default:"-" }}</p>
+                        <p><strong>Responsable:</strong> {{ offre.responsable_recrutement|default:"-" }}</p>
+                    </div>
+                </div>
+                
+                {% if offre.salaire_propose_min or offre.salaire_propose_max %}
+                <hr>
+                <p><strong>Rémunération proposée:</strong> 
+                    {% if offre.salaire_propose_min and offre.salaire_propose_max %}
+                        {{ offre.salaire_propose_min|floatformat:0|intcomma }} - {{ offre.salaire_propose_max|floatformat:0|intcomma }} GNF
+                    {% elif offre.salaire_propose_min %}
+                        À partir de {{ offre.salaire_propose_min|floatformat:0|intcomma }} GNF
+                    {% else %}
+                        Jusqu'à {{ offre.salaire_propose_max|floatformat:0|intcomma }} GNF
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Statut -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-body text-center">
+                <small class="text-muted d-block mb-2">Statut de l'offre</small>
+                {% if offre.statut_offre == 'ouverte' %}
+                    <span class="badge bg-success fs-6">Ouverte</span>
+                {% elif offre.statut_offre == 'fermee' %}
+                    <span class="badge bg-secondary fs-6">Fermée</span>
+                {% elif offre.statut_offre == 'pourvue' %}
+                    <span class="badge bg-primary fs-6">Pourvue</span>
+                {% else %}
+                    <span class="badge bg-danger fs-6">Annulée</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Statistiques candidatures -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-graph-up"></i> Candidatures</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total:</span>
+                    <strong>{{ stats.total }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Reçues:</span>
+                    <span class="badge bg-info">{{ stats.recues }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Présélectionnées:</span>
+                    <span class="badge bg-warning text-dark">{{ stats.preselectionnes }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Entretien:</span>
+                    <span class="badge bg-primary">{{ stats.entretien }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Retenues:</span>
+                    <span class="badge bg-success">{{ stats.retenues }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Rejetées:</span>
+                    <span class="badge bg-danger">{{ stats.rejetees }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Description et profil -->
+<div class="row mb-4">
+    {% if offre.description_poste %}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-file-text"></i> Description du poste</h6>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ offre.description_poste }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if offre.profil_recherche %}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-person-badge"></i> Profil recherché</h6>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ offre.profil_recherche }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if offre.competences_requises or offre.avantages %}
+<div class="row mb-4">
+    {% if offre.competences_requises %}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-check-circle"></i> Compétences requises</h6>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ offre.competences_requises }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if offre.avantages %}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-gift"></i> Avantages</h6>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ offre.avantages }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Liste des candidatures -->
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-people"></i> Candidatures ({{ candidatures.count }})</h5>
+    </div>
+    <div class="card-body">
+        {% if candidatures %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>N° Candidature</th>
+                        <th>Nom</th>
+                        <th>Prénoms</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidature in candidatures %}
+                    <tr>
+                        <td><strong>{{ candidature.numero_candidature }}</strong></td>
+                        <td>{{ candidature.nom }}</td>
+                        <td>{{ candidature.prenoms }}</td>
+                        <td>{{ candidature.email|default:"-" }}</td>
+                        <td>{{ candidature.telephone|default:"-" }}</td>
+                        <td>{{ candidature.date_candidature|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if candidature.statut_candidature == 'recue' %}
+                                <span class="badge bg-info">Reçue</span>
+                            {% elif candidature.statut_candidature == 'preselectionne' %}
+                                <span class="badge bg-warning text-dark">Présélectionnée</span>
+                            {% elif candidature.statut_candidature == 'entretien' %}
+                                <span class="badge bg-primary">Entretien</span>
+                            {% elif candidature.statut_candidature == 'retenue' %}
+                                <span class="badge bg-success">Retenue</span>
+                            {% elif candidature.statut_candidature == 'rejetee' %}
+                                <span class="badge bg-danger">Rejetée</span>
+                            {% elif candidature.statut_candidature == 'embauche' %}
+                                <span class="badge bg-dark">Embauché</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'recrutement:detail_candidature' candidature.pk %}" class="btn btn-sm btn-info" title="Détails">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'recrutement:evaluer_candidature' candidature.pk %}" class="btn btn-sm btn-warning" title="Évaluer">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="bi bi-inbox fs-1"></i>
+            <p class="mt-2">Aucune candidature pour cette offre</p>
+            <a href="{% url 'recrutement:creer_candidature' %}" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Ajouter une candidature
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

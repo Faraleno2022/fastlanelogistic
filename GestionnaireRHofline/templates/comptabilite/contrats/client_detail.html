@@ -1,0 +1,267 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Contrat {{ contrat.numero_contrat }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-file-earmark-person me-2"></i>{{ contrat.numero_contrat }}
+            </h1>
+            <p class="text-muted mb-0">{{ contrat.objet }}</p>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'comptabilite:contrats_client_update' contrat.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>Modifier
+            </a>
+            <a href="{% url 'comptabilite:contrats_clients' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations principales -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="text-muted" width="40%">Client</th>
+                                    <td><strong>{{ contrat.client.nom }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Type</th>
+                                    <td>{{ contrat.get_type_contrat_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Référence client</th>
+                                    <td>{{ contrat.reference_client|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Responsable</th>
+                                    <td>{{ contrat.responsable|default:"-" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="text-muted" width="40%">Statut</th>
+                                    <td>
+                                        {% if contrat.statut == 'actif' %}
+                                        <span class="badge bg-success">Actif</span>
+                                        {% elif contrat.statut == 'en_negociation' %}
+                                        <span class="badge bg-warning text-dark">En négociation</span>
+                                        {% elif contrat.statut == 'expire' %}
+                                        <span class="badge bg-secondary">Expiré</span>
+                                        {% elif contrat.statut == 'suspendu' %}
+                                        <span class="badge bg-danger">Suspendu</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">{{ contrat.get_statut_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Montant total</th>
+                                    <td><strong>{{ contrat.montant_total|floatformat:0 }} {{ contrat.devise }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Montant annuel</th>
+                                    <td>{{ contrat.montant_annuel|floatformat:0 }} {{ contrat.devise }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Renouvellement auto</th>
+                                    <td>
+                                        {% if contrat.renouvellement_auto %}
+                                        <span class="badge bg-info">Oui</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Non</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    {% if contrat.description %}
+                    <hr>
+                    <h6 class="text-muted">Description</h6>
+                    <p>{{ contrat.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Période -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-calendar me-2"></i>Période du contrat</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Date signature</small>
+                            <strong>{{ contrat.date_signature|date:"d/m/Y" }}</strong>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Date début</small>
+                            <strong>{{ contrat.date_debut|date:"d/m/Y" }}</strong>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Date fin</small>
+                            <strong>{{ contrat.date_fin|date:"d/m/Y" }}</strong>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Durée</small>
+                            <strong>{{ contrat.duree_mois }} mois</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conditions de paiement -->
+            {% if conditions_paiement %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-credit-card me-2"></i>Conditions de paiement</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mode</th>
+                                <th>Échéance</th>
+                                <th>Délai</th>
+                                <th>Escompte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cond in conditions_paiement %}
+                            <tr>
+                                <td>{{ cond.get_mode_paiement_display }}</td>
+                                <td>{{ cond.get_echeance_display }}</td>
+                                <td>{{ cond.delai_paiement_jours }} jours</td>
+                                <td>{{ cond.escompte_paiement_anticipe }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Garanties -->
+            {% if garanties %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-shield-check me-2"></i>Garanties</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Type</th>
+                                <th>Durée</th>
+                                <th>Montant</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for g in garanties %}
+                            <tr>
+                                <td>{{ g.get_type_garantie_display }}</td>
+                                <td>{{ g.duree_garantie_mois }} mois</td>
+                                <td>{{ g.montant_garanti|floatformat:0|default:"-" }}</td>
+                                <td>{{ g.description|truncatechars:50 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Document -->
+            {% if contrat.document_contrat %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-file-pdf me-2"></i>Document</h5>
+                </div>
+                <div class="card-body text-center">
+                    <a href="{{ contrat.document_contrat.url }}" class="btn btn-outline-primary" target="_blank">
+                        <i class="bi bi-download me-1"></i>Télécharger le contrat
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Alertes -->
+            {% if alertes %}
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0"><i class="bi bi-bell me-2"></i>Alertes actives</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for alerte in alertes %}
+                        <li class="list-group-item">
+                            <span class="badge bg-{{ alerte.niveau }} me-2">{{ alerte.get_niveau_display }}</span>
+                            {{ alerte.message|truncatechars:50 }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Réclamations -->
+            {% if reclamations %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-chat-dots me-2"></i>Réclamations</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for r in reclamations %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ r.numero_reclamation }}</strong>
+                                <small class="d-block text-muted">{{ r.objet|truncatechars:30 }}</small>
+                            </div>
+                            <span class="badge bg-{% if r.statut == 'ouverte' %}warning{% elif r.statut == 'resolue' %}success{% else %}secondary{% endif %}">
+                                {{ r.get_statut_display }}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Audit -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-clock-history me-2"></i>Audit</h5>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <p class="mb-1"><strong>Créé le:</strong> {{ contrat.date_creation|date:"d/m/Y H:i" }}</p>
+                        <p class="mb-1"><strong>Par:</strong> {{ contrat.cree_par|default:"-" }}</p>
+                        <p class="mb-0"><strong>Modifié le:</strong> {{ contrat.date_modification|date:"d/m/Y H:i" }}</p>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

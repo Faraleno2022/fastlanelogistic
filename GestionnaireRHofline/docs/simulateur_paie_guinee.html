@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur de Paie - Guinée</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #EF7707; text-align: center; margin-bottom: 20px; }
+        .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card h3 { color: #333; border-bottom: 2px solid #EF7707; padding-bottom: 10px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; color: #555; }
+        input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        input[type="number"]:focus { border-color: #EF7707; outline: none; }
+        .row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .col { flex: 1; min-width: 200px; }
+        .result { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px; }
+        .result-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .result-row:last-child { border-bottom: none; }
+        .result-row.total { font-weight: bold; font-size: 1.1em; background: #EF7707; color: white; margin: 10px -15px -15px; padding: 15px; border-radius: 0 0 5px 5px; }
+        .result-row.subtotal { font-weight: 600; background: #e9ecef; margin: 5px -15px; padding: 10px 15px; }
+        .positive { color: #28a745; }
+        .negative { color: #dc3545; }
+        .info { background: #e7f3ff; border-left: 4px solid #0d6efd; padding: 10px 15px; margin-top: 15px; font-size: 0.9em; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        button { background: #EF7707; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #d56a06; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 0.8em; margin-left: 5px; }
+        .badge-info { background: #17a2b8; color: white; }
+        .badge-warning { background: #ffc107; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Simulateur de Paie - Guinée</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">Conforme au Code du Travail et CGI 2022</p>
+        
+        <div class="grid-2">
+            <div class="card">
+                <h3>📝 Informations Employé</h3>
+                <div class="form-group">
+                    <label>Situation matrimoniale</label>
+                    <select id="situation" onchange="calculer()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;">
+                        <option value="celibataire">Célibataire</option>
+                        <option value="marie">Marié(e)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nombre d'enfants à charge (max 4)</label>
+                    <input type="number" id="nbEnfants" value="0" min="0" max="4" onchange="calculer()">
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>💰 Gains</h3>
+                <div class="form-group">
+                    <label>Salaire de base (GNF)</label>
+                    <input type="number" id="salaireBase" value="2800000" onchange="calculer()">
+                </div>
+                <div class="form-group">
+                    <label>Prime de transport (GNF)</label>
+                    <input type="number" id="primeTransport" value="500000" onchange="calculer()">
+                </div>
+                <div class="form-group">
+                    <label>Autres primes (GNF)</label>
+                    <input type="number" id="autresPrimes" value="0" onchange="calculer()">
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid-2">
+            <div class="card">
+                <h3>⏰ Heures Supplémentaires</h3>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label>HS +30% (4 prem./sem.)</label>
+                            <input type="number" id="hs30" value="0" min="0" onchange="calculer()">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label>HS +60% (au-delà)</label>
+                            <input type="number" id="hs60" value="0" min="0" onchange="calculer()">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Heures de nuit +20%</label>
+                            <input type="number" id="hsNuit" value="0" min="0" onchange="calculer()">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Heures férié +100%</label>
+                            <input type="number" id="hsFerie" value="0" min="0" onchange="calculer()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>📉 Retenues Diverses</h3>
+                <div class="form-group">
+                    <label>Avance sur salaire (GNF)</label>
+                    <input type="number" id="avance" value="0" onchange="calculer()">
+                </div>
+                <div class="form-group">
+                    <label>Remboursement prêt (GNF)</label>
+                    <input type="number" id="pret" value="0" onchange="calculer()">
+                </div>
+                <div class="form-group">
+                    <label>Autres retenues (GNF)</label>
+                    <input type="number" id="autresRetenues" value="0" onchange="calculer()">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>📊 Résultats du Calcul</h3>
+            <button onclick="calculer()">🔄 Recalculer</button>
+            
+            <div class="grid-2" style="margin-top: 20px;">
+                <div>
+                    <h4 style="color: #28a745; margin-bottom: 10px;">✅ Gains</h4>
+                    <div class="result">
+                        <div class="result-row"><span>Salaire de base</span><span id="r_base">0</span></div>
+                        <div class="result-row"><span>Prime de transport</span><span id="r_transport">0</span></div>
+                        <div class="result-row"><span>Autres primes</span><span id="r_primes">0</span></div>
+                        <div class="result-row"><span>Heures supplémentaires</span><span id="r_hs">0</span></div>
+                        <div class="result-row subtotal"><span>TOTAL BRUT</span><span id="r_brut">0</span></div>
+                    </div>
+                    
+                    <h4 style="color: #dc3545; margin: 20px 0 10px;">❌ Retenues</h4>
+                    <div class="result">
+                        <div class="result-row"><span>CNSS Employé (5%)<span class="badge badge-info">Plafond 2,5M</span></span><span id="r_cnss_emp">0</span></div>
+                        <div class="result-row"><span>RTS/IRG</span><span id="r_irg">0</span></div>
+                        <div class="result-row"><span>Avance sur salaire</span><span id="r_avance">0</span></div>
+                        <div class="result-row"><span>Remboursement prêt</span><span id="r_pret">0</span></div>
+                        <div class="result-row"><span>Autres retenues</span><span id="r_autres">0</span></div>
+                        <div class="result-row subtotal"><span>TOTAL RETENUES</span><span id="r_retenues">0</span></div>
+                    </div>
+                    
+                    <div class="result" style="margin-top: 15px;">
+                        <div class="result-row total"><span>💵 NET À PAYER</span><span id="r_net">0</span></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="color: #6f42c1; margin-bottom: 10px;">🏢 Charges Patronales</h4>
+                    <div class="result">
+                        <div class="result-row"><span>CNSS Employeur (18%)<span class="badge badge-info">Plafond 2,5M</span></span><span id="r_cnss_pat">0</span></div>
+                        <div class="result-row"><span>Versement Forfaitaire VF (6%)</span><span id="r_vf">0</span></div>
+                        <div class="result-row"><span>Taxe Apprentissage TA (1,5%)</span><span id="r_ta">0</span></div>
+                        <div class="result-row subtotal"><span>TOTAL CHARGES PATRONALES</span><span id="r_charges">0</span></div>
+                    </div>
+                    
+                    <h4 style="color: #fd7e14; margin: 20px 0 10px;">📈 Coût Total Employeur</h4>
+                    <div class="result">
+                        <div class="result-row"><span>Salaire brut</span><span id="r_brut2">0</span></div>
+                        <div class="result-row"><span>+ Charges patronales</span><span id="r_charges2">0</span></div>
+                        <div class="result-row total" style="background: #6f42c1;"><span>💼 COÛT TOTAL</span><span id="r_cout">0</span></div>
+                    </div>
+                    
+                    <div class="info">
+                        <strong>ℹ️ Paramètres utilisés :</strong><br>
+                        • CNSS : 5% salarié / 18% employeur (plafond 2 500 000 GNF)<br>
+                        • VF : 6% sur brut total<br>
+                        • TA : 1,5% sur brut total<br>
+                        • RTS : Barème progressif CGI 2022 (6 tranches)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Constantes légales Guinée
+        const CNSS_EMPLOYE = 0.05;
+        const CNSS_EMPLOYEUR = 0.18;
+        const PLAFOND_CNSS = 2500000;
+        const PLANCHER_CNSS = 550000;
+        const TAUX_VF = 0.06;
+        const TAUX_TA = 0.015;
+        const HEURES_MOIS = 173.33;
+        
+        // Barème RTS/IRG 2022
+        const TRANCHES_RTS = [
+            { min: 0, max: 1000000, taux: 0 },
+            { min: 1000001, max: 3000000, taux: 0.05 },
+            { min: 3000001, max: 5000000, taux: 0.08 },
+            { min: 5000001, max: 10000000, taux: 0.10 },
+            { min: 10000001, max: 20000000, taux: 0.15 },
+            { min: 20000001, max: Infinity, taux: 0.20 }
+        ];
+        
+        // Déductions familiales
+        const DEDUC_CONJOINT = 100000;
+        const DEDUC_ENFANT = 50000;
+        const MAX_ENFANTS = 4;
+        
+        function formatNumber(n) {
+            return Math.round(n).toLocaleString('fr-FR') + ' GNF';
+        }
+        
+        function calculerRTS(baseImposable) {
+            let impot = 0;
+            let reste = baseImposable;
+            
+            for (let tranche of TRANCHES_RTS) {
+                if (reste <= 0) break;
+                
+                let montantTranche = Math.min(reste, tranche.max - tranche.min + 1);
+                if (baseImposable > tranche.min) {
+                    let imposable = Math.min(baseImposable - tranche.min, tranche.max - tranche.min);
+                    if (imposable > 0) {
+                        impot += imposable * tranche.taux;
+                    }
+                }
+            }
+            
+            // Calcul simplifié progressif
+            impot = 0;
+            if (baseImposable > 20000000) {
+                impot += (baseImposable - 20000000) * 0.20;
+                baseImposable = 20000000;
+            }
+            if (baseImposable > 10000000) {
+                impot += (baseImposable - 10000000) * 0.15;
+                baseImposable = 10000000;
+            }
+            if (baseImposable > 5000000) {
+                impot += (baseImposable - 5000000) * 0.10;
+                baseImposable = 5000000;
+            }
+            if (baseImposable > 3000000) {
+                impot += (baseImposable - 3000000) * 0.08;
+                baseImposable = 3000000;
+            }
+            if (baseImposable > 1000000) {
+                impot += (baseImposable - 1000000) * 0.05;
+            }
+            
+            return Math.round(impot);
+        }
+        
+        function calculer() {
+            // Récupérer les valeurs
+            const salaireBase = parseFloat(document.getElementById('salaireBase').value) || 0;
+            const primeTransport = parseFloat(document.getElementById('primeTransport').value) || 0;
+            const autresPrimes = parseFloat(document.getElementById('autresPrimes').value) || 0;
+            const hs30 = parseFloat(document.getElementById('hs30').value) || 0;
+            const hs60 = parseFloat(document.getElementById('hs60').value) || 0;
+            const hsNuit = parseFloat(document.getElementById('hsNuit').value) || 0;
+            const hsFerie = parseFloat(document.getElementById('hsFerie').value) || 0;
+            const avance = parseFloat(document.getElementById('avance').value) || 0;
+            const pret = parseFloat(document.getElementById('pret').value) || 0;
+            const autresRetenues = parseFloat(document.getElementById('autresRetenues').value) || 0;
+            const situation = document.getElementById('situation').value;
+            const nbEnfants = Math.min(parseInt(document.getElementById('nbEnfants').value) || 0, MAX_ENFANTS);
+            
+            // Calcul heures supplémentaires
+            const tauxHoraire = salaireBase / HEURES_MOIS;
+            const montantHS = (hs30 * tauxHoraire * 1.30) + 
+                             (hs60 * tauxHoraire * 1.60) + 
+                             (hsNuit * tauxHoraire * 1.20) + 
+                             (hsFerie * tauxHoraire * 2.00);
+            
+            // Salaire brut
+            const brut = salaireBase + primeTransport + autresPrimes + montantHS;
+            
+            // CNSS (avec plafond)
+            const baseCNSS = Math.min(Math.max(brut, PLANCHER_CNSS), PLAFOND_CNSS);
+            const cnssEmploye = Math.round(baseCNSS * CNSS_EMPLOYE);
+            const cnssEmployeur = Math.round(baseCNSS * CNSS_EMPLOYEUR);
+            
+            // Base imposable RTS
+            let baseRTS = brut - cnssEmploye;
+            
+            // Déductions familiales
+            let deductions = 0;
+            if (situation === 'marie') deductions += DEDUC_CONJOINT;
+            deductions += nbEnfants * DEDUC_ENFANT;
+            baseRTS = Math.max(0, baseRTS - deductions);
+            
+            // Calcul RTS/IRG
+            const irg = calculerRTS(baseRTS);
+            
+            // Total retenues
+            const totalRetenues = cnssEmploye + irg + avance + pret + autresRetenues;
+            
+            // Net à payer
+            const net = brut - totalRetenues;
+            
+            // Charges patronales
+            const vf = Math.round(brut * TAUX_VF);
+            const ta = Math.round(brut * TAUX_TA);
+            const totalCharges = cnssEmployeur + vf + ta;
+            
+            // Coût total employeur
+            const coutTotal = brut + totalCharges;
+            
+            // Affichage
+            document.getElementById('r_base').textContent = formatNumber(salaireBase);
+            document.getElementById('r_transport').textContent = formatNumber(primeTransport);
+            document.getElementById('r_primes').textContent = formatNumber(autresPrimes);
+            document.getElementById('r_hs').textContent = formatNumber(montantHS);
+            document.getElementById('r_brut').textContent = formatNumber(brut);
+            
+            document.getElementById('r_cnss_emp').textContent = formatNumber(cnssEmploye);
+            document.getElementById('r_irg').textContent = formatNumber(irg);
+            document.getElementById('r_avance').textContent = formatNumber(avance);
+            document.getElementById('r_pret').textContent = formatNumber(pret);
+            document.getElementById('r_autres').textContent = formatNumber(autresRetenues);
+            document.getElementById('r_retenues').textContent = formatNumber(totalRetenues);
+            
+            document.getElementById('r_net').textContent = formatNumber(net);
+            
+            document.getElementById('r_cnss_pat').textContent = formatNumber(cnssEmployeur);
+            document.getElementById('r_vf').textContent = formatNumber(vf);
+            document.getElementById('r_ta').textContent = formatNumber(ta);
+            document.getElementById('r_charges').textContent = formatNumber(totalCharges);
+            
+            document.getElementById('r_brut2').textContent = formatNumber(brut);
+            document.getElementById('r_charges2').textContent = formatNumber(totalCharges);
+            document.getElementById('r_cout').textContent = formatNumber(coutTotal);
+        }
+        
+        // Calcul initial
+        calculer();
+    </script>
+</body>
+</html>

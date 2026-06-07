@@ -1,0 +1,156 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Analyse de variance {{ variance.periode }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-graph-down text-primary"></i> Analyse {{ variance.periode }}
+            </h1>
+            <p class="text-muted mb-0">Détails de l'analyse de variance pour {{ variance.centre_couts|default:variance.section }}.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:analytique_variance_update' variance.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:analytique_variances' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Résumé de l'écart</h5>
+                    {% if variance.favorable %}
+                    <span class="badge bg-success">Favorable</span>
+                    {% else %}
+                    <span class="badge bg-danger">Défavorable</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <h6 class="text-muted text-uppercase small">Montant budget</h6>
+                            <p class="fs-5 fw-semibold mb-0">{{ variance.montant_budget|floatformat:2 }} GNF</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted text-uppercase small">Montant réel</h6>
+                            <p class="fs-5 fw-semibold mb-0">{{ variance.montant_reel|floatformat:2 }} GNF</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted text-uppercase small">Écart</h6>
+                            <p class="fs-4 fw-bold {% if variance.favorable %}text-success{% else %}text-danger{% endif %} mb-0">
+                                {{ variance.ecart_montant|floatformat:2 }} GNF
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted text-uppercase small">Écart %</h6>
+                            <p class="fs-4 fw-bold {% if variance.favorable %}text-success{% else %}text-danger{% endif %} mb-0">
+                                {{ variance.ecart_pourcentage|floatformat:1 }}%
+                            </p>
+                        </div>
+                    </div>
+                    <hr>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Exercice comptable</dt>
+                        <dd class="col-sm-8">{{ variance.exercice }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Période</dt>
+                        <dd class="col-sm-8">{{ variance.periode }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Type d'écart</dt>
+                        <dd class="col-sm-8">{{ variance.get_type_ecart_display }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Centre de coûts</dt>
+                        <dd class="col-sm-8">{{ variance.centre_couts|default:"-" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Section analytique</dt>
+                        <dd class="col-sm-8">
+                            {% if variance.section %}
+                            <a href="{% url 'comptabilite:analytique_section_detail' variance.section.pk %}">{{ variance.section }}</a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if variance.explication or variance.actions_correctives %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Analyse et actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if variance.explication %}
+                    <div class="mb-3">
+                        <h6 class="text-muted text-uppercase small">Explication de l'écart</h6>
+                        <p class="mb-0">{{ variance.explication|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                    {% if variance.actions_correctives %}
+                    <div>
+                        <h6 class="text-muted text-uppercase small">Actions correctives proposées</h6>
+                        <p class="mb-0">{{ variance.actions_correctives|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Type : {{ variance.get_type_ecart_display }}</p>
+                    <p class="mb-1">Analysé le : {{ variance.date_analyse|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-1">Par : {{ variance.analyse_par|default:"Non renseigné" }}</p>
+                    <p class="mb-0">Identifiant : {{ variance.id }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3 {% if variance.favorable %}border-start border-success border-4{% else %}border-start border-danger border-4{% endif %}">
+                <div class="card-body">
+                    <h6 class="mb-2">
+                        {% if variance.favorable %}
+                        <i class="bi bi-check-circle text-success"></i> Écart favorable
+                        {% else %}
+                        <i class="bi bi-exclamation-triangle text-danger"></i> Écart défavorable
+                        {% endif %}
+                    </h6>
+                    <p class="text-muted small mb-0">
+                        {% if variance.favorable %}
+                        Cet écart représente une économie ou une surperformance par rapport au budget prévu.
+                        {% else %}
+                        Cet écart représente un dépassement ou une sous-performance par rapport au budget prévu. Des actions correctives peuvent être nécessaires.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Actions suggérées</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <ul class="mb-0">
+                        <li>Comparez avec les analyses des périodes précédentes.</li>
+                        <li>Identifiez les causes racines de l'écart.</li>
+                        <li>Mettez en place un plan d'action si l'écart est significatif.</li>
+                        <li>Révisez le budget si les hypothèses initiales ont changé.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

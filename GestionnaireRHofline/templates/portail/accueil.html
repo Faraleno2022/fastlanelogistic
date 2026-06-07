@@ -1,0 +1,183 @@
+{% extends 'portail/base_portail.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Mon Espace - {{ employe.nom }}{% endblock %}
+
+{% block portail_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-home me-2"></i>Bienvenue, {{ employe.prenoms }} !</h2>
+        <p class="text-muted">Votre espace personnel</p>
+    </div>
+</div>
+
+<!-- Cartes résumé -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Dernier salaire net</h6>
+                        {% if dernier_bulletin %}
+                        <h3>{{ dernier_bulletin.net_a_payer|floatformat:0|intcomma }} GNF</h3>
+                        <small>{{ dernier_bulletin.periode.mois }}/{{ dernier_bulletin.periode.annee }}</small>
+                        {% else %}
+                        <h3>-</h3>
+                        {% endif %}
+                    </div>
+                    <i class="fas fa-money-bill-wave fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+                <a href="{% url 'portail:mes_bulletins' %}" class="text-white">
+                    Voir mes bulletins <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Solde congés</h6>
+                        {% if solde_conges %}
+                        <h3>{{ solde_conges.solde_actuel|floatformat:1 }} jours</h3>
+                        <small>Acquis: {{ solde_conges.jours_acquis|floatformat:1 }}j</small>
+                        {% else %}
+                        <h3>-</h3>
+                        {% endif %}
+                    </div>
+                    <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+                <a href="{% url 'portail:mes_conges' %}" class="text-white">
+                    Gérer mes congés <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Prêts en cours</h6>
+                        <h3>{{ prets_en_cours }}</h3>
+                        <small>Solde: {{ solde_prets|floatformat:0|intcomma }} GNF</small>
+                    </div>
+                    <i class="fas fa-hand-holding-usd fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+                <a href="{% url 'portail:mes_prets' %}" class="text-dark">
+                    Voir mes prêts <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statut et alertes -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Mon statut</h6>
+            </div>
+            <div class="card-body">
+                {% if conge_en_cours %}
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-umbrella-beach me-2"></i>
+                    Vous êtes en congé jusqu'au {{ conge_en_cours.date_fin|date:"d/m/Y" }}
+                </div>
+                {% endif %}
+                
+                {% if demandes_conges > 0 %}
+                <div class="alert alert-warning mb-3">
+                    <i class="fas fa-clock me-2"></i>
+                    {{ demandes_conges }} demande(s) de congé en attente
+                </div>
+                {% endif %}
+                
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td><i class="fas fa-building me-2"></i>Département</td>
+                        <td class="text-end">{{ employe.service.nom_service|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-briefcase me-2"></i>Poste</td>
+                        <td class="text-end">{{ employe.poste.intitule|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-calendar me-2"></i>Date d'embauche</td>
+                        <td class="text-end">{{ employe.date_embauche|date:"d/m/Y"|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-file-contract me-2"></i>Type contrat</td>
+                        <td class="text-end">{{ employe.get_type_contrat_display|default:"-" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Heures supplémentaires du mois</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h2 class="text-primary">{{ hs_heures|floatformat:1 }}h</h2>
+                        <p class="text-muted mb-0">Heures validées</p>
+                    </div>
+                    <div class="col-6">
+                        <h2 class="text-success">{{ hs_montant|floatformat:0|intcomma }}</h2>
+                        <p class="text-muted mb-0">GNF</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <a href="{% url 'portail:mes_heures_sup' %}" class="btn btn-outline-primary btn-sm">
+                        Voir le détail
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Actions rapides</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'portail:demander_conge' %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-calendar-plus me-2"></i>Demander un congé
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'portail:demander_pret' %}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-hand-holding-usd me-2"></i>Demander un prêt
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'portail:mon_profil' %}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-user-edit me-2"></i>Mon profil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

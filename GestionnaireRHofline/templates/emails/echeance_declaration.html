@@ -1,0 +1,42 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Échéance déclaration{% endblock %}
+{% block header %}Rappel Déclaration{% endblock %}
+
+{% block content %}
+<p>Bonjour,</p>
+
+<div class="warning-box">
+    <strong>Rappel important !</strong><br>
+    L'échéance pour la déclaration <strong>{{ type_declaration }}</strong> approche.
+</div>
+
+<table>
+    <tr>
+        <th>Type de déclaration</th>
+        <td>{{ type_declaration }}</td>
+    </tr>
+    <tr>
+        <th>Date limite</th>
+        <td><strong>{{ date_limite|date:"d/m/Y" }}</strong></td>
+    </tr>
+    <tr>
+        <th>Jours restants</th>
+        <td>
+            {% if jours_restants <= 3 %}
+            <span style="color: #dc3545; font-weight: bold;">{{ jours_restants }} jour(s)</span>
+            {% elif jours_restants <= 7 %}
+            <span style="color: #ffc107; font-weight: bold;">{{ jours_restants }} jour(s)</span>
+            {% else %}
+            {{ jours_restants }} jour(s)
+            {% endif %}
+        </td>
+    </tr>
+</table>
+
+<p>Veuillez vous assurer que la déclaration est préparée et transmise avant la date limite pour éviter les pénalités.</p>
+
+<p style="text-align: center;">
+    <a href="#" class="btn">Accéder aux déclarations</a>
+</p>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouvelle{% endif %} délégation{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-person-badge text-primary"></i>
+                {% if object %}Modifier la délégation{% else %}Nouvelle délégation{% endif %}
+            </h1>
+        </div>
+        <a href="{% url 'comptabilite:controle_delegations' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <h6 class="text-muted mb-3">Parties</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Délégant *</label>
+                                {{ form.delegant }}
+                                {% for error in form.delegant.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Délégataire *</label>
+                                {{ form.delegataire }}
+                                {% for error in form.delegataire.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Pouvoir délégué</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Type de pouvoir *</label>
+                                {{ form.type_pouvoir }}
+                                {% for error in form.type_pouvoir.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Domaine d'application *</label>
+                                {{ form.domaine }}
+                                {% for error in form.domaine.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Description *</label>
+                                {{ form.description }}
+                                {% for error in form.description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Limites</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Montant maximum (GNF)</label>
+                                {{ form.montant_max }}
+                                {% for error in form.montant_max.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Statut *</label>
+                                {{ form.statut }}
+                                {% for error in form.statut.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Conditions</label>
+                                {{ form.conditions }}
+                                {% for error in form.conditions.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Période de validité</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Date de début *</label>
+                                {{ form.date_debut }}
+                                {% for error in form.date_debut.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date de fin</label>
+                                {{ form.date_fin }}
+                                {% for error in form.date_fin.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:controle_delegations' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Types de pouvoir</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <ul class="mb-0">
+                        <li><strong>Signature</strong> : Pouvoir de signer des documents</li>
+                        <li><strong>Engagement</strong> : Engager financièrement l'entreprise</li>
+                        <li><strong>Validation</strong> : Valider des opérations</li>
+                        <li><strong>Approbation</strong> : Approuver des demandes</li>
+                        <li><strong>Autorisation</strong> : Autoriser des actions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

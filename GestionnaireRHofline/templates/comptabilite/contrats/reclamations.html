@@ -1,0 +1,194 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Réclamations Contractuelles{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0"><i class="bi bi-chat-dots me-2"></i>Réclamations Contractuelles</h1>
+            <p class="text-muted mb-0">Suivi des réclamations liées aux contrats</p>
+        </div>
+        <a href="{% url 'comptabilite:contrats_reclamation_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Nouvelle réclamation
+        </a>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6 class="card-title">Ouvertes</h6>
+                    <h2 class="mb-0">{{ nb_ouvertes }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">En cours</h6>
+                    <h2 class="mb-0">{{ nb_en_cours }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Résolues</h6>
+                    <h2 class="mb-0">{{ nb_resolues }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Priorité</label>
+                    <select name="priorite" class="form-select">
+                        <option value="">Toutes les priorités</option>
+                        {% for value, label in priorites %}
+                        <option value="{{ value }}" {% if request.GET.priorite == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2"><i class="bi bi-search"></i> Filtrer</button>
+                    <a href="{% url 'comptabilite:contrats_reclamations' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>N° Réclamation</th>
+                            <th>Contrat</th>
+                            <th>Type</th>
+                            <th>Objet</th>
+                            <th>Priorité</th>
+                            <th class="text-end">Montant réclamé</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reclamations %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'comptabilite:contrats_reclamation_detail' r.pk %}" class="fw-bold text-decoration-none">
+                                    {{ r.numero_reclamation }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if r.contrat_fournisseur %}
+                                <a href="{% url 'comptabilite:contrats_fournisseur_detail' r.contrat_fournisseur.pk %}">
+                                    {{ r.contrat_fournisseur.numero_contrat }}
+                                </a>
+                                <span class="badge bg-info ms-1">F</span>
+                                {% elif r.contrat_client %}
+                                <a href="{% url 'comptabilite:contrats_client_detail' r.contrat_client.pk %}">
+                                    {{ r.contrat_client.numero_contrat }}
+                                </a>
+                                <span class="badge bg-success ms-1">C</span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ r.get_type_reclamation_display }}</td>
+                            <td>{{ r.objet|truncatechars:30 }}</td>
+                            <td>
+                                {% if r.priorite == 'urgente' %}
+                                <span class="badge bg-danger">Urgente</span>
+                                {% elif r.priorite == 'haute' %}
+                                <span class="badge bg-warning text-dark">Haute</span>
+                                {% elif r.priorite == 'normale' %}
+                                <span class="badge bg-info">Normale</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Basse</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">{{ r.montant_reclame|floatformat:0 }} GNF</td>
+                            <td>{{ r.date_reclamation|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if r.statut == 'ouverte' %}
+                                <span class="badge bg-warning text-dark">Ouverte</span>
+                                {% elif r.statut == 'en_cours' %}
+                                <span class="badge bg-info">En cours</span>
+                                {% elif r.statut == 'en_attente' %}
+                                <span class="badge bg-secondary">En attente</span>
+                                {% elif r.statut == 'resolue' %}
+                                <span class="badge bg-success">Résolue</span>
+                                {% elif r.statut == 'rejetee' %}
+                                <span class="badge bg-dark">Rejetée</span>
+                                {% elif r.statut == 'litige' %}
+                                <span class="badge bg-danger">En litige</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'comptabilite:contrats_reclamation_detail' r.pk %}" class="btn btn-outline-primary" title="Voir">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'comptabilite:contrats_reclamation_update' r.pk %}" class="btn btn-outline-secondary" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Aucune réclamation trouvée
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.priorite %}&priorite={{ request.GET.priorite }}{% endif %}">Précédent</a>
+            </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.priorite %}&priorite={{ request.GET.priorite }}{% endif %}">Suivant</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

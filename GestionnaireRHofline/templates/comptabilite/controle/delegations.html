@@ -1,0 +1,145 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Délégations de pouvoirs{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-person-badge text-primary"></i> Délégations de pouvoirs
+            </h1>
+            <p class="text-muted mb-0">Gérez les délégations de pouvoirs et signatures.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:controle_delegation_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle délégation
+            </a>
+            <a href="{% url 'comptabilite:controle_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <form method="get" class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous</option>
+                        {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'comptabilite:controle_delegations' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if delegations %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Délégant</th>
+                            <th>Délégataire</th>
+                            <th>Type</th>
+                            <th>Domaine</th>
+                            <th>Montant max</th>
+                            <th>Période</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for delegation in delegations %}
+                        <tr>
+                            <td>{{ delegation.delegant }}</td>
+                            <td class="fw-semibold">{{ delegation.delegataire }}</td>
+                            <td>{{ delegation.get_type_pouvoir_display }}</td>
+                            <td>{{ delegation.domaine|truncatechars:25 }}</td>
+                            <td>
+                                {% if delegation.montant_max %}
+                                {{ delegation.montant_max|floatformat:0 }} GNF
+                                {% else %}
+                                Illimité
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ delegation.date_debut|date:"d/m/Y" }}
+                                {% if delegation.date_fin %} - {{ delegation.date_fin|date:"d/m/Y" }}{% endif %}
+                            </td>
+                            <td>
+                                {% if delegation.statut == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif delegation.statut == 'suspendue' %}
+                                <span class="badge bg-warning text-dark">Suspendue</span>
+                                {% elif delegation.statut == 'expiree' %}
+                                <span class="badge bg-secondary">Expirée</span>
+                                {% else %}
+                                <span class="badge bg-danger">Révoquée</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'comptabilite:controle_delegation_detail' delegation.pk %}" class="btn btn-sm btn-outline-primary" title="Détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'comptabilite:controle_delegation_update' delegation.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if is_paginated %}
+            <nav aria-label="Pagination" class="mt-3">
+                <ul class="pagination justify-content-end mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-person-badge text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Aucune délégation trouvée</h5>
+                <p class="text-muted mb-3">Créez votre première délégation de pouvoirs.</p>
+                <a href="{% url 'comptabilite:controle_delegation_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nouvelle délégation
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

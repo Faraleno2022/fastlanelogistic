@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Archives Bulletins - Traçabilité{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-archive me-2"></i>Archives Bulletins</h2>
+                <a href="{% url 'paie:historique_bulletins' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-history me-1"></i>Historique
+                </a>
+            </div>
+            <p class="text-muted">
+                <i class="fas fa-shield-alt me-1"></i>
+                Conservation légale: 10 ans | Intégrité vérifiée par hash SHA256
+            </p>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.total_archives|default:"0" }}</h3>
+                    <small>Bulletins archivés</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    {% if stats.total_taille %}
+                    <h3 class="mb-0">{{ stats.total_taille|filesizeformat }}</h3>
+                    {% else %}
+                    <h3 class="mb-0">0 Ko</h3>
+                    {% endif %}
+                    <small>Espace utilisé</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.total_telechargements|default:"0" }}</h3>
+                    <small>Téléchargements</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="annee" class="form-label">Année</label>
+                    <select class="form-select" id="annee" name="annee">
+                        <option value="">Toutes</option>
+                        {% for a in annees %}
+                        <option value="{{ a }}" {% if annee_filtre == a|stringformat:"s" %}selected{% endif %}>{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="mois" class="form-label">Mois</label>
+                    <select class="form-select" id="mois" name="mois">
+                        <option value="">Tous</option>
+                        <option value="1" {% if mois_filtre == "1" %}selected{% endif %}>Janvier</option>
+                        <option value="2" {% if mois_filtre == "2" %}selected{% endif %}>Février</option>
+                        <option value="3" {% if mois_filtre == "3" %}selected{% endif %}>Mars</option>
+                        <option value="4" {% if mois_filtre == "4" %}selected{% endif %}>Avril</option>
+                        <option value="5" {% if mois_filtre == "5" %}selected{% endif %}>Mai</option>
+                        <option value="6" {% if mois_filtre == "6" %}selected{% endif %}>Juin</option>
+                        <option value="7" {% if mois_filtre == "7" %}selected{% endif %}>Juillet</option>
+                        <option value="8" {% if mois_filtre == "8" %}selected{% endif %}>Août</option>
+                        <option value="9" {% if mois_filtre == "9" %}selected{% endif %}>Septembre</option>
+                        <option value="10" {% if mois_filtre == "10" %}selected{% endif %}>Octobre</option>
+                        <option value="11" {% if mois_filtre == "11" %}selected{% endif %}>Novembre</option>
+                        <option value="12" {% if mois_filtre == "12" %}selected{% endif %}>Décembre</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des archives -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-orange-light">
+                        <tr>
+                            <th>Période</th>
+                            <th>Employé</th>
+                            <th>Matricule</th>
+                            <th class="text-end">Net payé</th>
+                            <th>Archivé le</th>
+                            <th>Téléchargements</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for archive in archives %}
+                        <tr>
+                            <td>
+                                <strong>{{ archive.periode_mois|stringformat:"02d" }}/{{ archive.periode_annee }}</strong>
+                            </td>
+                            <td>{{ archive.employe_nom }}</td>
+                            <td><code>{{ archive.employe_matricule }}</code></td>
+                            <td class="text-end fw-bold">{{ archive.montant_net|floatformat:0|intcomma }} GNF</td>
+                            <td>
+                                <small class="text-muted">{{ archive.date_archivage|date:"d/m/Y H:i" }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ archive.nombre_telechargements }}</span>
+                                {% if archive.dernier_telechargement %}
+                                <br><small class="text-muted">Dernier: {{ archive.dernier_telechargement|date:"d/m/Y" }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'paie:telecharger_archive' archive.pk %}" 
+                                       class="btn btn-outline-danger" title="Télécharger PDF">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                    <a href="{% url 'paie:verifier_integrite_archive' archive.pk %}" 
+                                       class="btn btn-outline-success" title="Vérifier intégrité">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fas fa-archive fa-3x mb-3"></i>
+                                <p>Aucune archive disponible</p>
+                                <small>Les bulletins sont archivés automatiquement lors de la validation des périodes</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info légale -->
+    <div class="alert alert-info mt-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Conservation légale:</strong> Les bulletins de paie doivent être conservés pendant 10 ans minimum.
+        Chaque archive est signée numériquement (SHA256) pour garantir son intégrité.
+    </div>
+</div>
+{% endblock %}

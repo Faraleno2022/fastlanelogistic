@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Statut de la Licence - Gestionnaire RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-certificate me-2"></i>
+                        Informations de Licence
+                    </h5>
+                </div>
+                <div class="card-body">
+                    
+                    {% if licence %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="text-muted">Clé de licence:</th>
+                                    <td><code>{{ licence.cle_licence }}</code></td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Entreprise:</th>
+                                    <td>{{ licence.nom_entreprise }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Plan:</th>
+                                    <td>
+                                        <span class="badge bg-{% if licence.plan == 'enterprise' %}warning{% elif licence.plan == 'pro' %}success{% else %}primary{% endif %}">
+                                            {{ licence.plan|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Max employés:</th>
+                                    <td>{{ licence.max_employes }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Max utilisateurs:</th>
+                                    <td>{{ licence.max_utilisateurs }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="text-muted">Date d'activation:</th>
+                                    <td>{{ licence.date_activation|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Date d'expiration:</th>
+                                    <td>
+                                        {% if licence.date_expiration %}
+                                            {{ licence.date_expiration|date:"d/m/Y" }}
+                                        {% else %}
+                                            <span class="text-success">Perpétuelle</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Jours restants:</th>
+                                    <td>
+                                        {% if licence.jours_restants > 30 %}
+                                            <span class="badge bg-success">{{ licence.jours_restants }} jours</span>
+                                        {% elif licence.jours_restants > 7 %}
+                                            <span class="badge bg-warning">{{ licence.jours_restants }} jours</span>
+                                        {% elif licence.jours_restants > 0 %}
+                                            <span class="badge bg-danger">{{ licence.jours_restants }} jours</span>
+                                        {% else %}
+                                            <span class="badge bg-dark">Perpétuelle</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Statut:</th>
+                                    <td>
+                                        {% if licence.est_valide %}
+                                            <span class="badge bg-success"><i class="fas fa-check"></i> Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger"><i class="fas fa-times"></i> Invalide</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">ID Machine:</th>
+                                    <td><code>{{ machine_id }}</code></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p class="mb-0">Aucune licence active</p>
+                    </div>
+                    <div class="text-center">
+                        <a href="{% url 'core:licence_activation' %}" class="btn btn-primary">
+                            <i class="fas fa-key me-2"></i>Activer une licence
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                </div>
+                
+                {% if licence %}
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'core:licence_renouveler' %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-sync-alt me-1"></i>Renouveler la licence
+                        </a>
+                        <a href="mailto:faraleno16@gmail.com?subject=Support licence {{ licence.cle_licence }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-envelope me-1"></i>Contacter le support
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Soldes de Congés{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-pie-chart me-2"></i>Soldes de Congés {{ annee }}</h2>
+        <a href="{% url 'conges:liste' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <strong>Configuration :</strong> {{ config.jours_conges_par_mois }} j/mois 
+        ({{ config.jours_conges_par_mois|floatformat:1 }} × 12 = 
+        {% widthratio config.jours_conges_par_mois 1 12 %} jours/an)
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Employé</th>
+                            <th>Acquis</th>
+                            <th>Pris</th>
+                            <th>Reports</th>
+                            <th>Restants</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for solde in soldes %}
+                        <tr>
+                            <td>{{ solde.employe.nom_complet }}</td>
+                            <td><span class="badge bg-primary">{{ solde.conges_acquis }}</span></td>
+                            <td><span class="badge bg-warning text-dark">{{ solde.conges_pris }}</span></td>
+                            <td><span class="badge bg-info">{{ solde.conges_reports }}</span></td>
+                            <td><span class="badge bg-success fs-6">{{ solde.conges_restants }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                Aucun solde pour {{ annee }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

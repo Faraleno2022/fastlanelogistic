@@ -1,0 +1,174 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Rapport {{ rapport.reference }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-file-earmark-bar-graph text-primary"></i> {{ rapport.reference }}
+            </h1>
+            <p class="text-muted mb-0">{{ rapport.titre }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:controle_rapport_update' rapport.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:controle_rapports' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Référence</dt>
+                        <dd class="col-sm-8">{{ rapport.reference }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Titre</dt>
+                        <dd class="col-sm-8">{{ rapport.titre }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Type</dt>
+                        <dd class="col-sm-8">{{ rapport.get_type_rapport_display }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Période</dt>
+                        <dd class="col-sm-8">{{ rapport.date_debut_periode|date:"d/m/Y" }} - {{ rapport.date_fin_periode|date:"d/m/Y" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Statut</dt>
+                        <dd class="col-sm-8">
+                            {% if rapport.statut == 'brouillon' %}
+                            <span class="badge bg-secondary">Brouillon</span>
+                            {% elif rapport.statut == 'en_revue' %}
+                            <span class="badge bg-info">En revue</span>
+                            {% elif rapport.statut == 'valide' %}
+                            <span class="badge bg-success">Validé</span>
+                            {% else %}
+                            <span class="badge bg-primary">Diffusé</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <p class="text-muted small mb-1">Tests réalisés</p>
+                            <p class="h3 mb-0">{{ rapport.nb_tests_realises }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <p class="text-muted small mb-1">Tests réussis</p>
+                            <p class="h3 mb-0 text-success">{{ rapport.nb_tests_reussis }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <p class="text-muted small mb-1">Non-conformités</p>
+                            <p class="h3 mb-0 text-danger">{{ rapport.nb_non_conformites }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <p class="text-muted small mb-1">Taux conformité</p>
+                            <p class="h3 mb-0 {% if rapport.taux_conformite >= 80 %}text-success{% elif rapport.taux_conformite >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ rapport.taux_conformite }}%
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Résumé exécutif</h5>
+                </div>
+                <div class="card-body">
+                    {{ rapport.resume_executif|linebreaks }}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Constats principaux</h5>
+                </div>
+                <div class="card-body">
+                    {{ rapport.constats_principaux|linebreaks }}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Recommandations</h5>
+                </div>
+                <div class="card-body">
+                    {{ rapport.recommandations|linebreaks }}
+                </div>
+            </div>
+
+            {% if rapport.plan_action %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Plan d'action</h5>
+                </div>
+                <div class="card-body">
+                    {{ rapport.plan_action|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-person"></i> Validation</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Rédigé par :</strong> {{ rapport.redige_par|default:"-" }}</p>
+                    <p class="mb-1"><strong>Validé par :</strong> {{ rapport.valide_par|default:"-" }}</p>
+                    <p class="mb-0"><strong>Date validation :</strong> {{ rapport.date_validation|date:"d/m/Y H:i"|default:"-" }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Métadonnées</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Créé le : {{ rapport.date_creation|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-0">Modifié le : {{ rapport.date_modification|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+
+            {% if rapport.fichier_rapport %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-file-earmark-pdf"></i> Document</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{{ rapport.fichier_rapport.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="bi bi-download"></i> Télécharger le rapport
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

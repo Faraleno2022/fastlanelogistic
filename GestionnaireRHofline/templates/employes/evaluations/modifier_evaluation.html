@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier Évaluation - {{ evaluation.employe }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:detail_evaluation_perf' evaluation.pk %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-edit me-2"></i>Évaluation de {{ evaluation.employe.nom }} {{ evaluation.employe.prenoms }}</h2>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Notes -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                        <h6 class="mb-0"><i class="fas fa-star me-2"></i>Notes (sur 5)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Atteinte des objectifs</label>
+                                <select class="form-select" name="note_objectifs">
+                                    <option value="">-</option>
+                                    {% for val, label in evaluation.NOTES %}
+                                    <option value="{{ val }}" {% if evaluation.note_objectifs == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Compétences</label>
+                                <select class="form-select" name="note_competences">
+                                    <option value="">-</option>
+                                    {% for val, label in evaluation.NOTES %}
+                                    <option value="{{ val }}" {% if evaluation.note_competences == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Comportement</label>
+                                <select class="form-select" name="note_comportement">
+                                    <option value="">-</option>
+                                    {% for val, label in evaluation.NOTES %}
+                                    <option value="{{ val }}" {% if evaluation.note_comportement == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commentaires -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-comment me-2"></i>Appréciation</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Points forts</label>
+                            <textarea class="form-control" name="points_forts" rows="3">{{ evaluation.points_forts }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Axes d'amélioration</label>
+                            <textarea class="form-control" name="axes_amelioration" rows="3">{{ evaluation.axes_amelioration }}</textarea>
+                        </div>
+                        <div>
+                            <label class="form-label">Commentaire de l'évaluateur</label>
+                            <textarea class="form-control" name="commentaire_evaluateur" rows="3">{{ evaluation.commentaire_evaluateur }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan de développement -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="fas fa-road me-2"></i>Plan de développement</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Plan de développement</label>
+                            <textarea class="form-control" name="plan_developpement" rows="3">{{ evaluation.plan_developpement }}</textarea>
+                        </div>
+                        <div>
+                            <label class="form-label">Besoins en formation</label>
+                            <textarea class="form-control" name="besoins_formation" rows="2">{{ evaluation.besoins_formation }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Infos employé -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-user me-2"></i>Employé</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>{{ evaluation.employe.nom }} {{ evaluation.employe.prenoms }}</strong></p>
+                        <p class="text-muted mb-0">{{ evaluation.employe.poste.intitule|default:"-" }}</p>
+                        <p class="text-muted">{{ evaluation.employe.service.nom_service|default:"-" }}</p>
+                    </div>
+                </div>
+
+                <!-- Entretien -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-calendar me-2"></i>Entretien</h6>
+                    </div>
+                    <div class="card-body">
+                        <label class="form-label">Date de l'entretien</label>
+                        <input type="date" class="form-control" name="date_entretien" 
+                               value="{{ evaluation.date_entretien|date:'Y-m-d' }}">
+                    </div>
+                </div>
+
+                <!-- Évolution -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Évolution</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Souhait d'évolution</label>
+                            <textarea class="form-control" name="souhait_evolution" rows="2">{{ evaluation.souhait_evolution }}</textarea>
+                        </div>
+                        <div>
+                            <label class="form-label">Proposition d'augmentation (%)</label>
+                            <input type="number" class="form-control" name="proposition_augmentation" 
+                                   step="0.5" min="0" max="100"
+                                   value="{{ evaluation.proposition_augmentation }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="action" value="save" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Enregistrer
+                            </button>
+                            <button type="submit" name="action" value="entretien" class="btn btn-info">
+                                <i class="fas fa-calendar-check me-2"></i>Planifier entretien
+                            </button>
+                            <button type="submit" name="action" value="valider" class="btn btn-success"
+                                    onclick="return confirm('Valider définitivement cette évaluation ?')">
+                                <i class="fas fa-check me-2"></i>Valider l'évaluation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

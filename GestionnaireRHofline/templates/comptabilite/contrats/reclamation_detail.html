@@ -1,0 +1,196 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Réclamation {{ reclamation.numero_reclamation }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-chat-dots me-2"></i>{{ reclamation.numero_reclamation }}
+            </h1>
+            <p class="text-muted mb-0">{{ reclamation.objet }}</p>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'comptabilite:contrats_reclamation_update' reclamation.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>Modifier
+            </a>
+            <a href="{% url 'comptabilite:contrats_reclamations' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations principales -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="text-muted" width="40%">Contrat</th>
+                                    <td>
+                                        {% if reclamation.contrat_fournisseur %}
+                                        <a href="{% url 'comptabilite:contrats_fournisseur_detail' reclamation.contrat_fournisseur.pk %}">
+                                            {{ reclamation.contrat_fournisseur.numero_contrat }}
+                                        </a>
+                                        <span class="badge bg-info ms-1">Fournisseur</span>
+                                        {% elif reclamation.contrat_client %}
+                                        <a href="{% url 'comptabilite:contrats_client_detail' reclamation.contrat_client.pk %}">
+                                            {{ reclamation.contrat_client.numero_contrat }}
+                                        </a>
+                                        <span class="badge bg-success ms-1">Client</span>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Type</th>
+                                    <td>{{ reclamation.get_type_reclamation_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Priorité</th>
+                                    <td>
+                                        {% if reclamation.priorite == 'urgente' %}
+                                        <span class="badge bg-danger">Urgente</span>
+                                        {% elif reclamation.priorite == 'haute' %}
+                                        <span class="badge bg-warning text-dark">Haute</span>
+                                        {% elif reclamation.priorite == 'normale' %}
+                                        <span class="badge bg-info">Normale</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Basse</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Responsable</th>
+                                    <td>{{ reclamation.responsable|default:"-" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="text-muted" width="40%">Statut</th>
+                                    <td>
+                                        {% if reclamation.statut == 'ouverte' %}
+                                        <span class="badge bg-warning text-dark fs-6">Ouverte</span>
+                                        {% elif reclamation.statut == 'en_cours' %}
+                                        <span class="badge bg-info fs-6">En cours</span>
+                                        {% elif reclamation.statut == 'en_attente' %}
+                                        <span class="badge bg-secondary fs-6">En attente</span>
+                                        {% elif reclamation.statut == 'resolue' %}
+                                        <span class="badge bg-success fs-6">Résolue</span>
+                                        {% elif reclamation.statut == 'rejetee' %}
+                                        <span class="badge bg-dark fs-6">Rejetée</span>
+                                        {% elif reclamation.statut == 'litige' %}
+                                        <span class="badge bg-danger fs-6">En litige</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Montant réclamé</th>
+                                    <td><strong>{{ reclamation.montant_reclame|floatformat:0 }} GNF</strong></td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Montant accordé</th>
+                                    <td>
+                                        {% if reclamation.montant_accorde %}
+                                        <span class="text-success">{{ reclamation.montant_accorde|floatformat:0 }} GNF</span>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-text-paragraph me-2"></i>Description</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ reclamation.description|linebreaks }}</p>
+                </div>
+            </div>
+
+            <!-- Résolution -->
+            {% if reclamation.resolution %}
+            <div class="card mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0"><i class="bi bi-check-circle me-2"></i>Résolution</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ reclamation.resolution|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Dates -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-calendar me-2"></i>Dates</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <th class="text-muted">Date réclamation</th>
+                            <td>{{ reclamation.date_reclamation|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Date limite réponse</th>
+                            <td>{{ reclamation.date_limite_reponse|date:"d/m/Y"|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Date résolution</th>
+                            <td>{{ reclamation.date_resolution|date:"d/m/Y"|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pièces jointes -->
+            {% if reclamation.pieces_jointes %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-paperclip me-2"></i>Pièces jointes</h5>
+                </div>
+                <div class="card-body text-center">
+                    <a href="{{ reclamation.pieces_jointes.url }}" class="btn btn-outline-primary" target="_blank">
+                        <i class="bi bi-download me-1"></i>Télécharger
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Audit -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-clock-history me-2"></i>Audit</h5>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <p class="mb-1"><strong>Créé le:</strong> {{ reclamation.date_creation|date:"d/m/Y H:i" }}</p>
+                        <p class="mb-0"><strong>Par:</strong> {{ reclamation.cree_par|default:"-" }}</p>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contrôle Global des Utilisateurs - Super Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-shield-lock-fill text-danger"></i> Contrôle Global des Utilisateurs</h2>
+                    <p class="text-muted">Interface Super Administrateur - Gestion de tous les utilisateurs du système</p>
+                </div>
+                <a href="{% url 'core:profile' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour au profil
+                </a>
+            </div>
+            
+            <!-- Statistiques -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-0">{{ stats.total }}</h3>
+                            <small>Total Utilisateurs</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-0">{{ stats.actifs }}</h3>
+                            <small>Utilisateurs Actifs</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-0">{{ stats.inactifs }}</h3>
+                            <small>Utilisateurs Bloqués</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-0">{{ stats.total_entreprises }}</h3>
+                            <small>Entreprises</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtres -->
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtres</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Recherche</label>
+                            <input type="text" name="search" class="form-control" placeholder="Nom, email, username..." value="{{ search }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Entreprise</label>
+                            <select name="entreprise" class="form-select">
+                                <option value="">Toutes les entreprises</option>
+                                {% for e in entreprises %}
+                                <option value="{{ e.id }}" {% if entreprise_filter == e.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ e.nom_entreprise }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Statut</label>
+                            <select name="status" class="form-select">
+                                <option value="">Tous</option>
+                                <option value="actif" {% if status_filter == 'actif' %}selected{% endif %}>Actifs</option>
+                                <option value="inactif" {% if status_filter == 'inactif' %}selected{% endif %}>Bloqués</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Filtrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Liste des Entreprises -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-building"></i> Liste des Entreprises ({{ entreprises.count }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Entreprise</th>
+                                    <th>Secteur d'activité</th>
+                                    <th>Date de création</th>
+                                    <th>Effectif</th>
+                                    <th>Plan</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for e in entreprises %}
+                                <tr>
+                                    <td>
+                                        {% if e.logo %}
+                                        <img src="{{ e.logo.url }}" alt="{{ e.nom_entreprise }}" class="rounded me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                        {% endif %}
+                                        <strong>{{ e.nom_entreprise }}</strong>
+                                        <br><small class="text-muted">{{ e.email }}</small>
+                                    </td>
+                                    <td>{{ e.secteur_activite|default:"-" }}</td>
+                                    <td>{{ e.date_creation|date:"d/m/Y" }}</td>
+                                    <td><span class="badge bg-primary">{{ e.effectif }} employé{{ e.effectif|pluralize }}</span></td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if e.plan_abonnement == 'entreprise' %}bg-danger
+                                            {% elif e.plan_abonnement == 'premium' %}bg-warning text-dark
+                                            {% elif e.plan_abonnement == 'basique' %}bg-info
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ e.get_plan_abonnement_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if e.actif %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Actif</span>
+                                        {% else %}
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'core:superuser_delete_entreprise' e.id %}" 
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('⚠️ DANGER: Supprimer {{ e.nom_entreprise }} et tous ses utilisateurs ?');"
+                                           title="Supprimer l'entreprise">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-3">Aucune entreprise</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Liste des utilisateurs -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-people-fill"></i> Liste des utilisateurs ({{ users.count }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-orange-light">
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Entreprise</th>
+                                    <th>Profil</th>
+                                    <th>Rôle</th>
+                                    <th>Statut</th>
+                                    <th>Dernière connexion</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for utilisateur in users %}
+                                <tr class="{% if not utilisateur.actif %}table-danger{% endif %}">
+                                    <td>
+                                        <strong>{{ utilisateur.get_full_name|default:utilisateur.username }}</strong>
+                                        <br><small class="text-muted">@{{ utilisateur.username }}</small>
+                                    </td>
+                                    <td>{{ utilisateur.email }}</td>
+                                    <td>
+                                        {% if utilisateur.entreprise %}
+                                            <span class="badge bg-info">{{ utilisateur.entreprise.nom_entreprise }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if utilisateur.profil %}
+                                            {{ utilisateur.profil.nom_profil }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if utilisateur.is_superuser %}
+                                            <span class="badge bg-danger"><i class="bi bi-shield-check"></i> Superuser</span>
+                                        {% elif utilisateur.est_admin_entreprise %}
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-building"></i> Admin</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Utilisateur</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if utilisateur.actif %}
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Actif</span>
+                                        {% else %}
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Bloqué</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if utilisateur.date_derniere_connexion %}
+                                            {{ utilisateur.date_derniere_connexion|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Jamais</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if utilisateur != user %}
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'core:superuser_toggle_user' utilisateur.id %}" 
+                                                   class="btn btn-sm {% if utilisateur.actif %}btn-warning{% else %}btn-success{% endif %}"
+                                                   onclick="return confirm('{% if utilisateur.actif %}Voulez-vous BLOQUER {{ utilisateur.username }} ?{% else %}Voulez-vous DÉBLOQUER {{ utilisateur.username }} ?{% endif %}');"
+                                                   title="{% if utilisateur.actif %}Bloquer{% else %}Débloquer{% endif %}">
+                                                    {% if utilisateur.actif %}
+                                                        <i class="bi bi-lock-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-unlock-fill"></i>
+                                                    {% endif %}
+                                                </a>
+                                                <a href="{% url 'core:superuser_delete_user' utilisateur.id %}" 
+                                                   class="btn btn-sm btn-danger"
+                                                   onclick="return confirm('⚠️ ATTENTION: Voulez-vous SUPPRIMER DÉFINITIVEMENT {{ utilisateur.username }} ? Cette action est irréversible.');"
+                                                   title="Supprimer l'utilisateur">
+                                                    <i class="bi bi-trash-fill"></i>
+                                                </a>
+                                                {% if utilisateur.entreprise and utilisateur.est_admin_entreprise %}
+                                                <a href="{% url 'core:superuser_delete_entreprise' utilisateur.entreprise.id %}" 
+                                                   class="btn btn-sm btn-outline-danger"
+                                                   onclick="return confirm('⚠️⚠️ DANGER: Voulez-vous SUPPRIMER L\'ENTREPRISE {{ utilisateur.entreprise.nom_entreprise }} ET TOUS SES UTILISATEURS ? Cette action est IRRÉVERSIBLE!');"
+                                                   title="Supprimer l'entreprise et tous ses utilisateurs">
+                                                    <i class="bi bi-building-x"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Vous</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox display-4"></i>
+                                        <p class="mt-2">Aucun utilisateur trouvé</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

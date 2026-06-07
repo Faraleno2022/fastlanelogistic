@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Liens WhatsApp{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-whatsapp"></i> Liens WhatsApp générés</h1>
+    <a href="{% url 'paie:envoyer_masse' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Cliquez sur chaque lien pour ouvrir WhatsApp avec le message pré-rempli. 
+    N'oubliez pas de joindre le bulletin PDF manuellement.
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Employé</th>
+                    <th>Téléphone</th>
+                    <th>Période</th>
+                    <th class="text-end">Net à payer</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in liens %}
+                <tr>
+                    <td>{{ item.employe }}</td>
+                    <td>{{ item.telephone|default:"Non renseigné" }}</td>
+                    <td>{{ item.bulletin.periode }}</td>
+                    <td class="text-end">{{ item.bulletin.net_a_payer|floatformat:0|intcomma }} GNF</td>
+                    <td>
+                        {% if item.lien %}
+                        <a href="{{ item.lien }}" target="_blank" class="btn btn-sm btn-success">
+                            <i class="bi bi-whatsapp"></i> Ouvrir WhatsApp
+                        </a>
+                        <a href="{% url 'paie:imprimer_bulletin' item.bulletin.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-file-pdf"></i> PDF
+                        </a>
+                        {% else %}
+                        <span class="text-danger"><i class="bi bi-x-circle"></i> {{ item.erreur }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{% url 'paie:envoyer_masse' %}" class="btn btn-primary">
+        <i class="bi bi-arrow-repeat"></i> Nouvel envoi
+    </a>
+</div>
+{% endblock %}

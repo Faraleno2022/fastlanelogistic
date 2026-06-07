@@ -1,0 +1,63 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouvelle{% endif %} Demande de Suppression{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-trash me-2"></i>
+                        {% if object %}Modifier la demande{% else %}Nouvelle demande de suppression{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Document *</label>
+                            {{ form.document }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Type de suppression *</label>
+                                {{ form.type_suppression }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date planifiée *</label>
+                                {{ form.date_planifiee }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Motif *</label>
+                            {{ form.motif }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Référence légale</label>
+                                {{ form.reference_legale }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Statut</label>
+                                {{ form.statut }}
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:archivage_suppressions' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>{% if object %}Enregistrer{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

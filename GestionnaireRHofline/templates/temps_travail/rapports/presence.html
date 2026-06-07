@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Rapport de Présence{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-chart-bar me-2"></i>Rapport de Présence</h2>
+                <a href="{% url 'temps_travail:rapport_presence_pdf' %}?mois={{ mois }}&annee={{ annee }}" class="btn btn-danger no-print">
+                    <i class="fas fa-file-pdf me-2"></i>Télécharger PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4 no-print">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="mois" class="form-label">Mois</label>
+                            <select class="form-select" id="mois" name="mois">
+                                {% for m, nom in mois_liste %}
+                                <option value="{{ m }}" {% if m == mois %}selected{% endif %}>{{ nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="annee" class="form-label">Année</label>
+                            <select class="form-select" id="annee" name="annee">
+                                {% for a in annees %}
+                                <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="employe" class="form-label">Employé</label>
+                            <select class="form-select" id="employe" name="employe">
+                                <option value="">Tous</option>
+                                {% for emp in employes %}
+                                <option value="{{ emp.id }}">{{ emp.nom }} {{ emp.prenoms }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Filtrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rapport -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-orange-light">
+                                <tr>
+                                    <th>Employé</th>
+                                    <th class="text-center">Jours Pointés</th>
+                                    <th class="text-center">Présents</th>
+                                    <th class="text-center">Absents</th>
+                                    <th class="text-center">Retards</th>
+                                    <th class="text-end">Heures Travaillées</th>
+                                    <th class="text-end">Heures Sup.</th>
+                                    <th class="text-center">Taux Présence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in stats_employes %}
+                                <tr>
+                                    <td>{{ stat.employe.nom }} {{ stat.employe.prenoms }}</td>
+                                    <td class="text-center">{{ stat.total_jours }}</td>
+                                    <td class="text-center text-success"><strong>{{ stat.presents }}</strong></td>
+                                    <td class="text-center text-danger">{{ stat.absents }}</td>
+                                    <td class="text-center text-warning">{{ stat.retards }}</td>
+                                    <td class="text-end">{{ stat.heures_travaillees|floatformat:2 }}h</td>
+                                    <td class="text-end">{{ stat.heures_supplementaires|floatformat:2 }}h</td>
+                                    <td class="text-center">
+                                        {% if stat.taux_presence >= 90 %}
+                                        <span class="badge bg-success">{{ stat.taux_presence }}%</span>
+                                        {% elif stat.taux_presence >= 75 %}
+                                        <span class="badge bg-warning">{{ stat.taux_presence }}%</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">{{ stat.taux_presence }}%</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        Aucune donnée disponible
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+

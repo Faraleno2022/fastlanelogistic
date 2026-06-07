@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Modifier Session - {{ session.formation.intitule }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Modifier Session</h1>
+            <p class="text-muted">{{ session.formation.intitule }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'formation:detail_session' session.pk %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Informations de la Session</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date_debut" class="form-label">Date de début *</label>
+                                <input type="date" id="date_debut" name="date_debut" class="form-control" 
+                                       value="{{ session.date_debut|date:'Y-m-d' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_fin" class="form-label">Date de fin *</label>
+                                <input type="date" id="date_fin" name="date_fin" class="form-control" 
+                                       value="{{ session.date_fin|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="lieu" class="form-label">Lieu *</label>
+                                <input type="text" id="lieu" name="lieu" class="form-control" 
+                                       value="{{ session.lieu|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="formateur" class="form-label">Formateur</label>
+                                <input type="text" id="formateur" name="formateur" class="form-control" 
+                                       value="{{ session.formateur|default:'' }}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nombre_places" class="form-label">Nombre de places</label>
+                                <input type="number" id="nombre_places" name="nombre_places" class="form-control" 
+                                       value="{{ session.nombre_places|default:'' }}" min="1">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="statut" class="form-label">Statut</label>
+                                <select id="statut" name="statut" class="form-select">
+                                    <option value="planifiee" {% if session.statut == 'planifiee' %}selected{% endif %}>Planifiée</option>
+                                    <option value="en_cours" {% if session.statut == 'en_cours' %}selected{% endif %}>En cours</option>
+                                    <option value="terminee" {% if session.statut == 'terminee' %}selected{% endif %}>Terminée</option>
+                                    <option value="annulee" {% if session.statut == 'annulee' %}selected{% endif %}>Annulée</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observations" class="form-label">Observations</label>
+                            <textarea id="observations" name="observations" class="form-control" rows="3">{{ session.observations|default:'' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'formation:detail_session' session.pk %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Informations sur la Formation</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Formation:</strong> {{ session.formation.intitule }}</p>
+                    <p><strong>Type:</strong> {{ session.formation.type_formation }}</p>
+                    <p><strong>Domaine:</strong> {{ session.formation.domaine }}</p>
+                    <p><strong>Durée:</strong> {{ session.formation.duree_jours }} jours ({{ session.formation.duree_heures }} heures)</p>
+                    {% if session.formation.cout_unitaire %}
+                    <p><strong>Coût unitaire:</strong> {{ session.formation.cout_unitaire }} GNF</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateDebut = document.getElementById('date_debut');
+    const dateFin = document.getElementById('date_fin');
+    
+    dateDebut.addEventListener('change', function() {
+        dateFin.min = this.value;
+    });
+    
+    dateFin.addEventListener('change', function() {
+        if (this.value && dateDebut.value && this.value < dateDebut.value) {
+            this.value = dateDebut.value;
+        }
+    });
+});
+</script>
+{% endblock %}

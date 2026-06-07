@@ -1,0 +1,815 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Simulation Fiscale Comparative{% endblock %}
+
+{% block extra_css %}
+<style>
+  .bareme-card { border-top: 4px solid; }
+  .bareme-card:nth-child(1) { border-color: #0d6efd; }
+  .bareme-card:nth-child(2) { border-color: #198754; }
+  .bareme-card:nth-child(3) { border-color: #fd7e14; }
+  .bareme-card:nth-child(4) { border-color: #dc3545; }
+  .bareme-card:nth-child(5) { border-color: #6f42c1; }
+
+  .taux-badge { font-size: 1.1rem; font-weight: 700; }
+  .delta-positive { color: #198754; font-weight: 600; }
+  .delta-negative { color: #dc3545; font-weight: 600; }
+  .table-tranches th { background: #f8f9fa; font-size: .8rem; }
+  .table-tranches td { font-size: .85rem; }
+  .sticky-form { position: sticky; top: 70px; }
+  .row-highlight { background: #e8f4f8; font-weight: 600; }
+  .optim-card { border: 2px solid #198754; background: linear-gradient(135deg, #f0fff4 0%, #e8f5e9 100%); }
+  .scenario-best { background: #d4edda !important; border-left: 4px solid #198754; }
+  .scenario-row:hover { background: #f0f7ff; }
+  .augmentation-card { border: 2px solid #fd7e14; background: linear-gradient(135deg, #fff8f0 0%, #fff3e0 100%); }
+  .hero-stat { text-align: center; padding: 1rem; }
+  .hero-stat .value { font-size: 1.5rem; font-weight: 800; }
+  .hero-stat .label { font-size: .75rem; color: #6c757d; text-transform: uppercase; letter-spacing: .5px; }
+  .loading-spinner { display: none; }
+  .loading-spinner.active { display: inline-block; }
+  @media print {
+    .sticky-form { position: static !important; }
+    .no-print { display: none !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Titre -->
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+      <h2 class="mb-0"><i class="fas fa-balance-scale me-2 text-primary"></i>Simulation Fiscale Comparative</h2>
+      <p class="text-muted mb-0 small">Comparez barèmes RTS, optimisez les salaires — Législation guinéenne (CGI)</p>
+    </div>
+    <div class="d-flex gap-2 no-print">
+      <a href="{% url 'paie:historique_simulations' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-history me-1"></i>Historique
+      </a>
+      <a href="{% url 'paie:simulation_paie' %}" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-calculator me-1"></i>Simulation simple
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row g-4">
+
+    <!-- ===== FORMULAIRE ===== -->
+    <div class="col-xl-4">
+      <div class="card shadow-sm sticky-form">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%);">
+          <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Paramètres de simulation</h5>
+        </div>
+        <div class="card-body">
+          <form method="post" id="formSimulation">
+            {% csrf_token %}
+
+            <!-- Employé optionnel -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Employé (optionnel)</label>
+              <select class="form-select form-select-sm" name="employe" id="idEmploye">
+                <option value="">— Simulation libre (sans employé) —</option>
+                {% for emp in employes %}
+                <option value="{{ emp.id }}"
+                  {% if form_data.employe_id == emp.id|stringformat:'s' %}selected{% endif %}>
+                  {{ emp.matricule }} – {{ emp.nom }} {{ emp.prenoms }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Salaire brut -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Salaire brut <span class="text-danger">*</span></label>
+              <div class="input-group input-group-sm">
+                <input type="text" class="form-control" name="salaire_brut" id="idBrut"
+                       value="{{ form_data.salaire_brut|default:'' }}"
+                       placeholder="Ex : 5 000 000" required>
+                <span class="input-group-text">GNF</span>
+              </div>
+              <div class="form-text">Saisir le brut total (base + primes)</div>
+            </div>
+
+            <!-- Indemnités forfaitaires -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">
+                Total indemnités forfaitaires
+                <i class="fas fa-info-circle text-info" title="Transport, logement, cherté de vie…
+Exonérées à hauteur de 25% du brut (CGI Art. 93)" data-bs-toggle="tooltip"></i>
+              </label>
+              <div class="input-group input-group-sm">
+                <input type="text" class="form-control" name="total_indemnites" id="idIndemnites"
+                       value="{{ form_data.total_indemnites|default:'' }}"
+                       placeholder="Ex : 1 000 000">
+                <span class="input-group-text">GNF</span>
+              </div>
+              <div class="form-text text-warning">
+                <i class="fas fa-info-circle"></i> Plafond = 25% du brut. Au-delà → réintégré dans la base RTS.
+              </div>
+            </div>
+
+            <hr class="my-2">
+
+            <!-- Sélection des barèmes -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Barèmes à comparer</label>
+              <small class="text-muted d-block mb-2">Cochez 2 à 5 barèmes (au moins 1)</small>
+              <div id="baremesContainer" class="border rounded p-2" style="max-height:220px; overflow-y:auto;">
+                {% for b in baremes_dispo %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="baremes_choisis"
+                         value="{{ b.id }}" id="bar_{{ forloop.counter }}"
+                         {% if b.id in form_data.baremes_choisis or not form_data %}
+                           {% if forloop.counter <= 2 %}checked{% endif %}
+                         {% endif %}>
+                  <label class="form-check-label small" for="bar_{{ forloop.counter }}">
+                    {% if b.type == 'officiel' %}
+                      <i class="fas fa-check-circle text-success me-1"></i>
+                    {% elif b.type == 'reference' %}
+                      <i class="fas fa-book text-primary me-1"></i>
+                    {% else %}
+                      <i class="fas fa-flask text-warning me-1"></i>
+                    {% endif %}
+                    {{ b.label }}
+                  </label>
+                </div>
+                {% empty %}
+                <p class="text-muted small mb-0">
+                  <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                  Aucun barème enregistré. Le barème CGI de référence sera utilisé.
+                </p>
+                {% endfor %}
+              </div>
+              <div class="form-text">
+                <a href="{% url 'paie:bareme_irpp_liste' %}" target="_blank" class="small">
+                  <i class="fas fa-cog me-1"></i>Gérer les barèmes
+                </a>
+              </div>
+            </div>
+
+            <!-- Label simulation -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Label de la simulation</label>
+              <input type="text" class="form-control form-control-sm" name="label_simulation"
+                     value="{{ form_data.label_simulation|default:'' }}"
+                     placeholder="Ex : Vérification M. Diallo – mars 2026">
+            </div>
+
+            <hr class="my-2">
+
+            <!-- Scénario augmentation -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">
+                <i class="fas fa-chart-line text-warning me-1"></i>Scénario augmentation
+              </label>
+              <div class="input-group input-group-sm">
+                <input type="number" class="form-control" id="idAugmentation"
+                       value="0" min="-50" max="100" step="5" placeholder="% augmentation">
+                <span class="input-group-text">%</span>
+                <button type="button" class="btn btn-outline-warning" id="btnAugmentation"
+                        title="Simuler l'impact d'une augmentation">
+                  <i class="fas fa-chart-line"></i>
+                </button>
+              </div>
+              <div class="form-text">Testez l'impact d'une augmentation sur le net et les charges</div>
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-grid gap-2">
+              <button type="submit" name="action" value="simuler" class="btn btn-primary btn-lg">
+                <i class="fas fa-play-circle me-2"></i>Simuler
+              </button>
+
+              <!-- Bouton Optimiser le net -->
+              <button type="button" class="btn btn-success" id="btnOptimiser">
+                <i class="fas fa-magic me-2"></i>Optimiser le Net
+                <span class="loading-spinner" id="spinOptimiser">
+                  <span class="spinner-border spinner-border-sm ms-1"></span>
+                </span>
+              </button>
+
+              {% if resultats %}
+              <div class="d-flex gap-2">
+                <button type="submit" name="action" value="csv" class="btn btn-outline-success flex-fill btn-sm">
+                  <i class="fas fa-file-csv me-1"></i>CSV
+                </button>
+                <button type="submit" name="action" value="sauvegarder" class="btn btn-outline-secondary flex-fill btn-sm">
+                  <i class="fas fa-save me-1"></i>Sauvegarder
+                </button>
+                <button type="button" class="btn btn-outline-dark flex-fill btn-sm" onclick="window.print()">
+                  <i class="fas fa-print me-1"></i>Imprimer
+                </button>
+              </div>
+              {% endif %}
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Carte récap barème -->
+        {% if resultats %}
+        <div class="card-footer bg-light small">
+          <strong>Formule appliquée (CGI Guinée) :</strong><br>
+          CNSS = half_up(min(Brut, 2 500 000) × 5%)<br>
+          Plafond exon. = floor(Brut × 25%)<br>
+          Base RTS = Brut − CNSS − Exon + Dépassement<br>
+          RTS = Barème progressif (ROUND_HALF_UP)
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ===== RÉSULTATS ===== -->
+    <div class="col-xl-8">
+
+      {% if not resultats %}
+      <div class="card shadow-sm h-100">
+        <div class="card-body d-flex flex-column align-items-center justify-content-center py-5 text-center">
+          <i class="fas fa-balance-scale fa-4x text-muted mb-3"></i>
+          <h5 class="text-muted">Aucune simulation lancée</h5>
+          <p class="text-muted mb-0">Remplissez le formulaire à gauche et cliquez sur <strong>Simuler</strong>.</p>
+        </div>
+      </div>
+
+      {% else %}
+
+      <!-- Tableau de synthèse -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h6 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>Tableau comparatif</h6>
+          <span class="badge bg-secondary">{{ resultats|length }} barème{{ resultats|length|pluralize }}</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th>Indicateur</th>
+                  {% for r in resultats %}
+                  <th class="text-center">
+                    <span class="d-block">{{ r.bareme_label }}</span>
+                    {% if r.annee %}<small class="text-info">{{ r.annee }}</small>{% endif %}
+                  </th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% with r0=resultats.0 %}
+
+                <tr class="table-secondary">
+                  <td colspan="{{ resultats|length|add:1 }}" class="fw-bold small text-uppercase px-3 py-1">
+                    Éléments de base
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Salaire brut</td>
+                  {% for r in resultats %}
+                  <td class="text-end">{{ r.brut|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>Indemnités forfaitaires</td>
+                  {% for r in resultats %}
+                  <td class="text-end">{{ r.total_indemnites|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>
+                    CNSS employé (5%)
+                    <small class="text-muted d-block">Base = min(Brut, 2 500 000)</small>
+                  </td>
+                  {% for r in resultats %}
+                  <td class="text-end text-danger">{{ r.cnss|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+
+                <tr class="table-secondary">
+                  <td colspan="{{ resultats|length|add:1 }}" class="fw-bold small text-uppercase px-3 py-1">
+                    Exonération indemnités (plafond 25% du brut)
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Plafond d'exonération (25%)</td>
+                  {% for r in resultats %}
+                  <td class="text-end">{{ r.plafond_exon|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>Montant exonéré</td>
+                  {% for r in resultats %}
+                  <td class="text-end text-success">{{ r.exon|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                {% if r0.depasse > 0 %}
+                <tr>
+                  <td class="text-warning">Dépassement réintégré</td>
+                  {% for r in resultats %}
+                  <td class="text-end text-warning fw-semibold">+{{ r.depasse|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                {% endif %}
+
+                <tr class="table-secondary">
+                  <td colspan="{{ resultats|length|add:1 }}" class="fw-bold small text-uppercase px-3 py-1">
+                    Calcul RTS
+                  </td>
+                </tr>
+
+                <tr class="row-highlight">
+                  <td>Base imposable RTS</td>
+                  {% for r in resultats %}
+                  <td class="text-end fw-bold">{{ r.base_rts|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                <tr class="table-warning">
+                  <td class="fw-bold">RTS (impôt)</td>
+                  {% for r in resultats %}
+                  <td class="text-end fw-bold text-danger fs-6">{{ r.rts|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>Taux effectif</td>
+                  {% for r in resultats %}
+                  <td class="text-end">
+                    <span class="badge bg-info taux-badge">{{ r.taux_effectif }}%</span>
+                  </td>
+                  {% endfor %}
+                </tr>
+
+                <tr class="table-secondary">
+                  <td colspan="{{ resultats|length|add:1 }}" class="fw-bold small text-uppercase px-3 py-1">
+                    Résultat net
+                  </td>
+                </tr>
+
+                <tr class="table-success">
+                  <td class="fw-bold fs-6">Net à payer</td>
+                  {% for r in resultats %}
+                  <td class="text-end fw-bold text-success fs-5">{{ r.net|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+
+                <!-- Ligne delta (comparaison vs premier barème) -->
+                {% if resultats|length > 1 %}
+                <tr>
+                  <td class="text-muted small">Δ Net vs barème 1</td>
+                  {% for r in resultats %}
+                  {% if forloop.first %}
+                  <td class="text-end text-muted small">référence</td>
+                  {% else %}
+                  <td class="text-end small fw-semibold
+                    {% if r.delta_net > 0 %}delta-positive{% elif r.delta_net < 0 %}delta-negative{% endif %}">
+                    {% if r.delta_net > 0 %}+{% endif %}{{ r.delta_net|intcomma }} GNF
+                  </td>
+                  {% endif %}
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td class="text-muted small">Δ RTS vs barème 1</td>
+                  {% for r in resultats %}
+                  {% if forloop.first %}
+                  <td class="text-end text-muted small">référence</td>
+                  {% else %}
+                  <td class="text-end small fw-semibold
+                    {% if r.delta_rts < 0 %}delta-positive{% elif r.delta_rts > 0 %}delta-negative{% endif %}">
+                    {% if r.delta_rts > 0 %}+{% endif %}{{ r.delta_rts|intcomma }} GNF
+                  </td>
+                  {% endif %}
+                  {% endfor %}
+                </tr>
+                {% endif %}
+
+                <tr class="table-secondary">
+                  <td colspan="{{ resultats|length|add:1 }}" class="fw-bold small text-uppercase px-3 py-1">
+                    Charges patronales
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>CNSS employeur (18%)</td>
+                  {% for r in resultats %}
+                  <td class="text-end">{{ r.cnss_employeur|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>Versement forfaitaire (VF 6%)</td>
+                  {% for r in resultats %}
+                  <td class="text-end">{{ r.vf|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>TA / ONFPP</td>
+                  {% for r in resultats %}
+                  <td class="text-end">
+                    {% if r.ta > 0 %}
+                      {{ r.ta|intcomma }} GNF <small class="text-muted">(TA 2%)</small>
+                    {% else %}
+                      {{ r.onfpp|intcomma }} GNF <small class="text-muted">(ONFPP 1.5%)</small>
+                    {% endif %}
+                  </td>
+                  {% endfor %}
+                </tr>
+                <tr class="table-warning">
+                  <td class="fw-bold">Total charges patronales</td>
+                  {% for r in resultats %}
+                  <td class="text-end fw-bold">{{ r.total_charges_pat|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+                <tr class="table-danger">
+                  <td class="fw-bold fs-6">Coût total employeur</td>
+                  {% for r in resultats %}
+                  <td class="text-end fw-bold fs-5">{{ r.cout_employeur|intcomma }} GNF</td>
+                  {% endfor %}
+                </tr>
+
+                {% endwith %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== DÉTAIL PAR TRANCHE pour chaque barème ===== -->
+      {% for r in resultats %}
+      <div class="card shadow-sm mb-3 bareme-card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h6 class="mb-0">
+            <i class="fas fa-layer-group me-2"></i>
+            Détail tranches — <strong>{{ r.bareme_label }}</strong>
+          </h6>
+          <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-info">Base RTS : {{ r.base_rts|intcomma }} GNF</span>
+            <span class="badge bg-danger">RTS : {{ r.rts|intcomma }} GNF</span>
+            <span class="badge bg-success">Taux eff. : {{ r.taux_effectif }}%</span>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          {% if r.detail_tranches %}
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-tranches mb-0">
+              <thead>
+                <tr>
+                  <th>Tranche</th>
+                  <th>Borne inf.</th>
+                  <th>Borne sup.</th>
+                  <th>Taux</th>
+                  <th class="text-end">Base taxable</th>
+                  <th class="text-end">Impôt tranche</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for t in r.detail_tranches %}
+                <tr{% if t.taux == 0 %} class="table-light text-muted"{% endif %}>
+                  <td>Tranche {{ forloop.counter }}</td>
+                  <td>{{ t.borne_inf|intcomma }} GNF</td>
+                  <td>
+                    {% if t.borne_sup %}
+                      {{ t.borne_sup|intcomma }} GNF
+                    {% else %}
+                      <span class="text-muted">Illimité</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge {% if t.taux == 0 %}bg-light text-dark{% else %}bg-warning text-dark{% endif %}">
+                      {{ t.taux|floatformat:"0" }}%
+                    </span>
+                  </td>
+                  <td class="text-end">{{ t.base_tranche|intcomma }} GNF</td>
+                  <td class="text-end fw-semibold">{{ t.impot_tranche|intcomma }} GNF</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot class="table-warning">
+                <tr>
+                  <td colspan="4" class="fw-bold text-end">Total RTS :</td>
+                  <td class="text-end fw-bold">{{ r.base_rts|intcomma }} GNF</td>
+                  <td class="text-end fw-bold text-danger">{{ r.rts|intcomma }} GNF</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          {% else %}
+          <div class="py-3 text-center text-muted small">
+            <i class="fas fa-info-circle me-1"></i>
+            Base RTS = {{ r.base_rts|intcomma }} GNF — en dessous du seuil de la 1ère tranche imposable (RTS = 0)
+          </div>
+          {% endif %}
+
+          <!-- Récapitulatif en bas pour ce barème -->
+          <div class="bg-light px-3 py-2 border-top d-flex flex-wrap gap-3 small">
+            <span><strong>Brut :</strong> {{ r.brut|intcomma }} GNF</span>
+            <span class="text-danger"><strong>−CNSS :</strong> {{ r.cnss|intcomma }} GNF</span>
+            <span class="text-success"><strong>−Exon. :</strong> {{ r.exon|intcomma }} GNF</span>
+            {% if r.depasse > 0 %}<span class="text-warning"><strong>+Dép. :</strong> {{ r.depasse|intcomma }} GNF</span>{% endif %}
+            <span><strong>=Base RTS :</strong> {{ r.base_rts|intcomma }} GNF</span>
+            <span class="text-danger"><strong>−RTS :</strong> {{ r.rts|intcomma }} GNF</span>
+            <span class="text-success fw-bold"><strong>=Net :</strong> {{ r.net|intcomma }} GNF</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- ===== PANNEAU OPTIMISATION DU NET ===== -->
+      <div id="panelOptimisation" class="card shadow-sm mb-4" style="display:none;">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #198754 0%, #20c997 100%);">
+          <h6 class="mb-0"><i class="fas fa-magic me-2"></i>Optimisation du Net à Payer</h6>
+        </div>
+        <div class="card-body" id="optimResultat"></div>
+      </div>
+
+      <!-- ===== PANNEAU SCÉNARIO AUGMENTATION ===== -->
+      <div id="panelAugmentation" class="card shadow-sm mb-4" style="display:none;">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);">
+          <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Impact de l'augmentation</h6>
+        </div>
+        <div class="card-body" id="augResultat"></div>
+      </div>
+
+      <!-- Légende méthode de calcul -->
+      <div class="card shadow-sm border-info">
+        <div class="card-body small">
+          <h6 class="text-info"><i class="fas fa-info-circle me-1"></i>Méthode de calcul (CGI Guinée)</h6>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <strong>1. CNSS employé</strong><br>
+              <code>half_up(min(Brut, 2 500 000) × 5%)</code>
+            </div>
+            <div class="col-md-6">
+              <strong>2. Plafond exonération indemnités</strong><br>
+              <code>floor(Brut × 25%)</code>
+            </div>
+            <div class="col-md-6">
+              <strong>3. Exonération effective</strong><br>
+              <code>Exon = min(Indemnités, Plafond)</code><br>
+              <code>Dépassement = max(0, Indemnités − Plafond)</code>
+            </div>
+            <div class="col-md-6">
+              <strong>4. Base RTS</strong><br>
+              <code>Base RTS = Brut − CNSS − Exon + Dépassement</code>
+            </div>
+            <div class="col-12">
+              <strong>5. RTS</strong> — Calcul progressif par tranches (ROUND_HALF_UP sur chaque tranche).<br>
+              <strong>6. Net</strong> = Brut − CNSS − RTS
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% endif %}{# fin if resultats #}
+    </div>{# fin col résultats #}
+  </div>{# fin row #}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  'use strict';
+
+  var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  function fmt(n) {
+    return Math.round(n).toLocaleString('fr-GN') + ' GNF';
+  }
+  function parseMontant(v) {
+    return parseInt(String(v).replace(/[\s\u202f]/g, '').replace(',', '.')) || 0;
+  }
+  function getSelectedBaremes() {
+    var checked = document.querySelectorAll('input[name="baremes_choisis"]:checked');
+    return Array.from(checked).map(function(c) { return c.value; });
+  }
+
+  // ===== 1. Charger salaire de l'employé sélectionné =====
+  document.getElementById('idEmploye').addEventListener('change', function() {
+    var empId = this.value;
+    if (!empId) return;
+    fetch('{% url "paie:api_employe_salaire" pk=0 %}'.replace('/0/', '/' + empId + '/'))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.brut) {
+          document.getElementById('idBrut').value = data.brut.toLocaleString('fr-GN');
+          document.getElementById('idIndemnites').value = data.indemnites ? data.indemnites.toLocaleString('fr-GN') : '';
+          var src = document.getElementById('empSource');
+          if (!src) {
+            src = document.createElement('div');
+            src.id = 'empSource';
+            src.className = 'form-text text-success small';
+            document.getElementById('idBrut').parentNode.after(src);
+          }
+          src.innerHTML = '<i class="fas fa-check-circle me-1"></i>Chargé depuis : ' + data.source;
+        }
+      })
+      .catch(function() {});
+  });
+
+  // ===== 2. Validation du formulaire =====
+  document.getElementById('formSimulation').addEventListener('submit', function(e) {
+    var cases = document.querySelectorAll('input[name="baremes_choisis"]:checked');
+    if (cases.length === 0) {
+      e.preventDefault();
+      alert('Veuillez cocher au moins un barème à simuler.');
+      return false;
+    }
+    if (cases.length > 5) {
+      e.preventDefault();
+      alert('Maximum 5 barèmes comparables à la fois.');
+      return false;
+    }
+  });
+
+  // ===== 3. Optimiser le Net =====
+  document.getElementById('btnOptimiser').addEventListener('click', function() {
+    var brut = parseMontant(document.getElementById('idBrut').value);
+    var indem = parseMontant(document.getElementById('idIndemnites').value);
+    var enveloppe = brut + indem;
+
+    if (enveloppe <= 0) {
+      alert('Saisissez un salaire brut avant d\'optimiser.');
+      return;
+    }
+
+    var baremes = getSelectedBaremes();
+    var baremeId = baremes.length > 0 ? baremes[0] : 'fallback';
+    var spinner = document.getElementById('spinOptimiser');
+    spinner.classList.add('active');
+
+    fetch('{% url "paie:api_optimiser_net" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+      body: JSON.stringify({enveloppe: enveloppe, bareme_id: baremeId})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      spinner.classList.remove('active');
+      var panel = document.getElementById('panelOptimisation');
+      panel.style.display = '';
+      var rec = data.recommandation;
+
+      var html = '<div class="row g-3 mb-3">';
+      html += '<div class="col-md-3"><div class="hero-stat optim-card rounded p-3">';
+      html += '<div class="label">Net optimal / mois</div>';
+      html += '<div class="value text-success">' + fmt(rec.net) + '</div>';
+      html += '<div class="small text-muted">Recommandation</div></div></div>';
+      html += '<div class="col-md-3"><div class="hero-stat border rounded p-3">';
+      html += '<div class="label">Économie RTS</div>';
+      html += '<div class="value text-danger">-' + fmt(rec.economie_rts) + '</div>';
+      html += '<div class="small text-muted">Impôt en moins / mois</div></div></div>';
+      html += '<div class="col-md-3"><div class="hero-stat border rounded p-3">';
+      html += '<div class="label">Gain Net / mois</div>';
+      html += '<div class="value text-success">+' + fmt(rec.gain_net) + '</div>';
+      html += '<div class="small text-muted">vs tout en brut</div></div></div>';
+      html += '<div class="col-md-3"><div class="hero-stat border border-success rounded p-3" style="background:#e8f5e9">';
+      html += '<div class="label">Gain Net / an</div>';
+      html += '<div class="value text-success fs-4">+' + fmt(rec.gain_net_annuel) + '</div>';
+      html += '<div class="small fw-bold text-success">' + fmt(rec.gain_net_annuel) + ' GNF / an</div></div></div>';
+      html += '</div>';
+
+      html += '<div class="alert alert-success mb-3"><i class="fas fa-lightbulb me-2"></i>';
+      html += '<strong>Répartition optimale</strong> pour une enveloppe de <strong>' + fmt(data.enveloppe_totale) + '</strong> :<br>';
+      html += 'Brut : <strong>' + fmt(rec.brut) + '</strong> | ';
+      html += 'Indemnités : <strong>' + fmt(rec.indemnites) + '</strong>';
+      html += ' <small class="text-muted">(= 25% du brut, plafond d\'exonération CGI)</small></div>';
+
+      html += '<h6 class="fw-bold mb-2"><i class="fas fa-table me-2"></i>Comparaison des scénarios</h6>';
+      html += '<div class="table-responsive"><table class="table table-sm table-bordered table-hover mb-0">';
+      html += '<thead class="table-dark"><tr><th>Scénario</th><th class="text-end">Brut</th>';
+      html += '<th class="text-end">Indemnités</th><th class="text-end">CNSS</th>';
+      html += '<th class="text-end">RTS</th><th class="text-end">Net</th></tr></thead><tbody>';
+
+      var bestNet = rec.net;
+      data.scenarios.forEach(function(s) {
+        var rowClass = (s.net === bestNet) ? 'scenario-best' : 'scenario-row';
+        var nonConforme = (s.conforme_25 === false);
+        if (nonConforme) rowClass = 'table-warning';
+        html += '<tr class="' + rowClass + '">';
+        html += '<td>' + s.scenario;
+        if (s.net === bestNet && !nonConforme) html += ' <span class="badge bg-success ms-1">Optimal</span>';
+        if (nonConforme) html += ' <span class="badge bg-warning text-dark ms-1">&#9888; Non conforme</span>';
+        html += '</td>';
+        html += '<td class="text-end">' + fmt(s.brut) + '</td>';
+        html += '<td class="text-end">' + fmt(s.total_indemnites) + '</td>';
+        html += '<td class="text-end">' + fmt(s.cnss) + '</td>';
+        html += '<td class="text-end text-danger">' + fmt(s.rts) + '</td>';
+        html += '<td class="text-end fw-bold text-success">' + fmt(s.net) + '</td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+
+      // Meta traceability
+      if (data.meta) {
+        html += '<div class="mt-2 small text-muted border-top pt-2">';
+        html += '<i class="fas fa-shield-alt me-1"></i>';
+        html += '<strong>Règle :</strong> ' + (data.meta.regle || 'Exonération \u2264 25% brut') + ' | ';
+        html += 'Plafond CNSS : ' + fmt(data.meta.plafond_cnss) + ' GNF | ';
+        html += 'CNSS employé : ' + data.meta.taux_cnss_employe + '% | ';
+        html += 'CNSS employeur : ' + data.meta.taux_cnss_employeur + '%';
+        html += '</div>';
+      }
+
+      html += '<div class="mt-3 text-end"><button class="btn btn-success btn-sm" onclick="';
+      html += 'document.getElementById(\'idBrut\').value=\'' + rec.brut.toLocaleString('fr-GN') + '\';';
+      html += 'document.getElementById(\'idIndemnites\').value=\'' + rec.indemnites.toLocaleString('fr-GN') + '\';';
+      html += '">';
+      html += '<i class="fas fa-check me-1"></i>Appliquer cette répartition</button></div>';
+
+      document.getElementById('optimResultat').innerHTML = html;
+      panel.scrollIntoView({behavior: 'smooth', block: 'start'});
+    })
+    .catch(function(err) {
+      spinner.classList.remove('active');
+      alert('Erreur lors de l\'optimisation : ' + err.message);
+    });
+  });
+
+  // ===== 4. Scénario augmentation =====
+  document.getElementById('btnAugmentation').addEventListener('click', function() {
+    var brut = parseMontant(document.getElementById('idBrut').value);
+    var indem = parseMontant(document.getElementById('idIndemnites').value);
+    var pct = parseFloat(document.getElementById('idAugmentation').value) || 0;
+
+    if (brut <= 0) { alert('Saisissez un salaire brut.'); return; }
+    if (pct === 0) { alert('Saisissez un pourcentage d\'augmentation.'); return; }
+
+    var baremes = getSelectedBaremes();
+    if (baremes.length === 0) baremes = ['fallback'];
+
+    fetch('{% url "paie:api_scenario_augmentation" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+      body: JSON.stringify({brut: brut, indemnites: indem, pourcentage: pct, baremes_ids: baremes})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var panel = document.getElementById('panelAugmentation');
+      panel.style.display = '';
+
+      var signe = data.pourcentage > 0 ? '+' : '';
+      var html = '<div class="alert alert-warning mb-3">';
+      html += '<i class="fas fa-chart-line me-2"></i>';
+      html += '<strong>Impact d\'une augmentation de ' + signe + data.pourcentage + '%</strong> ';
+      html += 'sur un brut de ' + fmt(data.brut_actuel);
+      html += ' → <strong>' + fmt(data.nouveau_brut) + '</strong></div>';
+
+      html += '<div class="table-responsive"><table class="table table-sm table-bordered table-hover mb-0">';
+      html += '<thead class="table-dark"><tr><th>Barème</th>';
+      html += '<th class="text-center" colspan="2">Net</th>';
+      html += '<th class="text-center" colspan="2">RTS</th>';
+      html += '<th class="text-center" colspan="2">Coût employeur</th></tr>';
+      html += '<tr class="table-secondary"><th></th>';
+      html += '<th class="text-end small">Avant</th><th class="text-end small">Après</th>';
+      html += '<th class="text-end small">Avant</th><th class="text-end small">Après</th>';
+      html += '<th class="text-end small">Avant</th><th class="text-end small">Après</th></tr></thead><tbody>';
+
+      data.comparaison.forEach(function(c) {
+        html += '<tr>';
+        html += '<td class="fw-semibold">' + c.bareme_label + '</td>';
+        html += '<td class="text-end">' + fmt(c.avant.net) + '</td>';
+        html += '<td class="text-end fw-bold text-success">' + fmt(c.apres.net) + '</td>';
+        html += '<td class="text-end">' + fmt(c.avant.rts) + '</td>';
+        html += '<td class="text-end text-danger">' + fmt(c.apres.rts) + '</td>';
+        html += '<td class="text-end">' + fmt(c.cout_total_avant) + '</td>';
+        html += '<td class="text-end fw-bold">' + fmt(c.cout_total_apres) + '</td>';
+        html += '</tr>';
+        html += '<tr class="table-light"><td colspan="7" class="small text-center">';
+        html += '\u0394 Net : <span class="' + (c.delta_net >= 0 ? 'delta-positive' : 'delta-negative') + ' fw-bold">';
+        html += (c.delta_net >= 0 ? '+' : '') + fmt(c.delta_net) + ' /mois</span>';
+        html += ' &rarr; <strong class="' + (c.delta_net >= 0 ? 'text-success' : 'text-danger') + '">';
+        html += (c.delta_net >= 0 ? '+' : '') + fmt(c.delta_net * 12) + ' /an</strong>';
+        html += ' | Δ RTS : <span class="' + (c.delta_rts > 0 ? 'delta-negative' : 'delta-positive') + '">';
+        html += (c.delta_rts >= 0 ? '+' : '') + fmt(c.delta_rts) + '</span>';
+        html += ' | Δ Charges : <span class="' + (c.delta_charges > 0 ? 'delta-negative' : 'delta-positive') + '">';
+        html += (c.delta_charges >= 0 ? '+' : '') + fmt(c.delta_charges) + '</span>';
+        html += '</td></tr>';
+      });
+      html += '</tbody></table></div>';
+
+      document.getElementById('augResultat').innerHTML = html;
+      panel.scrollIntoView({behavior: 'smooth', block: 'start'});
+    })
+    .catch(function(err) {
+      alert('Erreur : ' + err.message);
+    });
+  });
+
+  // ===== 5. Tooltips Bootstrap =====
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.forEach(function(el) {
+    new bootstrap.Tooltip(el, { html: true });
+  });
+
+})();
+</script>
+{% endblock %}

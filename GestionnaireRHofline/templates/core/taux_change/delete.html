@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer Taux de Change{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="#">Paramètres</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'core:liste_taux_change' %}">Taux de change</a></li>
+        <li class="breadcrumb-item active">Supprimer</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Confirmer la suppression</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>Attention !</strong> Cette action est irréversible.
+                    </div>
+                    
+                    <p>Êtes-vous sûr de vouloir supprimer ce taux de change ?</p>
+                    
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Date :</dt>
+                                <dd class="col-sm-8">{{ taux.date_taux|date:"d/m/Y" }}</dd>
+                                
+                                <dt class="col-sm-4">Devise source :</dt>
+                                <dd class="col-sm-8">{{ taux.devise_source.code }} - {{ taux.devise_source.nom }}</dd>
+                                
+                                <dt class="col-sm-4">Devise cible :</dt>
+                                <dd class="col-sm-8">{{ taux.devise_cible.code }} - {{ taux.devise_cible.nom }}</dd>
+                                
+                                <dt class="col-sm-4">Taux :</dt>
+                                <dd class="col-sm-8">{{ taux.taux|floatformat:6 }}</dd>
+                                
+                                {% if taux.source %}
+                                <dt class="col-sm-4">Source :</dt>
+                                <dd class="col-sm-8">{{ taux.source }}</dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'core:liste_taux_change' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Supprimer définitivement
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier Pointage - {{ pointage.employe.nom_complet }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-edit me-2"></i>Modifier le Pointage</h2>
+                <a href="{% url 'temps_travail:pointages' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        {{ pointage.employe.matricule }} - {{ pointage.employe.nom }} {{ pointage.employe.prenoms }}
+                        | {{ pointage.date_pointage|date:"d/m/Y" }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Employé et Date (lecture seule) -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Employé</label>
+                                <input type="text" class="form-control" value="{{ pointage.employe.matricule }} - {{ pointage.employe.nom }} {{ pointage.employe.prenoms }}" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date</label>
+                                <input type="text" class="form-control" value="{{ pointage.date_pointage|date:'d/m/Y' }}" disabled>
+                            </div>
+                        </div>
+
+                        <!-- Heures -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="heure_entree" class="form-label">Heure d'entrée</label>
+                                <input type="time" class="form-control" id="heure_entree" name="heure_entree"
+                                       value="{% if pointage.heure_entree %}{{ pointage.heure_entree|time:'H:i' }}{% endif %}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="heure_sortie" class="form-label">Heure de sortie</label>
+                                <input type="time" class="form-control" id="heure_sortie" name="heure_sortie"
+                                       value="{% if pointage.heure_sortie %}{{ pointage.heure_sortie|time:'H:i' }}{% endif %}">
+                            </div>
+                        </div>
+
+                        <!-- Statut -->
+                        <div class="mb-3">
+                            <label for="statut" class="form-label">Statut</label>
+                            <select class="form-select scrollable-select" id="statut" name="statut">
+                                <option value="present" {% if pointage.statut_pointage == 'present' %}selected{% endif %}>Présent</option>
+                                <option value="present_am" {% if pointage.statut_pointage == 'present_am' %}selected{% endif %}>Présent AM</option>
+                                <option value="present_pm" {% if pointage.statut_pointage == 'present_pm' %}selected{% endif %}>Présent PM</option>
+                                <option value="present_am_pm" {% if pointage.statut_pointage == 'present_am_pm' %}selected{% endif %}>Présent AM et PM</option>
+                                <option value="absent" {% if pointage.statut_pointage == 'absent' %}selected{% endif %}>Absent</option>
+                                <option value="retard" {% if pointage.statut_pointage == 'retard' %}selected{% endif %}>Retard</option>
+                                <option value="absence_justifiee" {% if pointage.statut_pointage == 'absence_justifiee' %}selected{% endif %}>Absence justifiée</option>
+                                <option value="malade" {% if pointage.statut_pointage == 'malade' %}selected{% endif %}>Malade</option>
+                                <option value="p" {% if pointage.statut_pointage == 'p' %}selected{% endif %}>P</option>
+                                <option value="a" {% if pointage.statut_pointage == 'a' %}selected{% endif %}>A</option>
+                            </select>
+                        </div>
+
+                        <!-- Observations -->
+                        <div class="mb-3">
+                            <label for="observations" class="form-label">Observations</label>
+                            <textarea class="form-control" id="observations" name="observations" rows="3">{{ pointage.observations|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Info heures calculées -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Les heures travaillées et supplémentaires seront recalculées automatiquement à partir des heures d'entrée et de sortie.
+                            {% if pointage.heures_travaillees %}
+                            <br><strong>Actuellement :</strong> {{ pointage.heures_travaillees|floatformat:2 }}h travaillées,
+                            {{ pointage.heures_supplementaires|default:"0"|floatformat:2 }}h supplémentaires.
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'temps_travail:pointages' %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

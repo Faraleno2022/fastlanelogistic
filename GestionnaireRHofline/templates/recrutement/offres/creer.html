@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Créer une Offre d'Emploi - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-megaphone"></i> Créer une Offre d'Emploi</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'recrutement:offres' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Informations générales -->
+            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informations Générales</h5>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="reference_poste" class="form-label">Référence du Poste</label>
+                    <input type="text" class="form-control" id="reference_poste" name="reference_poste" placeholder="Ex: REF-2024-001">
+                </div>
+                <div class="col-md-4">
+                    <label for="intitule_poste" class="form-label">Intitulé du Poste <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="intitule_poste" name="intitule_poste" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="secteur_activite" class="form-label">Secteur d'Activité</label>
+                    <input type="text" class="form-control" id="secteur_activite" name="secteur_activite" list="secteurs_list" placeholder="Sélectionner ou saisir...">
+                    <datalist id="secteurs_list">
+                        <option value="Agriculture">
+                        <option value="Banque / Finance">
+                        <option value="BTP / Construction">
+                        <option value="Commerce / Distribution">
+                        <option value="Éducation / Formation">
+                        <option value="Énergie / Environnement">
+                        <option value="Industrie / Production">
+                        <option value="Informatique / Technologies">
+                        <option value="Mines / Ressources naturelles">
+                        <option value="Santé / Médical">
+                        <option value="Services aux entreprises">
+                        <option value="Télécommunications">
+                        <option value="Transport / Logistique">
+                        <option value="Tourisme / Hôtellerie">
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="poste_texte" class="form-label">Poste</label>
+                    <input type="text" class="form-control" id="poste_texte" name="poste_texte" list="postes_list" placeholder="Sélectionner ou saisir...">
+                    <datalist id="postes_list">
+                        {% for poste in postes %}
+                        <option value="{{ poste.intitule_poste }}" data-id="{{ poste.id }}">
+                        {% endfor %}
+                    </datalist>
+                    <input type="hidden" id="poste" name="poste">
+                </div>
+                <div class="col-md-6">
+                    <label for="service_texte" class="form-label">Service</label>
+                    <input type="text" class="form-control" id="service_texte" name="service_texte" list="services_list" placeholder="Sélectionner ou saisir...">
+                    <datalist id="services_list">
+                        {% for service in services %}
+                        <option value="{{ service.nom_service }}" data-id="{{ service.id }}">
+                        {% endfor %}
+                    </datalist>
+                    <input type="hidden" id="service" name="service">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="type_contrat" class="form-label">Type de Contrat <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="type_contrat" name="type_contrat" list="types_contrat_list" placeholder="Sélectionner ou saisir..." required>
+                    <datalist id="types_contrat_list">
+                        <option value="CDI">
+                        <option value="CDD">
+                        <option value="Stage">
+                        <option value="Temporaire">
+                        <option value="Freelance">
+                        <option value="Intérim">
+                        <option value="Apprentissage">
+                        <option value="Contrat de professionnalisation">
+                    </datalist>
+                </div>
+                <div class="col-md-4">
+                    <label for="nombre_postes" class="form-label">Nombre de Postes <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="nombre_postes" name="nombre_postes" value="1" min="1" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="date_limite" class="form-label">Date Limite de Candidature</label>
+                    <input type="date" class="form-control" id="date_limite" name="date_limite">
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Description du poste -->
+            <h5 class="mb-3"><i class="bi bi-file-text"></i> Description du Poste</h5>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description du Poste</label>
+                <textarea class="form-control" id="description" name="description" rows="4" placeholder="Décrivez les missions et responsabilités du poste..."></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="profil" class="form-label">Profil Recherché</label>
+                <textarea class="form-control" id="profil" name="profil" rows="3" placeholder="Décrivez le profil idéal du candidat..."></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="competences" class="form-label">Compétences Requises</label>
+                <textarea class="form-control" id="competences" name="competences" rows="3" placeholder="Listez les compétences nécessaires..."></textarea>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Exigences -->
+            <h5 class="mb-3"><i class="bi bi-mortarboard"></i> Exigences</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="formation" class="form-label">Formation Requise</label>
+                    <input type="text" class="form-control" id="formation" name="formation" placeholder="Ex: Bac+3 en Informatique">
+                </div>
+                <div class="col-md-6">
+                    <label for="experience" class="form-label">Expérience Requise (années)</label>
+                    <input type="number" class="form-control" id="experience" name="experience" min="0" placeholder="Ex: 3">
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Rémunération -->
+            <h5 class="mb-3"><i class="bi bi-cash-coin"></i> Rémunération et Avantages</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="salaire_min" class="form-label">Salaire Minimum (GNF)</label>
+                    <input type="number" class="form-control" id="salaire_min" name="salaire_min" step="1000" placeholder="Ex: 5000000">
+                </div>
+                <div class="col-md-6">
+                    <label for="salaire_max" class="form-label">Salaire Maximum (GNF)</label>
+                    <input type="number" class="form-control" id="salaire_max" name="salaire_max" step="1000" placeholder="Ex: 8000000">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="avantages" class="form-label">Avantages</label>
+                <textarea class="form-control" id="avantages" name="avantages" rows="3" placeholder="Listez les avantages offerts (assurance, transport, logement, etc.)"></textarea>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Pièces jointes -->
+            <h5 class="mb-3"><i class="bi bi-paperclip"></i> Pièces Jointes</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="image" class="form-label">Image de présentation</label>
+                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                    <small class="text-muted">Formats acceptés : JPG, PNG, GIF. Taille max : 5 Mo</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="document_pdf" class="form-label">Document PDF (fiche de poste, description...)</label>
+                    <input type="file" class="form-control" id="document_pdf" name="document_pdf" accept="application/pdf">
+                    <small class="text-muted">Format accepté : PDF. Taille max : 10 Mo</small>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Responsable -->
+            <h5 class="mb-3"><i class="bi bi-person-badge"></i> Gestion</h5>
+            <div class="mb-3">
+                <label for="responsable_texte" class="form-label">Responsable du Recrutement</label>
+                <input type="text" class="form-control" id="responsable_texte" name="responsable_texte" list="responsables_list" placeholder="Sélectionner ou saisir...">
+                <datalist id="responsables_list">
+                    {% for employe in employes %}
+                    <option value="{{ employe.nom }} {{ employe.prenoms }}" data-id="{{ employe.id }}">
+                    {% endfor %}
+                </datalist>
+                <input type="hidden" id="responsable" name="responsable">
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'recrutement:offres' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Créer l'Offre
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <i class="bi bi-info-circle"></i> <strong>Note :</strong> Une référence unique sera générée automatiquement lors de la création de l'offre.
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fonction pour lier un champ texte avec datalist à un champ hidden
+    function setupDatalistBinding(textInputId, hiddenInputId, datalistId) {
+        const textInput = document.getElementById(textInputId);
+        const hiddenInput = document.getElementById(hiddenInputId);
+        const datalist = document.getElementById(datalistId);
+        
+        if (!textInput || !hiddenInput || !datalist) return;
+        
+        textInput.addEventListener('input', function() {
+            const options = datalist.querySelectorAll('option');
+            let found = false;
+            
+            for (let option of options) {
+                if (option.value === textInput.value) {
+                    hiddenInput.value = option.getAttribute('data-id') || '';
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) {
+                hiddenInput.value = '';
+            }
+        });
+        
+        textInput.addEventListener('change', function() {
+            textInput.dispatchEvent(new Event('input'));
+        });
+    }
+    
+    // Lier les champs
+    setupDatalistBinding('poste_texte', 'poste', 'postes_list');
+    setupDatalistBinding('service_texte', 'service', 'services_list');
+    setupDatalistBinding('responsable_texte', 'responsable', 'responsables_list');
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Import employés - Gestionnaire RH Guinée{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-zone {
+        border: 3px dashed #dee2e6;
+        border-radius: 12px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: #fafbfc;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+        border-color: #0d6efd;
+        background: #e7f1ff;
+    }
+    .upload-zone .icon {
+        font-size: 3rem;
+        color: #6c757d;
+    }
+    .upload-zone:hover .icon {
+        color: #0d6efd;
+    }
+    .step-card {
+        border-left: 4px solid #0d6efd;
+    }
+    .step-card .step-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #0d6efd;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.85rem;
+    }
+    .file-info {
+        display: none;
+    }
+    .file-info.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-upload"></i> Import des employés
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'employes:list' %}" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+        <a href="{% url 'employes:telecharger_template' %}" class="btn btn-sm btn-success">
+            <i class="bi bi-download"></i> Télécharger le template Excel
+        </a>
+    </div>
+</div>
+
+<!-- Étapes -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card step-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="step-number me-2">1</div>
+                    <h6 class="mb-0">Télécharger le template</h6>
+                </div>
+                <p class="text-muted small mb-2">
+                    Téléchargez le fichier Excel modèle avec les colonnes attendues,
+                    les données de référence et les instructions.
+                </p>
+                <a href="{% url 'employes:telecharger_template' %}" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-file-earmark-excel"></i> Télécharger le template
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card step-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="step-number me-2">2</div>
+                    <h6 class="mb-0">Remplir le fichier</h6>
+                </div>
+                <p class="text-muted small mb-0">
+                    Remplissez le template avec vos données employés.
+                    Les colonnes <strong>Nom</strong> et <strong>Prénoms</strong> sont obligatoires.
+                    Les matricules sont générés automatiquement si laissés vides.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card step-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="step-number me-2">3</div>
+                    <h6 class="mb-0">Importer</h6>
+                </div>
+                <p class="text-muted small mb-0">
+                    Uploadez votre fichier. Un aperçu vous sera présenté
+                    pour valider les données avant l'importation définitive.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Zone d'upload -->
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-cloud-arrow-up"></i> Charger un fichier
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'employes:import_preview' %}" enctype="multipart/form-data" id="importForm">
+            {% csrf_token %}
+
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fichier').click()">
+                <div class="icon mb-3">
+                    <i class="bi bi-file-earmark-arrow-up"></i>
+                </div>
+                <h5>Glissez-déposez votre fichier ici</h5>
+                <p class="text-muted">ou cliquez pour sélectionner</p>
+                <p class="small text-muted">
+                    Formats acceptés : <strong>.xlsx</strong> (Excel) ou <strong>.csv</strong>
+                    <br>Maximum 500 lignes par importation
+                </p>
+                <input type="file" id="fichier" name="fichier"
+                       accept=".xlsx,.csv" class="d-none"
+                       onchange="onFileSelected(this)">
+            </div>
+
+            <!-- Info fichier sélectionné -->
+            <div class="file-info mt-3" id="fileInfo">
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="bi bi-file-earmark-check me-2 fs-4"></i>
+                    <div>
+                        <strong id="fileName">-</strong>
+                        <br><small class="text-muted" id="fileSize">-</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="clearFile()">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-search"></i> Analyser et prévisualiser
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Colonnes attendues -->
+<div class="card mt-4 shadow-sm">
+    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#colsInfo" style="cursor:pointer">
+        <h6 class="m-0">
+            <i class="bi bi-info-circle"></i> Colonnes attendues
+            <i class="bi bi-chevron-down float-end"></i>
+        </h6>
+    </div>
+    <div id="colsInfo" class="collapse">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Colonne</th>
+                            <th>Obligatoire</th>
+                            <th>Description</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>Matricule</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Génération auto si vide</td><td>EMP-001</td></tr>
+                        <tr><td><strong>Civilité</strong></td><td><span class="badge bg-secondary">Non</span></td><td>M. / Mme / Mlle</td><td>M.</td></tr>
+                        <tr><td><strong>Nom*</strong></td><td><span class="badge bg-danger">Oui</span></td><td>Nom de famille</td><td>DIALLO</td></tr>
+                        <tr><td><strong>Prénoms*</strong></td><td><span class="badge bg-danger">Oui</span></td><td>Prénoms</td><td>Mamadou Alpha</td></tr>
+                        <tr><td><strong>Sexe</strong></td><td><span class="badge bg-secondary">Non</span></td><td>M ou F</td><td>M</td></tr>
+                        <tr><td><strong>Date de naissance</strong></td><td><span class="badge bg-secondary">Non</span></td><td>JJ/MM/AAAA</td><td>15/03/1990</td></tr>
+                        <tr><td><strong>Lieu de naissance</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Ville</td><td>Conakry</td></tr>
+                        <tr><td><strong>Nationalité</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Défaut : Guinéenne</td><td>Guinéenne</td></tr>
+                        <tr><td><strong>Situation matrimoniale</strong></td><td><span class="badge bg-secondary">Non</span></td><td>celibataire / marie / divorce / veuf</td><td>celibataire</td></tr>
+                        <tr><td><strong>Nombre enfants</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Nombre entier</td><td>2</td></tr>
+                        <tr><td><strong>N° Pièce identité</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Numéro du document</td><td>CNI-123456</td></tr>
+                        <tr><td><strong>N° CNSS</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Numéro CNSS individuel</td><td>CNSS-2024-001</td></tr>
+                        <tr><td><strong>Téléphone</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Numéro principal</td><td>+224 620 00 00 00</td></tr>
+                        <tr><td><strong>Email professionnel</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Email pro</td><td>mdiallo@entreprise.gn</td></tr>
+                        <tr><td><strong>Adresse</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Adresse de résidence</td><td>Kaloum, Conakry</td></tr>
+                        <tr><td><strong>Établissement</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Doit exister dans le système</td><td>Siège Conakry</td></tr>
+                        <tr><td><strong>Service</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Doit exister dans le système</td><td>Ressources Humaines</td></tr>
+                        <tr><td><strong>Poste</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Doit exister dans le système</td><td>Responsable RH</td></tr>
+                        <tr><td><strong>Date embauche</strong></td><td><span class="badge bg-secondary">Non</span></td><td>JJ/MM/AAAA</td><td>01/01/2024</td></tr>
+                        <tr><td><strong>Type contrat</strong></td><td><span class="badge bg-secondary">Non</span></td><td>CDI / CDD / Stage / etc.</td><td>CDI</td></tr>
+                        <tr><td><strong>Mode paiement</strong></td><td><span class="badge bg-secondary">Non</span></td><td>virement / cheque / especes / mobile_money</td><td>virement</td></tr>
+                        <tr><td><strong>Nom banque</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Nom de la banque</td><td>BCRG</td></tr>
+                        <tr><td><strong>N° Compte</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Numéro de compte</td><td>001-234567-89</td></tr>
+                        <tr><td><strong>RIB</strong></td><td><span class="badge bg-secondary">Non</span></td><td>Relevé d'identité bancaire</td><td>GN12345678901234</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fichier');
+const fileInfo = document.getElementById('fileInfo');
+
+// Drag & Drop
+uploadZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('drag-over');
+});
+
+uploadZone.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+});
+
+uploadZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        onFileSelected(fileInput);
+    }
+});
+
+function onFileSelected(input) {
+    if (input.files.length > 0) {
+        const file = input.files[0];
+        document.getElementById('fileName').textContent = file.name;
+        const sizeKB = (file.size / 1024).toFixed(1);
+        document.getElementById('fileSize').textContent = sizeKB + ' Ko';
+        fileInfo.classList.add('active');
+        uploadZone.style.display = 'none';
+    }
+}
+
+function clearFile() {
+    fileInput.value = '';
+    fileInfo.classList.remove('active');
+    uploadZone.style.display = 'block';
+}
+</script>
+{% endblock %}

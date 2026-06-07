@@ -1,0 +1,205 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouvelle{% endif %} déclaration IS{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-file-earmark-check text-primary"></i>
+                {% if object %}Modifier la déclaration IS{% else %}Nouvelle déclaration IS{% endif %}
+            </h1>
+        </div>
+        <a href="{% url 'comptabilite:fiscalite_declarations_is' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+            <p class="mb-0">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-xl-8">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Identification</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Dossier fiscal *</label>
+                                {{ form.dossier_fiscal }}
+                                {% for error in form.dossier_fiscal.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Référence *</label>
+                                {{ form.reference }}
+                                {% for error in form.reference.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Type de déclaration</label>
+                                {{ form.type_declaration }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Période début *</label>
+                                {{ form.periode_debut }}
+                                {% for error in form.periode_debut.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Période fin *</label>
+                                {{ form.periode_fin }}
+                                {% for error in form.periode_fin.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Résultat comptable et réintégrations</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Résultat comptable brut (GNF)</label>
+                                {{ form.resultat_comptable_brut }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Déficits antérieurs (GNF)</label>
+                                {{ form.deficits_anterieurs }}
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="text-muted mb-3">Réintégrations fiscales</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Amortissements non déductibles</label>
+                                {{ form.reintegrations_amortissements }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Provisions non déductibles</label>
+                                {{ form.reintegrations_provisions }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Amendes et pénalités</label>
+                                {{ form.reintegrations_amendes }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Dons excessifs</label>
+                                {{ form.reintegrations_dons_excessifs }}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Autres réintégrations</label>
+                                {{ form.autres_reintegrations }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Déductions fiscales</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Dividendes exonérés</label>
+                                {{ form.deductions_dividendes }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Plus-values exonérées</label>
+                                {{ form.deductions_plus_values }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Provisions réglementées</label>
+                                {{ form.deductions_provisions_reglementees }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Autres déductions</label>
+                                {{ form.autres_deductions }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Calcul de l'IS</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Taux IS (%)</label>
+                                {{ form.taux_is }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Crédits d'impôt</label>
+                                {{ form.credits_impot }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Acomptes versés</label>
+                                {{ form.acomptes_verses }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Minimum fiscal</label>
+                                {{ form.minimum_fiscal }}
+                            </div>
+                            <div class="col-md-4 d-flex align-items-center">
+                                <div class="form-check mt-3">
+                                    {{ form.is_minimum_applicable }}
+                                    <label class="form-check-label">Minimum applicable</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Statut</label>
+                                {{ form.statut }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Aide au calcul</h6>
+                    </div>
+                    <div class="card-body text-muted small">
+                        <p><strong>Formule IS :</strong></p>
+                        <ul class="mb-0">
+                            <li>Résultat fiscal = Résultat comptable + Réintégrations - Déductions</li>
+                            <li>Base imposable = Résultat fiscal - Déficits antérieurs</li>
+                            <li>IS brut = Base imposable × Taux IS</li>
+                            <li>IS net = IS brut - Crédits d'impôt</li>
+                            <li>Solde = IS net - Acomptes versés</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:fiscalite_declarations_is' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

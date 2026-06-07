@@ -1,0 +1,698 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Bulletin {{ bulletin.numero_bulletin }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-file-invoice me-2"></i>Bulletin {{ bulletin.numero_bulletin }}</h2>
+                <div class="btn-group">
+                    {% if bulletin.cnss_employe == 0 and bulletin.salaire_brut > 0 %}
+                    <form method="post" action="{% url 'paie:recalculer_cnss_bulletin' bulletin.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning fw-bold"
+                                onclick="return confirm('Recalculer la CNSS de ce bulletin ? Le net sera ajusté en conséquence.')"
+                                title="CNSS = 0 détectée — cliquez pour corriger">
+                            <i class="fas fa-sync-alt me-1"></i> Corriger CNSS
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'paie:telecharger_bulletin_pdf' bulletin.pk %}" class="btn btn-danger">
+                        <i class="fas fa-file-pdf me-2"></i>PDF standard GuineeRH
+                    </a>
+                    <a href="{% url 'paie:envoyer_email' bulletin.pk %}" class="btn btn-primary">
+                        <i class="fas fa-envelope me-2"></i>Email
+                    </a>
+                    <a href="{% url 'paie:envoyer_whatsapp' bulletin.pk %}" class="btn btn-success">
+                        <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                    </a>
+                    <a href="{% url 'paie:bulletin_audit_json' bulletin.pk %}" 
+                       class="btn btn-outline-info" target="_blank" title="Trace complète du calcul">
+                        <i class="fas fa-search me-1"></i> Détail JSON
+                    </a>
+                    <a href="{% url 'paie:bulletin_audit_pdf' bulletin.pk %}" 
+                       class="btn btn-info" target="_blank" title="PDF d'audit officiel">
+                        <i class="fas fa-file-pdf me-1"></i> PDF Audit
+                    </a>
+                    <a href="{% url 'paie:liste_bulletins' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations employé -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Informations Employé</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-sm mb-0">
+                        <tr>
+                            <th width="40%">Matricule :</th>
+                            <td><strong>{{ bulletin.employe.matricule }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Nom complet :</th>
+                            <td>{{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}</td>
+                        </tr>
+                        <tr>
+                            <th>Poste :</th>
+                            <td>{{ bulletin.employe.poste.intitule|default:"Non renseigné" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Service :</th>
+                            <td>{{ bulletin.employe.service.nom_service|default:"Non renseigné" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date embauche :</th>
+                            <td>{{ bulletin.employe.date_embauche|date:"d/m/Y"|default:"Non renseigné" }}</td>
+                        </tr>
+                        <tr>
+                            <th>N° CNSS :</th>
+                            <td>{{ bulletin.employe.num_cnss_individuel|default:"Non renseigné" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Mode paiement :</th>
+                            <td>{{ bulletin.employe.mode_paiement|default:"Non renseigné" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Informations Période</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-sm mb-0">
+                        <tr>
+                            <th width="40%">Période :</th>
+                            <td><strong>{{ bulletin.periode }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>N° Bulletin :</th>
+                            <td>{{ bulletin.numero_bulletin }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date de calcul :</th>
+                            <td>{{ bulletin.date_calcul|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Jours travaillés :</th>
+                            <td>{{ bulletin.periode.nombre_jours_travailles }} jours</td>
+                        </tr>
+                        <tr>
+                            <th>Heures/mois :</th>
+                            <td>{{ bulletin.periode.nombre_heures_mois }} h</td>
+                        </tr>
+                        <tr>
+                            <th>Statut :</th>
+                            <td>
+                                {% if bulletin.statut_bulletin == 'brouillon' %}
+                                    <span class="badge bg-secondary">Brouillon</span>
+                                {% elif bulletin.statut_bulletin == 'calcule' %}
+                                    <span class="badge bg-primary">Calculé</span>
+                                {% elif bulletin.statut_bulletin == 'valide' %}
+                                    <span class="badge bg-success">Validé</span>
+                                {% elif bulletin.statut_bulletin == 'paye' %}
+                                    <span class="badge bg-dark">Payé</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Détail du bulletin -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Gains</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Libellé</th>
+                                <th class="text-end">Base</th>
+                                <th class="text-center">Taux</th>
+                                <th class="text-end">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ligne in gains %}
+                            <tr>
+                                <td>{{ ligne.rubrique.libelle_rubrique }}</td>
+                                <td class="text-end">{{ ligne.base|floatformat:0|intcomma }}</td>
+                                <td class="text-center">
+                                    {% if ligne.taux %}{{ ligne.taux }}%{% else %}-{% endif %}
+                                </td>
+                                <td class="text-end"><strong>{{ ligne.montant|floatformat:0|intcomma }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-success">
+                                <th colspan="3">Total Brut</th>
+                                <th class="text-end">{{ bulletin.salaire_brut|floatformat:0|intcomma }} GNF</th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-minus-circle me-2"></i>Retenues</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Libellé</th>
+                                <th class="text-end">Base</th>
+                                <th class="text-center">Taux</th>
+                                <th class="text-end">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ligne in retenues %}
+                            <tr>
+                                <td>{{ ligne.rubrique.libelle_rubrique }}</td>
+                                <td class="text-end">{{ ligne.base|floatformat:0|intcomma }}</td>
+                                <td class="text-center">
+                                    {% if ligne.taux %}{{ ligne.taux }}%{% else %}-{% endif %}
+                                </td>
+                                <td class="text-end"><strong>{{ ligne.montant|floatformat:0|intcomma }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charges salariales -->
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0 text-center">Charges salariales</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <td>CNSS 5%</td>
+                            <td class="text-end text-danger">- {{ bulletin.cnss_employe|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        <tr>
+                            <td>RTS</td>
+                            <td class="text-end text-danger">- {{ bulletin.irg|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        <tr class="border-top">
+                            <th>TOTAL Charge salariale</th>
+                            <th class="text-end text-danger">- {{ bulletin.total_charges_salariales|floatformat:0|intcomma }} GNF</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Récapitulatif -->
+    <div class="row mt-4">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0 text-center">Récapitulatif</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <th>Salaire Brut :</th>
+                            <td class="text-end"><h5>{{ bulletin.salaire_brut|floatformat:0|intcomma }} GNF</h5></td>
+                        </tr>
+                        <tr>
+                            <td>CNSS Employé (5%) :</td>
+                            <td class="text-end text-danger">- {{ bulletin.cnss_employe|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        <tr>
+                            <td>RTS :</td>
+                            <td class="text-end text-danger">- {{ bulletin.irg|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% if bulletin.base_rts %}
+                        <tr class="small text-muted">
+                            <td colspan="2">
+                                Base RTS: {{ bulletin.base_rts|floatformat:0|intcomma }} GNF |
+                                Taux moyen: {{ bulletin.taux_effectif_rts|floatformat:2 }}%
+                                {% if bulletin.abattement_forfaitaire %}
+                                 | Exo. 25%: {{ bulletin.abattement_forfaitaire|floatformat:0|intcomma }} GNF
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% for ligne in retenues %}
+                        {% if ligne.rubrique.type_rubrique == 'retenue' %}
+                        <tr>
+                            <td class="text-muted">{{ ligne.rubrique.nom }} :</td>
+                            <td class="text-end text-danger">- {{ ligne.montant|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        <tr class="border-top">
+                            <td><strong>Total retenues :</strong></td>
+                            <td class="text-end text-danger"><strong>- {{ bulletin.total_retenues|floatformat:0|intcomma }} GNF</strong></td>
+                        </tr>
+                        <tr class="border-top">
+                            <th><h4>Net à Payer :</h4></th>
+                            <td class="text-end"><h4 class="text-success">{{ bulletin.net_a_payer|floatformat:0|intcomma }} GNF</h4></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations complémentaires -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-building me-2"></i>Charges Patronales</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <td>CNSS Employeur (18%)</td>
+                            <td class="text-end"><strong>{{ bulletin.cnss_employeur|floatformat:0|intcomma }} GNF</strong></td>
+                        </tr>
+                        <tr class="small text-muted">
+                            <td colspan="2" class="pt-0">Base CNSS: plafond 2 500 000 GNF</td>
+                        </tr>
+                        <tr>
+                            <td>Versement Forfaitaire VF (6%)</td>
+                            <td class="text-end"><strong>{{ bulletin.versement_forfaitaire|default:0|floatformat:0|intcomma }} GNF</strong></td>
+                        </tr>
+                        <tr class="small text-muted">
+                            <td colspan="2" class="pt-0">Base VF: {{ bulletin.base_vf|default:bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        <tr class="small">
+                            <td>Mode VF/ONFPP</td>
+                            <td class="text-end">
+                                <span class="badge bg-{% if bulletin.mode_base_vf_effectif == 'strict' %}secondary{% elif bulletin.mode_base_vf_effectif == 'optimise' %}success{% else %}warning text-dark{% endif %}">
+                                    {% if bulletin.mode_base_vf_effectif == 'strict' %}Strict fiscal{% elif bulletin.mode_base_vf_effectif == 'optimise' %}Optimise{% else %}A verifier{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr class="small">
+                            <td>Taux d'optimisation</td>
+                            <td class="text-end">
+                                <strong>{{ bulletin.taux_optimisation_vf_onfpp }}%</strong>
+                                {% if bulletin.economie_vf_onfpp_vs_strict > 0 %}
+                                <span class="text-muted">({{ bulletin.economie_vf_onfpp_vs_strict|floatformat:0|intcomma }} GNF vs strict)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr class="small">
+                            <td>Risque fiscal</td>
+                            <td class="text-end">
+                                <span class="badge bg-{{ bulletin.risque_fiscal_bulletin.classe }}">
+                                    {{ bulletin.risque_fiscal_bulletin.label }}
+                                </span>
+                                <span class="text-muted">{{ bulletin.risque_fiscal_bulletin.raisons|join:", " }}</span>
+                            </td>
+                        </tr>
+                        {% if bulletin.taxe_apprentissage and bulletin.taxe_apprentissage > 0 %}
+                        <tr>
+                            <td>Taxe d'Apprentissage TA ({{ bulletin.taux_ta|default:"2" }}%) <span class="badge bg-secondary">&lt;30 sal.</span></td>
+                            <td class="text-end"><strong>{{ bulletin.taxe_apprentissage|floatformat:0|intcomma }} GNF</strong></td>
+                        </tr>
+                        <tr class="small text-muted">
+                            <td colspan="2" class="pt-0">Base TA: {{ bulletin.base_vf|default:bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% endif %}
+                        {% if bulletin.contribution_onfpp and bulletin.contribution_onfpp > 0 %}
+                        <tr>
+                            <td>Contribution ONFPP (1,5%) <span class="badge bg-secondary">&ge;30 sal.</span></td>
+                            <td class="text-end"><strong>{{ bulletin.contribution_onfpp|floatformat:0|intcomma }} GNF</strong></td>
+                        </tr>
+                        <tr class="small text-muted">
+                            <td colspan="2" class="pt-0">Base ONFPP: {{ bulletin.base_onfpp|default:bulletin.base_vf|default:bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="border-top">
+                            <th>Total Charges Patronales</th>
+                            <th class="text-end">{{ bulletin.total_charges_patronales|floatformat:0|intcomma }} GNF</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Informations Bancaires</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless mb-0">
+                        {% if bulletin.employe.mode_paiement == 'virement' or bulletin.employe.mode_paiement == 'Virement' %}
+                        <tr>
+                            <td>Banque :</td>
+                            <td class="text-end">{{ bulletin.employe.nom_banque|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Agence :</td>
+                            <td class="text-end">{{ bulletin.employe.agence_banque|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>N° Compte :</td>
+                            <td class="text-end">{{ bulletin.employe.numero_compte|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>RIB :</td>
+                            <td class="text-end">{{ bulletin.employe.rib|default:"-" }}</td>
+                        </tr>
+                        {% elif bulletin.employe.mode_paiement == 'mobile_money' or bulletin.employe.mode_paiement == 'Mobile Money' %}
+                        <tr>
+                            <td>Opérateur :</td>
+                            <td class="text-end">{{ bulletin.employe.operateur_mobile_money|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>N° Mobile Money :</td>
+                            <td class="text-end">{{ bulletin.employe.numero_mobile_money|default:"-" }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="text-muted text-center">Paiement en espèces</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertes de conformité des indemnités -->
+    {% if alertes_conformite or conformite_resume.score %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-{% if conformite_resume.niveau_global == 'risque' %}danger{% elif conformite_resume.niveau_global == 'attention' %}warning{% else %}success{% endif %}">
+                <div class="card-header text-white bg-{% if conformite_resume.niveau_global == 'risque' %}danger{% elif conformite_resume.niveau_global == 'attention' %}warning{% else %}success{% endif %}">
+                    <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-shield-alt me-2"></i>Conformité des indemnités
+                            {% if conformite_resume.niveau_global == 'risque' %}
+                                — 🔴 Risque fiscal détecté
+                            {% elif conformite_resume.niveau_global == 'attention' %}
+                                — 🟡 Points d'attention
+                            {% else %}
+                                — 🟢 Conforme
+                            {% endif %}
+                        </span>
+                        {% if conformite_resume.score is not None %}
+                        <span class="badge fs-6 bg-{% if conformite_resume.score >= 90 %}success{% elif conformite_resume.score >= 70 %}warning text-dark{% else %}danger{% endif %}">
+                            Score : {{ conformite_resume.score }}/100
+                        </span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if conformite_resume.score is not None %}
+                    <div class="mb-3">
+                        <div class="progress" style="height: 24px;">
+                            <div class="progress-bar bg-{% if conformite_resume.score >= 90 %}success{% elif conformite_resume.score >= 70 %}warning{% else %}danger{% endif %}"
+                                 role="progressbar" style="width: {{ conformite_resume.score }}%"
+                                 aria-valuenow="{{ conformite_resume.score }}" aria-valuemin="0" aria-valuemax="100">
+                                {{ conformite_resume.score }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            {% if conformite_resume.score >= 90 %}Structure salariale conforme aux normes CGI
+                            {% elif conformite_resume.score >= 70 %}Quelques ajustements recommandés
+                            {% else %}Risque fiscal — actions correctives nécessaires{% endif %}
+                        </small>
+                    </div>
+                    {% endif %}
+
+                    {% if conformite_resume.risque_fiscal %}
+                    <div class="alert alert-{{ conformite_resume.risque_fiscal.decision_classe }} d-flex align-items-start mb-3" role="alert">
+                        <div class="fs-4 me-3">
+                            {% if conformite_resume.risque_fiscal.niveau == 'eleve' %}🔴{% elif conformite_resume.risque_fiscal.niveau == 'modere' %}🟡{% else %}🟢{% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong>{{ conformite_resume.risque_fiscal.label }}</strong>
+                                <span class="badge bg-{{ conformite_resume.risque_fiscal.decision_classe }} fs-6">
+                                    {{ conformite_resume.risque_fiscal.decision_icone }} {{ conformite_resume.risque_fiscal.decision }}
+                                </span>
+                            </div>
+                            <span class="small">{{ conformite_resume.risque_fiscal.explication }}</span>
+                            {% if conformite_resume.risque_fiscal.defense %}
+                            <div class="mt-2 p-2 bg-white bg-opacity-50 rounded border-start border-3 border-{{ conformite_resume.risque_fiscal.decision_classe }}">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <small class="text-muted"><i class="fas fa-gavel"></i> Phrase de défense :</small>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="copierDefense(this)" data-defense="{{ conformite_resume.risque_fiscal.defense }}" title="Copier l'argumentaire">
+                                        <i class="fas fa-copy"></i> Copier
+                                    </button>
+                                </div>
+                                <em class="small" id="texte-defense">« {{ conformite_resume.risque_fiscal.defense }} »</em>
+                                <div class="mt-1 border-top pt-1">
+                                    <small class="text-muted fst-italic">⚖️ Recommandation basée sur les pratiques fiscales usuelles en République de Guinée (CGI, art. 55)</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if conformite_resume.ratio_global_pct %}
+                    <p class="mb-3">
+                        <strong>Ratio global :</strong> {{ conformite_resume.ratio_global_pct }}% du brut
+                        (plafond CGI : 25%)
+                        {% if conformite_resume.categorie_employe and conformite_resume.categorie_employe != 'tous' %}
+                        — <span class="badge bg-info">{{ conformite_resume.categorie_employe }}</span>
+                        {% endif %}
+                    </p>
+                    {% endif %}
+
+                    {% if alertes_conformite %}
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:5%">Niveau</th>
+                                <th style="width:20%">Rubrique</th>
+                                <th style="width:35%">Constat</th>
+                                <th style="width:40%"><i class="fas fa-hand-point-right me-1"></i>Action recommandée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for alerte in alertes_conformite %}
+                            <tr class="{% if alerte.niveau == 'risque' %}table-danger{% elif alerte.niveau == 'attention' %}table-warning{% else %}table-success{% endif %}">
+                                <td>
+                                    {% if alerte.niveau == 'risque' %}🔴{% elif alerte.niveau == 'attention' %}🟡{% else %}🟢{% endif %}
+                                </td>
+                                <td><strong>{{ alerte.rubrique }}</strong></td>
+                                <td>{{ alerte.message }}</td>
+                                <td>
+                                    {% if alerte.action %}
+                                    <em>{{ alerte.action }}</em>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Scénarios d'optimisation -->
+    {% if scenarios %}
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sliders-h me-2"></i>Scénarios d'optimisation
+                        {% if conformite_resume.strategie_recommandee %}
+                        <small class="ms-2 opacity-75">
+                            (recommandé : plafond {{ conformite_resume.plafond_recommande_pct }}%)
+                        </small>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                    {% for cle, scenario in scenarios.items %}
+                        <div class="col-md-4 {% if not forloop.last %}border-end{% endif %}">
+                            <div class="p-3 {% if scenario.est_recommande %}bg-light{% endif %}">
+                                <h6 class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>{{ scenario.icone }} {{ scenario.label }}</span>
+                                    {% if scenario.est_recommande %}
+                                    <span class="badge bg-success">Recommandé</span>
+                                    {% endif %}
+                                </h6>
+                                <p class="text-muted small mb-2">{{ scenario.description }}</p>
+                                <p class="fw-bold mb-1">
+                                    Plafond : {{ scenario.plafond_pct }}%
+                                    — Budget : {{ scenario.budget_total|intcomma }} GNF
+                                </p>
+                                <table class="table table-sm table-borderless mb-0 small">
+                                {% for type, rep in scenario.repartition.items %}
+                                    <tr>
+                                        <td>{{ rep.rubrique }}</td>
+                                        <td class="text-end">{{ rep.montant_scenario|intcomma }} GNF</td>
+                                        <td class="text-end text-muted">({{ rep.taux_pct }}%)</td>
+                                    </tr>
+                                {% endfor %}
+                                </table>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recommandations détaillées -->
+    {% if recommandations %}
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card shadow-sm border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Recommandation détaillée (profil {{ conformite_resume.categorie_employe|default:"standard" }})</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Rubrique</th>
+                                <th class="text-end">Montant actuel</th>
+                                <th class="text-end">Montant recommandé</th>
+                                <th>Fourchette</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for type, reco in recommandations.items %}
+                            <tr>
+                                <td>{{ reco.rubrique }}</td>
+                                <td class="text-end">{{ reco.montant_actuel|intcomma }} GNF</td>
+                                <td class="text-end fw-bold text-info">{{ reco.montant_recommande|intcomma }} GNF</td>
+                                <td><span class="badge bg-secondary">{{ reco.fourchette }}</span></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Les montants recommandés sont adaptés au profil
+                        {% if conformite_resume.categorie_employe and conformite_resume.categorie_employe != 'tous' %}
+                            <strong>{{ conformite_resume.categorie_employe }}</strong>
+                        {% endif %}
+                        et respectent le plafond CGI de 25%.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Observations -->
+    {% if bulletin.observations %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-comment me-2"></i>Observations</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ bulletin.observations }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Zone de signatures -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <p class="fw-bold mb-4">L'Employeur</p>
+                    <div style="border-bottom: 1px dashed #999; height: 60px; margin: 0 30px;"></div>
+                    <p class="text-muted mt-2 mb-0">
+                        {% if bulletin.employe.entreprise %}
+                            {{ bulletin.employe.entreprise.nom_entreprise }}
+                        {% endif %}
+                    </p>
+                    <small class="text-muted">Date et signature</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <p class="fw-bold mb-4">L'Employé(e)</p>
+                    <div style="border-bottom: 1px dashed #999; height: 60px; margin: 0 30px;"></div>
+                    <p class="text-muted mt-2 mb-0">{{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}</p>
+                    <small class="text-muted">Lu et approuvé, date et signature</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copierDefense(btn) {
+    var texte = btn.getAttribute('data-defense');
+    var complet = texte + '\n\n⚖️ Recommandation basée sur les pratiques fiscales usuelles en République de Guinée (CGI, art. 55)';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(complet).then(function() {
+            var original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copié !';
+            btn.classList.replace('btn-outline-secondary', 'btn-success');
+            setTimeout(function() {
+                btn.innerHTML = original;
+                btn.classList.replace('btn-success', 'btn-outline-secondary');
+            }, 2000);
+        });
+    } else {
+        var ta = document.createElement('textarea');
+        ta.value = complet;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        var original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copié !';
+        btn.classList.replace('btn-outline-secondary', 'btn-success');
+        setTimeout(function() {
+            btn.innerHTML = original;
+            btn.classList.replace('btn-success', 'btn-outline-secondary');
+        }, 2000);
+    }
+}
+</script>
+{% endblock %}
+

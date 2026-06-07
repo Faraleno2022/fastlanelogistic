@@ -1,0 +1,180 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Dossiers Fiscaux{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-folder text-primary"></i> Dossiers fiscaux
+            </h1>
+            <p class="text-muted mb-0">Gérez vos dossiers fiscaux par exercice comptable.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:fiscalite_dossier_create' %}" class="btn btn-primary">
+                <i class="bi bi-folder-plus"></i> Nouveau dossier
+            </a>
+            <a href="{% url 'comptabilite:fiscalite_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <form method="get" class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous</option>
+                        {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Année fiscale</label>
+                    <input type="number" name="annee" value="{{ request.GET.annee }}" class="form-control" placeholder="Ex: 2025">
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'comptabilite:fiscalite_dossiers' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Dossiers</h6>
+                        <i class="bi bi-folder text-primary"></i>
+                    </div>
+                    <p class="display-6 fw-bold mb-0">{{ page_obj.paginator.count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Impôts dus</h6>
+                        <i class="bi bi-cash-stack text-danger"></i>
+                    </div>
+                    <p class="display-6 fw-bold text-danger mb-0">{{ total_impots_dus|floatformat:0 }} GNF</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Impôts payés</h6>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    <p class="display-6 fw-bold text-success mb-0">{{ total_impots_payes|floatformat:0 }} GNF</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if dossiers %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Référence</th>
+                            <th>Année</th>
+                            <th>Exercice</th>
+                            <th>Statut</th>
+                            <th class="text-end">Résultat fiscal</th>
+                            <th class="text-end">Impôts dus</th>
+                            <th>Date limite</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dossier in dossiers %}
+                        <tr>
+                            <td class="fw-semibold">{{ dossier.reference }}</td>
+                            <td>{{ dossier.annee_fiscale }}</td>
+                            <td>{{ dossier.exercice }}</td>
+                            <td>
+                                {% if dossier.statut == 'en_preparation' %}
+                                <span class="badge bg-secondary">En préparation</span>
+                                {% elif dossier.statut == 'en_cours' %}
+                                <span class="badge bg-info">En cours</span>
+                                {% elif dossier.statut == 'valide' %}
+                                <span class="badge bg-primary">Validé</span>
+                                {% elif dossier.statut == 'depose' %}
+                                <span class="badge bg-success">Déposé</span>
+                                {% elif dossier.statut == 'controle' %}
+                                <span class="badge bg-warning text-dark">Contrôle</span>
+                                {% elif dossier.statut == 'cloture' %}
+                                <span class="badge bg-dark">Clôturé</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">{{ dossier.resultat_fiscal|floatformat:2 }}</td>
+                            <td class="text-end text-danger">{{ dossier.total_impots_dus|floatformat:2 }}</td>
+                            <td>{{ dossier.date_limite_depot|date:"d/m/Y" }}</td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'comptabilite:fiscalite_dossier_detail' dossier.pk %}" class="btn btn-sm btn-outline-primary" title="Détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'comptabilite:fiscalite_dossier_update' dossier.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if is_paginated %}
+            <nav aria-label="Pagination" class="mt-3">
+                <ul class="pagination justify-content-end mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-folder text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Aucun dossier fiscal trouvé</h5>
+                <p class="text-muted mb-3">Créez votre premier dossier fiscal pour centraliser vos déclarations.</p>
+                <a href="{% url 'comptabilite:fiscalite_dossier_create' %}" class="btn btn-primary">
+                    <i class="bi bi-folder-plus"></i> Créer un dossier
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

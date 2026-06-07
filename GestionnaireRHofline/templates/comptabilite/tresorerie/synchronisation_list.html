@@ -1,0 +1,77 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Synchronisations Bancaires{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-arrow-repeat text-primary"></i> Synchronisations Bancaires
+        </h1>
+        <div>
+            <a href="{% url 'comptabilite:synchronisation_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle synchronisation
+            </a>
+            <a href="{% url 'comptabilite:tresorerie_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if synchronisations %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Compte bancaire</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th>Opérations</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sync in synchronisations %}
+                        <tr>
+                            <td>{{ sync.date_synchronisation|date:"d/m/Y H:i" }}</td>
+                            <td>{{ sync.compte_bancaire }}</td>
+                            <td>{{ sync.type_synchronisation }}</td>
+                            <td>
+                                {% if sync.statut == 'termine' %}
+                                <span class="badge bg-success">Terminé</span>
+                                {% elif sync.statut == 'en_cours' %}
+                                <span class="badge bg-info">En cours</span>
+                                {% else %}
+                                <span class="badge bg-danger">Erreur</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ sync.nb_operations|default:0 }}</td>
+                            <td>
+                                {% if sync.statut == 'en_attente' %}
+                                <a href="{% url 'comptabilite:synchronisation_executer' sync.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-play"></i> Exécuter
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-cloud-slash text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">Aucune synchronisation enregistrée</p>
+                <a href="{% url 'comptabilite:synchronisation_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Créer une synchronisation
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

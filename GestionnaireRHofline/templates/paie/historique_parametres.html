@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Historique des paramètres de calcul{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-clock-history me-2"></i>Historique des paramètres de calcul</h2>
+            <p class="text-muted mb-0">Traçabilité de toutes les modifications du moteur de formules</p>
+        </div>
+        <div>
+            <a href="{% url 'paie:parametres_calcul' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Retour aux paramètres
+            </a>
+        </div>
+    </div>
+
+    {% if not peut_modifier %}
+    <div class="alert alert-info d-flex align-items-center">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        <span><strong>Lecture seule</strong> — Contactez l'admin pour modifier ces paramètres.</span>
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul me-2"></i>Journal des modifications
+            </h5>
+            <span class="badge bg-secondary">{{ historique.count }} entrée{{ historique.count|pluralize }}</span>
+        </div>
+        <div class="card-body p-0">
+            {% if historique %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th><i class="bi bi-calendar3 me-1"></i>Date</th>
+                            <th><i class="bi bi-person me-1"></i>Utilisateur</th>
+                            <th><i class="bi bi-pencil me-1"></i>Champ modifié</th>
+                            <th><i class="bi bi-arrow-left-circle me-1"></i>Ancienne valeur</th>
+                            <th><i class="bi bi-arrow-right-circle me-1"></i>Nouvelle valeur</th>
+                            <th><i class="bi bi-chat-text me-1"></i>Raison</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entree in historique %}
+                        <tr>
+                            <td class="text-nowrap">
+                                <small class="text-muted">{{ entree.date_modification|date:"d/m/Y H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if entree.modifie_par %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary">
+                                        <i class="bi bi-person-circle me-1"></i>
+                                        {{ entree.modifie_par.get_full_name|default:entree.modifie_par.username }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted"><em>Système</em></span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <code class="text-dark">{{ entree.champ_modifie }}</code>
+                            </td>
+                            <td>
+                                {% if entree.ancienne_valeur %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger font-monospace">
+                                        {{ entree.ancienne_valeur|truncatechars:60 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted"><em>—</em></span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if entree.nouvelle_valeur %}
+                                    <span class="badge bg-success bg-opacity-10 text-success font-monospace">
+                                        {{ entree.nouvelle_valeur|truncatechars:60 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted"><em>—</em></span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if entree.raison %}
+                                    <small class="text-muted fst-italic">{{ entree.raison }}</small>
+                                {% else %}
+                                    <small class="text-muted">—</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-clock-history display-4 d-block mb-3 opacity-25"></i>
+                <p class="mb-0">Aucune modification enregistrée pour le moment.</p>
+                <small>Les futures modifications seront tracées ici automatiquement.</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

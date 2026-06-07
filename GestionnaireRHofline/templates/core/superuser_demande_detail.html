@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Demande de {{ demande.nom_entreprise }} - Administration{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-handshake me-2"></i>Demande de Partenariat</h2>
+        <a href="{% url 'core:superuser_demandes_partenariat' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Informations de la demande -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-building me-2"></i>{{ demande.nom_entreprise }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Informations Entreprise</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Secteur :</strong></td>
+                                    <td>{{ demande.secteur_activite }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NIF :</strong></td>
+                                    <td>{{ demande.nif|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Adresse :</strong></td>
+                                    <td>{{ demande.adresse }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Ville :</strong></td>
+                                    <td>{{ demande.ville }}, {{ demande.pays }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Contact Principal</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Nom :</strong></td>
+                                    <td>{{ demande.nom_contact }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fonction :</strong></td>
+                                    <td>{{ demande.fonction_contact }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email :</strong></td>
+                                    <td><a href="mailto:{{ demande.email }}">{{ demande.email }}</a></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Téléphone :</strong></td>
+                                    <td><a href="tel:{{ demande.telephone }}">{{ demande.telephone }}</a></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-muted">Type de partenariat souhaité</h6>
+                            <p><span class="badge bg-primary fs-6">{{ demande.get_type_partenariat_display }}</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="text-muted">Description de l'activité</h6>
+                            <p class="border rounded p-3 bg-light">{{ demande.description_activite }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="text-muted">Motivation</h6>
+                            <p class="border rounded p-3 bg-light">{{ demande.motivation }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            {% if demande.document_cgi or demande.autre_document %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark me-2"></i>Documents joints</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if demande.document_cgi %}
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 text-center">
+                                <i class="bi bi-file-earmark-pdf display-4 text-danger"></i>
+                                <p class="mt-2 mb-1"><strong>Document CGI</strong></p>
+                                <a href="{% url 'core:telecharger_document_partenariat' demande.pk 'cgi' %}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-download me-1"></i>Télécharger
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if demande.autre_document %}
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 text-center">
+                                <i class="bi bi-file-earmark display-4 text-secondary"></i>
+                                <p class="mt-2 mb-1"><strong>Autre document</strong></p>
+                                <a href="{% url 'core:telecharger_document_partenariat' demande.pk 'autre' %}" class="btn btn-secondary btn-sm">
+                                    <i class="bi bi-download me-1"></i>Télécharger
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Actions et statut -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Statut</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if demande.statut == 'nouveau' %}
+                        <span class="badge bg-info fs-5 p-2">Nouveau</span>
+                    {% elif demande.statut == 'en_cours' %}
+                        <span class="badge bg-warning text-dark fs-5 p-2">En cours</span>
+                    {% elif demande.statut == 'accepte' %}
+                        <span class="badge bg-success fs-5 p-2">Accepté</span>
+                    {% else %}
+                        <span class="badge bg-danger fs-5 p-2">Refusé</span>
+                    {% endif %}
+                    
+                    <p class="mt-3 mb-0 text-muted">
+                        <small>Soumis le {{ demande.date_soumission|date:"d/m/Y à H:i" }}</small>
+                    </p>
+                    {% if demande.date_traitement %}
+                    <p class="mb-0 text-muted">
+                        <small>Traité le {{ demande.date_traitement|date:"d/m/Y à H:i" }}</small>
+                    </p>
+                    {% if demande.traite_par %}
+                    <p class="mb-0 text-muted">
+                        <small>Par {{ demande.traite_par.get_full_name|default:demande.traite_par.username }}</small>
+                    </p>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if demande.statut != 'accepte' and demande.statut != 'refuse' %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Actions</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="notes_admin" class="form-label">Notes administrateur</label>
+                            <textarea class="form-control" id="notes_admin" name="notes_admin" rows="3">{{ demande.notes_admin|default:"" }}</textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {% if demande.statut == 'nouveau' %}
+                            <button type="submit" name="action" value="en_cours" class="btn btn-warning">
+                                <i class="bi bi-hourglass-split me-2"></i>Mettre en cours
+                            </button>
+                            {% endif %}
+                            <button type="submit" name="action" value="accepter" class="btn btn-success">
+                                <i class="bi bi-check-lg me-2"></i>Accepter
+                            </button>
+                            <button type="submit" name="action" value="refuser" class="btn btn-danger">
+                                <i class="bi bi-x-lg me-2"></i>Refuser
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            {% if demande.notes_admin %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-sticky me-2"></i>Notes</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ demande.notes_admin }}</p>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

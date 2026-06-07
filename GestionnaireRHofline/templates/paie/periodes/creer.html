@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Créer une Période de Paie{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-calendar-plus me-2"></i>Créer une Période de Paie</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="annee" class="form-label">Année</label>
+                            <input type="number" class="form-control" id="annee" name="annee" 
+                                   value="{{ current_year }}" readonly required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mois" class="form-label">Mois</label>
+                            <select class="form-select" id="mois" name="mois" required>
+                                <option value="">-- Sélectionner un mois --</option>
+                            </select>
+                            <small class="text-muted">Vous pouvez créer n'importe quel mois de l'année en cours.</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'paie:liste_periodes' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Créer la Période
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm bg-light">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>Information</h5>
+                    <p class="card-text">
+                        La création d'une période de paie permet de :
+                    </p>
+                    <ul>
+                        <li>Calculer automatiquement les salaires</li>
+                        <li>Générer les bulletins de paie</li>
+                        <li>Calculer les cotisations CNSS (5% employé, 18% employeur)</li>
+                        <li>Calculer l'INAM (2.5%)</li>
+                        <li>Calculer l'IRG selon le barème progressif</li>
+                        <li>Produire le livre de paie</li>
+                        <li>Générer les déclarations sociales</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const anneeInput = document.getElementById('annee');
+        const moisSelect = document.getElementById('mois');
+        
+        const nomsMois = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                          'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        
+        const now = new Date();
+        const moisCourant = now.getMonth() + 1;
+        
+        anneeInput.value = now.getFullYear();
+        
+        for (let i = 1; i <= 12; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = nomsMois[i];
+            if (i === moisCourant) {
+                option.selected = true;
+            }
+            moisSelect.appendChild(option);
+        }
+    });
+</script>
+{% endblock %}
+

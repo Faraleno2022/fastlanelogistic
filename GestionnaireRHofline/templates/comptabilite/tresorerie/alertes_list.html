@@ -1,0 +1,75 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Alertes Trésorerie{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-bell text-primary"></i> Alertes Trésorerie
+        </h1>
+        <a href="{% url 'comptabilite:tresorerie_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if alertes %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Message</th>
+                            <th>Priorité</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alerte in alertes %}
+                        <tr class="{% if not alerte.est_acquittee %}table-warning{% endif %}">
+                            <td>{{ alerte.date_creation|date:"d/m/Y H:i" }}</td>
+                            <td>{{ alerte.type_alerte }}</td>
+                            <td>{{ alerte.message }}</td>
+                            <td>
+                                {% if alerte.priorite == 'haute' %}
+                                <span class="badge bg-danger">Haute</span>
+                                {% elif alerte.priorite == 'moyenne' %}
+                                <span class="badge bg-warning">Moyenne</span>
+                                {% else %}
+                                <span class="badge bg-info">Basse</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if alerte.est_acquittee %}
+                                <span class="badge bg-success">Acquittée</span>
+                                {% else %}
+                                <span class="badge bg-warning">Active</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not alerte.est_acquittee %}
+                                <a href="{% url 'comptabilite:alerte_tresorerie_acquitter' alerte.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-check"></i> Acquitter
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-bell-slash text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">Aucune alerte</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

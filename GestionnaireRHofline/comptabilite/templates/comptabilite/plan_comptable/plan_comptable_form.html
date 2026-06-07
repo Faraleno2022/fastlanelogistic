@@ -1,0 +1,225 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}Nouveau Compte Comptable - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Nouveau Compte Comptable</h1>
+            <p class="text-muted mb-0">Créer un compte SYSCOHADA</p>
+        </div>
+        <div>
+            <a href="{% url 'comptabilite:plan_comptable_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <!-- Message de succès -->
+    {% if success %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>Succès!</strong> Compte comptable créé avec succès.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+
+    <!-- Formulaire -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations du compte</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="compteForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.numero_compte.id_for_label }}" class="form-label">N° Compte *</label>
+                                {{ form.numero_compte }}
+                                {% if form.numero_compte.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.numero_compte.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Numéro unique du compte selon SYSCOHADA</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.intitule.id_for_label }}" class="form-label">Intitulé *</label>
+                                {{ form.intitule }}
+                                {% if form.intitule.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.intitule.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Nom descriptif du compte</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.classe.id_for_label }}" class="form-label">Classe *</label>
+                                {{ form.classe }}
+                                {% if form.classe.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.classe.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Classe comptable SYSCOHADA</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.compte_parent.id_for_label }}" class="form-label">Compte Parent</label>
+                                {{ form.compte_parent }}
+                                {% if form.compte_parent.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.compte_parent.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Compte parent si c'est un sous-compte</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.est_actif }}
+                                <label class="form-check-label" for="{{ form.est_actif.id_for_label }}">
+                                    Compte actif
+                                </label>
+                            </div>
+                            <small class="text-muted">Cochez si le compte est utilisable dans les écritures</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:plan_comptable_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Créer le compte
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Classes SYSCOHADA</h6>
+                </div>
+                <div class="card-body">
+                    <h6>Classes comptables</h6>
+                    <ul class="list-unstyled small">
+                        <li><strong>Classe 1:</strong> Comptes de ressources durables</li>
+                        <li><strong>Classe 2:</strong> Comptes d'actif immobilisé</li>
+                        <li><strong>Classe 3:</strong> Comptes de stocks</li>
+                        <li><strong>Classe 4:</strong> Comptes de tiers</li>
+                        <li><strong>Classe 5:</strong> Comptes de trésorerie</li>
+                        <li><strong>Classe 6:</strong> Comptes de charges</li>
+                        <li><strong>Classe 7:</strong> Comptes de produits</li>
+                        <li><strong>Classe 8:</strong> Comptes des autres charges</li>
+                        <li><strong>Classe 9:</strong> Comptes analytiques</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Numérotation</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        La numérotation suit les normes SYSCOHADA. Exemples :
+                    </p>
+                    <ul class="list-unstyled small">
+                        <li><code>101</code> - Capital social</li>
+                        <li><code>164</code> - Emprunts</li>
+                        <li><code>241</code> - Matériel de transport</li>
+                        <li><code>401</code> - Fournisseurs</li>
+                        <li><code>411</code> - Clients</li>
+                        <li><code>521</code> - Banque</li>
+                        <li><code>601</code> - Achats de matières</li>
+                        <li><strong>701</strong> - Ventes de produits</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Comptes existants</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Consultez la liste complète des comptes existants pour éviter les doublons.
+                    </p>
+                    <a href="{% url 'comptabilite:plan_comptable_list' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-list me-1"></i>Voir tous les comptes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('compteForm');
+    const numeroInput = document.getElementById('{{ form.numero_compte.id_for_label }}');
+    const classeSelect = document.getElementById('{{ form.classe.id_for_label }}');
+    
+    // Suggérer un numéro de compte basé sur la classe
+    classeSelect.addEventListener('change', function() {
+        const classe = this.value;
+        if (!numeroInput.value) {
+            // Suggestions basiques selon la classe
+            const suggestions = {
+                '1': '1',
+                '2': '2',
+                '3': '3',
+                '4': '4',
+                '5': '5',
+                '6': '6',
+                '7': '7',
+                '8': '8',
+                '9': '9'
+            };
+            
+            if (suggestions[classe]) {
+                numeroInput.placeholder = `Ex: ${suggestions[classe]}01, ${suggestions[classe]}02, ...`;
+            }
+        }
+    });
+    
+    // Validation du formulaire
+    form.addEventListener('submit', function(e) {
+        const numero = numeroInput.value.trim();
+        const intitule = document.getElementById('{{ form.intitule.id_for_label }}').value.trim();
+        
+        if (!numero) {
+            e.preventDefault();
+            alert('Le numéro de compte est obligatoire');
+            numeroInput.focus();
+            return;
+        }
+        
+        if (!intitule) {
+            e.preventDefault();
+            alert('L\'intitulé du compte est obligatoire');
+            document.getElementById('{{ form.intitule.id_for_label }}').focus();
+            return;
+        }
+        
+        // Confirmer la soumission
+        if (!confirm('Êtes-vous sûr de vouloir créer ce compte comptable ?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

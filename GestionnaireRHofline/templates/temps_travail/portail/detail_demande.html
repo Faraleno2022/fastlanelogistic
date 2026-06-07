@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détail Demande de Congé{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'temps_travail:mes_conges' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-file-alt me-2"></i>Détail de ma demande</h2>
+                {% if conge.statut_demande == 'en_attente' %}
+                <a href="{% url 'temps_travail:annuler_ma_demande' conge.pk %}" 
+                   class="btn btn-danger"
+                   onclick="return confirm('Annuler cette demande ?')">
+                    <i class="fas fa-times me-1"></i>Annuler
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">{{ conge.get_type_conge_display }}</h6>
+                        {% if conge.statut_demande == 'en_attente' %}
+                        <span class="badge bg-warning text-dark fs-6">En attente</span>
+                        {% elif conge.statut_demande == 'approuve' %}
+                        <span class="badge bg-success fs-6">Approuvé</span>
+                        {% elif conge.statut_demande == 'refuse' %}
+                        <span class="badge bg-danger fs-6">Refusé</span>
+                        {% elif conge.statut_demande == 'annule' %}
+                        <span class="badge bg-secondary fs-6">Annulé</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-muted">Date de début</td>
+                                    <td><strong>{{ conge.date_debut|date:"d/m/Y" }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Date de fin</td>
+                                    <td><strong>{{ conge.date_fin|date:"d/m/Y" }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Nombre de jours</td>
+                                    <td><span class="badge bg-primary">{{ conge.nombre_jours|floatformat:1 }} jour(s)</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-muted">Date de demande</td>
+                                    <td>{{ conge.date_demande|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Année de référence</td>
+                                    <td>{{ conge.annee_reference }}</td>
+                                </tr>
+                                {% if conge.date_validation %}
+                                <tr>
+                                    <td class="text-muted">Date de validation</td>
+                                    <td>{{ conge.date_validation|date:"d/m/Y" }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if conge.motif %}
+                    <div class="mt-3">
+                        <h6>Motif</h6>
+                        <p class="bg-light p-3 rounded">{{ conge.motif }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if conge.commentaire_validation %}
+                    <div class="mt-3">
+                        <h6>Commentaire de validation</h6>
+                        <p class="bg-light p-3 rounded">{{ conge.commentaire_validation }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Timeline -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-history me-2"></i>Historique</h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <p class="mb-0"><strong>Demande créée</strong></p>
+                                <small class="text-muted">{{ conge.date_demande|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                        {% if conge.statut_demande != 'en_attente' %}
+                        <div class="timeline-item">
+                            {% if conge.statut_demande == 'approuve' %}
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <p class="mb-0"><strong>Approuvée</strong></p>
+                            {% elif conge.statut_demande == 'refuse' %}
+                            <div class="timeline-marker bg-danger"></div>
+                            <div class="timeline-content">
+                                <p class="mb-0"><strong>Refusée</strong></p>
+                            {% elif conge.statut_demande == 'annule' %}
+                            <div class="timeline-marker bg-secondary"></div>
+                            <div class="timeline-content">
+                                <p class="mb-0"><strong>Annulée</strong></p>
+                            {% endif %}
+                                {% if conge.date_validation %}
+                                <small class="text-muted">{{ conge.date_validation|date:"d/m/Y" }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 10px;
+    height: calc(100% - 10px);
+    width: 2px;
+    background: #dee2e6;
+}
+.timeline-item:last-child:before {
+    display: none;
+}
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+</style>
+{% endblock %}

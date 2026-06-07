@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Sanctions - {{ employe.nom }} {{ employe.prenoms }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">Sanctions disciplinaires - {{ employe.nom }} {{ employe.prenoms }}</h1>
+    <div class="btn-group" role="group">
+        <a class="btn btn-sm btn-primary" href="{% url 'employes:sanction_create' employe.id %}">Nouvelle sanction</a>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'employes:detail' employe.id %}">Retour fiche</a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        {% if sanctions %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date faits</th>
+                        <th>Type</th>
+                        <th>Statut</th>
+                        <th>Notification</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sanctions %}
+                    <tr>
+                        <td>{{ s.date_faits|date:"d/m/Y" }}</td>
+                        <td>{{ s.get_type_sanction_display }}</td>
+                        <td>{{ s.get_statut_display }}</td>
+                        <td>{{ s.date_notification|date:"d/m/Y"|default:"-" }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'employes:sanction_detail' s.id %}">Voir</a>
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'employes:sanction_delete' s.id %}">Supprimer</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">Aucune sanction enregistrée.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

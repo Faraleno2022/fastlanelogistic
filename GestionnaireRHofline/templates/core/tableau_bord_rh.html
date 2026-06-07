@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Tableau de Bord RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-chart-line me-2"></i>Tableau de Bord RH</h2>
+            <p class="text-muted">Vue d'ensemble - {{ mois_courant }}/{{ annee_courante }}</p>
+        </div>
+    </div>
+
+    <!-- Alertes -->
+    {% if alertes %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% for alerte in alertes %}
+            <div class="alert alert-{{ alerte.type }} alert-dismissible fade show" role="alert">
+                <i class="fas {{ alerte.icon }} me-2"></i>{{ alerte.message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- KPIs Effectifs -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h2 class="mb-0">{{ effectifs.total }}</h2>
+                    <small>Effectif total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-male fa-2x mb-2"></i>
+                    <h2 class="mb-0">{{ effectifs.hommes }}</h2>
+                    <small>Hommes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-pink text-white h-100" style="background-color: #e91e63;">
+                <div class="card-body text-center">
+                    <i class="fas fa-female fa-2x mb-2"></i>
+                    <h2 class="mb-0">{{ effectifs.femmes }}</h2>
+                    <small>Femmes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-contract fa-2x mb-2"></i>
+                    <h2 class="mb-0">{{ effectifs.cdi }}</h2>
+                    <small>CDI</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-signature fa-2x mb-2"></i>
+                    <h2 class="mb-0">{{ effectifs.cdd }}</h2>
+                    <small>CDD</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-graduate fa-2x mb-2"></i>
+                    <h2 class="mb-0">{{ effectifs.stage }}</h2>
+                    <small>Stagiaires</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Masse salariale -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Masse Salariale</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center border-end">
+                            <h6 class="text-muted">Brut du mois</h6>
+                            <h3 class="text-success">{{ paie.brut_mois|floatformat:0|intcomma }}</h3>
+                            <small class="text-muted">GNF</small>
+                        </div>
+                        <div class="col-md-4 text-center border-end">
+                            <h6 class="text-muted">Net du mois</h6>
+                            <h3 class="text-primary">{{ paie.net_mois|floatformat:0|intcomma }}</h3>
+                            <small class="text-muted">GNF</small>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h6 class="text-muted">Salaire moyen</h6>
+                            <h3 class="text-info">{{ paie.salaire_moyen|floatformat:0|intcomma }}</h3>
+                            <small class="text-muted">GNF</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <small class="text-muted">CNSS Employé</small>
+                            <p class="mb-0 fw-bold">{{ paie.cnss_employe|floatformat:0|intcomma }} GNF</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <small class="text-muted">CNSS Employeur</small>
+                            <p class="mb-0 fw-bold">{{ paie.cnss_employeur|floatformat:0|intcomma }} GNF</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <small class="text-muted">RTS</small>
+                            <p class="mb-0 fw-bold">{{ paie.rts|floatformat:0|intcomma }} GNF</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <small class="text-muted">Brut annuel</small>
+                            <p class="mb-0 fw-bold">{{ paie.brut_annee|floatformat:0|intcomma }} GNF</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Répartition</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartDepartements" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Congés, HS, Prêts, Absences -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Congés</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>En cours</span>
+                        <span class="badge bg-success">{{ conges.en_cours }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>En attente</span>
+                        <span class="badge bg-warning">{{ conges.en_attente }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Jours ce mois</span>
+                        <span class="badge bg-info">{{ conges.jours_mois }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Heures Sup.</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <h3 class="mb-0">{{ heures_sup.heures_mois|floatformat:1 }}h</h3>
+                        <small class="text-muted">ce mois</small>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <p class="mb-0 fw-bold">{{ heures_sup.montant_mois|floatformat:0|intcomma }} GNF</p>
+                        <small class="text-muted">montant</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0"><i class="fas fa-hand-holding-usd me-2"></i>Prêts</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>En cours</span>
+                        <span class="badge bg-primary">{{ prets.nb_en_cours }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>En attente</span>
+                        <span class="badge bg-warning">{{ prets.en_attente }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Solde total</span>
+                        <span class="fw-bold">{{ prets.solde_total|floatformat:0|intcomma }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="fas fa-user-times me-2"></i>Absences</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <h3 class="mb-0">{{ absences.jours_mois }}</h3>
+                        <small class="text-muted">jours ce mois</small>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <p class="mb-0">{{ absences.nb_absences }} absence(s)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Évolution masse salariale -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Évolution Masse Salariale (6 mois)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartEvolution" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicateurs supplémentaires -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Indicateurs RH</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td>Ancienneté moyenne</td>
+                            <td class="text-end fw-bold">{{ effectifs.anciennete_moyenne }} ans</td>
+                        </tr>
+                        <tr>
+                            <td>Taux de féminisation</td>
+                            <td class="text-end fw-bold">
+                                {% widthratio effectifs.femmes effectifs.total 100 %}%
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Taux CDI</td>
+                            <td class="text-end fw-bold">
+                                {% widthratio effectifs.cdi effectifs.total 100 %}%
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-link me-2"></i>Accès rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'paie:simulation_paie' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-calculator me-2"></i>Simulation de paie
+                        </a>
+                        <a href="{% url 'paie:declarations_sociales' %}" class="btn btn-outline-success">
+                            <i class="fas fa-file-alt me-2"></i>Déclarations sociales
+                        </a>
+                        <a href="{% url 'paie:declaration_etax' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Déclaration eTax
+                        </a>
+                        <a href="{% url 'paie:liste_prets' %}" class="btn btn-outline-info">
+                            <i class="fas fa-hand-holding-usd me-2"></i>Gestion des prêts
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Graphique répartition par département
+    const deptData = {{ repartition_dept|safe }};
+    if (deptData.length > 0) {
+        new Chart(document.getElementById('chartDepartements'), {
+            type: 'doughnut',
+            data: {
+                labels: deptData.map(d => d.departement__nom || 'Non défini'),
+                datasets: [{
+                    data: deptData.map(d => d.count),
+                    backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+    
+    // Graphique évolution masse salariale
+    const evolutionData = {{ paie.evolution|safe }};
+    new Chart(document.getElementById('chartEvolution'), {
+        type: 'line',
+        data: {
+            labels: evolutionData.map(e => e.mois),
+            datasets: [{
+                label: 'Masse salariale brute',
+                data: evolutionData.map(e => e.montant),
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('fr-FR') + ' GNF';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

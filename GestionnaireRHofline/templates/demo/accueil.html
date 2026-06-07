@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuineeRH — Démonstration Commerciale</title>
+    <meta name="description" content="GuineeRH - Logiciel de gestion RH et paie pour les entreprises en Guinée. Démonstration commerciale.">
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        :root {
+            --bleu: #1a5276;
+            --bleu-clair: #2e86c1;
+            --orange: #f39c12;
+            --vert: #1a7a42;
+            --rouge: #c0392b;
+            --gris-fond: #f4f6f9;
+            --gris-clair: #ecf0f1;
+            --gris-ligne: #d5d8dc;
+            --noir: #1a1a2e;
+            --blanc: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--gris-fond);
+            color: var(--noir);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ====== HEADER ====== */
+        .header {
+            background: linear-gradient(135deg, var(--bleu) 0%, var(--bleu-clair) 100%);
+            color: white;
+            padding: 0;
+        }
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 40px;
+        }
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .logo-text span { color: var(--orange); }
+        .header-subtitle {
+            font-size: 12px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+        .header-badge {
+            background: var(--orange);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .header-banner {
+            background: rgba(0,0,0,0.2);
+            text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .header-banner strong { color: var(--orange); }
+
+        /* ====== HERO ====== */
+        .hero {
+            background: linear-gradient(135deg, #0d3349 0%, var(--bleu) 60%, var(--bleu-clair) 100%);
+            color: white;
+            text-align: center;
+            padding: 60px 40px;
+        }
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+        .hero h1 span { color: var(--orange); }
+        .hero p {
+            font-size: 17px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 28px;
+        }
+        .btn-group { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background: var(--orange);
+            color: white;
+        }
+        .btn-primary:hover { background: #e67e22; transform: translateY(-1px); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.4);
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.25); }
+        .btn-outline {
+            background: white;
+            color: var(--bleu);
+            border: 2px solid var(--bleu);
+        }
+        .btn-outline:hover { background: var(--gris-clair); }
+
+        /* ====== CONTAINER ====== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ====== SECTIONS ====== */
+        .section {
+            padding: 40px 40px;
+            background: white;
+            margin: 20px 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--bleu);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: var(--orange);
+            margin-left: 10px;
+        }
+        .section-subtitle {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        /* ====== ENTREPRISE INFO ====== */
+        .entreprise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .info-card {
+            background: var(--gris-fond);
+            border: 1px solid var(--gris-ligne);
+            border-radius: 8px;
+            padding: 14px 16px;
+        }
+        .info-card .label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .info-card .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--noir);
+        }
+
+        /* ====== TABLEAU COMPARATIF ====== */
+        .table-wrapper { overflow-x: auto; margin-top: 16px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+        th {
+            background: var(--bleu);
+            color: white;
+            padding: 11px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        th.right, td.right { text-align: right; }
+        th.center, td.center { text-align: center; }
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--gris-ligne);
+            vertical-align: middle;
+        }
+        tr:nth-child(even) td { background: var(--gris-fond); }
+        tr:hover td { background: #eaf3fb; }
+        .tfoot-row td {
+            background: var(--bleu) !important;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .tfoot-row td.net-total { color: var(--orange); }
+        .badge-contrat {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-cdi { background: #d5f5e3; color: #1a7a42; }
+        .badge-stage { background: #fdebd0; color: #e67e22; }
+        .montant-net { color: var(--vert); font-weight: 700; }
+        .montant-retenue { color: var(--rouge); }
+        .zero-rts { color: #aaa; font-style: italic; }
+
+        /* ====== BULLETIN DÉTAIL ====== */
+        .bulletin-header {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: var(--bleu);
+            color: white;
+            padding: 18px 20px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+        }
+        .bulletin-header .titre-bl {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .bulletin-header .titre-bl span { color: var(--orange); display: block; font-size: 11px; font-weight: 400; margin-top: 2px; }
+        .bulletin-header .num-bl {
+            text-align: right;
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        .bulletin-body {
+            border: 1px solid var(--gris-ligne);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+        .bl-employe-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: var(--gris-fond);
+        }
+        .bl-emp-row {
+            display: flex;
+            padding: 7px 16px;
+            border-bottom: 1px solid var(--gris-ligne);
+            gap: 8px;
+        }
+        .bl-emp-row .lbl { color: #888; font-size: 12px; min-width: 110px; }
+        .bl-emp-row .val { font-weight: 600; font-size: 13px; }
+        .bl-rubriques table th { font-size: 11px; padding: 8px 12px; }
+        .bl-rubriques table td { font-size: 12.5px; padding: 7px 12px; }
+        .gain { color: var(--vert); font-weight: 600; }
+        .retenue { color: var(--rouge); font-weight: 600; }
+        .bl-recap {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            background: var(--bleu);
+            color: white;
+        }
+        .bl-recap-item {
+            padding: 14px 20px;
+            border-right: 1px solid rgba(255,255,255,0.15);
+        }
+        .bl-recap-item:last-child { border-right: none; }
+        .bl-recap-item .recap-lbl { font-size: 11px; opacity: 0.8; text-transform: uppercase; }
+        .bl-recap-item .recap-val {
+            font-size: 16px;
+            font-weight: 800;
+            margin-top: 3px;
+        }
+        .recap-net .recap-val { color: var(--orange); font-size: 18px; }
+        .bl-charges {
+            background: var(--gris-fond);
+            padding: 10px 20px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            border-top: 1px solid var(--gris-ligne);
+        }
+        .bl-charges span { color: #666; }
+        .bl-charges strong { color: var(--noir); }
+
+        /* ====== FONCTIONNALITES ====== */
+        .fonct-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .fonct-card {
+            background: var(--gris-fond);
+            border: 1px solid var(--gris-ligne);
+            border-left: 4px solid var(--bleu);
+            border-radius: 8px;
+            padding: 18px 20px;
+            transition: all 0.2s;
+        }
+        .fonct-card:hover {
+            border-left-color: var(--orange);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .fonct-icone { font-size: 28px; margin-bottom: 8px; }
+        .fonct-titre { font-size: 15px; font-weight: 700; color: var(--bleu); margin-bottom: 6px; }
+        .fonct-desc { font-size: 13px; color: #555; line-height: 1.5; }
+
+        /* ====== CTA ====== */
+        .cta-section {
+            background: linear-gradient(135deg, var(--bleu) 0%, var(--bleu-clair) 100%);
+            color: white;
+            text-align: center;
+            padding: 50px 40px;
+            margin: 20px 40px;
+            border-radius: 12px;
+        }
+        .cta-section h2 { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
+        .cta-section p { font-size: 15px; opacity: 0.9; margin-bottom: 24px; }
+
+        /* ====== FOOTER ====== */
+        .footer {
+            background: var(--bleu);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        .footer a { color: var(--orange); text-decoration: none; }
+
+        /* ====== DEMO BADGE ====== */
+        .demo-notice {
+            background: linear-gradient(90deg, #fffbf0, #fff8e1);
+            border: 1px solid #f0c040;
+            border-left: 4px solid var(--orange);
+            border-radius: 6px;
+            padding: 10px 16px;
+            margin: 20px 40px 0;
+            font-size: 12.5px;
+            color: #7d5a00;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 28px; }
+            .section { margin: 10px; padding: 20px; }
+            .cta-section { margin: 10px; padding: 30px 20px; }
+            .bl-employe-grid { grid-template-columns: 1fr; }
+            .bl-recap { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-top">
+        <div>
+            <div class="logo-text">Guinee<span>RH</span></div>
+            <div class="header-subtitle">Logiciel de Gestion RH &amp; Paie — Guinée</div>
+        </div>
+        <div class="header-badge">Démonstration Commerciale</div>
+    </div>
+    <div class="header-banner">
+        Cette page est accessible librement aux prospects. Données fictives à titre de démonstration.
+        <strong>Période : {{ periode }}</strong>
+    </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>Gérez votre paie<br><span>simplement et légalement</span></h1>
+    <p>La solution RH complète pour les entreprises guinéennes : paie conforme, bulletins PDF, CNSS, congés et bien plus.</p>
+    <div class="btn-group">
+        <a href="#bulletins" class="btn btn-primary">&#128203; Voir les bulletins</a>
+        {% if pdf_disponible %}
+        <a href="/demo/pdf/" class="btn btn-secondary">&#11015; Télécharger la présentation PDF</a>
+        {% else %}
+        <span class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">PDF non généré</span>
+        {% endif %}
+        <a href="/login/" class="btn btn-outline" style="border-color:white;color:white;background:rgba(255,255,255,0.1)">&#128273; Se connecter</a>
+    </div>
+</div>
+
+<!-- NOTICE DEMO -->
+<div class="demo-notice">
+    &#9888; <strong>Démonstration :</strong> Les données présentées sont fictives et correspondent à une entreprise de test ({{ entreprise.nom }}, secteur {{ entreprise.secteur }}).
+    Pour accéder à l'application complète : <a href="/login/" style="color: var(--orange); font-weight:600;">Connexion</a> avec demo@guineerh.com / Demo2026!
+</div>
+
+<!-- SECTION ENTREPRISE -->
+<div class="section" id="entreprise">
+    <div class="section-title">Entreprise de démonstration</div>
+    <div class="section-subtitle">{{ entreprise.nom }} — {{ periode }}</div>
+    <div class="entreprise-grid">
+        <div class="info-card">
+            <div class="label">Entreprise</div>
+            <div class="value">{{ entreprise.nom }}</div>
+        </div>
+        <div class="info-card">
+            <div class="label">Secteur</div>
+            <div class="value">{{ entreprise.secteur }}</div>
+        </div>
+        <div class="info-card">
+            <div class="label">Ville</div>
+            <div class="value">{{ entreprise.ville }}</div>
+        </div>
+        <div class="info-card">
+            <div class="label">NIF</div>
+            <div class="value">{{ entreprise.nif }}</div>
+        </div>
+        <div class="info-card">
+            <div class="label">N° CNSS</div>
+            <div class="value">{{ entreprise.cnss }}</div>
+        </div>
+        <div class="info-card">
+            <div class="label">Effectif démo</div>
+            <div class="value">{{ employes|length }} employés</div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION TABLEAU COMPARATIF -->
+<div class="section" id="bulletins">
+    <div class="section-title">&#128203; Tableau Comparatif — Bulletins {{ periode }}</div>
+    <div class="section-subtitle">Calcul automatique CNSS (5%), RTS (barème progressif Guinée), net à payer</div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Matricule</th>
+                    <th>Employé</th>
+                    <th>Poste</th>
+                    <th>Contrat</th>
+                    <th class="right">Salaire Brut</th>
+                    <th class="right">CNSS (5%)</th>
+                    <th class="right">RTS</th>
+                    <th class="right">Net à Payer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employes %}
+                <tr>
+                    <td><code style="font-size:12px;color:#555;">{{ emp.matricule }}</code></td>
+                    <td><strong>{{ emp.nom }}</strong></td>
+                    <td>{{ emp.poste }}</td>
+                    <td class="center">
+                        <span class="badge-contrat {% if emp.type_contrat == 'CDI' %}badge-cdi{% else %}badge-stage{% endif %}">
+                            {{ emp.type_contrat }}
+                        </span>
+                    </td>
+                    <td class="right">{{ emp.salaire_brut_fmt }} GNF</td>
+                    <td class="right montant-retenue">{{ emp.cnss_salarie_fmt }} GNF</td>
+                    <td class="right {% if emp.rts == 0 %}zero-rts{% else %}montant-retenue{% endif %}">{{ emp.rts_fmt }}{% if emp.rts != 0 %} GNF{% endif %}</td>
+                    <td class="right montant-net">{{ emp.net_a_payer_fmt }} GNF</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="tfoot-row">
+                    <td colspan="4"><strong>TOTAL MASSE SALARIALE</strong></td>
+                    <td class="right">{{ totaux.brut }} GNF</td>
+                    <td class="right">{{ totaux.cnss }} GNF</td>
+                    <td class="right">{{ totaux.rts }} GNF</td>
+                    <td class="right net-total">{{ totaux.net }} GNF</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<!-- SECTION BULLETIN DÉTAILLÉ -->
+<div class="section" id="bulletin-detail">
+    <div class="section-title">&#128196; Exemple Bulletin Complet — {{ employe_detail.poste }}</div>
+    <div class="section-subtitle">Modèle standard GuineeRH avec toutes les rubriques et charges patronales</div>
+
+    <!-- En-tête bulletin -->
+    <div class="bulletin-header">
+        <div>
+            <strong>{{ entreprise.nom }}</strong><br>
+            <span style="font-size:11px;opacity:0.7;">Conakry, Guinée — NIF: {{ entreprise.nif }}</span>
+        </div>
+        <div class="titre-bl">
+            BULLETIN DE PAIE
+            <span>Période : {{ periode }}</span>
+        </div>
+        <div class="num-bl">
+            N° BP-DEMO-2026-03-001<br>
+            <span style="color: var(--orange);">{{ periode }}</span>
+        </div>
+    </div>
+
+    <div class="bulletin-body">
+        <!-- Infos employé -->
+        <div class="bl-employe-grid">
+            <div>
+                <div class="bl-emp-row">
+                    <span class="lbl">Employé :</span>
+                    <span class="val">{{ employe_detail.nom }}</span>
+                </div>
+                <div class="bl-emp-row">
+                    <span class="lbl">Poste :</span>
+                    <span class="val">{{ employe_detail.poste }}</span>
+                </div>
+                <div class="bl-emp-row">
+                    <span class="lbl">Service :</span>
+                    <span class="val">{{ employe_detail.service }}</span>
+                </div>
+            </div>
+            <div>
+                <div class="bl-emp-row">
+                    <span class="lbl">Matricule :</span>
+                    <span class="val">{{ employe_detail.matricule }}</span>
+                </div>
+                <div class="bl-emp-row">
+                    <span class="lbl">Type contrat :</span>
+                    <span class="val">CDI — depuis 15/01/2010</span>
+                </div>
+                <div class="bl-emp-row">
+                    <span class="lbl">Situation :</span>
+                    <span class="val">Marié, 3 enfants</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rubriques -->
+        <div class="bl-rubriques">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Désignation</th>
+                        <th class="right">Base</th>
+                        <th class="center">Taux</th>
+                        <th class="right">Gain</th>
+                        <th class="right">Retenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>SAL-BASE</code></td>
+                        <td>Salaire de Base</td>
+                        <td class="right">—</td>
+                        <td class="center">—</td>
+                        <td class="right gain">8&nbsp;500&nbsp;000 GNF</td>
+                        <td class="right">—</td>
+                    </tr>
+                    <tr>
+                        <td><code>IND-TRANS</code></td>
+                        <td>Indemnité de Transport <em style="font-size:11px;color:#aaa;">(exonérée)</em></td>
+                        <td class="right">—</td>
+                        <td class="center">—</td>
+                        <td class="right gain">500&nbsp;000 GNF</td>
+                        <td class="right">—</td>
+                    </tr>
+                    <tr>
+                        <td><code>IND-LOG</code></td>
+                        <td>Indemnité de Logement <em style="font-size:11px;color:#aaa;">(exonérée)</em></td>
+                        <td class="right">—</td>
+                        <td class="center">—</td>
+                        <td class="right gain">1&nbsp;000&nbsp;000 GNF</td>
+                        <td class="right">—</td>
+                    </tr>
+                    <tr>
+                        <td><code>PRIME-PERF</code></td>
+                        <td>Prime de Performance</td>
+                        <td class="right">8&nbsp;500&nbsp;000</td>
+                        <td class="center">10%</td>
+                        <td class="right gain">850&nbsp;000 GNF</td>
+                        <td class="right">—</td>
+                    </tr>
+                    <tr style="background: #fff8f8;">
+                        <td><code>CNSS-SAL</code></td>
+                        <td>Cotisation CNSS Salarié</td>
+                        <td class="right">9&nbsp;350&nbsp;000</td>
+                        <td class="center">5%</td>
+                        <td class="right">—</td>
+                        <td class="right retenue">467&nbsp;500 GNF</td>
+                    </tr>
+                    <tr style="background: #fff8f8;">
+                        <td><code>RTS</code></td>
+                        <td>Retenue à la Source (RTS)</td>
+                        <td class="right">9&nbsp;382&nbsp;500</td>
+                        <td class="center">Barème</td>
+                        <td class="right">—</td>
+                        <td class="right retenue">1&nbsp;107&nbsp;625 GNF</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Récapitulatif -->
+        <div class="bl-recap">
+            <div class="bl-recap-item">
+                <div class="recap-lbl">Salaire Brut</div>
+                <div class="recap-val">10&nbsp;850&nbsp;000 GNF</div>
+            </div>
+            <div class="bl-recap-item">
+                <div class="recap-lbl">Cotisations salariales</div>
+                <div class="recap-val" style="color:#f1948a;">— 1&nbsp;575&nbsp;125 GNF</div>
+            </div>
+            <div class="bl-recap-item recap-net">
+                <div class="recap-lbl">NET À PAYER</div>
+                <div class="recap-val">9&nbsp;274&nbsp;875 GNF</div>
+            </div>
+        </div>
+
+        <!-- Charges patronales -->
+        <div class="bl-charges">
+            <div><span>CNSS Employeur (18%) :</span> <strong>1&nbsp;683&nbsp;000 GNF</strong></div>
+            <div><span>Versement Forfaitaire (6%) :</span> <strong>651&nbsp;000 GNF</strong></div>
+            <div><span>Taxe Apprentissage (2%) :</span> <strong>217&nbsp;000 GNF</strong></div>
+            <div><span>Coût employeur total :</span> <strong style="color:var(--bleu)">12&nbsp;750&nbsp;875 GNF</strong></div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION FONCTIONNALITÉS -->
+<div class="section" id="fonctionnalites">
+    <div class="section-title">&#128640; Fonctionnalités Clés</div>
+    <div class="section-subtitle">Tout ce dont votre entreprise a besoin pour gérer ses RH en Guinée</div>
+    <div class="fonct-grid">
+        {% for f in fonctionnalites %}
+        <div class="fonct-card">
+            <div class="fonct-icone">{{ f.icone }}</div>
+            <div class="fonct-titre">{{ f.titre }}</div>
+            <div class="fonct-desc">{{ f.desc }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+    <h2>Prêt à moderniser votre gestion RH ?</h2>
+    <p>Contactez-nous pour une démonstration personnalisée dans vos locaux à Conakry.</p>
+    <div class="btn-group">
+        <a href="/login/" class="btn btn-primary">&#128273; Accéder à l'application</a>
+        {% if pdf_disponible %}
+        <a href="/demo/pdf/" class="btn btn-secondary">&#11015; Télécharger la présentation PDF</a>
+        {% endif %}
+    </div>
+    <div style="margin-top: 28px; opacity: 0.8; font-size: 13px;">
+        &#127758; www.guineerh.space &nbsp;|&nbsp; &#128222; +224 XXX XXX XXX &nbsp;|&nbsp; &#128140; contact@guineerh.space
+    </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    <strong style="color:white;">Guinee<span style="color:var(--orange);">RH</span></strong> &copy; 2026
+    &mdash; Logiciel de Gestion RH &amp; Paie pour la Guinée
+    &mdash; Conforme au Code du Travail Guinéen
+    &mdash; <a href="/login/">Connexion</a>
+</div>
+
+<script>
+    // Smooth scroll pour les ancres
+    document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            var target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

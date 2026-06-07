@@ -1,0 +1,6 @@
+license_manager.py=absent
+project_guardian.py=absent
+runtime_shield.py=absent
+PYD:license_manager.cp313-win_amd64.pyd
+PYD:project_guardian.cp313-win_amd64.pyd
+PYD:runtime_shield.cp313-win_amd64.pyd

@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Taux de Change{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="#">Paramètres</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Taux de change</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Gestion des Taux de Change</h5>
+                    <div>
+                        <a href="{% url 'core:ajouter_taux_change' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle"></i> Nouveau Taux
+                        </a>
+                        <a href="{% url 'core:importer_taux_change' %}" class="btn btn-success btn-sm">
+                            <i class="bi bi-upload"></i> Importer CSV
+                        </a>
+                        <a href="{% url 'core:exporter_taux_change' %}" class="btn btn-secondary btn-sm">
+                            <i class="bi bi-download"></i> Exporter CSV
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Filtres -->
+                    <form method="get" class="mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" name="search" 
+                                       placeholder="Rechercher..." value="{{ search }}">
+                            </div>
+                            <div class="col-md-2">
+                                <select name="devise_source" class="form-select">
+                                    <option value="">-- Devise source --</option>
+                                    {% for devise in devises %}
+                                        <option value="{{ devise.id }}" {% if devise_source_id == devise.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ devise.code }} - {{ devise.nom }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="devise_cible" class="form-select">
+                                    <option value="">-- Devise cible --</option>
+                                    {% for devise in devises %}
+                                        <option value="{{ devise.id }}" {% if devise_cible_id == devise.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ devise.code }} - {{ devise.nom }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" class="form-control" name="date_debut" 
+                                       placeholder="Date début" value="{{ date_debut }}">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" class="form-control" name="date_fin" 
+                                       placeholder="Date fin" value="{{ date_fin }}">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Tableau -->
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Devise Source</th>
+                                    <th>Devise Cible</th>
+                                    <th class="text-end">Taux</th>
+                                    <th>Source</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for taux in page_obj %}
+                                <tr>
+                                    <td>{{ taux.date_taux|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <strong>{{ taux.devise_source.code }}</strong>
+                                        <small class="text-muted">{{ taux.devise_source.nom }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ taux.devise_cible.code }}</strong>
+                                        <small class="text-muted">{{ taux.devise_cible.nom }}</small>
+                                    </td>
+                                    <td class="text-end">{{ taux.taux|floatformat:6 }}</td>
+                                    <td>
+                                        {% if taux.source %}
+                                            <span class="badge bg-info">{{ taux.source }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'core:modifier_taux_change' taux.id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'core:supprimer_taux_change' taux.id %}" 
+                                              class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce taux ?')">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        Aucun taux de change trouvé
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                        Précédent
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">
+                                            {{ num }}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                        Suivant
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Documents - Gestion RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-folder2-open"></i> Documents employés</h1>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-primary">{{ total }}</h3>
+                <small class="text-muted">Total documents</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="Rechercher (titre, nom employé, matricule)...">
+            </div>
+            <div class="col-md-4">
+                <select name="type" class="form-select">
+                    <option value="">-- Type de document --</option>
+                    {% for code, label in types_document %}
+                    <option value="{{ code }}" {% if type_filter == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn w-100" style="background-color: #EF7707; color: white;">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tableau -->
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Titre</th>
+                    <th>Employé</th>
+                    <th>Type</th>
+                    <th>Date ajout</th>
+                    <th>Date expiration</th>
+                    <th>Ajouté par</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr>
+                    <td>
+                        <i class="{{ doc.get_icon }}"></i>
+                        <strong>{{ doc.titre }}</strong>
+                        {% if doc.confidentiel %}<span class="badge bg-danger ms-1">Confidentiel</span>{% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'employes:detail' doc.employe.pk %}">
+                            {{ doc.employe.nom }} {{ doc.employe.prenoms }}
+                        </a>
+                        <br><small class="text-muted">{{ doc.employe.matricule }}</small>
+                    </td>
+                    <td>{{ doc.get_type_document_display }}</td>
+                    <td>{{ doc.date_ajout|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if doc.date_expiration %}
+                            {{ doc.date_expiration|date:"d/m/Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ doc.ajoute_par.get_full_name|default:"-" }}</td>
+                    <td>
+                        {% if doc.fichier %}
+                        <a href="{{ doc.fichier.url }}" class="btn btn-sm btn-outline-success" title="Télécharger" target="_blank">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'employes:detail' doc.employe.pk %}" class="btn btn-sm btn-outline-primary" title="Voir employé">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Aucun document trouvé</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

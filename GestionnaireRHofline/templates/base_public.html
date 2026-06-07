@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com; font-src 'self' fonts.gstatic.com cdn.jsdelivr.net; img-src 'self' data: blob:; connect-src 'self';">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}International Consulting Guinea{% endblock %}</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="International Consulting Guinea (ICG) - Solution RH complète pour la Guinée. Gestion de paie, ressources humaines, conformité légale. GuinéeRH.space">
+    <meta name="keywords" content="International Consulting Guinea, ICG, GuineeRH, Guinearh.space, RH Guinée, paie Guinée, ressources humaines Guinée, gestion personnel Guinée">
+    <meta name="author" content="International Consulting Guinea">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.guineerh.space/">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.guineerh.space/">
+    <meta property="og:title" content="International Consulting Guinea (ICG) - Solution RH">
+    <meta property="og:description" content="Solution RH complète pour la Guinée. Gestion de paie, ressources humaines, conformité légale.">
+    <meta property="og:image" content="{% static 'img/home3.png' %}">
+    <meta property="og:image:alt" content="International Consulting Guinea - Plateforme RH">
+    <meta property="og:site_name" content="GuinéeRH">
+    <meta property="og:locale" content="fr_GN">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.guineerh.space/">
+    <meta name="twitter:title" content="International Consulting Guinea (ICG) - Solution RH">
+    <meta name="twitter:description" content="Solution RH complète pour la Guinée. Gestion de paie, ressources humaines, conformité légale.">
+    <meta name="twitter:image" content="{% static 'img/home3.png' %}">
+    
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "International Consulting Guinea",
+        "alternateName": ["ICG", "GuinéeRH", "Guinearh.space"],
+        "url": "https://www.guineerh.space",
+        "logo": "https://www.guineerh.space/static/img/logo.png",
+        "image": [
+            "https://www.guineerh.space/static/img/home3.png",
+            "https://www.guineerh.space/static/img/home4.png",
+            "https://www.guineerh.space/static/img/home5.png"
+        ],
+        "description": "Solution RH complète pour la Guinée - Gestion de paie, ressources humaines, conformité légale",
+        "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "GN",
+            "addressLocality": "Conakry",
+            "streetAddress": "Lambagny, en face de l'ISSEG"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+224-614-11-41-73",
+            "email": "contact@icguinea.com",
+            "contactType": "customer service"
+        },
+        "sameAs": []
+    }
+    </script>
+    
+    <!-- Bootstrap 5 CSS - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    
+    <!-- Bootstrap Icons - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    
+    <!-- Font Awesome - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}">
+    <style>
+        :root {
+            --orange-main: #EF7707;
+            --gray-light: #939393;
+            --gray-dark: #212121;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .navbar-public {
+            background: rgba(45, 45, 55, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 15px 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, var(--orange-main), #ff4757);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .btn-login:hover {
+            background: linear-gradient(135deg, #ff4757, var(--orange-main));
+            color: white;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        footer {
+            background: #1a1a2e;
+            color: rgba(255,255,255,0.8);
+            padding: 30px 0;
+            margin-top: auto;
+        }
+        
+        .guinea-flag {
+            display: inline-flex;
+            width: 40px;
+            height: 24px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .guinea-flag div { flex: 1; }
+        .guinea-flag .red { background: #CE1126; }
+        .guinea-flag .yellow { background: #FCD116; }
+        .guinea-flag .green { background: #009460; }
+        
+        /* ========== RESPONSIVE DESIGN ========== */
+        
+        /* Tablette */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: rgba(35, 35, 45, 0.98);
+                margin: 15px -12px -15px;
+                padding: 20px;
+                border-radius: 0 0 15px 15px;
+            }
+            .navbar-nav { gap: 5px; }
+            .nav-link { 
+                padding: 12px 15px !important; 
+                border-radius: 8px;
+            }
+            .btn-login { 
+                margin-top: 10px; 
+                width: 100%; 
+                text-align: center;
+            }
+        }
+        
+        /* Mobile */
+        @media (max-width: 767px) {
+            .navbar-public { padding: 10px 0; }
+            .navbar-brand img { height: 32px !important; max-width: 110px !important; }
+            footer { padding: 20px 0; }
+            footer .row { text-align: center; }
+            footer .col-md-6 { margin-bottom: 15px; }
+            footer .text-md-end { text-align: center !important; }
+            footer small { font-size: 0.85rem; }
+        }
+        
+        /* Petit mobile */
+        @media (max-width: 575px) {
+            .navbar-brand img { height: 28px !important; max-width: 100px !important; }
+            footer img { height: 30px !important; }
+        }
+        
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-public">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'core:index' %}">
+                <img src="{% static 'img/logo.png' %}" alt="ICG Logo" style="height: 40px; max-width: 140px; object-fit: contain; background-color: white; padding: 4px; border-radius: 4px;">
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#ffffff" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:index' %}">Accueil</a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-login" href="{% url 'core:login' %}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Connexion
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center gap-3">
+                        <div>
+                            <strong style="color: var(--orange-main);">International Consulting</strong> <span style="color: #fff;">Guinea</span>
+                            <br>
+                            <img src="{% static 'img/logo.png' %}" alt="International Consulting Guinea" style="height: 40px; max-width: 140px; object-fit: contain; margin-top: 8px; background-color: white; padding: 4px; border-radius: 4px;">
+                            <br><small>Solution RH pour la Guinée</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <small>
+                        <i class="bi bi-geo-alt me-1"></i> Lambagny, en face de l'ISSEG
+                        <br>
+                        <i class="bi bi-envelope me-1"></i> contact@icguinea.com
+                        <span class="mx-2">|</span>
+                        <i class="bi bi-phone me-1"></i> +224 614 11 41 73
+                    </small>
+                    <br>
+                    <small class="text-muted">© 2024 International Consulting Guinea. Tous droits réservés.</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- jQuery - LOCAL -->
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <!-- Bootstrap 5 JS Bundle - LOCAL -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

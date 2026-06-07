@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Candidature {{ candidature.numero_candidature }} - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-person-badge"></i> Candidature {{ candidature.numero_candidature }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'recrutement:candidatures' %}" class="btn btn-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'recrutement:evaluer_candidature' candidature.pk %}" class="btn btn-primary">
+            <i class="bi bi-star"></i> Évaluer
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Informations candidat -->
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-person me-2"></i>Informations du Candidat</h5>
+                <span class="badge 
+                    {% if candidature.statut_candidature == 'recue' %}bg-info
+                    {% elif candidature.statut_candidature == 'preselectionne' %}bg-warning
+                    {% elif candidature.statut_candidature == 'entretien' %}bg-primary
+                    {% elif candidature.statut_candidature == 'retenue' %}bg-success
+                    {% elif candidature.statut_candidature == 'rejetee' %}bg-danger
+                    {% else %}bg-secondary{% endif %}">
+                    {{ candidature.get_statut_candidature_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Civilité</th>
+                                <td>{{ candidature.civilite|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Nom</th>
+                                <td><strong>{{ candidature.nom }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Prénoms</th>
+                                <td><strong>{{ candidature.prenoms }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Date de naissance</th>
+                                <td>{{ candidature.date_naissance|date:"d/m/Y"|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Nationalité</th>
+                                <td>{{ candidature.nationalite|default:"-" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Email</th>
+                                <td><a href="mailto:{{ candidature.email }}">{{ candidature.email|default:"-" }}</a></td>
+                            </tr>
+                            <tr>
+                                <th>Téléphone</th>
+                                <td><a href="tel:{{ candidature.telephone }}">{{ candidature.telephone|default:"-" }}</a></td>
+                            </tr>
+                            <tr>
+                                <th>Adresse</th>
+                                <td>{{ candidature.adresse|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Formation</th>
+                                <td>{{ candidature.formation_niveau|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Expérience</th>
+                                <td>{% if candidature.experience_annees %}{{ candidature.experience_annees }} an(s){% else %}-{% endif %}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Documents du Candidat</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center h-100">
+                            <i class="bi bi-file-earmark-person fs-1 text-primary"></i>
+                            <h6 class="mt-2">CV</h6>
+                            {% if candidature.cv_fichier %}
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ candidature.cv_fichier.url }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-download me-1"></i>Télécharger
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-file="cv_fichier" data-name="CV">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">Non fourni</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center h-100">
+                            <i class="bi bi-file-earmark-text fs-1 text-info"></i>
+                            <h6 class="mt-2">Lettre de Motivation</h6>
+                            {% if candidature.lettre_motivation %}
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ candidature.lettre_motivation.url }}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="bi bi-download me-1"></i>Télécharger
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-file="lettre_motivation" data-name="Lettre de motivation">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">Non fourni</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center h-100">
+                            <i class="bi bi-file-earmark-zip fs-1 text-warning"></i>
+                            <h6 class="mt-2">Autres Documents</h6>
+                            {% if candidature.autres_documents %}
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ candidature.autres_documents.url }}" target="_blank" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-download me-1"></i>Télécharger
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-file="autres_documents" data-name="Autres documents">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">Non fourni</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entretiens -->
+        {% if entretiens %}
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Entretiens</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Lieu</th>
+                                <th>Note</th>
+                                <th>Décision</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entretien in entretiens %}
+                            <tr>
+                                <td>{{ entretien.date_entretien|date:"d/m/Y H:i" }}</td>
+                                <td>{{ entretien.get_type_entretien_display }}</td>
+                                <td>{{ entretien.lieu_entretien|default:"-" }}</td>
+                                <td>{{ entretien.note_globale|default:"-" }}/10</td>
+                                <td>
+                                    {% if entretien.decision == 'favorable' %}
+                                    <span class="badge bg-success">Favorable</span>
+                                    {% elif entretien.decision == 'defavorable' %}
+                                    <span class="badge bg-danger">Défavorable</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ entretien.get_decision_display|default:"En attente" }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Offre liée -->
+        <div class="card shadow mb-4">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                <h5 class="mb-0"><i class="bi bi-briefcase me-2"></i>Offre</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ candidature.offre.intitule_poste }}</h6>
+                <p class="text-muted mb-2">{{ candidature.offre.reference_offre }}</p>
+                {% if candidature.offre.type_contrat %}
+                <span class="badge bg-secondary">{{ candidature.offre.type_contrat }}</span>
+                {% endif %}
+                <hr>
+                <a href="{% url 'recrutement:detail_offre' candidature.offre.uuid %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye"></i> Voir l'offre
+                </a>
+            </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calendar me-2"></i>Dates</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Candidature reçue:</strong><br>{{ candidature.date_candidature|date:"d/m/Y" }}</p>
+                {% if candidature.date_entretien %}
+                <p><strong>Entretien prévu:</strong><br>{{ candidature.date_entretien|date:"d/m/Y H:i" }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Évaluation -->
+        {% if candidature.score_evaluation or candidature.commentaires %}
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-star me-2"></i>Évaluation</h5>
+            </div>
+            <div class="card-body">
+                {% if candidature.score_evaluation %}
+                <p><strong>Score:</strong> {{ candidature.score_evaluation }}/100</p>
+                {% endif %}
+                {% if candidature.commentaires %}
+                <p><strong>Commentaires:</strong><br>{{ candidature.commentaires }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions rapides -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Actions</h5>
+            </div>
+            <div class="card-body d-grid gap-2">
+                {% if candidature.email %}
+                <a href="mailto:{{ candidature.email }}" class="btn btn-outline-primary">
+                    <i class="bi bi-envelope me-1"></i>Envoyer un email
+                </a>
+                {% endif %}
+                {% if candidature.telephone %}
+                <a href="tel:{{ candidature.telephone }}" class="btn btn-outline-success">
+                    <i class="bi bi-telephone me-1"></i>Appeler
+                </a>
+                {% endif %}
+                <a href="{% url 'recrutement:creer_entretien' candidature.pk %}" class="btn btn-outline-info">
+                    <i class="bi bi-calendar-plus me-1"></i>Planifier un entretien
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirmer la suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'recrutement:supprimer_document_candidature' candidature.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer le fichier <strong id="fileName"></strong> ?</p>
+                    <p class="text-muted small">Cette action est irréversible.</p>
+                    <input type="hidden" name="file_field" id="fileField">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Supprimer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function(event) {
+        var button = event.relatedTarget;
+        var fileField = button.getAttribute('data-file');
+        var fileName = button.getAttribute('data-name');
+        document.getElementById('fileField').value = fileField;
+        document.getElementById('fileName').textContent = fileName;
+    });
+});
+</script>
+{% endblock %}

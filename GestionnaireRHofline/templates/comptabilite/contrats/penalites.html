@@ -1,0 +1,118 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}Pénalités{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Pénalités de Retard</h1>
+            <p class="text-muted mb-0">Pénalités définies dans les contrats</p>
+        </div>
+    </div>
+
+    <!-- Liste -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Contrat</th>
+                            <th>Type contrat</th>
+                            <th>Type pénalité</th>
+                            <th>Mode calcul</th>
+                            <th>Taux</th>
+                            <th>Montant fixe</th>
+                            <th>Plafond</th>
+                            <th>Franchise</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in penalites %}
+                        <tr>
+                            <td>
+                                {% if p.contrat_fournisseur %}
+                                <a href="{% url 'comptabilite:contrats_fournisseur_detail' p.contrat_fournisseur.pk %}">
+                                    {{ p.contrat_fournisseur.numero_contrat }}
+                                </a>
+                                {% elif p.contrat_client %}
+                                <a href="{% url 'comptabilite:contrats_client_detail' p.contrat_client.pk %}">
+                                    {{ p.contrat_client.numero_contrat }}
+                                </a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.contrat_fournisseur %}
+                                <span class="badge bg-info">Fournisseur</span>
+                                {% else %}
+                                <span class="badge bg-success">Client</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-danger">{{ p.get_type_penalite_display }}</span>
+                            </td>
+                            <td>{{ p.get_mode_calcul_display }}</td>
+                            <td>{{ p.taux }}%</td>
+                            <td>
+                                {% if p.montant_fixe %}
+                                {{ p.montant_fixe|floatformat:0 }} GNF
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.plafond_penalite %}
+                                {{ p.plafond_penalite|floatformat:0 }} GNF
+                                {% elif p.plafond_pourcentage %}
+                                {{ p.plafond_pourcentage }}%
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.jours_franchise > 0 %}
+                                {{ p.jours_franchise }} jours
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Aucune pénalité trouvée
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+            </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

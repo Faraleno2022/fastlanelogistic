@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Période {{ periode }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-calendar-alt me-2"></i>Période {{ periode }}</h2>
+                <a href="{% url 'paie:liste_periodes' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations de la période -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <small class="text-muted d-block mb-1">Statut</small>
+                    {% if periode.statut_periode == 'ouverte' %}
+                        <span class="badge bg-info">Ouverte</span>
+                    {% elif periode.statut_periode == 'calculee' %}
+                        <span class="badge bg-primary">Calculée</span>
+                    {% elif periode.statut_periode == 'validee' %}
+                        <span class="badge bg-success">Validée</span>
+                    {% elif periode.statut_periode == 'cloturee' %}
+                        <span class="badge bg-secondary">Clôturée</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <small class="text-muted d-block mb-1">Bulletins</small>
+                    <strong>{{ bulletins.count }}</strong>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <small class="text-muted d-block mb-1">Masse Salariale Brute</small>
+                    <strong>{{ stats.total_brut|floatformat:0|intcomma }} GNF</strong>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <small class="text-muted d-block mb-1">Net à Payer</small>
+                    <strong class="text-success">{{ stats.total_net|floatformat:0|intcomma }} GNF</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Actions</h5>
+                    <div class="btn-group" role="group">
+                        {% if periode.statut_periode == 'ouverte' or periode.statut_periode == 'calculee' %}
+                        <a href="{% url 'paie:calculer_periode' periode.pk %}" class="btn btn-success">
+                            <i class="fas fa-calculator me-2"></i>Calculer la Paie
+                        </a>
+                        {% endif %}
+                        
+                        {% if periode.statut_periode == 'calculee' %}
+                        <a href="{% url 'paie:valider_periode' periode.pk %}" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>Valider
+                        </a>
+                        {% endif %}
+                        
+                        {% if periode.statut_periode == 'validee' %}
+                        <a href="{% url 'paie:cloturer_periode' periode.pk %}" class="btn btn-warning">
+                            <i class="fas fa-lock me-2"></i>Clôturer
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques détaillées -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted d-block mb-1">CNSS Employé</small>
+                    <strong>{{ stats.total_cnss_employe|floatformat:0|intcomma }} GNF</strong>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted d-block mb-1">CNSS Employeur</small>
+                    <strong>{{ stats.total_cnss_employeur|floatformat:0|intcomma }} GNF</strong>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted d-block mb-1">RTS Total</small>
+                    <strong>{{ stats.total_irg|floatformat:0|intcomma }} GNF</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des bulletins -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Bulletins de Paie</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-orange-light">
+                                <tr>
+                                    <th>Matricule</th>
+                                    <th>Employé</th>
+                                    <th>Salaire Brut</th>
+                                    <th>CNSS</th>
+                                    <th>RTS</th>
+                                    <th>Net à Payer</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bulletin in bulletins %}
+                                <tr>
+                                    <td>{{ bulletin.employe.matricule }}</td>
+                                    <td>{{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}</td>
+                                    <td>{{ bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
+                                    <td>{{ bulletin.cnss_employe|floatformat:0|intcomma }} GNF</td>
+                                    <td>{{ bulletin.irg|floatformat:0|intcomma }} GNF</td>
+                                    <td class="text-success"><strong>{{ bulletin.net_a_payer|floatformat:0|intcomma }} GNF</strong></td>
+                                    <td>
+                                        {% if bulletin.statut_bulletin == 'brouillon' %}
+                                            <span class="badge bg-secondary">Brouillon</span>
+                                        {% elif bulletin.statut_bulletin == 'calcule' %}
+                                            <span class="badge bg-primary">Calculé</span>
+                                        {% elif bulletin.statut_bulletin == 'valide' %}
+                                            <span class="badge bg-success">Validé</span>
+                                        {% elif bulletin.statut_bulletin == 'paye' %}
+                                            <span class="badge bg-dark">Payé</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'paie:detail_bulletin' bulletin.pk %}" 
+                                           class="btn btn-sm btn-outline-primary" title="Détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'paie:imprimer_bulletin' bulletin.pk %}" 
+                                           class="btn btn-sm btn-outline-secondary" title="Imprimer" target="_blank">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        Aucun bulletin généré pour cette période
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

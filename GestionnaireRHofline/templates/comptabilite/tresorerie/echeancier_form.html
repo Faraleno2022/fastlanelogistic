@@ -1,0 +1,108 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}{% if echeance %}Modifier{% else %}Nouvelle{% endif %} Échéance{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-calendar-plus text-primary"></i> 
+            {% if echeance %}Modifier l'échéance{% else %}Nouvelle échéance{% endif %}
+        </h1>
+        <a href="{% url 'comptabilite:echeancier_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Date d'échéance *</label>
+                                <input type="date" name="date_echeance" class="form-control" 
+                                       value="{{ form.date_echeance.value|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Type de flux *</label>
+                                <select name="type_flux" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    <option value="encaissement" {% if form.type_flux.value == 'encaissement' %}selected{% endif %}>Encaissement</option>
+                                    <option value="decaissement" {% if form.type_flux.value == 'decaissement' %}selected{% endif %}>Décaissement</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Montant *</label>
+                                <input type="number" name="montant" class="form-control" step="0.01"
+                                       value="{{ form.montant.value|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Origine</label>
+                                <select name="origine" class="form-select">
+                                    <option value="">-- Sélectionner --</option>
+                                    <option value="facture" {% if form.origine.value == 'facture' %}selected{% endif %}>Facture</option>
+                                    <option value="contrat" {% if form.origine.value == 'contrat' %}selected{% endif %}>Contrat</option>
+                                    <option value="salaire" {% if form.origine.value == 'salaire' %}selected{% endif %}>Salaire</option>
+                                    <option value="impot" {% if form.origine.value == 'impot' %}selected{% endif %}>Impôt</option>
+                                    <option value="autre" {% if form.origine.value == 'autre' %}selected{% endif %}>Autre</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Libellé *</label>
+                            <input type="text" name="libelle" class="form-control" 
+                                   value="{{ form.libelle.value|default:'' }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tiers</label>
+                            <select name="tiers" class="form-select">
+                                <option value="">-- Aucun --</option>
+                                {% for t in tiers %}
+                                <option value="{{ t.pk }}" {% if form.tiers.value == t.pk %}selected{% endif %}>{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control" rows="3">{{ form.notes.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:echeancier_list' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Aide</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Encaissement</strong> : Entrée d'argent prévue (paiement client, etc.)</p>
+                    <p><strong>Décaissement</strong> : Sortie d'argent prévue (paiement fournisseur, salaires, etc.)</p>
+                    <p class="mb-0">Les échéances permettent de prévoir les flux de trésorerie futurs.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

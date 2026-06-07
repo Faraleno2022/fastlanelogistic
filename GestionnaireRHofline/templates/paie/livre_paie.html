@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Livre de Paie{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-book me-2"></i>Livre de Paie</h2>
+                <a href="{% url 'paie:telecharger_livre_paie_pdf' %}{{ livre_pdf_query }}" class="btn btn-primary">
+                    <i class="fas fa-file-pdf me-2"></i>Télécharger PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="annee" class="form-label">Année</label>
+                            <select class="form-select" id="annee" name="annee">
+                                <option value="" {% if not annee %}selected{% endif %}>Toutes les années</option>
+                                {% for a in annees %}
+                                <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="mois" class="form-label">Mois</label>
+                            <select class="form-select" id="mois" name="mois">
+                                <option value="" {% if not mois %}selected{% endif %}>Tous les mois</option>
+                                <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+                                <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+                                <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+                                <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+                                <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+                                <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+                                <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+                                <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+                                <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+                                <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+                                <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+                                <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Filtrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Totaux -->
+    <div class="row mb-4 totaux-cards">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Masse Salariale Brute</h6>
+                    <h4 class="text-primary">{{ totaux.total_brut|floatformat:0|intcomma }} GNF</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">CNSS Employé</h6>
+                    <h5>{{ totaux.total_cnss_employe|floatformat:0|intcomma }} GNF</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">CNSS Employeur</h6>
+                    <h5>{{ totaux.total_cnss_employeur|floatformat:0|intcomma }} GNF</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">RTS Total</h6>
+                    <h5>{{ totaux.total_irg|floatformat:0|intcomma }} GNF</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Net à Payer Total</h6>
+                    <h4 class="text-success">{{ totaux.total_net|floatformat:0|intcomma }} GNF</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if controles_livre %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if controles_livre.conforme %}
+            <div class="alert alert-success shadow-sm">
+                <strong>Contrôle livre de paie OK.</strong>
+                Total net = brut - retenues affichées.
+                {% if controles_livre.nb_retenues_hors_cnss_rts > 0 %}
+                <div class="mt-2">
+                    Retenues hors CNSS/RTS : {{ controles_livre.nb_retenues_hors_cnss_rts }}
+                    ligne(s), total {{ controles_livre.total_retenues_hors_cnss_rts|floatformat:0|intcomma }} GNF.
+                </div>
+                <ul class="mb-0 mt-1">
+                    {% for ligne in controles_livre.retenues_hors_cnss_rts %}
+                    <li>{{ ligne.matricule }} : {{ ligne.montant|floatformat:0|intcomma }} GNF</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="alert alert-danger shadow-sm">
+                <div class="fw-bold mb-2">Contrôle livre de paie à corriger</div>
+                <div>Net attendu : {{ controles_livre.net_attendu|floatformat:0|intcomma }} GNF</div>
+                <div>Écart net : {{ controles_livre.ecart_net|floatformat:0|intcomma }} GNF</div>
+                <div>Anomalies CNSS : {{ controles_livre.nb_anomalies_cnss }}</div>
+                <div>Écarts agrégation : {{ controles_livre.nb_controles_agregation }}</div>
+                {% if controles_livre.controles_agregation %}
+                <ul class="mb-0 mt-2">
+                    {% for controle in controles_livre.controles_agregation %}
+                    <li>{{ controle.libelle }} : détail {{ controle.total_detail|floatformat:0|intcomma }} GNF, résumé {{ controle.total_resume|floatformat:0|intcomma }} GNF, écart {{ controle.ecart|floatformat:0|intcomma }} GNF</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Livre de paie -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0">
+                        Livre de Paie - Année {{ annee }}
+                        {% if mois %} - Mois {{ mois }}{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-sm livre-paie-table">
+                            <thead class="table-orange-light">
+                                <tr>
+                                    <th>Période</th>
+                                    <th>Matricule</th>
+                                    <th>Nom et Prénoms</th>
+                                    <th>Fonction</th>
+                                    <th class="text-end">Salaire de base</th>
+                                    <th class="text-end">Prime de Logement</th>
+                                    <th class="text-end">Prime de transport</th>
+                                    <th class="text-end">Cherté de vie</th>
+                                    <th class="text-end">Salaire brut</th>
+                                    <th class="text-end">CNSS 5%</th>
+                                    <th class="text-end">CNSS 18%</th>
+                                    <th class="text-end">Base taxable RTS</th>
+                                    <th class="text-end">Avance sur Salaire</th>
+                                    <th class="text-end bg-primary text-white">Salaire Net</th>
+                                    <th class="text-end">ONFPP</th>
+                                    <th class="text-end">VF</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bulletin in bulletins %}
+                                <tr class="{% if bulletin.controle_cnss_livre_erreur %}table-danger{% elif bulletin.controle_retenues_hors_cnss_rts %}table-warning{% endif %}">
+                                    <td>{{ bulletin.periode }}</td>
+                                    <td>{{ bulletin.employe.matricule }}</td>
+                                    <td>{{ bulletin.employe.nom }} {{ bulletin.employe.prenoms }}</td>
+                                    <td class="{% if not bulletin.employe.poste and not bulletin.employe.departement %}table-warning text-danger fw-semibold{% endif %}">
+                                        {% if bulletin.employe.poste and bulletin.employe.poste.intitule_poste %}
+                                            {{ bulletin.employe.poste.intitule_poste }}
+                                        {% elif bulletin.employe.departement %}
+                                            {{ bulletin.employe.departement }}
+                                        {% else %}
+                                            Poste à renseigner
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">{{ bulletin.livre_salaire_base|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.livre_prime_logement|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.livre_prime_transport|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.livre_cherte_vie|floatformat:0|intcomma }}</td>
+                                    <td class="text-end fw-semibold">{{ bulletin.salaire_brut|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.cnss_employe|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.cnss_employeur|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.base_rts|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.livre_avance_salaire|floatformat:0|intcomma }}</td>
+                                    <td class="text-end text-success"><strong>{{ bulletin.net_a_payer|floatformat:0|intcomma }}</strong></td>
+                                    <td class="text-end">{{ bulletin.contribution_onfpp|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ bulletin.versement_forfaitaire|floatformat:0|intcomma }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="16" class="text-center text-muted py-4">
+                                        Aucune donnée disponible pour cette période
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% if bulletins %}
+                            <tfoot class="table-secondary">
+                                <tr>
+                                    <th colspan="4" class="text-end">TOTAUX:</th>
+                                    <th class="text-end">{{ totaux.total_salaire_base|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_prime_logement|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_prime_transport|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_cherte_vie|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_brut|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_cnss_employe|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_cnss_employeur|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_base_rts|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_avance_salaire|floatformat:0|intcomma }}</th>
+                                    <th class="text-end text-success"><strong>{{ totaux.total_net|floatformat:0|intcomma }}</strong></th>
+                                    <th class="text-end">{{ totaux.total_onfpp|floatformat:0|intcomma }}</th>
+                                    <th class="text-end">{{ totaux.total_vf|floatformat:0|intcomma }}</th>
+                                </tr>
+                            </tfoot>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations légales -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm bg-light">
+                <div class="card-body">
+                    <h6><i class="fas fa-info-circle me-2"></i>Informations Légales</h6>
+                    <p class="mb-1 small">
+                        <strong>Taux CNSS:</strong> Employé 5% - Employeur 18%
+                    </p>
+                    <p class="mb-1 small">
+                        <strong>RTS:</strong> Calculée selon le barème progressif guinéen sur la base imposable RTS
+                    </p>
+                    <p class="mb-0 small">
+                        <strong>Conservation:</strong> Ce livre de paie doit être conservé pendant 10 ans minimum
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Réduire la taille de police pour le livre de paie */
+    .livre-paie-table {
+        font-size: 0.68rem;
+    }
+    
+    .livre-paie-table th,
+    .livre-paie-table td {
+        padding: 0.22rem 0.32rem;
+        white-space: nowrap;
+    }
+    
+    .totaux-cards h4,
+    .totaux-cards h5 {
+        font-size: 0.75rem;
+        margin-bottom: 0;
+    }
+    
+    .totaux-cards h6 {
+        font-size: 0.65rem;
+    }
+    
+    .totaux-cards .card-body {
+        padding: 0.4rem;
+    }
+    
+    @media print {
+        .btn, .card-header, .no-print {
+            display: none !important;
+        }
+        
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        table {
+            font-size: 8pt;
+        }
+    }
+</style>
+{% endblock %}
+

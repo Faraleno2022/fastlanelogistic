@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détail Pointage - {{ pointage.employe.nom_complet }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-clock me-2"></i>Détail du Pointage</h2>
+                <div>
+                    <a href="{% url 'temps_travail:modifier_pointage' pointage.pk %}" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                    </a>
+                    <a href="{% url 'temps_travail:supprimer_pointage' pointage.pk %}" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Supprimer
+                    </a>
+                    <a href="{% url 'temps_travail:pointages' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations employé -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Employé</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <th class="text-muted" style="width: 40%;">Matricule</th>
+                            <td><strong>{{ pointage.employe.matricule }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Nom et Prénoms</th>
+                            <td>{{ pointage.employe.nom }} {{ pointage.employe.prenoms }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Poste</th>
+                            <td>{{ pointage.employe.poste|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Département</th>
+                            <td>{{ pointage.employe.departement|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Détails du pointage -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Pointage</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <th class="text-muted" style="width: 40%;">Date</th>
+                            <td><strong>{{ pointage.date_pointage|date:"d/m/Y" }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Heure d'entrée</th>
+                            <td>
+                                {% if pointage.heure_entree %}
+                                    <i class="fas fa-sign-in-alt text-success me-1"></i>{{ pointage.heure_entree|time:"H:i" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Heure de sortie</th>
+                            <td>
+                                {% if pointage.heure_sortie %}
+                                    <i class="fas fa-sign-out-alt text-danger me-1"></i>{{ pointage.heure_sortie|time:"H:i" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Heures travaillées</th>
+                            <td>{{ pointage.heures_travaillees|default:"0"|floatformat:2 }}h</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Heures supplémentaires</th>
+                            <td>
+                                {% if pointage.heures_supplementaires and pointage.heures_supplementaires > 0 %}
+                                    <span class="text-primary fw-bold">{{ pointage.heures_supplementaires|floatformat:2 }}h</span>
+                                {% else %}
+                                    0.00h
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Statut</th>
+                            <td>
+                                {% if pointage.statut_pointage == 'present' %}
+                                    <span class="badge bg-success fs-6"><i class="fas fa-check-circle me-1"></i>Présent</span>
+                                {% elif pointage.statut_pointage == 'present_am' %}
+                                    <span class="badge bg-info fs-6"><i class="fas fa-sun me-1"></i>Présent AM</span>
+                                {% elif pointage.statut_pointage == 'present_pm' %}
+                                    <span class="badge bg-info fs-6"><i class="fas fa-moon me-1"></i>Présent PM</span>
+                                {% elif pointage.statut_pointage == 'present_am_pm' %}
+                                    <span class="badge bg-info fs-6"><i class="fas fa-calendar-day me-1"></i>Présent AM et PM</span>
+                                {% elif pointage.statut_pointage == 'absent' %}
+                                    <span class="badge bg-danger fs-6"><i class="fas fa-times-circle me-1"></i>Absent</span>
+                                {% elif pointage.statut_pointage == 'retard' %}
+                                    <span class="badge bg-warning fs-6"><i class="fas fa-clock me-1"></i>Retard</span>
+                                {% elif pointage.statut_pointage == 'absence_justifiee' %}
+                                    <span class="badge bg-primary fs-6"><i class="fas fa-shield-alt me-1"></i>Absence justifiée</span>
+                                {% elif pointage.statut_pointage == 'malade' %}
+                                    <span class="badge bg-warning fs-6"><i class="fas fa-heartbeat me-1"></i>Malade</span>
+                                {% elif pointage.statut_pointage == 'p' %}
+                                    <span class="badge bg-secondary fs-6">P</span>
+                                {% elif pointage.statut_pointage == 'a' %}
+                                    <span class="badge bg-secondary fs-6">A</span>
+                                {% else %}
+                                    <span class="badge bg-dark fs-6">{{ pointage.get_statut_pointage_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Validé</th>
+                            <td>
+                                {% if pointage.valide %}
+                                    <i class="fas fa-check-circle text-success"></i> Oui
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger"></i> Non
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Observations -->
+    {% if pointage.observations %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-comment-alt me-2"></i>Observations</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ pointage.observations }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

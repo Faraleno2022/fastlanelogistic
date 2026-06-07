@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Statistiques Réclamations {{ annee }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:liste_reclamations' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-chart-bar me-2"></i>Statistiques Réclamations {{ annee }}</h2>
+        </div>
+    </div>
+
+    <!-- Totaux -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ totaux.total|default:"0" }}</h3>
+                    <p class="mb-0">Total réclamations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ totaux.resolues|default:"0" }}</h3>
+                    <p class="mb-0">Résolues</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>{{ totaux.en_cours|default:"0" }}</h3>
+                    <p class="mb-0">En cours</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ totaux.taux_resolution }}%</h3>
+                    <p class="mb-0">Taux de résolution</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Par catégorie -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Par Catégorie</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-orange-light">
+                                <tr>
+                                    <th>Catégorie</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Résolues</th>
+                                    <th class="text-center">Rejetées</th>
+                                    <th class="text-center">Taux</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in recap_categories %}
+                                <tr>
+                                    <td><strong>{{ r.categorie__libelle }}</strong></td>
+                                    <td class="text-center">{{ r.total }}</td>
+                                    <td class="text-center text-success">{{ r.resolues }}</td>
+                                    <td class="text-center text-danger">{{ r.rejetees }}</td>
+                                    <td class="text-center">
+                                        {% widthratio r.resolues r.total 100 as taux %}
+                                        <span class="badge {% if taux >= 80 %}bg-success{% elif taux >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ taux|default:"0" }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        Aucune donnée pour {{ annee }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Par mois -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Évolution mensuelle</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for m in recap_mois %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {% with m.date_ouverture__month as mois %}
+                            {% if mois == 1 %}Janvier
+                            {% elif mois == 2 %}Février
+                            {% elif mois == 3 %}Mars
+                            {% elif mois == 4 %}Avril
+                            {% elif mois == 5 %}Mai
+                            {% elif mois == 6 %}Juin
+                            {% elif mois == 7 %}Juillet
+                            {% elif mois == 8 %}Août
+                            {% elif mois == 9 %}Septembre
+                            {% elif mois == 10 %}Octobre
+                            {% elif mois == 11 %}Novembre
+                            {% elif mois == 12 %}Décembre
+                            {% endif %}
+                            {% endwith %}
+                            <span class="badge bg-primary rounded-pill">{{ m.total }}</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted py-4">
+                            Aucune donnée
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

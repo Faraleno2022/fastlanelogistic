@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Générer déclaration CNSS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-file-earmark-plus"></i> Nouvelle déclaration CNSS</h1>
+    <a href="{% url 'core:cnss_dashboard' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Mois *</label>
+                    <select name="mois" class="form-select" required>
+                        {% for num, nom in mois_disponibles %}
+                        <option value="{{ num }}" {% if num == mois_courant %}selected{% endif %}>{{ nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Année *</label>
+                    <input type="number" name="annee" class="form-control" value="{{ annee_courante }}" required>
+                </div>
+            </div>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> La déclaration sera générée à partir des bulletins de paie validés pour cette période.
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-file-earmark-arrow-up"></i> Générer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tableau de Bord Administrateur - {{ stats.entreprise.nom_entreprise }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="bi bi-speedometer2"></i> Tableau de Bord Administrateur</h2>
+            <p class="text-muted">{{ stats.entreprise.nom_entreprise }} - Plan {{ stats.entreprise.get_plan_abonnement_display }}</p>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Statistiques Principales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-people"></i> Utilisateurs</h5>
+                    <h2>{{ stats.active_users }} / {{ stats.quota_users }}</h2>
+                    <p class="mb-0">
+                        <small>{{ stats.total_users }} total</small>
+                    </p>
+                    {% if stats.active_users >= stats.quota_users %}
+                        <span class="badge bg-danger">Quota atteint</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-person-badge"></i> Employés</h5>
+                    <h2>{{ stats.employes_actifs }}</h2>
+                    <p class="mb-0">
+                        <small>{{ stats.total_employes }} total</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-file-earmark-text"></i> Bulletins</h5>
+                    <h2>{{ stats.bulletins_mois }}</h2>
+                    <p class="mb-0">
+                        <small>Ce mois</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-calendar-check"></i> Congés</h5>
+                    <h2>{{ stats.conges_en_attente }}</h2>
+                    <p class="mb-0">
+                        <small>En attente</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions Rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'core:manage_users' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-person-plus"></i> Gérer les Utilisateurs
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'core:send_invitation' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-envelope"></i> Inviter par Email
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'employes:list' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-people"></i> Voir Employés
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'paie:home' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-cash-stack"></i> Module Paie
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'core:gestion_structure' %}" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-diagram-3"></i> Structure Entreprise
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Utilisateurs Récents -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Utilisateurs Récents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Email</th>
+                                    <th>Profil</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>
+                                        {{ user.get_full_name }}
+                                        {% if user.est_admin_entreprise %}
+                                            <span class="badge bg-danger">Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.profil %}
+                                            {{ user.profil.nom_profil }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.date_joined|date:"d/m/Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Aucun utilisateur</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activités Récentes -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-activity"></i> Activités Récentes</h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <ul class="list-group list-group-flush">
+                        {% for log in recent_logs %}
+                        <li class="list-group-item px-0">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ log.utilisateur.get_full_name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ log.action }}</small>
+                                    {% if log.module %}
+                                        <span class="badge bg-secondary">{{ log.module }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">{{ log.date_action|date:"d/m H:i" }}</small>
+                                </div>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted">Aucune activité</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations Abonnement -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-credit-card"></i> Informations d'Abonnement</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Plan:</strong> {{ stats.entreprise.get_plan_abonnement_display }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Utilisateurs max:</strong> {{ stats.entreprise.max_utilisateurs }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Date création:</strong> {{ stats.entreprise.date_creation|date:"d/m/Y" }}
+                        </div>
+                        <div class="col-md-3">
+                            {% if stats.entreprise.date_expiration %}
+                                <strong>Expiration:</strong> 
+                                <span class="{% if stats.entreprise.date_expiration < today %}text-danger{% endif %}">
+                                    {{ stats.entreprise.date_expiration|date:"d/m/Y" }}
+                                </span>
+                            {% else %}
+                                <strong>Expiration:</strong> Illimitée
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

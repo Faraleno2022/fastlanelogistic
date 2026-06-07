@@ -1,0 +1,112 @@
+{% extends 'portail/base_portail.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Mes Bulletins de Paie{% endblock %}
+
+{% block portail_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-file-invoice-dollar me-2"></i>Mes Bulletins de Paie</h2>
+    </div>
+</div>
+
+<!-- Filtre année -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label class="form-label mb-0">Année:</label>
+            </div>
+            <div class="col-auto">
+                <select class="form-select" name="annee" onchange="this.form.submit()">
+                    {% for a in annees %}
+                    <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Totaux annuels -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h5>{{ totaux.brut|floatformat:0|intcomma|default:"0" }}</h5>
+                <small>Brut annuel (GNF)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h5>{{ totaux.net|floatformat:0|intcomma|default:"0" }}</h5>
+                <small>Net annuel (GNF)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h5>{{ totaux.cnss|floatformat:0|intcomma|default:"0" }}</h5>
+                <small>CNSS annuel (GNF)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h5>{{ totaux.rts|floatformat:0|intcomma|default:"0" }}</h5>
+                <small>RTS annuel (GNF)</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des bulletins -->
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-orange-light">
+                    <tr>
+                        <th>Période</th>
+                        <th class="text-end">Salaire brut</th>
+                        <th class="text-end">CNSS</th>
+                        <th class="text-end">RTS</th>
+                        <th class="text-end">Net à payer</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bulletin in bulletins %}
+                    <tr>
+                        <td>
+                            <strong>{{ bulletin.periode.get_mois_display }} {{ bulletin.periode.annee }}</strong>
+                        </td>
+                        <td class="text-end">{{ bulletin.salaire_brut|floatformat:0|intcomma }}</td>
+                        <td class="text-end">{{ bulletin.cnss_employe|floatformat:0|intcomma }}</td>
+                        <td class="text-end">{{ bulletin.irg|floatformat:0|intcomma }}</td>
+                        <td class="text-end fw-bold text-success">{{ bulletin.net_a_payer|floatformat:0|intcomma }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'portail:detail_bulletin' bulletin.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> Détail
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="fas fa-file-invoice fa-3x mb-3"></i>
+                            <p>Aucun bulletin pour cette année</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

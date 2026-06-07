@@ -1,0 +1,266 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}Grand Livre - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Grand Livre</h1>
+            <p class="text-muted mb-0">Détail de toutes les écritures comptables par compte</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>Imprimer
+            </button>
+            <button class="btn btn-success" onclick="exportExcel()">
+                <i class="bi bi-download me-2"></i>Exporter Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Période et filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="date_debut" class="form-label">Date début</label>
+                    <input type="date" name="date_debut" id="date_debut" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_fin" class="form-label">Date fin</label>
+                    <input type="date" name="date_fin" id="date_fin" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="compte" class="form-label">Compte</label>
+                    <select name="compte" id="compte" class="form-select">
+                        <option value="">Tous les comptes</option>
+                        {% for compte_num in comptes_data.keys %}
+                            <option value="{{ compte_num }}">{{ compte_num }} - {{ comptes_data|lookup:compte_num.compte.intitule }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-search me-2"></i>Filtrer
+                    </button>
+                    <a href="{% url 'comptabilite:grand_livre' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Résumé général -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_general_debit|floatformat:0 }}</h4>
+                            <p class="mb-0">Total Débit</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-arrow-up-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_general_credit|floatformat:0 }}</h4>
+                            <p class="mb-0">Total Crédit</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-arrow-down-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ comptes_data|length }}</h4>
+                            <p class="mb-0">Comptes utilisés</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-journal-text fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grand Livre -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Détail des écritures par compte</h5>
+        </div>
+        <div class="card-body">
+            {% if comptes_data %}
+                {% for compte_num, data in comptes_data.items %}
+                    <div class="mb-4">
+                        <!-- En-tête du compte -->
+                        <div class="table-responsive mb-2">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th colspan="6">
+                                            <strong>Compte: {{ compte_num }} - {{ data.compte.intitule }}</strong>
+                                            <span class="float-end">
+                                                Solde: 
+                                                {% if data.solde > 0 %}
+                                                    <span class="text-danger">{{ data.solde|floatformat:0 }} GNF (Débiteur)</span>
+                                                {% elif data.solde < 0 %}
+                                                    <span class="text-success">{{ data.solde|floatformat:0 }} GNF (Créditeur)</span>
+                                                {% else %}
+                                                    <span class="text-muted">{{ data.solde|floatformat:0 }} GNF (Nul)</span>
+                                                {% endif %}
+                                            </span>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>N° Écriture</th>
+                                        <th>Libellé</th>
+                                        <th class="text-end">Débit</th>
+                                        <th class="text-end">Crédit</th>
+                                        <th class="text-end">Solde</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set current_solde = 0 %}
+                                    {% for ligne in data.lignes %}
+                                        <tr>
+                                            <td>{{ ligne.ecriture.date_ecriture|date:"d/m/Y" }}</td>
+                                            <td>{{ ligne.ecriture.numero_ecriture }}</td>
+                                            <td>{{ ligne.libelle|default:ligne.ecriture.libelle }}</td>
+                                            <td class="text-end">
+                                                {% if ligne.montant_debit %}
+                                                    {{ ligne.montant_debit|floatformat:0 }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                {% if ligne.montant_credit %}
+                                                    {{ ligne.montant_credit|floatformat:0 }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                {% set current_solde = current_solde + (ligne.montant_debit or 0) - (ligne.montant_credit or 0) %}
+                                                {% if current_solde > 0 %}
+                                                    <span class="text-danger">{{ current_solde|floatformat:0 }}</span>
+                                                {% elif current_solde < 0 %}
+                                                    <span class="text-success">{{ current_solde|floatformat:0 }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">{{ current_solde|floatformat:0 }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="3">Totaux du compte</th>
+                                        <th class="text-end">{{ data.total_debit|floatformat:0 }}</th>
+                                        <th class="text-end">{{ data.total_credit|floatformat:0 }}</th>
+                                        <th class="text-end">
+                                            {% if data.solde > 0 %}
+                                                <span class="text-danger">{{ data.solde|floatformat:0 }}</span>
+                                            {% elif data.solde < 0 %}
+                                                <span class="text-success">{{ data.solde|floatformat:0 }}</span>
+                                            {% else %}
+                                                <span class="text-muted">{{ data.solde|floatformat:0 }}</span>
+                                            {% endif %}
+                                        </th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if not forloop.last %}
+                        <hr class="my-4">
+                    {% endif %}
+                {% endfor %}
+                
+                <!-- Totaux généraux -->
+                <div class="mt-4 pt-4 border-top">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <h5 class="text-primary mb-1">{{ total_general_debit|floatformat:0 }} GNF</h5>
+                                    <p class="mb-0 text-muted">Total Général Débit</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <h5 class="text-success mb-1">{{ total_general_credit|floatformat:0 }} GNF</h5>
+                                    <p class="mb-0 text-muted">Total Général Crédit</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <h5 class="text-info mb-1">
+                                        {% set ecart = total_general_debit - total_general_credit %}
+                                        {% if ecart > 0 %}
+                                            <span class="text-danger">{{ ecart|floatformat:0 }}</span>
+                                        {% elif ecart < 0 %}
+                                            <span class="text-success">{{ ecart|floatformat:0 }}</span>
+                                        {% else %}
+                                            <span class="text-muted">{{ ecart|floatformat:0 }}</span>
+                                        {% endif %}
+                                        GNF
+                                    </h5>
+                                    <p class="mb-0 text-muted">Écart</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-journal-text fs-1 text-muted"></i>
+                    <h5 class="mt-3 text-muted">Aucune écriture trouvée</h5>
+                    <p class="text-muted">Aucune écriture comptable n'a été enregistrée pour la période sélectionnée.</p>
+                    <a href="{% url 'comptabilite:ecriture_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Créer une écriture
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Ajouter la classe 'table' aux tableaux pour DataTables
+    $('.table').each(function() {
+        if (!$(this).hasClass('dataTable')) {
+            $(this).addClass('dataTable');
+        }
+    });
+});
+
+function exportExcel() {
+    // Logique d'exportation Excel
+    window.print();
+}
+</script>
+{% endblock %}

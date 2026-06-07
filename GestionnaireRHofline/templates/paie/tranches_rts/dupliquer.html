@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Dupliquer barème RTS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-copy me-2"></i>Dupliquer le barème RTS</h2>
+        <a href="{% url 'paie:liste_tranches_rts' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Année source</label>
+                            <select name="annee_source" class="form-select">
+                                {% for a in annees_dispo %}
+                                <option value="{{ a }}">{{ a }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Année cible</label>
+                            <input type="number" name="annee_cible" class="form-control" value="{{ annee_suivante }}">
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Les tranches existantes pour l'année cible seront remplacées.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-copy me-1"></i>Dupliquer
+                            </button>
+                            <a href="{% url 'paie:liste_tranches_rts' %}" class="btn btn-outline-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,357 @@
+================================================================================
+🚀 DÉMARRAGE RAPIDE - Gestionnaire RH Guinée
+================================================================================
+
+📋 PRÉREQUIS
+------------
+✅ Python 3.10+ installé
+✅ PostgreSQL 14+ installé
+✅ Git installé (optionnel)
+
+================================================================================
+⚡ INSTALLATION EN 8 ÉTAPES (15 minutes)
+================================================================================
+
+ÉTAPE 1 : Ouvrir PowerShell
+----------------------------
+Windows + R → tapez "powershell" → Entrée
+
+ÉTAPE 2 : Aller dans le dossier du projet
+------------------------------------------
+cd C:\Users\LENO\Desktop\GestionnaireRH
+
+ÉTAPE 3 : Créer l'environnement virtuel
+----------------------------------------
+python -m venv venv
+
+ÉTAPE 4 : Activer l'environnement virtuel
+------------------------------------------
+.\venv\Scripts\activate
+
+Vous devriez voir (venv) au début de la ligne
+
+ÉTAPE 5 : Installer les dépendances
+------------------------------------
+pip install -r requirements.txt
+
+⏱️ Temps : ~2-3 minutes
+
+ÉTAPE 6 : Créer la base de données
+-----------------------------------
+cd database
+.\install_database.bat
+
+Suivre les instructions à l'écran
+Mot de passe PostgreSQL par défaut : postgres
+
+⏱️ Temps : ~1 minute
+
+ÉTAPE 7 : Appliquer les migrations Django
+------------------------------------------
+cd ..
+python manage.py migrate
+
+ÉTAPE 8 : Créer un compte administrateur
+-----------------------------------------
+python manage.py createsuperuser
+
+Remplir :
+- Username: admin
+- Email: admin@example.com
+- Password: (votre mot de passe sécurisé)
+- Password (again): (répéter le mot de passe)
+
+================================================================================
+🎯 LANCER L'APPLICATION
+================================================================================
+
+1. Activer l'environnement (si pas déjà fait)
+   .\venv\Scripts\activate
+
+2. Lancer le serveur
+   python manage.py runserver
+
+3. Ouvrir le navigateur
+   http://localhost:8000
+
+4. Se connecter
+   Username: admin
+   Password: (celui créé à l'étape 8)
+
+================================================================================
+✅ VÉRIFICATION - Tout fonctionne ?
+================================================================================
+
+Vous devriez voir :
+✅ Page de connexion moderne avec drapeau guinéen
+✅ Après connexion : Dashboard avec statistiques
+✅ Menu latéral avec tous les modules
+✅ Barre de navigation en haut
+
+Si vous voyez cela, BRAVO ! 🎉 L'installation est réussie !
+
+================================================================================
+🎨 PREMIÈRE UTILISATION
+================================================================================
+
+ÉTAPE 1 : Configurer la société
+--------------------------------
+1. Cliquer sur "Paramètres" dans le menu
+2. Remplir les informations de votre entreprise :
+   - Raison sociale
+   - NIF
+   - N° CNSS Employeur
+   - Adresse, téléphone, email
+
+ÉTAPE 2 : Créer un établissement
+---------------------------------
+1. Aller dans "Paramètres" > "Établissements"
+2. Cliquer "Nouvel établissement"
+3. Remplir :
+   - Code : SIEGE
+   - Nom : Siège social
+   - Type : Siège
+   - Adresse
+
+ÉTAPE 3 : Créer des services
+-----------------------------
+1. Aller dans "Paramètres" > "Services"
+2. Créer vos services :
+   - Direction Générale
+   - Ressources Humaines
+   - Comptabilité
+   - Commercial
+   - etc.
+
+ÉTAPE 4 : Créer des postes
+---------------------------
+1. Aller dans "Paramètres" > "Postes"
+2. Créer vos postes :
+   - Directeur Général
+   - Responsable RH
+   - Comptable
+   - Commercial
+   - etc.
+
+ÉTAPE 5 : Créer votre premier employé
+--------------------------------------
+1. Cliquer sur "Employés" dans le menu
+2. Cliquer "Nouvel employé"
+3. Remplir le formulaire (5 onglets) :
+   
+   📝 Onglet 1 - État civil :
+   - Civilité : M. / Mme / Mlle
+   - Nom : DIALLO
+   - Prénoms : Mamadou
+   - Sexe : Masculin
+   - Date de naissance : 01/01/1990
+   - Lieu de naissance : Conakry
+   
+   🆔 Onglet 2 - Identification :
+   - Type pièce : Carte d'identité
+   - N° pièce : 123456789
+   - N° CNSS : 1234567890
+   
+   📞 Onglet 3 - Contact :
+   - Téléphone : +224 XXX XXX XXX
+   - Email pro : mdiallo@entreprise.com
+   - Adresse : Conakry, Kaloum
+   
+   💼 Onglet 4 - Professionnel :
+   - Matricule : (laisser vide, sera généré auto)
+   - Établissement : Siège social
+   - Service : Ressources Humaines
+   - Poste : Responsable RH
+   - Date embauche : 01/01/2024
+   - Type contrat : CDI
+   
+   🏦 Onglet 5 - Bancaire :
+   - Mode paiement : Virement
+   - Banque : BICIGUI
+   - N° compte : 123456789
+
+4. Cliquer "Enregistrer"
+
+BRAVO ! 🎉 Votre premier employé est créé !
+
+================================================================================
+🔍 TESTER LES FONCTIONNALITÉS
+================================================================================
+
+✅ Rechercher un employé
+   - Aller dans "Employés"
+   - Taper "DIALLO" dans la recherche
+   - Cliquer "Rechercher"
+
+✅ Filtrer les employés
+   - Utiliser les filtres (statut, type contrat, service)
+   - Cliquer "Rechercher"
+
+✅ Voir la fiche d'un employé
+   - Cliquer sur le nom de l'employé
+   - Explorer les 5 onglets
+
+✅ Modifier un employé
+   - Sur la fiche, cliquer "Modifier"
+   - Changer des informations
+   - Cliquer "Enregistrer"
+
+✅ Exporter en Excel
+   - Dans la liste des employés
+   - Cliquer "Export Excel"
+   - Le fichier se télécharge automatiquement
+
+✅ Créer un contrat
+   - Sur la fiche employé
+   - Onglet "Contrats"
+   - Cliquer "Nouveau contrat"
+   - Remplir et enregistrer
+
+✅ Modifier votre profil
+   - Cliquer sur votre nom en haut à droite
+   - Sélectionner "Mon profil"
+   - Cliquer "Modifier mes informations"
+
+================================================================================
+📊 EXPLORER LE DASHBOARD
+================================================================================
+
+Le Dashboard affiche :
+✅ Effectif total (hommes/femmes)
+✅ Masse salariale du mois
+✅ Congés en cours
+✅ Bulletins de paie validés
+✅ Alertes (contrats à échéance, congés en attente)
+✅ Graphique répartition par type de contrat
+✅ Liste des employés en congé
+✅ Accès rapides
+
+================================================================================
+🛠️ COMMANDES UTILES
+================================================================================
+
+Lancer le serveur :
+   python manage.py runserver
+
+Arrêter le serveur :
+   Ctrl + C
+
+Créer un backup de la BDD :
+   cd database
+   .\backup_database.bat
+
+Voir les logs :
+   Les logs s'affichent dans la console où le serveur tourne
+
+Accéder à l'admin Django :
+   http://localhost:8000/admin
+   (même login que l'application)
+
+================================================================================
+❓ PROBLÈMES COURANTS
+================================================================================
+
+PROBLÈME : "Module not found"
+SOLUTION : pip install -r requirements.txt
+
+PROBLÈME : "Connection refused" (PostgreSQL)
+SOLUTION : Vérifier que PostgreSQL est démarré
+   Services Windows > PostgreSQL > Démarrer
+
+PROBLÈME : "Port already in use"
+SOLUTION : Changer de port
+   python manage.py runserver 8080
+
+PROBLÈME : Page blanche / erreur 500
+SOLUTION : Vérifier les logs dans la console
+
+PROBLÈME : Fichiers statiques non chargés
+SOLUTION : python manage.py collectstatic
+
+================================================================================
+📚 DOCUMENTATION COMPLÈTE
+================================================================================
+
+Pour aller plus loin, consultez :
+
+📖 README.md
+   Vue d'ensemble du projet
+
+📘 GUIDE_INSTALLATION.md
+   Installation détaillée
+
+📗 GUIDE_UTILISATEUR.md
+   Manuel utilisateur complet
+
+📙 QUICK_START_COMMANDS.md
+   Toutes les commandes disponibles
+
+📕 NEXT_STEPS.md
+   Prochaines fonctionnalités à développer
+
+📓 STATUS_ACTUEL.txt
+   État actuel du projet (40% complété)
+
+================================================================================
+🎯 MODULES DISPONIBLES
+================================================================================
+
+✅ CORE (100%)
+   - Authentification
+   - Gestion profil
+   - Logs d'activité
+
+✅ DASHBOARD (100%)
+   - Statistiques temps réel
+   - Graphiques
+   - Alertes
+
+✅ EMPLOYÉS (100%)
+   - CRUD complet
+   - Recherche/filtres
+   - Export Excel
+   - Gestion contrats
+
+🚧 TEMPS DE TRAVAIL (0%)
+   - Pointages (à venir)
+   - Congés (à venir)
+
+🚧 PAIE (0%)
+   - Calcul bulletins (à venir)
+   - Livre de paie (à venir)
+   - Déclarations (à venir)
+
+🚧 AUTRES MODULES (0%)
+   - Prêts
+   - Recrutement
+   - Formation
+
+================================================================================
+📞 SUPPORT
+================================================================================
+
+Email : dev@votre-entreprise.com
+Téléphone : +224 XXX XXX XXX
+
+Documentation : docs/
+Bugs : Créer un ticket GitHub
+
+================================================================================
+🎉 FÉLICITATIONS !
+================================================================================
+
+Vous êtes maintenant prêt à utiliser le Gestionnaire RH Guinée !
+
+Prochaines étapes :
+1. ✅ Créer vos employés
+2. ✅ Explorer les fonctionnalités
+3. ⏳ Attendre les prochains modules (Temps, Paie)
+
+Bon travail ! 🚀
+
+================================================================================
+
+Dernière mise à jour : 19 octobre 2025
+Version : 1.0 (40% complété)
+
+================================================================================

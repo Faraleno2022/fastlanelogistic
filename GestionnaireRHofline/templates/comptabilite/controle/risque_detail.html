@@ -1,0 +1,205 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Risque {{ risque.reference }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-shield-exclamation text-primary"></i> {{ risque.reference }}
+            </h1>
+            <p class="text-muted mb-0">{{ risque.titre }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:controle_risque_update' risque.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:controle_risques' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Référence</dt>
+                        <dd class="col-sm-8">{{ risque.reference }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Titre</dt>
+                        <dd class="col-sm-8">{{ risque.titre }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Catégorie</dt>
+                        <dd class="col-sm-8">{{ risque.get_categorie_display }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Description</dt>
+                        <dd class="col-sm-8">{{ risque.description|linebreaks }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Processus</dt>
+                        <dd class="col-sm-8">{{ risque.processus }}{% if risque.sous_processus %} / {{ risque.sous_processus }}{% endif %}</dd>
+
+                        <dt class="col-sm-4 text-muted">Propriétaire</dt>
+                        <dd class="col-sm-8">{{ risque.proprietaire|default:"-" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Statut</dt>
+                        <dd class="col-sm-8">
+                            {% if risque.statut == 'identifie' %}
+                            <span class="badge bg-secondary">Identifié</span>
+                            {% elif risque.statut == 'evalue' %}
+                            <span class="badge bg-info">Évalué</span>
+                            {% elif risque.statut == 'traite' %}
+                            <span class="badge bg-primary">Traité</span>
+                            {% elif risque.statut == 'accepte' %}
+                            <span class="badge bg-warning text-dark">Accepté</span>
+                            {% elif risque.statut == 'cloture' %}
+                            <span class="badge bg-dark">Clôturé</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0">Risque inhérent</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <p class="text-muted small mb-1">Impact</p>
+                                    <p class="h4 mb-0">{{ risque.impact_inherent }}</p>
+                                </div>
+                                <div class="col-4">
+                                    <p class="text-muted small mb-1">Probabilité</p>
+                                    <p class="h4 mb-0">{{ risque.probabilite_inherente }}</p>
+                                </div>
+                                <div class="col-4">
+                                    <p class="text-muted small mb-1">Score</p>
+                                    {% if risque.score_inherent >= 15 %}
+                                    <p class="h4 mb-0 text-danger">{{ risque.score_inherent }}</p>
+                                    {% elif risque.score_inherent >= 8 %}
+                                    <p class="h4 mb-0 text-warning">{{ risque.score_inherent }}</p>
+                                    {% else %}
+                                    <p class="h4 mb-0 text-success">{{ risque.score_inherent }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0">Risque résiduel</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if risque.impact_residuel and risque.probabilite_residuelle %}
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <p class="text-muted small mb-1">Impact</p>
+                                    <p class="h4 mb-0">{{ risque.impact_residuel }}</p>
+                                </div>
+                                <div class="col-4">
+                                    <p class="text-muted small mb-1">Probabilité</p>
+                                    <p class="h4 mb-0">{{ risque.probabilite_residuelle }}</p>
+                                </div>
+                                <div class="col-4">
+                                    <p class="text-muted small mb-1">Score</p>
+                                    {% if risque.score_residuel >= 15 %}
+                                    <p class="h4 mb-0 text-danger">{{ risque.score_residuel }}</p>
+                                    {% elif risque.score_residuel >= 8 %}
+                                    <p class="h4 mb-0 text-warning">{{ risque.score_residuel }}</p>
+                                    {% else %}
+                                    <p class="h4 mb-0 text-success">{{ risque.score_residuel }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <p class="text-muted mb-0 text-center">Non évalué</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if risque.strategie_traitement %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Plan de traitement</h5>
+                </div>
+                <div class="card-body">
+                    {{ risque.strategie_traitement|linebreaks }}
+                    {% if risque.date_revue %}
+                    <p class="text-muted small mb-0 mt-3">
+                        <i class="bi bi-calendar"></i> Prochaine revue : {{ risque.date_revue|date:"d/m/Y" }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Métadonnées</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Créé par : {{ risque.cree_par|default:"-" }}</p>
+                    <p class="mb-1">Créé le : {{ risque.date_creation|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-0">Modifié le : {{ risque.date_modification|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-clipboard-check"></i> Procédures liées</h6>
+                </div>
+                <div class="card-body">
+                    {% if risque.procedures.exists %}
+                    <ul class="list-unstyled mb-0">
+                        {% for proc in risque.procedures.all %}
+                        <li class="mb-2">
+                            <a href="{% url 'comptabilite:controle_procedure_detail' proc.pk %}">{{ proc.code }}</a>
+                            <small class="text-muted d-block">{{ proc.titre|truncatechars:30 }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">Aucune procédure liée.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Non-conformités</h6>
+                </div>
+                <div class="card-body">
+                    {% if risque.non_conformites.exists %}
+                    <ul class="list-unstyled mb-0">
+                        {% for nc in risque.non_conformites.all|slice:":5" %}
+                        <li class="mb-2">
+                            <a href="{% url 'comptabilite:controle_non_conformite_detail' nc.pk %}">{{ nc.reference }}</a>
+                            <small class="text-muted d-block">{{ nc.titre|truncatechars:30 }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">Aucune non-conformité liée.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

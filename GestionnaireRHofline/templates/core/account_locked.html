@@ -1,0 +1,72 @@
+{% extends 'base_auth.html' %}
+{% load static %}
+
+{% block title %}Compte Bloqué - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-lock fa-4x text-danger mb-3"></i>
+                    <h2 class="h3 mb-3 font-weight-bold text-danger">Compte Temporairement Bloqué</h2>
+                </div>
+
+                <div class="alert alert-danger" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle"></i> Accès Refusé
+                    </h5>
+                    <hr>
+                    <p class="mb-0">
+                        Votre compte a été temporairement bloqué en raison de plusieurs tentatives de connexion infructueuses.
+                    </p>
+                </div>
+
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="font-weight-bold mb-3">
+                            <i class="fas fa-info-circle text-primary"></i> Informations importantes :
+                        </h6>
+                        <ul class="mb-0">
+                            <li>Votre compte sera automatiquement débloqué dans <strong>1 heure</strong></li>
+                            <li>Cette mesure de sécurité protège votre compte contre les accès non autorisés</li>
+                            <li>Si vous avez oublié votre mot de passe, contactez l'administrateur</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card border-warning">
+                    <div class="card-body">
+                        <h6 class="font-weight-bold text-warning mb-3">
+                            <i class="fas fa-shield-alt"></i> Besoin d'aide ?
+                        </h6>
+                        <p class="mb-2">
+                            Si vous pensez que ce blocage est une erreur ou si vous avez besoin d'un déblocage immédiat, 
+                            veuillez contacter l'administrateur système.
+                        </p>
+                        <p class="mb-0 small text-muted">
+                            <i class="fas fa-envelope"></i> Email : support@votreentreprise.com<br>
+                            <i class="fas fa-phone"></i> Téléphone : +224 XXX XX XX XX
+                        </p>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="{% url 'core:login' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> Retour à la page de connexion
+                    </a>
+                </div>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-clock"></i> 
+                        Tentative de connexion bloquée le {{ request.META.HTTP_DATE|default:"maintenant" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

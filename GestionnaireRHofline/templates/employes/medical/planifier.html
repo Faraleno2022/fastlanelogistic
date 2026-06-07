@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Planifier Visite Médicale{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:liste_visites_medicales' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-calendar-plus me-2"></i>Planifier une Visite Médicale</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employe" class="form-label">Employé *</label>
+                                <select class="form-select" id="employe" name="employe" required>
+                                    <option value="">Sélectionner</option>
+                                    {% for emp in employes %}
+                                    <option value="{{ emp.id }}">{{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="type_visite" class="form-label">Type de visite *</label>
+                                <select class="form-select" id="type_visite" name="type_visite" required>
+                                    <option value="">Sélectionner</option>
+                                    {% for code, libelle in types_visite %}
+                                    <option value="{{ code }}">{{ libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="date_visite" class="form-label">Date de la visite *</label>
+                            <input type="date" class="form-control" id="date_visite" name="date_visite" required>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="medecin" class="form-label">Médecin</label>
+                                <input type="text" class="form-control" id="medecin" name="medecin"
+                                       placeholder="Nom du médecin">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="centre_medical" class="form-label">Centre médical</label>
+                                <input type="text" class="form-control" id="centre_medical" name="centre_medical"
+                                       placeholder="Nom du centre ou cabinet">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'employes:liste_visites_medicales' %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-calendar-check me-2"></i>Planifier
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Types de visites</h6>
+                </div>
+                <div class="card-body small">
+                    <ul class="mb-0">
+                        <li><strong>Embauche:</strong> Avant la prise de poste</li>
+                        <li><strong>Périodique:</strong> Visite annuelle obligatoire</li>
+                        <li><strong>Reprise:</strong> Après arrêt maladie > 30 jours</li>
+                        <li><strong>Pré-reprise:</strong> Pendant un arrêt prolongé</li>
+                        <li><strong>À la demande:</strong> Sur demande employé/employeur</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

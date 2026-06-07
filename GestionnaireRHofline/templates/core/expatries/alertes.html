@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Alertes expatriés{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-bell"></i> Alertes - Documents expirant</h1>
+    <a href="{% url 'core:expatries_liste' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        {% if alertes %}
+        <table class="table">
+            <thead><tr><th>Expatrié</th><th>Document</th><th>Expiration</th><th>Jours restants</th><th></th></tr></thead>
+            <tbody>
+            {% for a in alertes %}
+            <tr class="table-{{ a.urgence }}">
+                <td>{{ a.permis.expatrie.employe.nom_complet }}</td>
+                <td>{{ a.permis.get_type_document_display }}</td>
+                <td>{{ a.permis.date_expiration|date:"d/m/Y" }}</td>
+                <td><strong>{{ a.jours_restants }} jours</strong></td>
+                <td><a href="{% url 'core:expatrie_detail' a.permis.expatrie.id %}" class="btn btn-sm btn-outline-primary">Voir</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="alert alert-success mb-0"><i class="bi bi-check-circle"></i> Aucun document expirant dans les 90 prochains jours</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

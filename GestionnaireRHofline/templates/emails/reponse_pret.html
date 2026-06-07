@@ -1,0 +1,56 @@
+{% extends 'emails/base_email.html' %}
+{% load humanize %}
+
+{% block title %}Réponse demande de prêt{% endblock %}
+{% block header %}Demande de Prêt{% endblock %}
+
+{% block content %}
+<p>Bonjour {{ employe.prenoms }},</p>
+
+{% if approuve %}
+<div class="success-box">
+    <strong>Bonne nouvelle !</strong><br>
+    Votre demande de prêt a été <strong>approuvée</strong>.
+</div>
+{% else %}
+<div class="danger-box">
+    <strong>Information</strong><br>
+    Votre demande de prêt a été <strong>refusée</strong>.
+</div>
+{% endif %}
+
+<table>
+    <tr>
+        <th>Type de prêt</th>
+        <td>{{ pret.get_type_pret_display }}</td>
+    </tr>
+    <tr>
+        <th>Montant</th>
+        <td>{{ pret.montant_pret|floatformat:0 }} GNF</td>
+    </tr>
+    <tr>
+        <th>Nombre d'échéances</th>
+        <td>{{ pret.nombre_echeances }} mois</td>
+    </tr>
+    {% if approuve %}
+    <tr>
+        <th>Mensualité</th>
+        <td>{{ pret.montant_echeance|floatformat:0 }} GNF</td>
+    </tr>
+    <tr>
+        <th>Début remboursement</th>
+        <td>{{ pret.date_debut_remboursement|date:"d/m/Y" }}</td>
+    </tr>
+    {% endif %}
+</table>
+
+{% if approuve %}
+<p>Le remboursement sera prélevé automatiquement sur votre salaire à partir de la date indiquée.</p>
+{% else %}
+<p>Pour plus d'informations, veuillez contacter le service RH.</p>
+{% endif %}
+
+<p style="text-align: center;">
+    <a href="#" class="btn">Accéder à mon espace</a>
+</p>
+{% endblock %}

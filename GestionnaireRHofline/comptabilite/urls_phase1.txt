@@ -1,0 +1,33 @@
+"""
+Intégration des nouvelles URLs pour le module comptabilité Phase 1.
+
+À ajouter à comptabilite/urls.py après les imports existants.
+"""
+
+# À ajouter dans comptabilite/urls.py:
+
+# ========== RAPPROCHEMENTS BANCAIRES (Phase 1) ==========
+
+# Comptes bancaires
+# path('comptes/', views.CompteBancaireListView.as_view(), name='compte-list'),
+# path('comptes/<int:pk>/', views.CompteBancaireDetailView.as_view(), name='compte-detail'),
+# path('comptes/create/', views.CompteBancaireCreateView.as_view(), name='compte-create'),
+# path('comptes/<int:pk>/update/', views.CompteBancaireUpdateView.as_view(), name='compte-update'),
+# path('comptes/<int:pk>/delete/', views.CompteBancaireDeleteView.as_view(), name='compte-delete'),
+
+# Rapprochements
+# path('rapprochements/', views.RapprochementListView.as_view(), name='rapprochement-list'),
+# path('rapprochements/<int:pk>/', views.RapprochementDetailView.as_view(), name='rapprochement-detail'),
+# path('rapprochements/create/', views.RapprochementCreateView.as_view(), name='rapprochement-create'),
+# path('rapprochements/<int:pk>/update/', views.RapprochementUpdateView.as_view(), name='rapprochement-update'),
+# path('rapprochements/<int:pk>/delete/', views.RapprochementDeleteView.as_view(), name='rapprochement-delete'),
+
+# Import opérations
+# path('import/', views.OperationImportView.as_view(), name='import-operations'),
+
+# AJAX endpoints
+# path('ajax/lettrage/', views.LettrageView.as_view(), name='ajax-lettrage'),
+# path('ajax/lettrage-annuler/', views.LettrageAnnulationView.as_view(), name='ajax-lettrage-annuler'),
+# path('ajax/finaliser/', views.RapprochementFinalisationView.as_view(), name='ajax-finaliser'),
+
+print("Rapprochements bancaires URLs disponibles pour intégration")

@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Réclamation {{ reclamation.reference }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:liste_reclamations' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-comments me-2"></i>{{ reclamation.reference }}
+                    {% if reclamation.confidentiel %}
+                    <i class="fas fa-lock text-warning ms-2" title="Confidentiel"></i>
+                    {% endif %}
+                </h2>
+                <div>
+                    {% if reclamation.statut == 'ouverte' %}
+                    <a href="{% url 'employes:prendre_en_charge' reclamation.pk %}" class="btn btn-success">
+                        <i class="fas fa-hand-paper me-1"></i>Prendre en charge
+                    </a>
+                    {% endif %}
+                    {% if reclamation.statut in 'ouverte,en_cours,en_attente' %}
+                    <a href="{% url 'employes:resoudre_reclamation' reclamation.pk %}" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>Résoudre
+                    </a>
+                    {% endif %}
+                    {% if reclamation.statut in 'resolue,rejetee' %}
+                    <a href="{% url 'employes:fermer_reclamation' reclamation.pk %}" class="btn btn-secondary"
+                       onclick="return confirm('Fermer cette réclamation ?')">
+                        <i class="fas fa-archive me-1"></i>Fermer
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Informations -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Détails de la réclamation</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-muted">Employé</td>
+                                    <td><strong>{{ reclamation.employe.nom }} {{ reclamation.employe.prenoms }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Matricule</td>
+                                    <td>{{ reclamation.employe.matricule }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Département</td>
+                                    <td>{{ reclamation.employe.service.nom_service|default:"-" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-muted">Catégorie</td>
+                                    <td><span class="badge bg-secondary">{{ reclamation.categorie.libelle }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Priorité</td>
+                                    <td>
+                                        {% if reclamation.priorite == 'urgente' %}
+                                        <span class="badge bg-danger">Urgente</span>
+                                        {% elif reclamation.priorite == 'haute' %}
+                                        <span class="badge bg-warning">Haute</span>
+                                        {% elif reclamation.priorite == 'normale' %}
+                                        <span class="badge bg-info">Normale</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Basse</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Date ouverture</td>
+                                    <td>{{ reclamation.date_ouverture|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h6><strong>Objet:</strong> {{ reclamation.objet }}</h6>
+                    <div class="bg-light p-3 rounded mt-3">
+                        {{ reclamation.description|linebreaks }}
+                    </div>
+                    
+                    {% if reclamation.pieces_jointes %}
+                    <div class="mt-3">
+                        <a href="{{ reclamation.pieces_jointes.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-paperclip me-1"></i>Pièce jointe
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Réponse/Résolution -->
+            {% if reclamation.reponse %}
+            <div class="card shadow-sm mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Résolution</h6>
+                </div>
+                <div class="card-body">
+                    {{ reclamation.reponse|linebreaks }}
+                    <small class="text-muted">Résolu le {{ reclamation.date_resolution|date:"d/m/Y H:i" }}</small>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if reclamation.motif_rejet %}
+            <div class="card shadow-sm mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0"><i class="fas fa-times-circle me-2"></i>Motif de rejet</h6>
+                </div>
+                <div class="card-body">
+                    {{ reclamation.motif_rejet|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Commentaires -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%); d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-comments me-2"></i>Suivi / Commentaires</h6>
+                </div>
+                <div class="card-body">
+                    {% for com in commentaires %}
+                    <div class="border-start border-3 {% if com.interne %}border-warning{% else %}border-primary{% endif %} ps-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ com.auteur.nom|default:"Système" }} {{ com.auteur.prenoms|default:"" }}</strong>
+                            <small class="text-muted">{{ com.date_creation|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        {% if com.interne %}
+                        <span class="badge bg-warning text-dark mb-1">Note interne</span>
+                        {% endif %}
+                        <p class="mb-1">{{ com.contenu }}</p>
+                        {% if com.piece_jointe %}
+                        <a href="{{ com.piece_jointe.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-paperclip"></i> Pièce jointe
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center mb-0">Aucun commentaire</p>
+                    {% endfor %}
+                    
+                    {% if reclamation.statut not in 'fermee' %}
+                    <hr>
+                    <form method="post" action="{% url 'employes:ajouter_commentaire' reclamation.pk %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <textarea class="form-control" name="contenu" rows="2" placeholder="Ajouter un commentaire..." required></textarea>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <input type="file" class="form-control form-control-sm d-inline-block w-auto" name="piece_jointe">
+                                <div class="form-check form-check-inline ms-2">
+                                    <input type="checkbox" class="form-check-input" id="interne" name="interne">
+                                    <label class="form-check-label small" for="interne">Note interne</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-paper-plane me-1"></i>Envoyer
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Satisfaction -->
+            {% if reclamation.statut == 'resolue' and not reclamation.satisfaction %}
+            <div class="card shadow-sm border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-star me-2"></i>Évaluer la résolution</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'employes:noter_satisfaction' reclamation.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Votre niveau de satisfaction</label>
+                            <div class="btn-group w-100" role="group">
+                                {% for i in "12345" %}
+                                <input type="radio" class="btn-check" name="satisfaction" id="sat{{ i }}" value="{{ i }}" required>
+                                <label class="btn btn-outline-warning" for="sat{{ i }}">{{ i }} <i class="fas fa-star"></i></label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" name="commentaire_satisfaction" rows="2" 
+                                      placeholder="Commentaire (optionnel)"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-info">
+                            <i class="fas fa-check me-1"></i>Soumettre
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% elif reclamation.satisfaction %}
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-star me-2"></i>Satisfaction</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% for i in "12345" %}
+                    <i class="fas fa-star {% if forloop.counter <= reclamation.satisfaction %}text-warning{% else %}text-muted{% endif %} fa-2x"></i>
+                    {% endfor %}
+                    {% if reclamation.commentaire_satisfaction %}
+                    <p class="mt-2 mb-0">{{ reclamation.commentaire_satisfaction }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Statut -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Statut</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if reclamation.statut == 'ouverte' %}
+                    <span class="badge bg-danger fs-5 px-4 py-2">Ouverte</span>
+                    {% elif reclamation.statut == 'en_cours' %}
+                    <span class="badge bg-warning fs-5 px-4 py-2">En cours</span>
+                    {% elif reclamation.statut == 'en_attente' %}
+                    <span class="badge bg-info fs-5 px-4 py-2">En attente</span>
+                    {% elif reclamation.statut == 'resolue' %}
+                    <span class="badge bg-success fs-5 px-4 py-2">Résolue</span>
+                    {% elif reclamation.statut == 'rejetee' %}
+                    <span class="badge bg-dark fs-5 px-4 py-2">Rejetée</span>
+                    {% else %}
+                    <span class="badge bg-secondary fs-5 px-4 py-2">Fermée</span>
+                    {% endif %}
+                    
+                    {% if reclamation.delai_depasse %}
+                    <div class="alert alert-danger mt-3 mb-0">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Délai dépassé
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Responsable -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-user-tie me-2"></i>Responsable</h6>
+                </div>
+                <div class="card-body">
+                    {% if reclamation.responsable %}
+                    <p class="mb-0"><strong>{{ reclamation.responsable.nom }} {{ reclamation.responsable.prenoms }}</strong></p>
+                    {% else %}
+                    <p class="text-muted mb-2">Non assigné</p>
+                    {% endif %}
+                    
+                    {% if reclamation.statut not in 'fermee,resolue,rejetee' %}
+                    <form method="post" action="{% url 'employes:assigner_reclamation' reclamation.pk %}" class="mt-2">
+                        {% csrf_token %}
+                        <div class="input-group input-group-sm">
+                            <select class="form-select" name="responsable" required>
+                                <option value="">Assigner à...</option>
+                                {% for r in responsables %}
+                                <option value="{{ r.id }}">{{ r.nom }} {{ r.prenoms }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Traçabilité -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-history me-2"></i>Traçabilité</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td class="text-muted">Ouverte</td>
+                            <td>{{ reclamation.date_ouverture|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% if reclamation.date_prise_en_charge %}
+                        <tr>
+                            <td class="text-muted">Prise en charge</td>
+                            <td>{{ reclamation.date_prise_en_charge|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if reclamation.date_resolution %}
+                        <tr>
+                            <td class="text-muted">Résolue</td>
+                            <td>{{ reclamation.date_resolution|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if reclamation.date_fermeture %}
+                        <tr>
+                            <td class="text-muted">Fermée</td>
+                            <td>{{ reclamation.date_fermeture|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td class="text-muted">Âge</td>
+                            <td><strong>{{ reclamation.jours_ouverts }} jour(s)</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            {% if reclamation.statut in 'ouverte,en_cours,en_attente' %}
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'employes:rejeter_reclamation' reclamation.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <textarea class="form-control form-control-sm" name="motif_rejet" rows="2" 
+                                      placeholder="Motif de rejet..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-sm w-100"
+                                onclick="return confirm('Rejeter cette réclamation ?')">
+                            <i class="fas fa-times me-1"></i>Rejeter
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

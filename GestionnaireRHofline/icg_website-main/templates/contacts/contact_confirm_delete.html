@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-bg: #121212;
+        --secondary-bg: #1e1e1e;
+        --card-bg: #242424;
+        --accent-color: #ff6b00;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+    }
+
+    .delete-confirmation-container {
+        max-width: 600px;
+        margin: 3rem auto;
+        padding: 2rem;
+        background: var(--card-bg);
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        border-left: 4px solid #dc3545; /* Rouge pour l'alerte */
+        text-align: center;
+    }
+
+    .delete-title {
+        color: #dc3545;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .delete-message {
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    .delete-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.7rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 500;
+        transition: all 0.3s;
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    .btn-confirm {
+        background-color: #dc3545;
+        color: var(--text-primary);
+        border: 1px solid #dc3545;
+    }
+
+    .btn-confirm:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+
+    .btn-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+        border: 1px solid var(--text-secondary);
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-confirmation-container">
+    <h2 class="delete-title">Confirmer la suppression</h2>
+    <p class="delete-message">Êtes-vous sûr de vouloir supprimer le contact "{{ object.contact_name }}" ? Cette action est irréversible.</p>
+    <div class="delete-actions">
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-confirm">
+                <i class="fas fa-trash"></i> Confirmer la suppression
+            </button>
+        </form>
+        <a href="{{ contact_detail_url }}" class="btn btn-cancel">
+            <i class="fas fa-ban"></i> Annuler
+        </a>
+    </div>
+</div>
+{% endblock %}

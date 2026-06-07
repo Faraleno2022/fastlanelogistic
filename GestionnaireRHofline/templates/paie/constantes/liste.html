@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Constantes de paie{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-sliders me-2"></i>Constantes de paie</h2>
+        <a href="{% url 'paie:home' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Filtres par catégorie -->
+    <ul class="nav nav-pills mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if not categorie_active %}active{% endif %}"
+               href="{% url 'paie:liste_constantes' %}">Toutes</a>
+        </li>
+        {% for code, label in categories %}
+        <li class="nav-item">
+            <a class="nav-link {% if categorie_active == code %}active{% endif %}"
+               href="{% url 'paie:liste_constantes' %}?categorie={{ code }}">{{ label }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Code</th>
+                            <th>Libellé</th>
+                            <th>Catégorie</th>
+                            <th class="text-end">Valeur</th>
+                            <th>Unité</th>
+                            <th class="text-center">Actif</th>
+                            {% if peut_modifier %}
+                            <th class="text-center">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in constantes %}
+                        <tr>
+                            <td><code>{{ c.code }}</code></td>
+                            <td>{{ c.libelle }}</td>
+                            <td>
+                                <span class="badge bg-{% if c.categorie == 'cnss' %}primary{% elif c.categorie == 'irg' %}danger{% elif c.categorie == 'temps' %}info{% else %}secondary{% endif %}">
+                                    {{ c.get_categorie_display }}
+                                </span>
+                            </td>
+                            <td class="text-end fw-bold">{{ c.valeur|floatformat:2 }}</td>
+                            <td>{{ c.unite }}</td>
+                            <td class="text-center">
+                                {% if c.actif %}
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                <i class="bi bi-x-circle-fill text-danger"></i>
+                                {% endif %}
+                            </td>
+                            {% if peut_modifier %}
+                            <td class="text-center">
+                                <a href="{% url 'paie:modifier_constante' c.pk %}"
+                                   class="btn btn-sm btn-outline-primary" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                Aucune constante trouvée.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-3">
+        <i class="bi bi-info-circle me-1"></i>
+        Les constantes définissent les taux et plafonds utilisés par le moteur de paie.
+        Modifiez-les ici pour adapter le calcul sans toucher au code.
+    </div>
+</div>
+{% endblock %}

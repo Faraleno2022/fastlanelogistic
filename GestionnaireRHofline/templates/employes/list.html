@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des employés - Gestionnaire RH Guinée{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    .employee-photo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .badge-status {
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-people"></i> Employés
+        <span class="badge bg-primary">{{ total_employes }}</span>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'employes:create' %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-person-plus"></i> Nouvel employé
+            </a>
+            <a href="{% url 'employes:import_page' %}" class="btn btn-sm btn-warning">
+                <i class="bi bi-upload"></i> Import Excel
+            </a>
+            <a href="{% url 'employes:export_excel' %}" class="btn btn-sm btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total</div>
+                <div class="h5 mb-0 font-weight-bold">{{ total_employes }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-success shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Actifs</div>
+                <div class="h5 mb-0 font-weight-bold">{{ employes_actifs }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-funnel"></i> Filtres et recherche
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Rechercher</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Nom, prénom, matricule, N° CNSS...">
+            </div>
+            <div class="col-md-2">
+                <label for="statut" class="form-label">Statut</label>
+                <select class="form-select" id="statut" name="statut">
+                    <option value="">Tous</option>
+                    <option value="Actif" {% if statut_filter == 'Actif' %}selected{% endif %}>Actif</option>
+                    <option value="Suspendu" {% if statut_filter == 'Suspendu' %}selected{% endif %}>Suspendu</option>
+                    <option value="Démissionnaire" {% if statut_filter == 'Démissionnaire' %}selected{% endif %}>Démissionnaire</option>
+                    <option value="Licencié" {% if statut_filter == 'Licencié' %}selected{% endif %}>Licencié</option>
+                    <option value="Retraité" {% if statut_filter == 'Retraité' %}selected{% endif %}>Retraité</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="type_contrat" class="form-label">Type contrat</label>
+                <select class="form-select" id="type_contrat" name="type_contrat">
+                    <option value="">Tous</option>
+                    <option value="CDI" {% if type_contrat_filter == 'CDI' %}selected{% endif %}>CDI</option>
+                    <option value="CDD" {% if type_contrat_filter == 'CDD' %}selected{% endif %}>CDD</option>
+                    <option value="Stage" {% if type_contrat_filter == 'Stage' %}selected{% endif %}>Stage</option>
+                    <option value="Temporaire" {% if type_contrat_filter == 'Temporaire' %}selected{% endif %}>Temporaire</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="service" class="form-label">Service</label>
+                <select class="form-select" id="service" name="service">
+                    <option value="">Tous</option>
+                    {% for service in services %}
+                    <option value="{{ service.id }}" {% if service_filter == service.id|stringformat:"s" %}selected{% endif %}>
+                        {{ service.nom_service }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="sexe" class="form-label">Sexe</label>
+                <select class="form-select" id="sexe" name="sexe">
+                    <option value="">Tous</option>
+                    <option value="M" {% if sexe_filter == 'M' %}selected{% endif %}>Masculin</option>
+                    <option value="F" {% if sexe_filter == 'F' %}selected{% endif %}>Féminin</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Rechercher
+                </button>
+                <a href="{% url 'employes:list' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Réinitialiser
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table des employés -->
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-table"></i> Liste des employés ({{ page_obj.paginator.count }} résultat{{ page_obj.paginator.count|pluralize }})
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="employesTable">
+                <thead>
+                    <tr>
+                        <th>Photo</th>
+                        <th>Matricule</th>
+                        <th>Nom complet</th>
+                        <th>Sexe</th>
+                        <th>N° CNSS</th>
+                        <th>Service</th>
+                        <th>Poste</th>
+                        <th>Type contrat</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employe in employes %}
+                    <tr>
+                        <td>
+                            {% if employe.photo %}
+                            <img src="{{ employe.photo.url }}" alt="{{ employe.nom }}" class="employee-photo">
+                            {% else %}
+                            <div class="employee-photo bg-secondary d-flex align-items-center justify-content-center text-white">
+                                {{ employe.nom.0 }}{{ employe.prenoms.0 }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ employe.matricule }}</strong></td>
+                        <td>
+                            <a href="{% url 'employes:detail' employe.pk %}" class="text-decoration-none">
+                                {{ employe.civilite }} {{ employe.nom }} {{ employe.prenoms }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if employe.sexe == 'M' %}
+                            <i class="bi bi-gender-male text-primary"></i> M
+                            {% else %}
+                            <i class="bi bi-gender-female text-danger"></i> F
+                            {% endif %}
+                        </td>
+                        <td><small>{{ employe.num_cnss_individuel|default:"-" }}</small></td>
+                        <td>{{ employe.service.nom_service|default:"-" }}</td>
+                        <td>{{ employe.poste.intitule_poste|default:"-" }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ employe.type_contrat }}</span>
+                        </td>
+                        <td>
+                            {% if employe.statut_employe == 'Actif' %}
+                            <span class="badge bg-success badge-status">{{ employe.statut_employe }}</span>
+                            {% elif employe.statut_employe == 'Suspendu' %}
+                            <span class="badge bg-warning badge-status">{{ employe.statut_employe }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary badge-status">{{ employe.statut_employe }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'employes:detail' employe.pk %}" 
+                                   class="btn btn-outline-primary" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'employes:edit' employe.pk %}" 
+                                   class="btn btn-outline-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'employes:delete' employe.pk %}" 
+                                   class="btn btn-outline-danger" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center text-muted">
+                            <i class="bi bi-inbox"></i> Aucun employé trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(document).ready(function() {
+    // DataTables avec tri et recherche côté client (optionnel)
+    // $('#employesTable').DataTable({
+    //     "language": {
+    //         "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
+    //     },
+    //     "pageLength": 20,
+    //     "order": [[1, "asc"]]
+    // });
+});
+</script>
+{% endblock %}
+

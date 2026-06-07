@@ -1,0 +1,74 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Nouvelle Synchronisation{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-arrow-repeat text-primary"></i> Nouvelle Synchronisation Bancaire
+        </h1>
+        <a href="{% url 'comptabilite:synchronisation_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Compte bancaire *</label>
+                            <select name="compte_bancaire" class="form-select" required>
+                                <option value="">-- Sélectionner --</option>
+                                {% for compte in comptes %}
+                                <option value="{{ compte.pk }}">{{ compte }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Type de synchronisation *</label>
+                            <select name="type_synchronisation" class="form-select" required>
+                                <option value="import_releve">Import de relevé bancaire</option>
+                                <option value="api_bancaire">API bancaire</option>
+                                <option value="manuel">Saisie manuelle</option>
+                            </select>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Date début</label>
+                                <input type="date" name="date_debut" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date fin</label>
+                                <input type="date" name="date_fin" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Fichier de relevé (optionnel)</label>
+                            <input type="file" name="fichier_releve" class="form-control" accept=".csv,.xlsx,.xls,.ofx">
+                            <small class="text-muted">Formats acceptés : CSV, Excel, OFX</small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Créer la synchronisation
+                            </button>
+                            <a href="{% url 'comptabilite:synchronisation_list' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

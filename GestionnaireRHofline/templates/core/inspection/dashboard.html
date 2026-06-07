@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Conformité Inspection du Travail{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-clipboard-check"></i> Conformité Inspection du Travail</h1>
+    <div class="btn-group">
+        <a href="{% url 'core:checklist_conformite' %}" class="btn btn-primary btn-sm"><i class="bi bi-list-check"></i> Checklist</a>
+        <a href="{% url 'core:visite_ajouter' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-plus-lg"></i> Visite</a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center {% if score_conformite >= 80 %}border-success{% elif score_conformite >= 50 %}border-warning{% else %}border-danger{% endif %}">
+            <div class="card-body">
+                <h2 class="{% if score_conformite >= 80 %}text-success{% elif score_conformite >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ score_conformite }}%</h2>
+                <p class="mb-0">Score de conformité</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2>{{ registres_a_jour }}/{{ registres_total }}</h2>
+                <p class="mb-0">Registres conformes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2>{{ visites|length }}</h2>
+                <p class="mb-0">Visites récentes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <span><i class="bi bi-journal-text"></i> Registres obligatoires</span>
+                <a href="{% url 'core:registres_liste' %}" class="btn btn-sm btn-link">Gérer</a>
+            </div>
+            <div class="card-body">
+                {% for r in registres %}
+                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                    <span>{{ r.get_type_registre_display }}</span>
+                    <span class="badge bg-{% if r.conforme %}success{% else %}danger{% endif %}">
+                        {% if r.conforme %}Conforme{% else %}Non conforme{% endif %}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">Aucun registre configuré. <a href="{% url 'core:registre_ajouter' %}">Ajouter</a></p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <span><i class="bi bi-person-badge"></i> Dernières visites</span>
+                <a href="{% url 'core:visites_liste' %}" class="btn btn-sm btn-link">Tout voir</a>
+            </div>
+            <div class="card-body">
+                {% for v in visites %}
+                <div class="border-bottom py-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ v.date_visite|date:"d/m/Y" }}</strong>
+                        <span class="badge bg-{% if v.resultat == 'conforme' %}success{% elif v.resultat == 'pv_infraction' %}danger{% else %}warning{% endif %}">{{ v.get_resultat_display|default:"En cours" }}</span>
+                    </div>
+                    <small class="text-muted">{{ v.get_type_visite_display }} - {{ v.nom_inspecteur }}</small>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">Aucune visite enregistrée</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

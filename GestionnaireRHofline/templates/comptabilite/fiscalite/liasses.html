@@ -1,0 +1,125 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Liasses Fiscales{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-files text-primary"></i> Liasses fiscales
+            </h1>
+            <p class="text-muted mb-0">Générez et gérez vos liasses fiscales annuelles.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:fiscalite_liasse_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle liasse
+            </a>
+            <a href="{% url 'comptabilite:fiscalite_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <form method="get" class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous</option>
+                        {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Type de liasse</label>
+                    <select name="type" class="form-select">
+                        <option value="">Tous</option>
+                        {% for value, label in types_liasse %}
+                        <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'comptabilite:fiscalite_liasses' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if liasses %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Référence</th>
+                            <th>Type</th>
+                            <th>Année</th>
+                            <th>Dossier fiscal</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for liasse in liasses %}
+                        <tr>
+                            <td class="fw-semibold">{{ liasse.reference }}</td>
+                            <td>{{ liasse.get_type_liasse_display }}</td>
+                            <td>{{ liasse.annee }}</td>
+                            <td>
+                                {% if liasse.dossier_fiscal %}
+                                <a href="{% url 'comptabilite:fiscalite_dossier_detail' liasse.dossier_fiscal.pk %}">{{ liasse.dossier_fiscal.reference }}</a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if liasse.statut == 'en_cours' %}
+                                <span class="badge bg-secondary">En cours</span>
+                                {% elif liasse.statut == 'complete' %}
+                                <span class="badge bg-info">Complète</span>
+                                {% elif liasse.statut == 'validee' %}
+                                <span class="badge bg-primary">Validée</span>
+                                {% elif liasse.statut == 'deposee' %}
+                                <span class="badge bg-success">Déposée</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'comptabilite:fiscalite_liasse_detail' liasse.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'comptabilite:fiscalite_liasse_update' liasse.pk %}" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-files text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Aucune liasse fiscale trouvée</h5>
+                <p class="text-muted mb-3">Créez votre première liasse fiscale.</p>
+                <a href="{% url 'comptabilite:fiscalite_liasse_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nouvelle liasse
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

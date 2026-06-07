@@ -1,0 +1,112 @@
+/* Styles pour les listes déroulantes avec scrollbar et recherche */
+
+/* Classe pour les selects avec scrollbar */
+.scrollable-select,
+.searchable-select {
+    max-height: 350px;  /* ~15 lignes * 24px hauteur estimée */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Wrapper pour les listes avec recherche */
+.select-search-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+/* Champ de recherche */
+.select-search-input {
+    display: none;
+    padding: 8px 12px;
+    width: 100%;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem 0.25rem 0 0;
+    font-size: 0.875rem;
+    background-color: #f8f9fa;
+    margin-bottom: 4px;
+    box-sizing: border-box;
+}
+
+.select-search-input:focus {
+    outline: none;
+    background-color: #fff;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Afficher la recherche quand le parent a la classe show-search */
+.show-search .select-search-input {
+    display: block;
+}
+
+/* Select responsive */
+select.form-select {
+    background-size: 16px 12px;
+}
+
+select.form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Options cachées (non filtrées) */
+option.hidden-option {
+    display: none;
+}
+
+/* Hauteur personnalisée pour select avec data-max-lines */
+select[data-max-lines] {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+/* Style du conteneur de select avec scrollbar */
+.select-container {
+    position: relative;
+}
+
+/* Scrollbar personnalisée pour Firefox */
+select.scrollable-select::-webkit-scrollbar {
+    width: 8px;
+}
+
+select.scrollable-select::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+select.scrollable-select::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+select.scrollable-select::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Pour les listes déroulantes longues */
+.form-select[size] {
+    height: auto;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+/* Améliorations visuelles */
+.form-select option:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.form-select option:checked {
+    background: linear-gradient(#007bff, #007bff);
+    background-color: #007bff;
+}
+
+/* Support pour les appareils tactiles */
+@media (max-width: 768px) {
+    .scrollable-select,
+    .searchable-select {
+        max-height: 200px;
+    }
+}

@@ -1,0 +1,42 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Note {{ note.numero }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-file-text text-primary"></i> Note {{ note.numero }} - {{ note.titre }}
+        </h1>
+        <div>
+            <a href="{% url 'comptabilite:note_update' note.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:notes_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">{{ note.titre }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        <strong>Type :</strong> {{ note.type_note }} |
+                        <strong>Date :</strong> {{ note.date_creation|date:"d/m/Y" }}
+                    </p>
+                    <hr>
+                    <div class="note-content">
+                        {{ note.contenu|linebreaks }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

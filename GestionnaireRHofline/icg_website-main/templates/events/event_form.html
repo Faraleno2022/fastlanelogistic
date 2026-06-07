@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/events.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="hse-form-container">
+    <div class="hse-hero" style="background-image: url('{% static 'images/event-default.jpg' %}');">
+        <div class="hse-hero-content">
+            <h1>Création d'Événement <span class="hse-orange">RH/RSE/HSE</span></h1>
+            <p>Organisez des actions engageantes pour vos collaborateurs</p>
+        </div>
+    </div>
+
+    <div class="hse-form-wrapper">
+        <form method="post" enctype="multipart/form-data" class="hse-event-form">
+            {% csrf_token %}
+            
+            <div class="hse-form-section">
+                <h2><i class="fas fa-id-card hse-icon"></i> Identification</h2>
+                
+                <div class="hse-form-group">
+                    <label for="id_event_name">
+                        <i class="fas fa-tag hse-icon"></i> Intitulé <span class="hse-orange">*</span>
+                    </label>
+                    {{ form.event_name }} {# <-- Rendu par Django Form #}
+                    <p class="hse-field-hint">Ex: "Atelier RSE: Diversité & Inclusion"</p>
+                </div>
+
+                <div class="hse-form-row">
+                    <div class="hse-form-group hse-half">
+                        <label for="id_event_date">
+                            <i class="fas fa-calendar-day hse-icon"></i> Date <span class="hse-orange">*</span>
+                        </label>
+                        {{ form.event_date }} {# <-- NOUVEAU : Rendu par Django Form (qui inclut type="date" et min) #}
+                    </div>
+                    
+                    <div class="hse-form-group hse-half">
+                        <label for="id_event_address">
+                            <i class="fas fa-map-marker-alt hse-icon"></i> Lieu <span class="hse-orange">*</span>
+                        </label>
+                        {{ form.event_address }} {# <-- Rendu par Django Form #}
+                    </div>
+                </div>
+            </div>
+
+            <div class="hse-form-section">
+                <h2><i class="fas fa-clipboard-check hse-icon"></i> Contenu</h2>
+                
+                <div class="hse-form-group">
+                    <label for="id_event_description">
+                        <i class="fas fa-file-alt hse-icon"></i> Description <span class="hse-orange">*</span>
+                    </label>
+                    {{ form.event_description }} {# <-- Rendu par Django Form #}
+                    <div class="hse-char-counter"><span id="hse-char-count">0</span>/1500 caractères</div>
+                    
+                    <div class="hse-content-guide">
+                        <p><strong>Guide :</strong> Précisez :</p>
+                        <ul>
+                            <li>Objectifs RH/RSE/HSE</li>
+                            <li>Public cible (management, équipes, etc.)</li>
+                            <li>Référentiels concernés</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hse-form-section">
+                <h2><i class="fas fa-image hse-icon"></i> Visuel</h2>
+                
+                <div class="hse-file-upload">
+                    <div class="hse-preview-container">
+                        <img id="hse-preview" src="{% static 'images/hse-default.jpg' %}" alt="Aperçu">
+                    </div>
+                    <label class="hse-upload-label">
+                        <span class="hse-upload-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> Sélectionner une image
+                        </span>
+                        {{ form.event_picture }} {# <-- Rendu par Django Form #}
+                        <span class="hse-file-info">PNG/JPG - Max 2MB</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="hse-form-actions">
+                <button type="submit" class="hse-submit-btn">
+                    <i class="fas fa-check-circle"></i> Valider
+                </button>
+                <p class="hse-validation-note">
+                    <i class="fas fa-lock hse-icon"></i> Soumis à validation conforme
+                </p>
+            </div>
+        </form>
+    </div>
+
+    <div class="hse-domains">
+        <div class="hse-domain">
+            <i class="fas fa-users"></i>
+            <h3>RH Stratégiques</h3>
+        </div>
+        <div class="hse-domain">
+            <i class="fas fa-globe-americas"></i>
+            <h3>RSE</h3>
+        </div>
+        <div class="hse-domain">
+            <i class="fas fa-shield-alt"></i>
+            <h3>HSE</h3>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/events.js' %}"></script>
+{% endblock %}

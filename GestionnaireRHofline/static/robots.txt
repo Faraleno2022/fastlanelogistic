@@ -1,0 +1,27 @@
+# Robots.txt pour GuinéeRH
+# https://www.guineerh.space
+
+User-agent: *
+Allow: /
+Allow: /login/
+Allow: /inscription/
+
+# Pages protégées - Ne pas indexer
+Disallow: /admin/
+Disallow: /api/
+Disallow: /employes/
+Disallow: /paie/
+Disallow: /conges/
+Disallow: /core/
+Disallow: /comptabilite/
+Disallow: /static/admin/
+
+# Fichiers sensibles
+Disallow: /*.json$
+Disallow: /*?*
+
+# Sitemap
+Sitemap: https://www.guineerh.space/sitemap.xml
+
+# Délai entre les requêtes (en secondes)
+Crawl-delay: 1

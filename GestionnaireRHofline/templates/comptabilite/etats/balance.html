@@ -1,0 +1,90 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}Balance Générale{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-bar-chart me-2"></i>Balance Générale</h4>
+    <div>
+        <button class="btn btn-outline-primary" onclick="window.print()">
+            <i class="bi bi-printer me-2"></i>Imprimer
+        </button>
+        <button class="btn btn-success" onclick="exportExcel()">
+            <i class="bi bi-download me-2"></i>Exporter Excel
+        </button>
+    </div>
+</div>
+
+<!-- En-tête entreprise -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body text-center py-3" style="background: linear-gradient(90deg, #EF7707 0%, #FF8C00 100%); color: white; border-radius: 12px;">
+        <h5 class="mb-1">{{ request.user.entreprise.nom_entreprise }}</h5>
+        <p class="mb-0">BALANCE GÉNÉRALE DES COMPTES</p>
+        <small>Arrêtée au {{ today|date:"d/m/Y"|default:"--/--/----" }}</small>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead style="background-color: #FFD699;">
+                    <tr>
+                        <th style="width: 12%">N° Compte</th>
+                        <th style="width: 36%">Intitulé</th>
+                        <th class="text-end" style="width: 13%">Mvt Débit</th>
+                        <th class="text-end" style="width: 13%">Mvt Crédit</th>
+                        <th class="text-end" style="width: 13%">Solde Débit</th>
+                        <th class="text-end" style="width: 13%">Solde Crédit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in comptes %}
+                    {% if c.total_debit or c.total_credit %}
+                    <tr>
+                        <td><strong>{{ c.numero_compte }}</strong></td>
+                        <td>{{ c.intitule }}</td>
+                        <td class="text-end">{{ c.total_debit|floatformat:0|default:"0" }}</td>
+                        <td class="text-end">{{ c.total_credit|floatformat:0|default:"0" }}</td>
+                        <td class="text-end text-primary fw-bold">
+                            {% if c.total_debit and c.total_credit %}
+                                {% if c.total_debit > c.total_credit %}{{ c.solde_debiteur|floatformat:0 }}{% endif %}
+                            {% elif c.total_debit %}{{ c.total_debit|floatformat:0 }}{% endif %}
+                        </td>
+                        <td class="text-end text-success fw-bold">
+                            {% if c.total_debit and c.total_credit %}
+                                {% if c.total_credit > c.total_debit %}{{ c.solde_crediteur|floatformat:0 }}{% endif %}
+                            {% elif c.total_credit %}{{ c.total_credit|floatformat:0 }}{% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Aucune écriture comptabilisée</td></tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot style="background-color: #FFD699; font-weight: bold;">
+                    <tr>
+                        <td colspan="2" class="text-end">TOTAUX :</td>
+                        <td class="text-end">{{ total_debit|floatformat:0|default:"0" }}</td>
+                        <td class="text-end">{{ total_credit|floatformat:0|default:"0" }}</td>
+                        <td class="text-end">{{ total_solde_debit|floatformat:0|default:"0" }}</td>
+                        <td class="text-end">{{ total_solde_credit|floatformat:0|default:"0" }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3 text-muted small text-center">
+    <i class="bi bi-info-circle me-1"></i> Seuls les comptes ayant des mouvements sont affichés
+</div>
+
+<script>
+function exportExcel() {
+    // Fonction simple pour exporter les données de la balance en Excel
+    // Pour l'instant, affiche un message d'information
+    alert('Export Excel - Cette fonctionnalité sera bientôt disponible.\n\nPour l\'instant, vous pouvez utiliser l\'impression ou copier les données manuellement.');
+}
+</script>
+{% endblock %}

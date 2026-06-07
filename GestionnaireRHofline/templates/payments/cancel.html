@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Paiement annulé - GuinéeRH{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow text-center">
+                <div class="card-body py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-x-circle-fill text-warning" style="font-size: 5rem;"></i>
+                    </div>
+                    <h2 class="text-warning mb-3">Paiement annulé</h2>
+                    
+                    <p class="text-muted mb-4">
+                        Votre paiement a été annulé. Aucun montant n'a été débité de votre compte.
+                    </p>
+                    
+                    {% if transaction %}
+                    <div class="alert alert-light">
+                        <small class="text-muted">Référence : {{ transaction.reference }}</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'payments:plans' %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-repeat"></i> Réessayer
+                        </a>
+                        <a href="{% url 'dashboard:index' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-house"></i> Retour au tableau de bord
+                        </a>
+                    </div>
+                    
+                    <p class="mt-4 text-muted small">
+                        <i class="bi bi-question-circle"></i> 
+                        Besoin d'aide ? <a href="mailto:support@guineerh.space">Contactez-nous</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

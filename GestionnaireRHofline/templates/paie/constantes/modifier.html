@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier constante — {{ constante.code }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-pencil-square me-2"></i>Modifier constante</h2>
+        <a href="{% url 'paie:liste_constantes' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ constante.code }} — {{ constante.libelle }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if constante.description %}
+                    <div class="alert alert-light border mb-3">
+                        <small>{{ constante.description }}</small>
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Catégorie</label>
+                            <input type="text" class="form-control" value="{{ constante.get_categorie_display }}" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Type</label>
+                            <input type="text" class="form-control" value="{{ constante.get_type_valeur_display }}" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="valeur" class="form-label fw-bold">
+                                Valeur
+                                {% if constante.unite %}({{ constante.unite }}){% endif %}
+                            </label>
+                            <input type="number" name="valeur" id="valeur" class="form-control form-control-lg"
+                                   value="{{ constante.valeur }}" step="0.0001" required>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>Enregistrer
+                            </button>
+                            <a href="{% url 'paie:liste_constantes' %}" class="btn btn-outline-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

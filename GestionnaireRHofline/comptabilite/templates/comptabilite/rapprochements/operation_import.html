@@ -1,0 +1,390 @@
+{% extends "comptabilite/base.html" %}
+{% load i18n %}
+
+{% block title %}Import opérations bancaires - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Importer opérations bancaires</h1>
+            <p class="text-muted">Téléchargez les opérations depuis un relevé CSV ou OFX</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'comptabilite:compte-bancaire-list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Tabs for different import types -->
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="csv-tab" data-bs-toggle="tab" 
+                            data-bs-target="#csv-panel" type="button" role="tab">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ofx-tab" data-bs-toggle="tab" 
+                            data-bs-target="#ofx-panel" type="button" role="tab">
+                        <i class="fas fa-file"></i> OFX
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="manual-tab" data-bs-toggle="tab" 
+                            data-bs-target="#manual-panel" type="button" role="tab">
+                        <i class="fas fa-keyboard"></i> Manuel
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- CSV Import Panel -->
+                <div class="tab-pane fade show active" id="csv-panel" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data" id="csv-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="import_type" value="csv">
+
+                                <div class="mb-3">
+                                    <label for="compte-select" class="form-label">
+                                        Compte bancaire <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="compte_bancaire_id" id="compte-select" class="form-select" required>
+                                        <option value="">-- Sélectionner un compte --</option>
+                                        {% for compte in comptes %}
+                                        <option value="{{ compte.id }}">
+                                            {{ compte.numero_compte }} - {{ compte.intitule_tiers }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="csv-file" class="form-label">
+                                        Fichier CSV <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="file" name="csv_file" id="csv-file" class="form-control" 
+                                           accept=".csv,.txt" required>
+                                    <small class="form-text text-muted d-block mt-1">
+                                        Format attendu: Date, Libellé, Montant, Type (D/C)<br>
+                                        Taille maximale: 10 MB
+                                    </small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Paramètres du CSV</label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="delimiter" class="form-label">Séparateur</label>
+                                            <select name="delimiter" id="delimiter" class="form-select">
+                                                <option value=",">Virgule (,)</option>
+                                                <option value=";">Point-virgule (;)</option>
+                                                <option value="\t">Tabulation</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="encoding" class="form-label">Encodage</label>
+                                            <select name="encoding" id="encoding" class="form-select">
+                                                <option value="utf-8">UTF-8</option>
+                                                <option value="latin1">Latin-1 (ISO-8859-1)</option>
+                                                <option value="cp1252">Windows-1252</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Options</label>
+                                    <div class="form-check">
+                                        <input type="checkbox" name="skip_header" id="skip-header" 
+                                               class="form-check-input" checked>
+                                        <label class="form-check-label" for="skip-header">
+                                            Ignorer la première ligne (entête)
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" name="auto_match" id="auto-match" 
+                                               class="form-check-input" checked>
+                                        <label class="form-check-label" for="auto-match">
+                                            Lettrer automatiquement les opérations identiques
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-upload"></i> Importer CSV
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OFX Import Panel -->
+                <div class="tab-pane fade" id="ofx-panel" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data" id="ofx-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="import_type" value="ofx">
+
+                                <div class="mb-3">
+                                    <label for="ofx-file" class="form-label">
+                                        Fichier OFX <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="file" name="ofx_file" id="ofx-file" class="form-control" 
+                                           accept=".ofx,.qfx,.txt" required>
+                                    <small class="form-text text-muted d-block mt-1">
+                                        Fichier d'échange bancaire au format OFX/QFX<br>
+                                        Taille maximale: 10 MB
+                                    </small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Options</label>
+                                    <div class="form-check">
+                                        <input type="checkbox" name="validate_iban" id="validate-iban" 
+                                               class="form-check-input" checked>
+                                        <label class="form-check-label" for="validate-iban">
+                                            Valider les numéros IBAN
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" name="auto_match" id="auto-match-ofx" 
+                                               class="form-check-input" checked>
+                                        <label class="form-check-label" for="auto-match-ofx">
+                                            Lettrer automatiquement
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-upload"></i> Importer OFX
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Entry Panel -->
+                <div class="tab-pane fade" id="manual-panel" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" id="manual-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="import_type" value="manual">
+
+                                <div class="mb-3">
+                                    <label for="compte-manual" class="form-label">
+                                        Compte bancaire <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="compte_bancaire_id" id="compte-manual" class="form-select" required>
+                                        <option value="">-- Sélectionner un compte --</option>
+                                        {% for compte in comptes %}
+                                        <option value="{{ compte.id }}">
+                                            {{ compte.numero_compte }} - {{ compte.intitule_tiers }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div id="operations-container">
+                                    <!-- Dynamic operation rows will be added here -->
+                                    <div class="operation-row mb-3 p-3 border rounded">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Date <span class="text-danger">*</span></label>
+                                                <input type="date" name="operations[0][date]" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Libellé <span class="text-danger">*</span></label>
+                                                <input type="text" name="operations[0][libelle]" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Montant <span class="text-danger">*</span></label>
+                                                <input type="number" name="operations[0][montant]" class="form-control" 
+                                                       step="0.01" min="0" required>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Type <span class="text-danger">*</span></label>
+                                                <select name="operations[0][type]" class="form-select" required>
+                                                    <option value="D">Débit</option>
+                                                    <option value="C">Crédit</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-1 d-flex align-items-end">
+                                                <button type="button" class="btn btn-sm btn-outline-danger w-100 remove-row">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-outline-secondary mb-3" id="add-row">
+                                    <i class="fas fa-plus"></i> Ajouter une opération
+                                </button>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="auto_match" id="auto-match-manual" 
+                                               class="form-check-input" checked>
+                                        <label class="form-check-label" for="auto-match-manual">
+                                            Lettrer automatiquement
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Ajouter opérations
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side panel with examples and help -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Format CSV</h5>
+                </div>
+                <div class="card-body">
+                    <p><small>Format attendu:</small></p>
+                    <pre class="bg-light p-2 rounded"><small>Date;Libellé;Montant;Type
+2024-01-15;Salaire;50000;C
+2024-01-15;Loyer;10000;D
+2024-01-16;Intérêts;150;C</small></pre>
+                    <p class="mt-2"><small><strong>Colonnes requises:</strong></small></p>
+                    <ul class="small">
+                        <li><strong>Date:</strong> JJ/MM/AAAA ou AAAA-MM-JJ</li>
+                        <li><strong>Libellé:</strong> Description de l'opération</li>
+                        <li><strong>Montant:</strong> Nombre décimal</li>
+                        <li><strong>Type:</strong> D (Débit) ou C (Crédit)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Télécharger exemple</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'comptabilite:download-template' %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-download"></i> Modèle CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Aide</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Points importants:</h6>
+                    <ul class="small">
+                        <li>Vérifier l'encodage du fichier</li>
+                        <li>S'assurer du bon séparateur</li>
+                        <li>Les montants doivent être numériques</li>
+                        <li>Les dates doivent être au bon format</li>
+                        <li>Éviter les accents spéciaux si possible</li>
+                    </ul>
+
+                    <h6 class="mt-3">Types de fichier supportés:</h6>
+                    <ul class="small">
+                        <li><strong>CSV:</strong> Valeurs séparées par virgule</li>
+                        <li><strong>OFX:</strong> Format bancaire standard</li>
+                        <li><strong>Manuel:</strong> Saisie directe</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress section (shown after upload) -->
+    {% if import_in_progress %}
+    <div class="row mt-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Import en cours...</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ import_progress }}%;" 
+                             aria-valuenow="{{ import_progress }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ import_progress }}%
+                        </div>
+                    </div>
+                    <p class="mt-3 text-muted">
+                        <i class="fas fa-spinner fa-spin"></i> 
+                        Traitement de {{ processed_count }}/{{ total_count }} opérations...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Add operation row functionality
+document.getElementById('add-row').addEventListener('click', function() {
+    const container = document.getElementById('operations-container');
+    const rowCount = container.querySelectorAll('.operation-row').length;
+    
+    const newRow = document.createElement('div');
+    newRow.className = 'operation-row mb-3 p-3 border rounded';
+    newRow.innerHTML = `
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label">Date <span class="text-danger">*</span></label>
+                <input type="date" name="operations[${rowCount}][date]" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Libellé <span class="text-danger">*</span></label>
+                <input type="text" name="operations[${rowCount}][libelle]" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Montant <span class="text-danger">*</span></label>
+                <input type="number" name="operations[${rowCount}][montant]" class="form-control" 
+                       step="0.01" min="0" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Type <span class="text-danger">*</span></label>
+                <select name="operations[${rowCount}][type]" class="form-select" required>
+                    <option value="D">Débit</option>
+                    <option value="C">Crédit</option>
+                </select>
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100 remove-row">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    newRow.querySelector('.remove-row').addEventListener('click', function() {
+        newRow.remove();
+    });
+    
+    container.appendChild(newRow);
+});
+
+// Remove row functionality
+document.querySelectorAll('.remove-row').forEach(btn => {
+    btn.addEventListener('click', function() {
+        this.closest('.operation-row').remove();
+    });
+});
+</script>
+{% endblock %}

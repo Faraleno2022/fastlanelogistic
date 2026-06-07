@@ -1,0 +1,275 @@
+{% extends "comptabilite/base.html" %}
+{% load i18n widget_tweaks %}
+
+{% block title %}{% if form.instance.id %}Éditer{% else %}Nouveau{% endif %} rapprochement - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                {% if form.instance.id %}
+                    Éditer rapprochement
+                {% else %}
+                    Nouveau rapprochement
+                {% endif %}
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'comptabilite:rapprochement-list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Annuler
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Informations du rapprochement</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="rapprochement-form">
+                        {% csrf_token %}
+
+                        <!-- Compte bancaire -->
+                        <div class="mb-3">
+                            <label for="{{ form.compte_bancaire.id_for_label }}" class="form-label">
+                                Compte bancaire <span class="text-danger">*</span>
+                            </label>
+                            {{ form.compte_bancaire|add_class:"form-select" }}
+                            {% if form.compte_bancaire.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.compte_bancaire.errors|first }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted d-block mt-1">
+                                Sélectionnez le compte bancaire à rapprocher
+                            </small>
+                        </div>
+
+                        <!-- Date rapprochement -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.date_rapprochement.id_for_label }}" class="form-label">
+                                        Date rapprochement <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.date_rapprochement|add_class:"form-control" }}
+                                    {% if form.date_rapprochement.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.date_rapprochement.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Exercice fiscal -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.exercice.id_for_label }}" class="form-label">
+                                        Exercice fiscal <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.exercice|add_class:"form-select" }}
+                                    {% if form.exercice.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.exercice.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Soldes -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.solde_comptable.id_for_label }}" class="form-label">
+                                        Solde comptable <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.solde_comptable|add_class:"form-control" }}
+                                        <span class="input-group-text">{{ form.instance.compte_bancaire.devise|default:"XOF" }}</span>
+                                    </div>
+                                    {% if form.solde_comptable.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.solde_comptable.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted d-block mt-1">
+                                        Solde selon la comptabilité
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.solde_bancaire.id_for_label }}" class="form-label">
+                                        Solde bancaire <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.solde_bancaire|add_class:"form-control" }}
+                                        <span class="input-group-text">{{ form.instance.compte_bancaire.devise|default:"XOF" }}</span>
+                                    </div>
+                                    {% if form.solde_bancaire.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.solde_bancaire.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted d-block mt-1">
+                                        Solde selon le relevé bancaire
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statut -->
+                        <div class="mb-3">
+                            <label for="{{ form.statut.id_for_label }}" class="form-label">
+                                Statut <span class="text-danger">*</span>
+                            </label>
+                            {{ form.statut|add_class:"form-select" }}
+                            {% if form.statut.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.statut.errors|first }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                Description
+                            </label>
+                            {{ form.description|add_class:"form-control" }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.description.errors|first }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted d-block mt-1">
+                                Notes ou observations sur ce rapprochement
+                            </small>
+                        </div>
+
+                        <!-- Non-blocking form error display -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Erreur:</strong>
+                            <ul class="mb-0">
+                                {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+
+                        <!-- Submit buttons -->
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary" name="action" value="save">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                            {% if form.instance.id %}
+                            <button type="submit" class="btn btn-success" name="action" value="finalize">
+                                <i class="fas fa-check-circle"></i> Enregistrer et Finaliser
+                            </button>
+                            {% endif %}
+                            <a href="{% url 'comptabilite:rapprochement-list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side panel with validation info -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Résumé</h5>
+                </div>
+                <div class="card-body">
+                    {% if form.instance.id %}
+                    <div class="mb-3">
+                        <strong>ID:</strong><br>
+                        <code>{{ form.instance.id }}</code>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <strong>Compte:</strong><br>
+                        {% if form.instance.compte_bancaire %}
+                        {{ form.instance.compte_bancaire.numero_compte }}
+                        {% else %}
+                        <span class="text-muted">À sélectionner</span>
+                        {% endif %}
+                    </div>
+
+                    {% if form.instance.id %}
+                    <div class="mb-3">
+                        <strong>Créé par:</strong><br>
+                        <small>{{ form.instance.utilisateur_creation.get_full_name }}</small><br>
+                        <small class="text-muted">{{ form.instance.date_creation|date:"d/m/Y H:i" }}</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Modifié par:</strong><br>
+                        <small>{{ form.instance.utilisateur_modification.get_full_name }}</small><br>
+                        <small class="text-muted">{{ form.instance.date_modification|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Aide</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Points à vérifier:</h6>
+                    <ul class="small">
+                        <li>Le solde comptable correspond-il à la clôture?</li>
+                        <li>Le solde bancaire correspond-il au relevé?</li>
+                        <li>Les deux soldes sont-ils en même devise?</li>
+                        <li>L'exercice fiscal est-il correct?</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form submission validation
+document.getElementById('rapprochement-form').addEventListener('submit', function(e) {
+    // Basic client-side validation could be added here
+    const soldeComptable = parseFloat(document.querySelector('input[name="solde_comptable"]').value);
+    const solideBancaire = parseFloat(document.querySelector('input[name="solde_bancaire"]').value);
+    
+    const ecart = Math.abs(soldeComptable - solideBancaire);
+    
+    if (ecart > 0.01) {
+        // Warn about divergence
+        const warning = document.createElement('div');
+        warning.className = 'alert alert-warning';
+        warning.innerHTML = `
+            <strong>Attention:</strong> Il existe un écart de ${ecart.toFixed(2)} 
+            entre le solde comptable et le solde bancaire.
+        `;
+    }
+});
+
+// Auto-calculate écart on solde change
+document.querySelectorAll('input[name="solde_comptable"], input[name="solde_bancaire"]').forEach(input => {
+    input.addEventListener('change', function() {
+        const soldeComptable = parseFloat(document.querySelector('input[name="solde_comptable"]').value || 0);
+        const solideBancaire = parseFloat(document.querySelector('input[name="solde_bancaire"]').value || 0);
+        const ecart = soldeComptable - solideBancaire;
+        // Update display if needed
+    });
+});
+</script>
+{% endblock %}

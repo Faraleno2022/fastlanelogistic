@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Barème RTS {{ annee_active }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-bar-chart-steps me-2"></i>Barème RTS — {{ annee_active }}</h2>
+        <div class="d-flex gap-2">
+            {% if peut_modifier %}
+            <a href="{% url 'paie:ajouter_tranche_rts' %}?annee={{ annee_active }}" class="btn btn-success">
+                <i class="bi bi-plus-lg me-1"></i>Ajouter tranche
+            </a>
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalDupliquer">
+                <i class="bi bi-copy me-1"></i>Dupliquer barème
+            </button>
+            {% endif %}
+            <a href="{% url 'paie:home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Sélecteur d'année -->
+    <ul class="nav nav-pills mb-3">
+        {% for a in annees_dispo %}
+        <li class="nav-item">
+            <a class="nav-link {% if a == annee_active %}active{% endif %}"
+               href="{% url 'paie:liste_tranches_rts' %}?annee={{ a }}{% if type_filtre %}&type={{ type_filtre }}{% endif %}">{{ a }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Filtre par type de barème -->
+    <div class="mb-4">
+        <span class="me-2 text-muted fw-bold">Type :</span>
+        <a class="btn btn-sm {% if not type_filtre %}btn-dark{% else %}btn-outline-dark{% endif %} me-1"
+           href="{% url 'paie:liste_tranches_rts' %}?annee={{ annee_active }}">Tous</a>
+        {% for code, label in types_bareme %}
+        <a class="btn btn-sm {% if type_filtre == code %}btn-dark{% else %}btn-outline-dark{% endif %} me-1"
+           href="{% url 'paie:liste_tranches_rts' %}?annee={{ annee_active }}&type={{ code }}">{{ label }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="row">
+        <!-- Tableau des tranches -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th class="text-end">Borne inférieure</th>
+                                    <th class="text-end">Borne supérieure</th>
+                                    <th class="text-end">Taux RTS</th>
+                                    <th class="text-center">Type</th>
+                                    <th class="text-center">Actif</th>
+                                    {% if peut_modifier %}
+                                    <th class="text-center">Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in tranches %}
+                                <tr>
+                                    <td class="text-center">{{ t.numero_tranche }}</td>
+                                    <td class="text-end">{{ t.borne_inferieure|floatformat:0 }} GNF</td>
+                                    <td class="text-end">
+                                        {% if t.borne_superieure %}
+                                            {{ t.borne_superieure|floatformat:0 }} GNF
+                                        {% else %}
+                                            <span class="text-muted">Illimité</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end fw-bold">{{ t.taux_irg }}%</td>
+                                    <td class="text-center">
+                                        {% if t.type_bareme == 'officiel' %}
+                                        <span class="badge bg-success">Officiel</span>
+                                        {% elif t.type_bareme == 'simulation' %}
+                                        <span class="badge bg-warning text-dark">Simulation</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Test</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if t.actif %}
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        {% else %}
+                                        <i class="bi bi-x-circle-fill text-danger"></i>
+                                        {% endif %}
+                                    </td>
+                                    {% if peut_modifier %}
+                                    <td class="text-center">
+                                        <a href="{% url 'paie:modifier_tranche_rts' t.pk %}"
+                                           class="btn btn-sm btn-outline-primary" title="Modifier">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        Aucune tranche pour {{ annee_active }}.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulateur inline -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-calculator me-1"></i>Simulation RTS</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="montant_sim" class="form-label fw-bold">Base imposable (GNF)</label>
+                        <input type="number" id="montant_sim" class="form-control" placeholder="Ex: 5000000" value="5000000">
+                    </div>
+                    <button class="btn btn-info w-100" onclick="simulerRTS()">
+                        <i class="bi bi-play-fill me-1"></i>Calculer le RTS
+                    </button>
+                    <div id="resultat_sim" class="mt-3" style="display:none;">
+                        <table class="table table-sm table-bordered mb-2">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Tranche</th>
+                                    <th class="text-end">Montant</th>
+                                    <th class="text-end">Taux</th>
+                                    <th class="text-end">RTS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detail_sim"></tbody>
+                            <tfoot>
+                                <tr class="table-warning fw-bold">
+                                    <td colspan="3">Total RTS</td>
+                                    <td class="text-end" id="total_sim"></td>
+                                </tr>
+                                <tr class="table-secondary">
+                                    <td colspan="3">Taux moyen effectif</td>
+                                    <td class="text-end" id="taux_moyen_sim"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Dupliquer -->
+{% if peut_modifier %}
+<div class="modal fade" id="modalDupliquer" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'paie:dupliquer_bareme_rts' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Dupliquer le barème RTS</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Année source</label>
+                        <select name="annee_source" class="form-select">
+                            {% for a in annees_dispo %}
+                            <option value="{{ a }}" {% if a == annee_active %}selected{% endif %}>{{ a }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Année cible</label>
+                        <input type="number" name="annee_cible" class="form-control" value="{{ annee_active|add:1 }}">
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Les tranches existantes pour l'année cible seront remplacées.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Dupliquer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Données des tranches pour la simulation côté client
+const tranches = [
+    {% for t in tranches %}
+    {
+        min: {{ t.borne_inferieure|floatformat:0 }},
+        max: {% if t.borne_superieure %}{{ t.borne_superieure|floatformat:0 }}{% else %}Infinity{% endif %},
+        taux: {{ t.taux_irg }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+function simulerRTS() {
+    const base = parseFloat(document.getElementById('montant_sim').value) || 0;
+    let total = 0;
+    let html = '';
+
+    for (const t of tranches) {
+        if (base <= t.min) break;
+        const montant_tranche = Math.min(base, t.max) - t.min;
+        const rts_tranche = Math.round(montant_tranche * t.taux / 100);
+        total += rts_tranche;
+
+        const maxLabel = t.max === Infinity ? '...' : t.max.toLocaleString('fr-FR');
+        html += `<tr>
+            <td>${t.min.toLocaleString('fr-FR')} - ${maxLabel}</td>
+            <td class="text-end">${montant_tranche.toLocaleString('fr-FR')}</td>
+            <td class="text-end">${t.taux}%</td>
+            <td class="text-end">${rts_tranche.toLocaleString('fr-FR')}</td>
+        </tr>`;
+    }
+
+    document.getElementById('detail_sim').innerHTML = html;
+    document.getElementById('total_sim').textContent = total.toLocaleString('fr-FR') + ' GNF';
+    const tauxMoyen = base > 0 ? (total / base * 100).toFixed(2) : '0.00';
+    document.getElementById('taux_moyen_sim').textContent = tauxMoyen + '%';
+    document.getElementById('resultat_sim').style.display = 'block';
+}
+</script>
+{% endblock %}

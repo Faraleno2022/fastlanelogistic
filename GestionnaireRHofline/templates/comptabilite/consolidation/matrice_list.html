@@ -1,0 +1,76 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Matrice de Consolidation{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-grid-3x3 text-primary"></i> Matrice de Consolidation
+        </h1>
+        <div>
+            <a href="{% url 'comptabilite:matrice_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle matrice
+            </a>
+            <a href="{% url 'comptabilite:consolidation_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if matrices %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Libellé</th>
+                            <th>Type</th>
+                            <th>Exercice</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for matrice in matrices %}
+                        <tr>
+                            <td>{{ matrice.code }}</td>
+                            <td>{{ matrice.libelle }}</td>
+                            <td>{{ matrice.type_consolidation }}</td>
+                            <td>{{ matrice.exercice }}</td>
+                            <td>
+                                {% if matrice.est_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'comptabilite:matrice_detail' matrice.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'comptabilite:matrice_update' matrice.pk %}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-grid text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">Aucune matrice de consolidation</p>
+                <a href="{% url 'comptabilite:matrice_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Créer une matrice
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

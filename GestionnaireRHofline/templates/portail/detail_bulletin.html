@@ -1,0 +1,116 @@
+{% extends 'portail/base_portail.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Bulletin {{ bulletin.periode.mois }}/{{ bulletin.periode.annee }}{% endblock %}
+
+{% block portail_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="{% url 'portail:mes_bulletins' %}" class="btn btn-outline-secondary mb-3">
+            <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-file-invoice-dollar me-2"></i>Bulletin de Paie</h2>
+            <button onclick="window.print()" class="btn btn-outline-primary">
+                <i class="fas fa-print me-1"></i>Imprimer
+            </button>
+        </div>
+        <p class="text-muted">{{ bulletin.periode.get_mois_display }} {{ bulletin.periode.annee }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Détail du bulletin</h5>
+            </div>
+            <div class="card-body">
+                <!-- Gains -->
+                <h6 class="text-success border-bottom pb-2 mb-3"><i class="fas fa-plus-circle me-2"></i>GAINS</h6>
+                <table class="table table-sm mb-4">
+                    <tbody>
+                        {% for ligne in bulletin.lignes.all %}
+                        {% if ligne.montant > 0 and ligne.rubrique.type_rubrique == 'gain' %}
+                        <tr>
+                            <td>{{ ligne.rubrique.libelle }}</td>
+                            <td class="text-end">{{ ligne.montant|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        <tr class="table-success fw-bold">
+                            <td>SALAIRE BRUT</td>
+                            <td class="text-end">{{ bulletin.salaire_brut|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Retenues -->
+                <h6 class="text-danger border-bottom pb-2 mb-3 mt-5"><i class="fas fa-minus-circle me-2"></i>RETENUES</h6>
+                <table class="table table-sm mb-4">
+                    <tbody>
+                        <tr>
+                            <td>CNSS Employé (5%)</td>
+                            <td class="text-end text-danger">- {{ bulletin.cnss_employe|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        <tr>
+                            <td>RTS (Impôt sur salaire)</td>
+                            <td class="text-end text-danger">- {{ bulletin.irg|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% for ligne in bulletin.lignes.all %}
+                        {% if ligne.montant > 0 and ligne.rubrique.type_rubrique == 'retenue' %}
+                        <tr>
+                            <td>{{ ligne.rubrique.libelle }}</td>
+                            <td class="text-end text-danger">- {{ ligne.montant|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        <tr class="table-danger fw-bold">
+                            <td>TOTAL RETENUES</td>
+                            <td class="text-end">- {{ bulletin.total_retenues|floatformat:0|intcomma }} GNF</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Net à payer -->
+        <div class="card bg-success text-white mb-4">
+            <div class="card-body text-center">
+                <h6>NET À PAYER</h6>
+                <h2>{{ bulletin.net_a_payer|floatformat:0|intcomma }} GNF</h2>
+            </div>
+        </div>
+
+        <!-- Résumé -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Résumé</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td>Salaire brut</td>
+                        <td class="text-end">{{ bulletin.salaire_brut|floatformat:0|intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <td>CNSS (5%)</td>
+                        <td class="text-end">{{ bulletin.cnss_employe|floatformat:0|intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <td>RTS</td>
+                        <td class="text-end">{{ bulletin.irg|floatformat:0|intcomma }}</td>
+                    </tr>
+                    <tr class="table-success">
+                        <td><strong>Net</strong></td>
+                        <td class="text-end"><strong>{{ bulletin.net_a_payer|floatformat:0|intcomma }}</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

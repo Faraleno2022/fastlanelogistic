@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ session.formation.intitule }} - {{ session.date_debut|date:"d/m/Y" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>{{ session.formation.intitule }}</h1>
+            <p class="text-muted">Session du {{ session.date_debut|date:"d/m/Y" }} au {{ session.date_fin|date:"d/m/Y" }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'formation:modifier_session' session.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'formation:sessions' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Informations générales -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Informations Générales</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Formation</dt>
+                        <dd class="col-sm-8">
+                            <a href="{% url 'formation:detail_formation' session.formation.pk %}">
+                                {{ session.formation.intitule }}
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-4">Lieu</dt>
+                        <dd class="col-sm-8">{{ session.lieu|default:"Non spécifié" }}</dd>
+
+                        <dt class="col-sm-4">Formateur</dt>
+                        <dd class="col-sm-8">{{ session.formateur|default:"Non spécifié" }}</dd>
+
+                        <dt class="col-sm-4">Capacité</dt>
+                        <dd class="col-sm-8">
+                            {{ inscriptions.count }} / {{ session.nombre_places|default:"Illimitée" }}
+                        </dd>
+
+                        <dt class="col-sm-4">Statut</dt>
+                        <dd class="col-sm-8">
+                            {% if session.statut == 'PLANIFIEE' %}
+                            <span class="badge bg-info">Planifiée</span>
+                            {% elif session.statut == 'EN_COURS' %}
+                            <span class="badge bg-warning">En cours</span>
+                            {% elif session.statut == 'TERMINEE' %}
+                            <span class="badge bg-success">Terminée</span>
+                            {% elif session.statut == 'ANNULEE' %}
+                            <span class="badge bg-danger">Annulée</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Inscriptions -->
+            <div class="card">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Tous les Participants ({{ tous_participants|length }})</h5>
+                    <div>
+                        <a href="{% url 'formation:inscrire_employe' session.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus"></i> Ajouter Employé
+                        </a>
+                        <a href="{% url 'formation:liste_candidatures' %}" class="btn btn-sm btn-info">
+                            <i class="bi bi-list"></i> Candidatures
+                        </a>
+                    </div>
+                </div>
+                
+                {% if tous_participants %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Participant</th>
+                                <th>Type</th>
+                                <th>Contact</th>
+                                <th>Date d'inscription</th>
+                                <th>Statut</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for participant in tous_participants %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <strong>{{ participant.prenom }} {{ participant.nom }}</strong>
+                                            {% if participant.entreprise %}
+                                            <br><small class="text-muted">{{ participant.entreprise }}</small>
+                                            {% endif %}
+                                        </div>
+                                        {% if participant.type == 'public' %}
+                                        <span class="badge bg-info ms-2">Public</span>
+                                        {% else %}
+                                        <span class="badge bg-primary ms-2">Employé</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if participant.fonction %}
+                                    {{ participant.fonction }}
+                                    {% else %}
+                                    <span class="text-muted">Non spécifié</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>
+                                        <small class="text-muted">{{ participant.email }}</small><br>
+                                        <small class="text-muted">{{ participant.telephone }}</small>
+                                    </div>
+                                </td>
+                                <td>{{ participant.date_inscription|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if participant.statut == 'confirme' %}
+                                    <span class="badge bg-success">Confirmé</span>
+                                    {% elif participant.statut == 'en_attente' %}
+                                    <span class="badge bg-warning">En attente</span>
+                                    {% elif participant.statut == 'inscrit' %}
+                                    <span class="badge bg-primary">Inscrit</span>
+                                    {% elif participant.statut == 'present' %}
+                                    <span class="badge bg-success">Présent</span>
+                                    {% elif participant.statut == 'absent' %}
+                                    <span class="badge bg-danger">Absent</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ participant.statut }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        {% if participant.type == 'employe' %}
+                                            <a href="#" class="btn btn-outline-primary" title="Évaluer">
+                                                <i class="bi bi-star"></i>
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'formation:gerer_candidature' participant.pk %}" class="btn btn-outline-info" title="Gérer">
+                                                <i class="bi bi-gear"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="card-body text-center text-muted py-4">
+                    <p>Aucun participant inscrit à cette session</p>
+                    <a href="{% url 'formation:inscrire_employe' session.pk %}" class="btn btn-sm btn-primary">
+                        Ajouter les premiers participants
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Dates et durée -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-6 text-muted">Début</dt>
+                        <dd class="col-6 ms-0">{{ session.date_debut|date:"d/m/Y" }}</dd>
+
+                        <dt class="col-6 text-muted">Fin</dt>
+                        <dd class="col-6 ms-0">{{ session.date_fin|date:"d/m/Y" }}</dd>
+
+                        <dt class="col-6 text-muted">Durée</dt>
+                        <dd class="col-6 ms-0">
+                            {% with jours=session.date_fin|timeuntil:session.date_debut %}
+                            Environ {{ jours }}
+                            {% endwith %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Description -->
+            {% if session.formation.description %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Description</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ session.formation.description|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Objectifs -->
+            {% if session.formation.objectifs %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Objectifs</h5>
+                </div>
+                <div class="card-body">
+                    {{ session.formation.objectifs|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Statistiques rapides -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Statistiques</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="mb-2">
+                                <strong class="display-6">{{ inscriptions.count }}</strong>
+                                <p class="text-muted small">Inscrits</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-2">
+                                <strong class="display-6">
+                                    {% if inscriptions %}
+                                    {{ inscriptions|dictsort:"present"|length }}
+                                    {% else %}
+                                    0
+                                    {% endif %}
+                                </strong>
+                                <p class="text-muted small">Présents</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

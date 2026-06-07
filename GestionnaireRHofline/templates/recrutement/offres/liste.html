@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Offres d'Emploi - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-megaphone"></i> Offres d'Emploi</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'recrutement:creer_offre' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouvelle Offre
+        </a>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Statut</label>
+                <select name="statut" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="ouverte">Ouverte</option>
+                    <option value="fermee">Fermée</option>
+                    <option value="pourvue">Pourvue</option>
+                    <option value="annulee">Annulée</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Service</label>
+                <select name="service" class="form-select">
+                    <option value="">Tous</option>
+                    {% for service in services %}
+                    <option value="{{ service.id }}">{{ service.nom_service }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des offres -->
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="mb-0">Liste des Offres ({{ offres.count }})</h5>
+    </div>
+    <div class="card-body">
+        {% if offres %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Intitulé du Poste</th>
+                        <th>Service</th>
+                        <th>Type Contrat</th>
+                        <th>Postes</th>
+                        <th>Candidatures</th>
+                        <th>Date Limite</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for offre in offres %}
+                    <tr>
+                        <td><strong>{{ offre.reference_offre }}</strong></td>
+                        <td>{{ offre.intitule_poste }}</td>
+                        <td>{{ offre.service.nom_service|default:"-" }}</td>
+                        <td>{{ offre.type_contrat|default:"-" }}</td>
+                        <td>{{ offre.nombre_postes }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ offre.nb_candidatures }}</span>
+                        </td>
+                        <td>
+                            {% if offre.date_limite_candidature %}
+                                {{ offre.date_limite_candidature|date:"d/m/Y" }}
+                                {% now "Y-m-d" as today %}
+                                {% if offre.date_limite_candidature|date:"Y-m-d" < today %}
+                                    <span class="badge bg-danger ms-1">Expirée</span>
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if offre.statut_offre == 'ouverte' %}
+                                <span class="badge bg-success">Ouverte</span>
+                            {% elif offre.statut_offre == 'fermee' %}
+                                <span class="badge bg-secondary">Fermée</span>
+                            {% elif offre.statut_offre == 'pourvue' %}
+                                <span class="badge bg-primary">Pourvue</span>
+                            {% else %}
+                                <span class="badge bg-danger">Annulée</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'recrutement:detail_offre' offre.uuid %}" class="btn btn-sm btn-info" title="Détails">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'recrutement:modifier_offre' offre.uuid %}" class="btn btn-sm btn-warning" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'recrutement:supprimer_offre' offre.uuid %}" class="btn btn-sm btn-danger" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?');">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Aucune offre d'emploi trouvée.
+            <a href="{% url 'recrutement:creer_offre' %}" class="alert-link">Créer une offre</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

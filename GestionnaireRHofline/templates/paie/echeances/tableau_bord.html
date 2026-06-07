@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tableau de bord des échéances - Paie{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Tableau de bord des échéances
+            </h1>
+            <p class="text-muted">Suivi des déclarations sociales et fiscales</p>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h2 class="display-4 text-danger">{{ stats.total_urgentes }}</h2>
+                    <p class="mb-0">Alertes urgentes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h2 class="display-4 text-warning">{{ stats.total_en_retard }}</h2>
+                    <p class="mb-0">En retard</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h2 class="display-4 text-info">{{ stats.total_a_venir }}</h2>
+                    <p class="mb-0">À venir</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prochaine échéance -->
+    {% if prochaine_echeance %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card {% if prochaine_echeance.niveau_alerte == 'danger' %}bg-danger{% elif prochaine_echeance.niveau_alerte == 'warning' %}bg-warning{% else %}bg-info{% endif %} text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="card-title mb-1">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Prochaine échéance: {{ prochaine_echeance.get_type_echeance_display }}
+                            </h5>
+                            <p class="mb-0">{{ prochaine_echeance.message }}</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="display-6">
+                                {% if prochaine_echeance.jours_restants >= 0 %}
+                                    J-{{ prochaine_echeance.jours_restants }}
+                                {% else %}
+                                    J+{{ prochaine_echeance.jours_restants|abs }}
+                                {% endif %}
+                            </span>
+                            <br>
+                            <small>{{ prochaine_echeance.date_echeance|date:"d/m/Y" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Alertes urgentes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell me-2"></i>
+                        Alertes urgentes ({{ alertes_urgentes|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if alertes_urgentes %}
+                    <div class="list-group list-group-flush">
+                        {% for alerte in alertes_urgentes %}
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">
+                                    {% if alerte.statut == 'en_retard' %}
+                                    <span class="badge bg-danger me-2">EN RETARD</span>
+                                    {% else %}
+                                    <span class="badge bg-warning me-2">URGENT</span>
+                                    {% endif %}
+                                    {{ alerte.get_type_echeance_display }}
+                                </h6>
+                                <small class="text-muted">
+                                    Période: {{ alerte.mois|stringformat:"02d" }}/{{ alerte.annee }} |
+                                    Échéance: {{ alerte.date_echeance|date:"d/m/Y" }}
+                                </small>
+                                <p class="mb-0 small">{{ alerte.message }}</p>
+                            </div>
+                            <div>
+                                <a href="{% url 'paie:marquer_alerte_traitee' alerte.pk %}" 
+                                   class="btn btn-sm btn-success" 
+                                   title="Marquer comme traité">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                        <p>Aucune alerte urgente</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Échéances à venir -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        Échéances à venir ({{ alertes_a_venir|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if alertes_a_venir %}
+                    <div class="list-group list-group-flush">
+                        {% for alerte in alertes_a_venir %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ alerte.get_type_echeance_display }}</h6>
+                                <small class="text-muted">
+                                    Période: {{ alerte.mois|stringformat:"02d" }}/{{ alerte.annee }} |
+                                    Échéance: {{ alerte.date_echeance|date:"d/m/Y" }}
+                                </small>
+                            </div>
+                            <span class="badge {% if alerte.niveau_alerte == 'warning' %}bg-warning{% else %}bg-info{% endif %}">
+                                J-{{ alerte.jours_restants }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-calendar-check fa-3x mb-3"></i>
+                        <p>Aucune échéance à venir</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historique des échéances traitées -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Dernières échéances traitées
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if alertes_traitees %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Période</th>
+                                    <th>Échéance</th>
+                                    <th>Traité le</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alerte in alertes_traitees %}
+                                <tr>
+                                    <td>{{ alerte.get_type_echeance_display }}</td>
+                                    <td>{{ alerte.mois|stringformat:"02d" }}/{{ alerte.annee }}</td>
+                                    <td>{{ alerte.date_echeance|date:"d/m/Y" }}</td>
+                                    <td>{{ alerte.date_lecture|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p>Aucune échéance traitée récemment</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rappel des pénalités -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Rappel: Pénalités en cas de retard
+                </h5>
+                <hr>
+                <ul class="mb-0">
+                    <li><strong>CNSS:</strong> Pénalité de 5% par mois de retard</li>
+                    <li><strong>RTS/VF:</strong> Pénalité de 100% du montant dû</li>
+                    <li><strong>Échéance:</strong> Le 15 du mois suivant la période de paie</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

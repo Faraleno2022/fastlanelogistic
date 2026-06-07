@@ -1,0 +1,125 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Imputation analytique {{ imputation.libelle }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-diagram-2 text-primary"></i> {{ imputation.libelle }}
+            </h1>
+            <p class="text-muted mb-0">Détails de l'imputation analytique du {{ imputation.date_imputation|date:"d/m/Y" }}.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:analytique_imputation_update' imputation.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:analytique_imputations' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Résumé analytique</h5>
+                    <span class="badge {% if imputation.type_imputation == 'directe' %}bg-success{% elif imputation.type_imputation == 'indirecte' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                        {{ imputation.get_type_imputation_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <h6 class="text-muted text-uppercase small">Montant débit</h6>
+                            <p class="fs-4 fw-semibold text-success mb-0">{{ imputation.montant_debit|floatformat:2 }} GNF</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted text-uppercase small">Montant crédit</h6>
+                            <p class="fs-4 fw-semibold text-danger mb-0">{{ imputation.montant_credit|floatformat:2 }} GNF</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted text-uppercase small">Période</h6>
+                            <p class="fs-5 mb-0">{{ imputation.periode }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Centre de coûts</dt>
+                        <dd class="col-sm-8">{{ imputation.centre_couts|default:"-" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Section analytique</dt>
+                        <dd class="col-sm-8">{% if imputation.section %}<a href="{% url 'comptabilite:analytique_section_detail' imputation.section.pk %}">{{ imputation.section }}</a>{% else %}-{% endif %}</dd>
+
+                        <dt class="col-sm-4 text-muted">Commande</dt>
+                        <dd class="col-sm-8">{{ imputation.commande|default:"-" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Clé de répartition</dt>
+                        <dd class="col-sm-8">{{ imputation.cle_repartition|default:"-" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">% Répartition</dt>
+                        <dd class="col-sm-8">{% if imputation.pourcentage_repartition %}{{ imputation.pourcentage_repartition }} %{% else %}-{% endif %}</dd>
+
+                        <dt class="col-sm-4 text-muted">Quantité</dt>
+                        <dd class="col-sm-8">{% if imputation.quantite %}{{ imputation.quantite }} {{ imputation.unite|default:"" }}{% else %}-{% endif %}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Écriture comptable liée</h5>
+                    {% if imputation.ecriture %}
+                    <span class="badge bg-primary-subtle text-primary">{{ imputation.ecriture.numero_ecriture }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if imputation.ecriture %}
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3 text-muted">Journal</dt>
+                        <dd class="col-sm-9">{{ imputation.ecriture.journal }}</dd>
+
+                        <dt class="col-sm-3 text-muted">Date</dt>
+                        <dd class="col-sm-9">{{ imputation.ecriture.date_ecriture|date:"d/m/Y" }}</dd>
+
+                        <dt class="col-sm-3 text-muted">Compte comptable</dt>
+                        <dd class="col-sm-9">{{ imputation.compte.numero_compte }} - {{ imputation.compte.libelle }}</dd>
+                    </dl>
+                    {% else %}
+                    <p class="text-muted mb-0">Aucune écriture comptable n'est associée à cette imputation.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Type : {{ imputation.get_type_imputation_display }}</p>
+                    <p class="mb-1">Créée le : {{ imputation.date_creation|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-1">Identifiant : {{ imputation.id }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Astuces analyse</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <ul class="mb-0">
+                        <li>Comparez le montant aux budgets analytiques pour détecter les écarts.</li>
+                        <li>Utilisez la clé de répartition pour justifier les affectations indirectes.</li>
+                        <li>Centralisez vos imputations sur une période cohérente pour la clôture.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

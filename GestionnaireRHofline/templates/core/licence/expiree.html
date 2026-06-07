@@ -1,0 +1,79 @@
+{% extends 'base_auth.html' %}
+{% load static %}
+
+{% block title %}Licence Expirée - Gestionnaire RH{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Licence Expirée
+                    </h4>
+                </div>
+                <div class="card-body p-4 text-center">
+                    
+                    <div class="mb-4">
+                        <i class="fas fa-clock fa-5x text-danger mb-3"></i>
+                        <h5>Votre licence a expiré</h5>
+                        <p class="text-muted">
+                            Votre accès au logiciel est temporairement suspendu.
+                            Veuillez renouveler votre licence pour continuer à utiliser le Gestionnaire RH.
+                        </p>
+                    </div>
+                    
+                    {% if licence %}
+                    <div class="alert alert-secondary">
+                        <p class="mb-1"><strong>Clé:</strong> {{ licence.cle_licence }}</p>
+                        <p class="mb-1"><strong>Plan:</strong> {{ licence.plan|title }}</p>
+                        <p class="mb-0"><strong>Expirée le:</strong> {{ licence.date_expiration|date:"d/m/Y" }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <h6 class="mb-3">Pour renouveler votre licence:</h6>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'core:licence_renouveler' %}" class="btn btn-success btn-lg">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            Renouveler ma licence
+                        </a>
+                        
+                        <a href="mailto:faraleno16@gmail.com?subject=Renouvellement licence {{ licence.cle_licence }}&body=Bonjour,%0A%0AJe souhaite renouveler ma licence.%0A%0AClé: {{ licence.cle_licence }}%0AID Machine: {{ machine_id }}%0A%0ACordialement" 
+                           class="btn btn-primary">
+                            <i class="fas fa-envelope me-2"></i>
+                            Contacter le support
+                        </a>
+                        
+                        <a href="tel:+224622613559" class="btn btn-outline-success">
+                            <i class="fas fa-phone me-2"></i>
+                            Appeler: +224 622 61 35 59
+                        </a>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <p class="text-muted small">
+                        Vous avez une nouvelle clé de licence ?
+                    </p>
+                    <a href="{% url 'core:licence_activation' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-key me-2"></i>
+                        Activer une nouvelle licence
+                    </a>
+                    
+                </div>
+                
+                <div class="card-footer bg-light text-center">
+                    <small class="text-muted">
+                        ID Machine: <code>{{ machine_id }}</code>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-bg: #121212;
+        --secondary-bg: #1e1e1e;
+        --accent-color: #ff6b00;
+        --accent-hover: #ff8c3a;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+    }
+
+    .delete-confirmation {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+        background: var(--secondary-bg);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 107, 0, 0.1);
+    }
+
+    .delete-confirmation h1 {
+        color: var(--danger-color);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        padding-bottom: 15px;
+    }
+
+    .delete-confirmation h1::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 3px;
+        background: var(--danger-color);
+    }
+
+    .alert-warning {
+        background: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid var(--warning-color);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-radius: 8px;
+    }
+
+    .alert-warning i {
+        color: var(--warning-color);
+        margin-bottom: 1rem;
+    }
+
+    .alert-warning h3 {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .alert-warning .lead {
+        color: var(--accent-color);
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    .event-preview .card {
+        background: var(--primary-bg);
+        border: 1px solid rgba(255, 107, 0, 0.2);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .event-preview .card-body {
+        padding: 1.5rem;
+    }
+
+    .event-preview .card-title {
+        color: var(--accent-color);
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .event-preview .card-text {
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .btn {
+        padding: 0.8rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 10px;
+    }
+
+    .btn-danger {
+        background: var(--danger-color);
+        border: none;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--glass-effect);
+        color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px);
+    }
+
+    .btn-lg {
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+        .delete-confirmation {
+            padding: 2rem 1rem;
+        }
+        
+        .btn {
+            width: 100%;
+            margin-bottom: 1rem;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="events-container">
+    <div class="delete-confirmation">
+        <h1 class="text-center mb-5">Confirmer la suppression</h1>
+        
+        <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+            <h3>Êtes-vous sûr de vouloir supprimer cet événement ?</h3>
+            <p class="lead">{{ object.event_name }} - {{ object.event_date|date:"d F Y" }}</p>
+        </div>
+
+        <div class="event-preview mb-5">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ object.event_name }}</h5>
+                    <p class="card-text">{{ object.event_description|truncatewords:30 }}</p>
+                    <div class="event-meta mt-3">
+                        <span class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> {{ object.event_address }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="text-center">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-lg">
+                <i class="fas fa-trash"></i> Confirmer la suppression
+            </button>
+            <a href="{{ event_detail_url }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </form>
+    </div>
+</section>
+{% endblock %}

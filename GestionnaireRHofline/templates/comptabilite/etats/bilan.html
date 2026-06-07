@@ -1,0 +1,151 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}Bilan{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-pie-chart me-2"></i>Bilan Comptable</h4>
+    <div>
+        <button class="btn btn-outline-primary" onclick="window.print()">
+            <i class="bi bi-printer me-2"></i>Imprimer
+        </button>
+        <button class="btn btn-success" onclick="exportExcel()">
+            <i class="bi bi-download me-2"></i>Exporter Excel
+        </button>
+    </div>
+</div>
+
+<!-- En-tête entreprise -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body text-center py-3" style="background: linear-gradient(90deg, #EF7707 0%, #FF8C00 100%); color: white; border-radius: 12px;">
+        <h5 class="mb-1">{{ request.user.entreprise.nom_entreprise }}</h5>
+        <p class="mb-0">BILAN COMPTABLE</p>
+        <small>Exercice {{ exercice.libelle|default:"en cours" }} - Arrêté au {{ today|date:"d/m/Y" }}</small>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- ACTIF -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header text-white" style="background-color: #0d6efd;"><h6 class="mb-0"><i class="bi bi-arrow-up-circle me-2"></i>ACTIF</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead style="background-color: #cfe2ff;">
+                        <tr><th>Compte</th><th>Intitulé</th><th class="text-end">Montant (GNF)</th></tr>
+                    </thead>
+                    <tbody>
+                        <!-- Actif immobilisé (classe 2) -->
+                        <tr class="table-secondary"><td colspan="3"><strong>ACTIF IMMOBILISÉ</strong></td></tr>
+                        {% for c in actif_immobilise %}
+                        <tr>
+                            <td>{{ c.numero_compte }}</td>
+                            <td>{{ c.intitule }}</td>
+                            <td class="text-end">{{ c.solde|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted small">Aucun compte</td></tr>
+                        {% endfor %}
+                        
+                        <!-- Actif circulant (classes 3, 4, 5) -->
+                        <tr class="table-secondary"><td colspan="3"><strong>ACTIF CIRCULANT</strong></td></tr>
+                        {% for c in actif_circulant %}
+                        <tr>
+                            <td>{{ c.numero_compte }}</td>
+                            <td>{{ c.intitule }}</td>
+                            <td class="text-end">{{ c.solde|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted small">Aucun compte</td></tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot style="background-color: #0d6efd; color: white;">
+                        <tr>
+                            <td colspan="2"><strong>TOTAL ACTIF</strong></td>
+                            <td class="text-end"><strong>{{ total_actif|floatformat:0|default:"0" }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PASSIF -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header text-white" style="background-color: #198754;"><h6 class="mb-0"><i class="bi bi-arrow-down-circle me-2"></i>PASSIF</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead style="background-color: #d1e7dd;">
+                        <tr><th>Compte</th><th>Intitulé</th><th class="text-end">Montant (GNF)</th></tr>
+                    </thead>
+                    <tbody>
+                        <!-- Capitaux propres (classe 1) -->
+                        <tr class="table-secondary"><td colspan="3"><strong>CAPITAUX PROPRES</strong></td></tr>
+                        {% for c in capitaux_propres %}
+                        <tr>
+                            <td>{{ c.numero_compte }}</td>
+                            <td>{{ c.intitule }}</td>
+                            <td class="text-end">{{ c.solde|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted small">Aucun compte</td></tr>
+                        {% endfor %}
+                        
+                        <!-- Dettes (classe 4 créditeur) -->
+                        <tr class="table-secondary"><td colspan="3"><strong>DETTES</strong></td></tr>
+                        {% for c in dettes %}
+                        <tr>
+                            <td>{{ c.numero_compte }}</td>
+                            <td>{{ c.intitule }}</td>
+                            <td class="text-end">{{ c.solde|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted small">Aucun compte</td></tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot style="background-color: #198754; color: white;">
+                        <tr>
+                            <td colspan="2"><strong>TOTAL PASSIF</strong></td>
+                            <td class="text-end"><strong>{{ total_passif|floatformat:0|default:"0" }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Résumé -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex justify-content-around text-center">
+                <div>
+                    <h6 class="text-muted mb-1">Total Actif</h6>
+                    <h4 class="text-primary">{{ total_actif|floatformat:0|default:"0" }} GNF</h4>
+                </div>
+                <div class="border-start border-end px-5">
+                    <h6 class="text-muted mb-1">Total Passif</h6>
+                    <h4 class="text-success">{{ total_passif|floatformat:0|default:"0" }} GNF</h4>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1">Écart</h6>
+                    <h4 class="{% if ecart == 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ ecart|floatformat:0|default:"0" }} GNF
+                        {% if ecart == 0 %}<i class="bi bi-check-circle"></i>{% else %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportExcel() {
+    // Fonction simple pour exporter les données du bilan en Excel
+    // Pour l'instant, affiche un message d'information
+    alert('Export Excel - Cette fonctionnalité sera bientôt disponible.\n\nPour l\'instant, vous pouvez utiliser l\'impression ou copier les données manuellement.');
+}
+</script>
+{% endblock %}

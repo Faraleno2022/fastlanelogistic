@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier la Formation - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-pencil"></i> Modifier la Formation</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'formation:detail_formation' formation.pk %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Informations générales -->
+            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informations Générales</h5>
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <label for="intitule" class="form-label">Intitulé de la Formation <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="intitule" name="intitule" value="{{ formation.intitule }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Options</label>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="actif" name="actif" {% if formation.actif %}checked{% endif %}>
+                        <label class="form-check-label" for="actif">Formation active</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="publiee" name="publiee" {% if formation.publiee %}checked{% endif %}>
+                        <label class="form-check-label" for="publiee"><i class="bi bi-globe text-primary"></i> Publier sur la page d'accueil</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="type_formation" class="form-label">Type de Formation <span class="text-danger">*</span></label>
+                    <select class="form-select" id="type_formation" name="type_formation" required>
+                        <option value="">-- Sélectionner --</option>
+                        <option value="interne" {% if formation.type_formation == 'interne' %}selected{% endif %}>Interne</option>
+                        <option value="externe" {% if formation.type_formation == 'externe' %}selected{% endif %}>Externe</option>
+                        <option value="en_ligne" {% if formation.type_formation == 'en_ligne' %}selected{% endif %}>En ligne</option>
+                        <option value="certifiante" {% if formation.type_formation == 'certifiante' %}selected{% endif %}>Certifiante</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="domaine" class="form-label">Domaine <span class="text-danger">*</span></label>
+                    <select class="form-select" id="domaine" name="domaine" required>
+                        <option value="">-- Sélectionner --</option>
+                        <option value="technique" {% if formation.domaine == 'technique' %}selected{% endif %}>Technique</option>
+                        <option value="management" {% if formation.domaine == 'management' %}selected{% endif %}>Management</option>
+                        <option value="securite" {% if formation.domaine == 'securite' %}selected{% endif %}>Sécurité</option>
+                        <option value="informatique" {% if formation.domaine == 'informatique' %}selected{% endif %}>Informatique</option>
+                        <option value="langues" {% if formation.domaine == 'langues' %}selected{% endif %}>Langues</option>
+                        <option value="soft_skills" {% if formation.domaine == 'soft_skills' %}selected{% endif %}>Soft Skills</option>
+                        <option value="reglementaire" {% if formation.domaine == 'reglementaire' %}selected{% endif %}>Réglementaire</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Description -->
+            <h5 class="mb-3"><i class="bi bi-file-text"></i> Description</h5>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description de la Formation</label>
+                <textarea class="form-control" id="description" name="description" rows="3">{{ formation.description }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="objectifs" class="form-label">Objectifs Pédagogiques</label>
+                <textarea class="form-control" id="objectifs" name="objectifs" rows="3">{{ formation.objectifs }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="contenu" class="form-label">Contenu du Programme</label>
+                <textarea class="form-control" id="contenu" name="contenu" rows="4">{{ formation.contenu }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="prerequis" class="form-label">Prérequis</label>
+                <textarea class="form-control" id="prerequis" name="prerequis" rows="2">{{ formation.prerequis }}</textarea>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Durée et Coût -->
+            <h5 class="mb-3"><i class="bi bi-clock"></i> Durée et Coût</h5>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="duree_jours" class="form-label">Durée en Jours <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="duree_jours" name="duree_jours" min="1" value="{{ formation.duree_jours }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="duree_heures" class="form-label">Durée en Heures <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="duree_heures" name="duree_heures" min="1" value="{{ formation.duree_heures }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="cout" class="form-label">Coût Unitaire (GNF)</label>
+                    <input type="number" class="form-control" id="cout" name="cout" step="1000" value="{{ formation.cout_unitaire|default:'' }}">
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Organisme -->
+            <h5 class="mb-3"><i class="bi bi-building"></i> Organisme Formateur</h5>
+            <div class="mb-3">
+                <label for="organisme" class="form-label">Nom de l'Organisme ou du Formateur</label>
+                <input type="text" class="form-control" id="organisme" name="organisme" value="{{ formation.organisme_formateur|default:'' }}">
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Image -->
+            <h5 class="mb-3"><i class="bi bi-image"></i> Image de Présentation</h5>
+            {% if formation.image %}
+            <div class="mb-3">
+                <label class="form-label">Image actuelle</label>
+                <div class="d-flex align-items-center gap-3">
+                    <img src="{{ formation.image.url }}" alt="{{ formation.intitule }}" style="max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 8px;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="supprimer_image" name="supprimer_image">
+                        <label class="form-check-label text-danger" for="supprimer_image">Supprimer l'image</label>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="mb-3">
+                <label for="image" class="form-label">{% if formation.image %}Remplacer l'image{% else %}Image de la formation{% endif %}</label>
+                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                <small class="text-muted">Formats acceptés : JPG, PNG, GIF. Cette image sera affichée sur la page d'accueil si la formation est publiée.</small>
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'formation:detail_formation' formation.pk %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <i class="bi bi-info-circle"></i> <strong>Code Formation :</strong> {{ formation.code_formation }}
+</div>
+{% endblock %}

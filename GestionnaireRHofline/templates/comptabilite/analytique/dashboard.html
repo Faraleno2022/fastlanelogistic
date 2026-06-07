@@ -1,0 +1,125 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Comptabilité Analytique - Dashboard{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-pie-chart-fill text-primary"></i> Comptabilité Analytique
+        </h1>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-building text-primary fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Centres de coûts</h6>
+                            <h3 class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-diagram-3 text-success fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Sections</h6>
+                            <h3 class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-clipboard-data text-warning fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Imputations</h6>
+                            <h3 class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-graph-up text-info fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Variances</h6>
+                            <h3 class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'comptabilite:analytique_centres_couts' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-building"></i> Gérer les centres de coûts
+                        </a>
+                        <a href="{% url 'comptabilite:analytique_sections' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-diagram-3"></i> Gérer les sections analytiques
+                        </a>
+                        <a href="{% url 'comptabilite:analytique_imputations' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-clipboard-data"></i> Saisir des imputations
+                        </a>
+                        <a href="{% url 'comptabilite:analytique_budgets' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-wallet2"></i> Gérer les budgets
+                        </a>
+                        <a href="{% url 'comptabilite:analytique_variances' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-graph-up"></i> Analyser les variances
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> À propos du module</h5>
+                </div>
+                <div class="card-body">
+                    <p>Le module de <strong>Comptabilité Analytique Avancée</strong> permet de :</p>
+                    <ul>
+                        <li>Définir des centres de coûts et sections analytiques</li>
+                        <li>Imputer les charges et produits par axe d'analyse</li>
+                        <li>Suivre les budgets par centre de responsabilité</li>
+                        <li>Analyser les écarts (variances) budget vs réel</li>
+                        <li>Générer des rapports de profitabilité</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

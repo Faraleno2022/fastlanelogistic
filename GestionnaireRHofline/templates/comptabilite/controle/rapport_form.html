@@ -1,0 +1,151 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouveau{% endif %} rapport{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-file-earmark-bar-graph text-primary"></i>
+                {% if object %}Modifier le rapport{% else %}Nouveau rapport{% endif %}
+            </h1>
+        </div>
+        <a href="{% url 'comptabilite:controle_rapports' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <h6 class="text-muted mb-3">Identification</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Référence *</label>
+                                {{ form.reference }}
+                                {% for error in form.reference.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Type de rapport *</label>
+                                {{ form.type_rapport }}
+                                {% for error in form.type_rapport.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Statut *</label>
+                                {{ form.statut }}
+                                {% for error in form.statut.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Titre *</label>
+                                {{ form.titre }}
+                                {% for error in form.titre.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Période</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Date de début *</label>
+                                {{ form.date_debut_periode }}
+                                {% for error in form.date_debut_periode.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date de fin *</label>
+                                {{ form.date_fin_periode }}
+                                {% for error in form.date_fin_periode.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Contenu</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Résumé exécutif *</label>
+                                {{ form.resume_executif }}
+                                {% for error in form.resume_executif.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Constats principaux *</label>
+                                {{ form.constats_principaux }}
+                                {% for error in form.constats_principaux.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Recommandations *</label>
+                                {{ form.recommandations }}
+                                {% for error in form.recommandations.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Plan d'action</label>
+                                {{ form.plan_action }}
+                                {% for error in form.plan_action.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Statistiques</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label">Tests réalisés</label>
+                                {{ form.nb_tests_realises }}
+                                {% for error in form.nb_tests_realises.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Tests réussis</label>
+                                {{ form.nb_tests_reussis }}
+                                {% for error in form.nb_tests_reussis.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Non-conformités</label>
+                                {{ form.nb_non_conformites }}
+                                {% for error in form.nb_non_conformites.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Taux conformité (%)</label>
+                                {{ form.taux_conformite }}
+                                {% for error in form.taux_conformite.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:controle_rapports' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Types de rapport</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <ul class="mb-0">
+                        <li><strong>Mensuel</strong> : Synthèse mensuelle des contrôles</li>
+                        <li><strong>Trimestriel</strong> : Bilan trimestriel approfondi</li>
+                        <li><strong>Annuel</strong> : Rapport annuel complet</li>
+                        <li><strong>Spécial</strong> : Rapport sur un sujet spécifique</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

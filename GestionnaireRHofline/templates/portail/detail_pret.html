@@ -1,0 +1,143 @@
+{% extends 'portail/base_portail.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Prêt {{ pret.numero_pret }}{% endblock %}
+
+{% block portail_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="{% url 'portail:mes_prets' %}" class="btn btn-outline-secondary mb-3">
+            <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+        <h2><i class="fas fa-file-invoice-dollar me-2"></i>Prêt {{ pret.numero_pret }}</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <!-- Informations -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td>Type</td>
+                        <td class="text-end">{{ pret.get_type_pret_display }}</td>
+                    </tr>
+                    <tr>
+                        <td>Date demande</td>
+                        <td class="text-end">{{ pret.date_demande|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td>Statut</td>
+                        <td class="text-end">
+                            {% if pret.statut == 'en_attente' %}
+                            <span class="badge bg-warning">En attente</span>
+                            {% elif pret.statut == 'en_cours' %}
+                            <span class="badge bg-primary">En cours</span>
+                            {% elif pret.statut == 'solde' %}
+                            <span class="badge bg-success">Soldé</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Montants -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Montants</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td>Montant prêt</td>
+                        <td class="text-end fw-bold">{{ pret.montant_pret|floatformat:0|intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <td>Total à rembourser</td>
+                        <td class="text-end">{{ pret.montant_total|floatformat:0|intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <td>Mensualité</td>
+                        <td class="text-end">{{ pret.montant_echeance|floatformat:0|intcomma }}</td>
+                    </tr>
+                    <tr class="table-success">
+                        <td>Remboursé</td>
+                        <td class="text-end">{{ pret.montant_rembourse|floatformat:0|intcomma }}</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>Solde restant</strong></td>
+                        <td class="text-end"><strong>{{ pret.solde_restant|floatformat:0|intcomma }}</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Progression -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6>Progression</h6>
+                <div class="progress mb-2" style="height: 25px;">
+                    <div class="progress-bar bg-success" style="width: {% widthratio pret.echeances_payees pret.nombre_echeances 100 %}%">
+                        {{ pret.echeances_payees }}/{{ pret.nombre_echeances }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Échéancier -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Échéancier</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-orange-light">
+                            <tr>
+                                <th class="text-center">N°</th>
+                                <th>Date</th>
+                                <th class="text-end">Montant</th>
+                                <th class="text-end">Solde après</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ech in echeances %}
+                            <tr class="{% if ech.statut == 'paye' %}table-success{% elif ech.statut == 'en_retard' %}table-danger{% endif %}">
+                                <td class="text-center">{{ ech.numero_echeance }}</td>
+                                <td>{{ ech.date_echeance|date:"d/m/Y" }}</td>
+                                <td class="text-end">{{ ech.montant_echeance|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ ech.solde_apres|floatformat:0|intcomma }}</td>
+                                <td>
+                                    {% if ech.statut == 'paye' %}
+                                    <span class="badge bg-success">Payé</span>
+                                    {% elif ech.statut == 'en_retard' %}
+                                    <span class="badge bg-danger">En retard</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">En attente</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Échéancier non généré
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

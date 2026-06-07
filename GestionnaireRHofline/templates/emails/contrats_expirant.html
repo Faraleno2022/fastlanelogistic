@@ -1,0 +1,40 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Contrats expirant{% endblock %}
+{% block header %}Alerte Contrats{% endblock %}
+
+{% block content %}
+<p>Bonjour,</p>
+
+<div class="warning-box">
+    <strong>Attention !</strong><br>
+    {{ employes|length }} contrat(s) expire(nt) dans les {{ jours_avant }} prochains jours.
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Employé</th>
+            <th>Matricule</th>
+            <th>Type contrat</th>
+            <th>Date fin</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for emp in employes %}
+        <tr>
+            <td>{{ emp.nom }} {{ emp.prenoms }}</td>
+            <td>{{ emp.matricule }}</td>
+            <td>{{ emp.get_type_contrat_display }}</td>
+            <td>{{ emp.date_fin_contrat|date:"d/m/Y" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p>Veuillez prendre les dispositions nécessaires pour le renouvellement ou la fin de ces contrats.</p>
+
+<p style="text-align: center;">
+    <a href="#" class="btn">Accéder au système RH</a>
+</p>
+{% endblock %}

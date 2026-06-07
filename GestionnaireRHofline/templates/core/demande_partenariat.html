@@ -1,0 +1,153 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block title %}Demande de Partenariat - GuinéeRH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, #EF7707, #ff8c00);">
+                    <h2 class="mb-0"><i class="bi bi-handshake me-2"></i>Demande de Partenariat</h2>
+                    <p class="mb-0 mt-2 opacity-75">Rejoignez notre réseau de partenaires</p>
+                </div>
+                <div class="card-body p-4">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <h5 class="border-bottom pb-2 mb-3 text-primary">
+                            <i class="bi bi-building me-2"></i>Informations Entreprise
+                        </h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nom_entreprise" class="form-label">Nom de l'entreprise *</label>
+                                <input type="text" class="form-control" id="nom_entreprise" name="nom_entreprise" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="secteur_activite" class="form-label">Secteur d'activité *</label>
+                                <input type="text" class="form-control" id="secteur_activite" name="secteur_activite" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nif" class="form-label">NIF (optionnel)</label>
+                                <input type="text" class="form-control" id="nif" name="nif">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ville" class="form-label">Ville *</label>
+                                <input type="text" class="form-control" id="ville" name="ville" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="adresse" class="form-label">Adresse *</label>
+                                <input type="text" class="form-control" id="adresse" name="adresse" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="pays" class="form-label">Pays</label>
+                                <input type="text" class="form-control" id="pays" name="pays" value="Guinée">
+                            </div>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3 mt-4 text-primary">
+                            <i class="bi bi-person me-2"></i>Contact Principal
+                        </h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nom_contact" class="form-label">Nom complet *</label>
+                                <input type="text" class="form-control" id="nom_contact" name="nom_contact" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fonction_contact" class="form-label">Fonction *</label>
+                                <input type="text" class="form-control" id="fonction_contact" name="fonction_contact" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telephone" class="form-label">Téléphone *</label>
+                                <input type="tel" class="form-control" id="telephone" name="telephone" required>
+                            </div>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3 mt-4 text-primary">
+                            <i class="bi bi-diagram-3 me-2"></i>Type de Partenariat
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <label for="type_partenariat" class="form-label">Type de partenariat souhaité *</label>
+                            <select class="form-select" id="type_partenariat" name="type_partenariat" required>
+                                <option value="">-- Sélectionner --</option>
+                                {% for value, label in types_partenariat %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description_activite" class="form-label">Description de votre activité *</label>
+                            <textarea class="form-control" id="description_activite" name="description_activite" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="motivation" class="form-label">Pourquoi souhaitez-vous devenir partenaire ? *</label>
+                            <textarea class="form-control" id="motivation" name="motivation" rows="3" required></textarea>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3 mt-4 text-primary">
+                            <i class="bi bi-file-earmark-arrow-up me-2"></i>Documents (optionnel)
+                        </h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="document_cgi" class="form-label">Document CGI / Registre de commerce</label>
+                                <input type="file" class="form-control" id="document_cgi" name="document_cgi" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="text-muted">PDF, JPG ou PNG (max 5 Mo)</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="autre_document" class="form-label">Autre document</label>
+                                <input type="file" class="form-control" id="autre_document" name="autre_document" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="text-muted">PDF, JPG ou PNG (max 5 Mo)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="accepter_conditions" required>
+                            <label class="form-check-label" for="accepter_conditions">
+                                J'accepte les conditions générales et la politique de confidentialité *
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-lg text-white" style="background: linear-gradient(135deg, #EF7707, #ff8c00); border: none;">
+                                <i class="bi bi-send me-2"></i>Soumettre ma demande
+                            </button>
+                            <a href="{% url 'core:index' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Retour à l'accueil
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

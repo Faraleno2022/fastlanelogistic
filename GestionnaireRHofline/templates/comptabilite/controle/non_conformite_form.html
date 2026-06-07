@@ -1,0 +1,164 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouvelle{% endif %} non-conformité{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-exclamation-triangle text-primary"></i>
+                {% if object %}Modifier la non-conformité{% else %}Nouvelle non-conformité{% endif %}
+            </h1>
+        </div>
+        <a href="{% url 'comptabilite:controle_non_conformites' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <h6 class="text-muted mb-3">Identification</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Référence *</label>
+                                {{ form.reference }}
+                                {% for error in form.reference.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Titre *</label>
+                                {{ form.titre }}
+                                {% for error in form.titre.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Description *</label>
+                                {{ form.description }}
+                                {% for error in form.description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Classification</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Niveau de gravité *</label>
+                                {{ form.niveau_gravite }}
+                                {% for error in form.niveau_gravite.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Origine *</label>
+                                {{ form.origine }}
+                                {% for error in form.origine.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Date de détection *</label>
+                                {{ form.date_detection }}
+                                {% for error in form.date_detection.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Liens</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Procédure</label>
+                                {{ form.procedure }}
+                                {% for error in form.procedure.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Test</label>
+                                {{ form.test }}
+                                {% for error in form.test.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Risque</label>
+                                {{ form.risque }}
+                                {% for error in form.risque.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Analyse</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Cause racine</label>
+                                {{ form.cause_racine }}
+                                {% for error in form.cause_racine.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Impact</label>
+                                {{ form.impact }}
+                                {% for error in form.impact.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Plan d'action</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Actions correctives</label>
+                                {{ form.actions_correctives }}
+                                {% for error in form.actions_correctives.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Actions préventives</label>
+                                {{ form.actions_preventives }}
+                                {% for error in form.actions_preventives.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Responsable correction</label>
+                                {{ form.responsable_correction }}
+                                {% for error in form.responsable_correction.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Date d'échéance</label>
+                                {{ form.date_echeance }}
+                                {% for error in form.date_echeance.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Statut *</label>
+                                {{ form.statut }}
+                                {% for error in form.statut.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:controle_non_conformites' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Niveaux de gravité</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <ul class="mb-0">
+                        <li><strong>Mineur</strong> : Impact limité, correction simple</li>
+                        <li><strong>Majeur</strong> : Impact significatif, action rapide requise</li>
+                        <li><strong>Critique</strong> : Impact grave, action immédiate</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

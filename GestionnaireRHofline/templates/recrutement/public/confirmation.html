@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidature Confirmée</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <style>
+        :root {
+            --guinea-green: #009460;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .confirmation-card {
+            max-width: 600px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .success-header {
+            background: linear-gradient(135deg, var(--guinea-green) 0%, #006040 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2.5rem;
+        }
+        .confirmation-body {
+            padding: 2rem;
+        }
+        .reference-box {
+            background: #f8f9fa;
+            border: 2px dashed var(--guinea-green);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .reference-number {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--guinea-green);
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="confirmation-card">
+        <div class="success-header">
+            <div class="success-icon">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h2>Candidature Envoyée!</h2>
+            <p class="mb-0">Votre dossier a été transmis avec succès</p>
+        </div>
+        <div class="confirmation-body">
+            <div class="reference-box mb-4">
+                <small class="text-muted d-block">Référence de votre candidature</small>
+                <span class="reference-number">{{ candidature.numero_candidature }}</span>
+            </div>
+            
+            <div class="mb-4">
+                <h5><i class="bi bi-briefcase me-2 text-success"></i>Poste</h5>
+                <p class="mb-1"><strong>{{ candidature.offre.intitule_poste }}</strong></p>
+                <p class="text-muted mb-0">{{ candidature.offre.entreprise.nom_entreprise }}</p>
+            </div>
+            
+            <div class="mb-4">
+                <h5><i class="bi bi-person me-2 text-success"></i>Candidat</h5>
+                <p class="mb-0">{{ candidature.civilite }} {{ candidature.nom }} {{ candidature.prenoms }}</p>
+                <p class="text-muted mb-0">{{ candidature.email }}</p>
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Prochaines étapes:</strong><br>
+                L'entreprise <strong>{{ candidature.offre.entreprise.nom_entreprise }}</strong> examinera votre dossier 
+                et vous contactera si votre profil correspond à leurs attentes.
+            </div>
+            
+            <div class="text-center">
+                <a href="/" class="btn btn-outline-success">
+                    <i class="bi bi-house me-2"></i>Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

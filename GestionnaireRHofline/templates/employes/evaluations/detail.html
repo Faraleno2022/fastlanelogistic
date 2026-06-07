@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Détail évaluation - {{ employe.nom }} {{ employe.prenoms }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">Évaluation {{ evaluation.annee_evaluation }} - {{ evaluation.get_periode_display }}</h1>
+    <div class="btn-group" role="group">
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'employes:evaluation_list' employe.id %}">Retour</a>
+        <a class="btn btn-sm btn-outline-danger" href="{% url 'employes:evaluation_delete' evaluation.id %}">Supprimer</a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Employé</dt>
+            <dd class="col-sm-9">{{ employe.nom }} {{ employe.prenoms }}</dd>
+
+            <dt class="col-sm-3">Date</dt>
+            <dd class="col-sm-9">{{ evaluation.date_evaluation|date:"d/m/Y" }}</dd>
+
+            <dt class="col-sm-3">Évaluateur</dt>
+            <dd class="col-sm-9">
+                {% if evaluation.evaluateur %}
+                    {{ evaluation.evaluateur.nom }} {{ evaluation.evaluateur.prenoms|default:"" }}
+                {% else %}
+                    -
+                {% endif %}
+            </dd>
+
+            <dt class="col-sm-3">Objectifs atteints</dt>
+            <dd class="col-sm-9">{{ evaluation.objectifs_atteints|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Compétences techniques</dt>
+            <dd class="col-sm-9">{{ evaluation.competences_techniques|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Compétences comportementales</dt>
+            <dd class="col-sm-9">{{ evaluation.competences_comportementales|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Note globale</dt>
+            <dd class="col-sm-9">{{ evaluation.note_globale|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Appréciation</dt>
+            <dd class="col-sm-9">{{ evaluation.get_appreciation_display|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Points forts</dt>
+            <dd class="col-sm-9">{{ evaluation.points_forts|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Points d'amélioration</dt>
+            <dd class="col-sm-9">{{ evaluation.points_amelioration|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Plan de développement</dt>
+            <dd class="col-sm-9">{{ evaluation.plan_developpement|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Recommandations</dt>
+            <dd class="col-sm-9">{{ evaluation.recommandations|default:"-" }}</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}

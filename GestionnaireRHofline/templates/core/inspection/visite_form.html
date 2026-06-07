@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Enregistrer visite d'inspection{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">Nouvelle visite d'inspection</h1>
+    <a href="{% url 'core:visites_liste' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Date de visite *</label>
+                    <input type="date" name="date_visite" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Type de visite *</label>
+                    <select name="type_visite" class="form-select" required>
+                        <option value="routine">Visite de routine</option>
+                        <option value="controle">Contrôle</option>
+                        <option value="enquete">Enquête</option>
+                        <option value="suite_plainte">Suite à plainte</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Inspecteur *</label>
+                    <input type="text" name="inspecteur" class="form-control" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Motif / Objet de la visite</label>
+                <textarea name="motif" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Observations</label>
+                <textarea name="observations" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Actions requises</label>
+                <textarea name="actions_requises" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Date limite actions</label>
+                    <input type="date" name="date_limite_actions" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="en_cours">En cours</option>
+                        <option value="regularise">Régularisé</option>
+                        <option value="clos">Clos</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

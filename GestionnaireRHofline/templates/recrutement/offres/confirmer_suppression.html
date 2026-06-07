@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer Offre - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-exclamation-triangle text-danger"></i> Confirmer la Suppression</h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-trash"></i> Suppression de l'offre</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Attention !</strong> Cette action est irréversible.
+                </div>
+                
+                <p class="lead">Êtes-vous sûr de vouloir supprimer l'offre suivante ?</p>
+                
+                <table class="table table-bordered">
+                    <tr>
+                        <th width="30%">Référence</th>
+                        <td><strong>{{ offre.reference_offre }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Intitulé du poste</th>
+                        <td>{{ offre.intitule_poste }}</td>
+                    </tr>
+                    <tr>
+                        <th>Type de contrat</th>
+                        <td>{{ offre.type_contrat|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date de publication</th>
+                        <td>{{ offre.date_publication|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date limite</th>
+                        <td>{{ offre.date_limite_candidature|date:"d/m/Y"|default:"Non définie" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Statut</th>
+                        <td>
+                            {% if offre.statut_offre == 'ouverte' %}
+                                <span class="badge bg-success">Ouverte</span>
+                            {% elif offre.statut_offre == 'fermee' %}
+                                <span class="badge bg-secondary">Fermée</span>
+                            {% elif offre.statut_offre == 'pourvue' %}
+                                <span class="badge bg-primary">Pourvue</span>
+                            {% else %}
+                                <span class="badge bg-danger">Annulée</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Candidatures</th>
+                        <td>
+                            {% with nb_candidatures=offre.candidatures.count %}
+                                {% if nb_candidatures > 0 %}
+                                    <span class="badge bg-warning text-dark">{{ nb_candidatures }} candidature{{ nb_candidatures|pluralize }}</span>
+                                    <br><small class="text-muted">Les candidatures seront également supprimées.</small>
+                                {% else %}
+                                    <span class="text-muted">Aucune candidature</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                </table>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'recrutement:offres' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Annuler
+                    </a>
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Confirmer la suppression
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

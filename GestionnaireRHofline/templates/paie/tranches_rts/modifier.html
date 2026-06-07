@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier tranche RTS #{{ tranche.numero_tranche }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-pencil-square me-2"></i>Modifier tranche #{{ tranche.numero_tranche }}</h2>
+        <a href="{% url 'paie:liste_tranches_rts' %}?annee={{ tranche.annee_validite }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Tranche {{ tranche.numero_tranche }} — Barème {{ tranche.annee_validite }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">N° tranche</label>
+                            <input type="number" name="numero_tranche" class="form-control"
+                                   value="{{ tranche.numero_tranche }}" min="1" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Borne inférieure (GNF)</label>
+                                <input type="number" name="borne_inferieure" class="form-control"
+                                       value="{{ tranche.borne_inferieure|floatformat:0 }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Borne supérieure (GNF)</label>
+                                <input type="number" name="borne_superieure" class="form-control"
+                                       value="{% if tranche.borne_superieure %}{{ tranche.borne_superieure|floatformat:0 }}{% endif %}"
+                                       placeholder="Vide = illimité">
+                                <small class="text-muted">Laisser vide pour la dernière tranche.</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Taux RTS (%)</label>
+                            <input type="number" name="taux" class="form-control"
+                                   value="{{ tranche.taux_irg }}" step="0.01" min="0" max="100" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Type de barème</label>
+                            <select name="type_bareme" class="form-select">
+                                <option value="officiel" {% if tranche.type_bareme == 'officiel' %}selected{% endif %}>Officiel (en vigueur)</option>
+                                <option value="simulation" {% if tranche.type_bareme == 'simulation' %}selected{% endif %}>Simulation</option>
+                                <option value="test" {% if tranche.type_bareme == 'test' %}selected{% endif %}>Test</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="actif" class="form-check-input" id="actif"
+                                   {% if tranche.actif %}checked{% endif %}>
+                            <label class="form-check-label" for="actif">Tranche active</label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>Enregistrer
+                            </button>
+                            <a href="{% url 'paie:liste_tranches_rts' %}?annee={{ tranche.annee_validite }}"
+                               class="btn btn-outline-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

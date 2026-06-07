@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Modifier{% else %}Ajouter{% endif %} Taux de Change{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="#">Paramètres</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'core:liste_taux_change' %}">Taux de change</a></li>
+        <li class="breadcrumb-item active">{% if is_edit %}Modifier{% else %}Nouveau{% endif %}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        {% if is_edit %}
+                            Modifier le taux {{ taux.devise_source.code }}/{{ taux.devise_cible.code }}
+                        {% else %}
+                            Ajouter un nouveau taux de change
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if not is_edit %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="devise_source" class="form-label">Devise source <span class="text-danger">*</span></label>
+                                <select name="devise_source" id="devise_source" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    {% for devise in devises %}
+                                        <option value="{{ devise.id }}">{{ devise.code }} - {{ devise.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="devise_cible" class="form-label">Devise cible <span class="text-danger">*</span></label>
+                                <select name="devise_cible" id="devise_cible" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    {% for devise in devises %}
+                                        <option value="{{ devise.id }}">{{ devise.code }} - {{ devise.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Devise source</label>
+                                <input type="text" class="form-control-plaintext" 
+                                       value="{{ taux.devise_source.code }} - {{ taux.devise_source.nom }}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Devise cible</label>
+                                <input type="text" class="form-control-plaintext" 
+                                       value="{{ taux.devise_cible.code }} - {{ taux.devise_cible.nom }}" readonly>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="taux" class="form-label">Taux <span class="text-danger">*</span></label>
+                                <input type="number" name="taux" id="taux" class="form-control" 
+                                       step="0.000001" min="0" required
+                                       value="{% if is_edit %}{{ taux.taux }}{% endif %}"
+                                       placeholder="Ex: 8600.000000">
+                                <small class="form-text text-muted">
+                                    1 {{ taux.devise_source.code|default:"devise source" }} = X {{ taux.devise_cible.code|default:"devise cible" }}
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_taux" class="form-label">Date <span class="text-danger">*</span></label>
+                                <input type="date" name="date_taux" id="date_taux" class="form-control" required
+                                       value="{% if is_edit %}{{ taux.date_taux|date:'Y-m-d' }}{% else %}{{ today }}{% endif %}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="source" class="form-label">Source</label>
+                            <input type="text" name="source" id="source" class="form-control"
+                                   value="{% if is_edit %}{{ taux.source }}{% endif %}"
+                                   placeholder="Ex: BCRG, Marché parallèle, etc.">
+                            <small class="form-text text-muted">
+                                Indiquez la source du taux (optionnel)
+                            </small>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'core:liste_taux_change' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> 
+                                {% if is_edit %}Enregistrer les modifications{% else %}Ajouter le taux{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Exemple de calcul -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Exemple de conversion</h6>
+                </div>
+                <div class="card-body">
+                    <div id="exemple-conversion" class="text-muted">
+                        Sélectionnez les devises et entrez un taux pour voir un exemple
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deviseSourceSelect = document.getElementById('devise_source');
+    const deviseCibleSelect = document.getElementById('devise_cible');
+    const tauxInput = document.getElementById('taux');
+    const exempleDiv = document.getElementById('exemple-conversion');
+    
+    function updateExemple() {
+        const deviseSource = deviseSourceSelect ? deviseSourceSelect.options[deviseSourceSelect.selectedIndex].text.split(' - ')[0] : '{{ taux.devise_source.code }}';
+        const deviseCible = deviseCibleSelect ? deviseCibleSelect.options[deviseCibleSelect.selectedIndex].text.split(' - ')[0] : '{{ taux.devise_cible.code }}';
+        const taux = parseFloat(tauxInput.value) || 0;
+        
+        if (deviseSource && deviseSource !== '--' && deviseCible && deviseCible !== '--' && taux > 0) {
+            exempleDiv.innerHTML = `
+                <p class="mb-1">1 ${deviseSource} = ${taux.toFixed(6)} ${deviseCible}</p>
+                <p class="mb-1">100 ${deviseSource} = ${(100 * taux).toFixed(2)} ${deviseCible}</p>
+                <p class="mb-0">1,000 ${deviseSource} = ${(1000 * taux).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${deviseCible}</p>
+            `;
+        } else {
+            exempleDiv.innerHTML = 'Sélectionnez les devises et entrez un taux pour voir un exemple';
+        }
+    }
+    
+    if (deviseSourceSelect) deviseSourceSelect.addEventListener('change', updateExemple);
+    if (deviseCibleSelect) deviseCibleSelect.addEventListener('change', updateExemple);
+    tauxInput.addEventListener('input', updateExemple);
+    
+    // Initial update for edit mode
+    if ('{{ is_edit }}' === 'True') {
+        updateExemple();
+    }
+});
+</script>
+{% endblock %}

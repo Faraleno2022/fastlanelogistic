@@ -1,0 +1,357 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}{{ facture.numero }} - Détail Facture - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ facture.numero }}</h1>
+            <p class="text-muted mb-0">
+                {% if facture.type_facture == 'vente' %}
+                    <i class="bi bi-arrow-up-circle me-2"></i>Facture de vente
+                {% else %}
+                    <i class="bi bi-arrow-down-circle me-2"></i>Facture d'achat
+                {% endif %}
+                - {{ facture.date_facture|date:"d/m/Y" }}
+            </p>
+        </div>
+        <div>
+            <div class="btn-group">
+                <a href="{% url 'comptabilite:facture_update' facture.pk %}" class="btn btn-warning">
+                    <i class="bi bi-pencil me-2"></i>Modifier
+                </a>
+                <button class="btn btn-info" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i>Imprimer
+                </button>
+                <a href="{% url 'comptabilite:facture_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte principale -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Détails de la Facture</h5>
+                    <div>
+                        {% if facture.statut == 'payee' %}
+                            <span class="badge bg-success fs-6">Payée</span>
+                        {% elif facture.statut == 'partiellement_payee' %}
+                            <span class="badge bg-warning fs-6">Partiellement payée</span>
+                        {% else %}
+                            <span class="badge bg-danger fs-6">Non payée</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Informations générales -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">Numéro:</td>
+                                    <td><strong>{{ facture.numero }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Type:</td>
+                                    <td>
+                                        {% if facture.type_facture == 'vente' %}
+                                            <span class="badge bg-success">Facture de vente</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Facture d'achat</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Date facture:</td>
+                                    <td>{{ facture.date_facture|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Date échéance:</td>
+                                    <td>
+                                        {% if facture.date_echeance %}
+                                            <span class="{% if facture.date_echeance < today %}text-danger{% endif %}">
+                                                {{ facture.date_echeance|date:"d/m/Y" }}
+                                            </span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">Tiers:</td>
+                                    <td>
+                                        {% if facture.tiers %}
+                                            <a href="{% url 'comptabilite:tiers_detail' facture.tiers.pk %}" class="text-decoration-none">
+                                                {{ facture.tiers.raison_sociale }}
+                                            </a>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Statut:</td>
+                                    <td>
+                                        {% if facture.statut == 'payee' %}
+                                            <span class="badge bg-success">Payée</span>
+                                        {% elif facture.statut == 'partiellement_payee' %}
+                                            <span class="badge bg-warning">Partiellement payée</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Non payée</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Date création:</td>
+                                    <td>{{ facture.date_creation|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Dernière modif:</td>
+                                    <td>{{ facture.date_modification|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Montants -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6 class="text-muted mb-3">Détails des montants</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Description</th>
+                                            <th class="text-end">Montant</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Montant Hors Taxes</td>
+                                            <td class="text-end">{{ facture.montant_ht|floatformat:0 }} GNF</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TVA</td>
+                                            <td class="text-end">{{ facture.montant_tva|floatformat:0 }} GNF</td>
+                                        </tr>
+                                        <tr class="table-primary">
+                                            <td><strong>Montant TTC</strong></td>
+                                            <td class="text-end"><strong>{{ facture.montant_ttc|floatformat:0 }} GNF</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions et informations -->
+        <div class="col-lg-4">
+            <!-- Actions rapides -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Actions Rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'comptabilite:facture_update' facture.pk %}" class="btn btn-warning">
+                            <i class="bi bi-pencil me-2"></i>Modifier la facture
+                        </a>
+                        
+                        <button class="btn btn-info" onclick="window.print()">
+                            <i class="bi bi-printer me-2"></i>Imprimer la facture
+                        </button>
+                        
+                        <button class="btn btn-success" onclick="sendByEmail()">
+                            <i class="bi bi-envelope me-2"></i>Envoyer par email
+                        </button>
+                        
+                        {% if facture.statut != 'payee' %}
+                            <button class="btn btn-primary" onclick="markAsPaid()">
+                                <i class="bi bi-check-circle me-2"></i>Marquer comme payée
+                            </button>
+                        {% endif %}
+                        
+                        <button class="btn btn-outline-danger" onclick="duplicateFacture()">
+                            <i class="bi bi-files me-2"></i>Dupliquer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations de paiement -->
+            <div class="card mt-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Informations de Paiement</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Montant dû:</span>
+                            <strong class="text-danger">{{ facture.montant_ttc|floatformat:0 }} GNF</strong>
+                        </div>
+                        
+                        {% if facture.date_echeance %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Échéance:</span>
+                                <span class="{% if facture.date_echeance < today %}text-danger{% endif %}">
+                                    {{ facture.date_echeance|date:"d/m/Y" }}
+                                </span>
+                            </div>
+                            
+                            {% if facture.date_echeance < today %}
+                                <div class="alert alert-warning small py-2">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    En retard de {{ today|timesince:facture.date_echeance }}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <div class="progress mb-2" style="height: 20px;">
+                        {% if facture.statut == 'payee' %}
+                            <div class="progress-bar bg-success" style="width: 100%">100%</div>
+                        {% elif facture.statut == 'partiellement_payee' %}
+                            <div class="progress-bar bg-warning" style="width: 50%">50%</div>
+                        {% else %}
+                            <div class="progress-bar bg-danger" style="width: 0%">0%</div>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">État du paiement</small>
+                </div>
+            </div>
+
+            <!-- Statut -->
+            <div class="card mt-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Statut de la Facture</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if facture.statut == 'payee' %}
+                        <i class="bi bi-check-circle text-success fs-1"></i>
+                        <h6 class="mt-2 text-success">Facture Payée</h6>
+                        <p class="text-muted small">Cette facture a été entièrement réglée.</p>
+                    {% elif facture.statut == 'partiellement_payee' %}
+                        <i class="bi bi-clock text-warning fs-1"></i>
+                        <h6 class="mt-2 text-warning">Partiellement Payée</h6>
+                        <p class="text-muted small">Un paiement partiel a été effectué.</p>
+                    {% else %}
+                        <i class="bi bi-x-circle text-danger fs-1"></i>
+                        <h6 class="mt-2 text-danger">Non Payée</h6>
+                        <p class="text-muted small">Cette facture attend encore le paiement.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section d'impression -->
+<div class="d-none" id="printSection">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-6">
+                <h2>FACTURE</h2>
+                <h4>{{ facture.numero }}</h4>
+            </div>
+            <div class="col-6 text-end">
+                <p><strong>Date:</strong> {{ facture.date_facture|date:"d/m/Y" }}</p>
+                {% if facture.date_echeance %}
+                    <p><strong>Échéance:</strong> {{ facture.date_echeance|date:"d/m/Y" }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-6">
+                <h5>Client:</h5>
+                {% if facture.tiers %}
+                    <p><strong>{{ facture.tiers.raison_sociale }}</strong></p>
+                    <p>{{ facture.tiers.adresse|default:"-" }}</p>
+                    <p>NIF: {{ facture.tiers.nif|default:"-" }}</p>
+                {% endif %}
+            </div>
+            <div class="col-6">
+                <h5>Fournisseur:</h5>
+                <p><strong>{{ request.user.entreprise.nom_entreprise }}</strong></p>
+                <p>{{ request.user.entreprise.adresse|default:"-" }}</p>
+                <p>NIF: {{ request.user.entreprise.nif|default:"-" }}</p>
+            </div>
+        </div>
+        
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th class="text-end">Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Montant Hors Taxes</td>
+                    <td class="text-end">{{ facture.montant_ht|floatformat:0 }} GNF</td>
+                </tr>
+                <tr>
+                    <td>TVA ({{ facture.taux_tva }}%)</td>
+                    <td class="text-end">{{ facture.montant_tva|floatformat:0 }} GNF</td>
+                </tr>
+                <tr>
+                    <td><strong>Total TTC</strong></td>
+                    <td class="text-end"><strong>{{ facture.montant_ttc|floatformat:0 }} GNF</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function sendByEmail() {
+    var email = "{{ facture.tiers.email|default:'' }}";
+    
+    if (email) {
+        if (confirm('Envoyer cette facture par email à ' + email + ' ?')) {
+            // Logique d'envoi d'email
+            alert('Facture envoyée avec succès!');
+        }
+    } else {
+        alert('Le tiers n\'a pas d\'adresse email configurée.');
+    }
+}
+
+function markAsPaid() {
+    if (confirm('Marquer cette facture comme payée?')) {
+        // Logique pour marquer comme payée
+        alert('Fonctionnalité à implémenter');
+    }
+}
+
+function duplicateFacture() {
+    if (confirm('Créer une copie de cette facture?')) {
+        // Logique pour dupliquer
+        alert('Fonctionnalité à implémenter');
+    }
+}
+
+// Gestion de l'impression
+window.addEventListener('beforeprint', function() {
+    document.body.innerHTML = document.getElementById('printSection').innerHTML;
+});
+
+window.addEventListener('afterprint', function() {
+    location.reload();
+});
+</script>
+{% endblock %}

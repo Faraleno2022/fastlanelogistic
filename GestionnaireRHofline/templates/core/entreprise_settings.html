@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Paramètres de l'Entreprise - {{ entreprise.nom_entreprise }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h4 class="mb-0"><i class="bi bi-building-gear"></i> Paramètres de l'Entreprise</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Aperçu du logo actuel -->
+                    {% if entreprise.logo %}
+                    <div class="alert alert-info mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center">
+                                <strong>Logo actuel:</strong>
+                            </div>
+                            <div class="col-md-9">
+                                <img src="{{ entreprise.logo.url }}" alt="Logo {{ entreprise.nom_entreprise }}" 
+                                     class="img-thumbnail" style="max-height: 100px;">
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning mb-4">
+                        <i class="bi bi-exclamation-triangle"></i> Aucun logo n'est actuellement défini pour votre entreprise.
+                    </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informations Générales</h5>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.nom_entreprise.id_for_label }}" class="form-label">{{ form.nom_entreprise.label }} *</label>
+                            {{ form.nom_entreprise }}
+                            {% if form.nom_entreprise.errors %}
+                                <div class="text-danger">{{ form.nom_entreprise.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.nif.id_for_label }}" class="form-label">{{ form.nif.label }}</label>
+                                {{ form.nif }}
+                                {% if form.nif.errors %}
+                                    <div class="text-danger">{{ form.nif.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.nifp.id_for_label }}" class="form-label">{{ form.nifp.label }}</label>
+                                {{ form.nifp }}
+                                {% if form.nifp.errors %}
+                                    <div class="text-danger">{{ form.nifp.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.num_cnss.id_for_label }}" class="form-label">{{ form.num_cnss.label }}</label>
+                                {{ form.num_cnss }}
+                                {% if form.num_cnss.errors %}
+                                    <div class="text-danger">{{ form.num_cnss.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.adresse.id_for_label }}" class="form-label">{{ form.adresse.label }}</label>
+                            {{ form.adresse }}
+                            {% if form.adresse.errors %}
+                                <div class="text-danger">{{ form.adresse.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ville.id_for_label }}" class="form-label">{{ form.ville.label }}</label>
+                                {{ form.ville }}
+                                {% if form.ville.errors %}
+                                    <div class="text-danger">{{ form.ville.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.pays.id_for_label }}" class="form-label">{{ form.pays.label }}</label>
+                                {{ form.pays }}
+                                {% if form.pays.errors %}
+                                    <div class="text-danger">{{ form.pays.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.telephone.id_for_label }}" class="form-label">{{ form.telephone.label }}</label>
+                                {{ form.telephone }}
+                                {% if form.telephone.errors %}
+                                    <div class="text-danger">{{ form.telephone.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+
+                        <h5 class="mb-3"><i class="bi bi-bank2"></i> Coordonnées Bancaires / Télépaiement DGI</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.banque_nom.id_for_label }}" class="form-label">{{ form.banque_nom.label }}</label>
+                                {{ form.banque_nom }}
+                                {% if form.banque_nom.errors %}
+                                    <div class="text-danger">{{ form.banque_nom.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.banque_iban.id_for_label }}" class="form-label">{{ form.banque_iban.label }}</label>
+                                {{ form.banque_iban }}
+                                {% if form.banque_iban.errors %}
+                                    <div class="text-danger">{{ form.banque_iban.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.banque_code.id_for_label }}" class="form-label">{{ form.banque_code.label }}</label>
+                                {{ form.banque_code }}
+                                {% if form.banque_code.errors %}
+                                    <div class="text-danger">{{ form.banque_code.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.banque_guichet.id_for_label }}" class="form-label">{{ form.banque_guichet.label }}</label>
+                                {{ form.banque_guichet }}
+                                {% if form.banque_guichet.errors %}
+                                    <div class="text-danger">{{ form.banque_guichet.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.banque_compte.id_for_label }}" class="form-label">{{ form.banque_compte.label }}</label>
+                                {{ form.banque_compte }}
+                                {% if form.banque_compte.errors %}
+                                    <div class="text-danger">{{ form.banque_compte.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.banque_cle_rib.id_for_label }}" class="form-label">{{ form.banque_cle_rib.label }}</label>
+                                {{ form.banque_cle_rib }}
+                                {% if form.banque_cle_rib.errors %}
+                                    <div class="text-danger">{{ form.banque_cle_rib.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch mt-2">
+                                    {{ form.telepaiement_autorise }}
+                                    <label class="form-check-label" for="{{ form.telepaiement_autorise.id_for_label }}">
+                                        {{ form.telepaiement_autorise.label }}
+                                    </label>
+                                </div>
+                                {% if form.telepaiement_autorise.errors %}
+                                    <div class="text-danger">{{ form.telepaiement_autorise.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        
+                        <h5 class="mb-3"><i class="bi bi-image"></i> Logo de l'Entreprise</h5>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.logo.id_for_label }}" class="form-label">{{ form.logo.label }}</label>
+                            {{ form.logo }}
+                            {% if form.logo.errors %}
+                                <div class="text-danger">{{ form.logo.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted d-block mt-2">
+                                <i class="bi bi-info-circle"></i> Le logo sera affiché:
+                                <ul class="mt-2">
+                                    <li>En en-tête de toutes les pages</li>
+                                    <li>En filigrane sur tous les documents PDF (bulletins de paie, contrats, etc.)</li>
+                                    <li>Format recommandé: PNG ou JPG, taille max: 2 MB</li>
+                                    <li>Dimensions recommandées: 200x200 pixels minimum</li>
+                                </ul>
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-save"></i> Enregistrer les Modifications
+                            </button>
+                            <a href="{% url 'core:admin_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour au Tableau de Bord
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

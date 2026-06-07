@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier Élément de Salaire - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-pencil"></i> Modifier un Élément de Salaire
+        <br><small class="text-muted">{{ element.employe.nom_complet }} - {{ element.rubrique.libelle_rubrique }}</small>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'paie:elements_salaire_employe' element.employe.id %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Rubrique (non modifiable) -->
+            <div class="mb-3">
+                <label class="form-label">Rubrique</label>
+                <input type="text" class="form-control" value="{{ element.rubrique.libelle_rubrique }} ({{ element.rubrique.code_rubrique }})" disabled>
+                <small class="text-muted">La rubrique ne peut pas être modifiée. Supprimez et recréez l'élément si nécessaire.</small>
+            </div>
+
+            <!-- Montant ou Taux -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="montant" class="form-label">Montant Fixe (GNF)</label>
+                    <input type="text" class="form-control" id="montant" name="montant" inputmode="decimal" value="{{ element.montant|default:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="taux" class="form-label">Taux (%)</label>
+                    <input type="number" class="form-control" id="taux" name="taux" step="0.01" value="{{ element.taux|default:'' }}">
+                </div>
+            </div>
+
+            <!-- Base de calcul -->
+            <div class="mb-3">
+                <label for="base_calcul" class="form-label">Base de Calcul</label>
+                <select class="form-select" id="base_calcul" name="base_calcul">
+                    <option value="">-- Aucune --</option>
+                    <option value="SALAIRE_BASE" {% if element.base_calcul == 'SALAIRE_BASE' %}selected{% endif %}>Salaire de base</option>
+                    <option value="BRUT" {% if element.base_calcul == 'BRUT' %}selected{% endif %}>Salaire brut</option>
+                    <option value="CNSS_BASE" {% if element.base_calcul == 'CNSS_BASE' %}selected{% endif %}>Base CNSS</option>
+                </select>
+            </div>
+
+            <!-- Dates -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="date_debut" class="form-label">Date de Début <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="date_debut" name="date_debut" required value="{{ element.date_debut|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="date_fin" class="form-label">Date de Fin</label>
+                    <input type="date" class="form-control" id="date_fin" name="date_fin" value="{{ element.date_fin|date:'Y-m-d'|default:'' }}">
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="actif" name="actif" {% if element.actif %}checked{% endif %}>
+                        <label class="form-check-label" for="actif">
+                            <strong>Actif</strong>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="recurrent" name="recurrent" {% if element.recurrent %}checked{% endif %}>
+                        <label class="form-check-label" for="recurrent">
+                            <strong>Récurrent</strong>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'paie:elements_salaire_employe' element.employe.id %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Enregistrer les Modifications
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

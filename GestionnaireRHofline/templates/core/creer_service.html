@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Nouveau Service{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-people-fill me-2"></i>Nouveau Service</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="code_service" class="form-label">Code *</label>
+                                <input type="text" class="form-control" id="code_service" 
+                                       name="code_service" required placeholder="Ex: RH">
+                            </div>
+                            <div class="col-md-8">
+                                <label for="nom_service" class="form-label">Nom *</label>
+                                <input type="text" class="form-control" id="nom_service" 
+                                       name="nom_service" required placeholder="Ex: Ressources Humaines">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="etablissement" class="form-label">Établissement</label>
+                            <select class="form-select" id="etablissement" name="etablissement">
+                                <option value="">Aucun (service global)</option>
+                                {% for etab in etablissements %}
+                                <option value="{{ etab.pk }}">{{ etab.code_etablissement }} - {{ etab.nom_etablissement }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="Description du service"></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Enregistrer
+                            </button>
+                            <a href="{% url 'core:gestion_structure' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

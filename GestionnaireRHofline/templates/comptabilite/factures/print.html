@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture {{ facture.numero }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .company { font-size: 1.2em; font-weight: bold; }
+        .facture-info { text-align: right; }
+        .facture-numero { font-size: 1.5em; color: #1a237e; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f5f5f5; }
+        .text-end { text-align: right; }
+        .total-row { font-weight: bold; background: #e3f2fd; }
+        .footer { margin-top: 50px; text-align: center; font-size: 0.9em; color: #666; }
+        @media print { body { margin: 0; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company">{{ request.user.entreprise.nom_entreprise }}<br><small>{{ request.user.entreprise.adresse|default:"" }}</small></div>
+        <div class="facture-info">
+            <div class="facture-numero">FACTURE {{ facture.numero }}</div>
+            <p>Date: {{ facture.date_facture|date:"d/m/Y" }}</p>
+            {% if facture.date_echeance %}<p>Échéance: {{ facture.date_echeance|date:"d/m/Y" }}</p>{% endif %}
+        </div>
+    </div>
+    
+    <div style="background: #f5f5f5; padding: 15px; margin-bottom: 20px;">
+        <strong>{{ facture.tiers.raison_sociale }}</strong><br>
+        {{ facture.tiers.adresse|default:"" }}<br>
+        {% if facture.tiers.nif %}NIF: {{ facture.tiers.nif }}{% endif %}
+    </div>
+    
+    <table>
+        <thead>
+            <tr><th>Désignation</th><th class="text-end">Qté</th><th class="text-end">P.U. HT</th><th class="text-end">TVA</th><th class="text-end">Total TTC</th></tr>
+        </thead>
+        <tbody>
+            {% for ligne in facture.lignes.all %}
+            <tr>
+                <td>{{ ligne.designation }}</td>
+                <td class="text-end">{{ ligne.quantite|floatformat:2 }}</td>
+                <td class="text-end">{{ ligne.prix_unitaire|floatformat:0 }}</td>
+                <td class="text-end">{{ ligne.taux_tva }}%</td>
+                <td class="text-end">{{ ligne.montant_ttc|floatformat:0 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr><td colspan="4" class="text-end">Total HT</td><td class="text-end">{{ facture.montant_ht|floatformat:0 }} GNF</td></tr>
+            <tr><td colspan="4" class="text-end">TVA</td><td class="text-end">{{ facture.montant_tva|floatformat:0 }} GNF</td></tr>
+            <tr class="total-row"><td colspan="4" class="text-end">TOTAL TTC</td><td class="text-end">{{ facture.montant_ttc|floatformat:0 }} GNF</td></tr>
+        </tfoot>
+    </table>
+    
+    {% if facture.notes %}<p><strong>Notes:</strong> {{ facture.notes }}</p>{% endif %}
+    
+    <div class="footer">
+        <p>{{ request.user.entreprise.nom_entreprise }} | {{ request.user.entreprise.telephone|default:"" }} | {{ request.user.entreprise.email|default:"" }}</p>
+    </div>
+    
+    <script>window.onload = function() { window.print(); }</script>
+</body>
+</html>

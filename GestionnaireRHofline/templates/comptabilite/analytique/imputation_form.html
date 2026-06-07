@@ -1,0 +1,175 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if action == 'update' %}Modifier{% else %}Nouvelle{% endif %} imputation analytique{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-diagram-2 text-primary"></i>
+                {% if action == 'update' %}Modifier l'imputation{% else %}Enregistrer une imputation analytique{% endif %}
+            </h1>
+            <p class="text-muted mb-0">Affectez vos écritures comptables aux centres, sections ou commandes analytiques.</p>
+        </div>
+        <a href="{% url 'comptabilite:analytique_imputations' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.date_imputation.id_for_label }}">Date d'imputation *</label>
+                                {{ form.date_imputation }}
+                                {% for error in form.date_imputation.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="{{ form.periode.id_for_label }}">Période *</label>
+                                {{ form.periode }}
+                                <div class="form-text">Format YYYY-MM</div>
+                                {% for error in form.periode.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label" for="{{ form.libelle.id_for_label }}">Libellé *</label>
+                                {{ form.libelle }}
+                                {% for error in form.libelle.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.type_imputation.id_for_label }}">Type d'imputation *</label>
+                                {{ form.type_imputation }}
+                                {% for error in form.type_imputation.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.ecriture.id_for_label }}">Écriture comptable *</label>
+                                {{ form.ecriture }}
+                                {% for error in form.ecriture.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.compte.id_for_label }}">Compte comptable *</label>
+                                {{ form.compte }}
+                                {% for error in form.compte.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.centre_couts.id_for_label }}">Centre de coûts</label>
+                                {{ form.centre_couts }}
+                                {% for error in form.centre_couts.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.section.id_for_label }}">Section analytique</label>
+                                {{ form.section }}
+                                {% for error in form.section.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.commande.id_for_label }}">Commande analytique</label>
+                                {{ form.commande }}
+                                {% for error in form.commande.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.montant_debit.id_for_label }}">Montant débit</label>
+                                {{ form.montant_debit }}
+                                {% for error in form.montant_debit.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.montant_credit.id_for_label }}">Montant crédit</label>
+                                {{ form.montant_credit }}
+                                {% for error in form.montant_credit.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="row g-3">
+                                    <div class="col-7">
+                                        <label class="form-label" for="{{ form.quantite.id_for_label }}">Quantité</label>
+                                        {{ form.quantite }}
+                                        {% for error in form.quantite.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                                    </div>
+                                    <div class="col-5">
+                                        <label class="form-label" for="{{ form.unite.id_for_label }}">Unité</label>
+                                        {{ form.unite }}
+                                        {% for error in form.unite.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-5">
+                                <label class="form-label" for="{{ form.cle_repartition.id_for_label }}">Clé de répartition</label>
+                                {{ form.cle_repartition }}
+                                {% for error in form.cle_repartition.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="{{ form.pourcentage_repartition.id_for_label }}">% de répartition</label>
+                                {{ form.pourcentage_repartition }}
+                                <div class="form-text">0 à 100%</div>
+                                {% for error in form.pourcentage_repartition.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:analytique_imputations' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Conseils</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <ul class="mb-0">
+                        <li>Renseignez soit un montant au débit soit au crédit (ou les deux si nécessaire).</li>
+                        <li>Utilisez la clé de répartition pour ventiler automatiquement vos charges indirectes.</li>
+                        <li>Associez autant que possible centre, section et commande pour tracer la performance.</li>
+                    </ul>
+                </div>
+            </div>
+
+            {% if action == 'update' %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Métadonnées</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Créée le : {{ object.date_creation|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-0">Identifiant : {{ object.id }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

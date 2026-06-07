@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Prévisualisation import - Gestionnaire RH Guinée{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-radius: 10px;
+        padding: 1.2rem;
+        text-align: center;
+    }
+    .stat-card h3 {
+        font-size: 2rem;
+        margin-bottom: 0;
+    }
+    .stat-card p {
+        margin-bottom: 0;
+        font-size: 0.85rem;
+    }
+    .preview-table {
+        font-size: 0.85rem;
+    }
+    .preview-table td, .preview-table th {
+        white-space: nowrap;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .row-ok { background-color: #d1e7dd !important; }
+    .row-warn { background-color: #fff3cd !important; }
+    .row-err { background-color: #f8d7da !important; }
+    .error-list, .warn-list {
+        font-size: 0.8rem;
+        margin: 0;
+        padding-left: 1rem;
+    }
+    .scroll-container {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-eye"></i> Prévisualisation de l'import
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'employes:import_page' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Recommencer
+        </a>
+    </div>
+</div>
+
+<!-- Fichier source -->
+<div class="alert alert-info d-flex align-items-center mb-4">
+    <i class="bi bi-file-earmark-excel me-2 fs-5"></i>
+    <div>
+        <strong>{{ nom_fichier }}</strong> — {{ total_lignes }} ligne{{ total_lignes|pluralize }} détectée{{ total_lignes|pluralize }}
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-2">
+        <div class="stat-card bg-light border">
+            <h3>{{ total_lignes }}</h3>
+            <p class="text-muted">Total lignes</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-2">
+        <div class="stat-card bg-success bg-opacity-10 border border-success">
+            <h3 class="text-success">{{ total_ok }}</h3>
+            <p class="text-success">Prêtes à importer</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-2">
+        <div class="stat-card bg-warning bg-opacity-10 border border-warning">
+            <h3 class="text-warning">{{ total_warn }}</h3>
+            <p class="text-warning">Avec avertissements</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-2">
+        <div class="stat-card bg-danger bg-opacity-10 border border-danger">
+            <h3 class="text-danger">{{ total_err }}</h3>
+            <p class="text-danger">Avec erreurs (ignorées)</p>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau de prévisualisation -->
+<div class="card shadow">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-table"></i> Aperçu des données
+        </h6>
+        <div>
+            <span class="badge bg-success me-1"><i class="bi bi-check"></i> OK</span>
+            <span class="badge bg-warning me-1"><i class="bi bi-exclamation-triangle"></i> Avertissement</span>
+            <span class="badge bg-danger"><i class="bi bi-x"></i> Erreur</span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="scroll-container">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered preview-table mb-0">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th>#</th>
+                            <th>Statut</th>
+                            <th>Matricule</th>
+                            <th>Nom</th>
+                            <th>Prénoms</th>
+                            <th>Sexe</th>
+                            <th>Téléphone</th>
+                            <th>Service</th>
+                            <th>Poste</th>
+                            <th>Type contrat</th>
+                            <th>Détails</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for line in preview_data %}
+                        <tr class="{% if line.statut == 'ok' %}row-ok{% elif line.statut == 'avertissement' %}row-warn{% else %}row-err{% endif %}">
+                            <td>{{ line.numero }}</td>
+                            <td>
+                                {% if line.statut == 'ok' %}
+                                <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
+                                {% elif line.statut == 'avertissement' %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i></span>
+                                {% else %}
+                                <span class="badge bg-danger"><i class="bi bi-x-lg"></i></span>
+                                {% endif %}
+                            </td>
+                            <td>{{ line.donnees.matricule|default:"(auto)" }}</td>
+                            <td><strong>{{ line.donnees.nom|default:"-" }}</strong></td>
+                            <td>{{ line.donnees.prenoms|default:"-" }}</td>
+                            <td>{{ line.donnees.sexe|default:"-" }}</td>
+                            <td>{{ line.donnees.telephone_principal|default:"-" }}</td>
+                            <td>{{ line.donnees.service|default:"-" }}</td>
+                            <td>{{ line.donnees.poste|default:"-" }}</td>
+                            <td>{{ line.donnees.type_contrat|default:"-" }}</td>
+                            <td>
+                                {% if line.erreurs %}
+                                <ul class="error-list text-danger">
+                                    {% for err in line.erreurs %}
+                                    <li>{{ err }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                                {% if line.avertissements %}
+                                <ul class="warn-list text-warning">
+                                    {% for w in line.avertissements %}
+                                    <li>{{ w }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                                {% if not line.erreurs and not line.avertissements %}
+                                <small class="text-success"><i class="bi bi-check-circle"></i> OK</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="card mt-4 shadow-sm">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                {% if total_ok > 0 or total_warn > 0 %}
+                <h5 class="text-success mb-1">
+                    <i class="bi bi-check-circle"></i>
+                    {{ total_ok|add:total_warn }} employé{{ total_ok|add:total_warn|pluralize }} prêt{{ total_ok|add:total_warn|pluralize }} à être importé{{ total_ok|add:total_warn|pluralize }}
+                </h5>
+                <p class="text-muted mb-0">
+                    {% if total_err > 0 %}
+                    {{ total_err }} ligne{{ total_err|pluralize }} avec erreur{{ total_err|pluralize }} seront ignorée{{ total_err|pluralize }}.
+                    {% endif %}
+                    {% if total_warn > 0 %}
+                    {{ total_warn }} ligne{{ total_warn|pluralize }} avec avertissement{{ total_warn|pluralize }} seront importée{{ total_warn|pluralize }} (données manquantes ignorées).
+                    {% endif %}
+                </p>
+                {% else %}
+                <h5 class="text-danger mb-1">
+                    <i class="bi bi-x-circle"></i> Aucune ligne valide à importer
+                </h5>
+                <p class="text-muted mb-0">Corrigez les erreurs dans votre fichier et réessayez.</p>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'employes:import_page' %}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-counterclockwise"></i> Recommencer
+                </a>
+                {% if total_ok > 0 or total_warn > 0 %}
+                <form method="post" action="{% url 'employes:import_execute' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-lg"
+                            onclick="this.disabled=true; this.innerHTML='<span class=\'spinner-border spinner-border-sm\'></span> Importation en cours...'; this.form.submit();">
+                        <i class="bi bi-check2-all"></i> Importer {{ total_ok|add:total_warn }} employé{{ total_ok|add:total_warn|pluralize }}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

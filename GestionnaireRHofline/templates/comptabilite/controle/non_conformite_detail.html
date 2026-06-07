@@ -1,0 +1,184 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Non-conformité {{ nc.reference }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-exclamation-triangle text-primary"></i> {{ nc.reference }}
+            </h1>
+            <p class="text-muted mb-0">{{ nc.titre }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:controle_non_conformite_update' nc.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:controle_non_conformites' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Référence</dt>
+                        <dd class="col-sm-8">{{ nc.reference }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Titre</dt>
+                        <dd class="col-sm-8">{{ nc.titre }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Niveau de gravité</dt>
+                        <dd class="col-sm-8">
+                            {% if nc.niveau_gravite == 'critique' %}
+                            <span class="badge bg-danger">Critique</span>
+                            {% elif nc.niveau_gravite == 'majeur' %}
+                            <span class="badge bg-warning text-dark">Majeur</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Mineur</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Origine</dt>
+                        <dd class="col-sm-8">{{ nc.get_origine_display }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Date de détection</dt>
+                        <dd class="col-sm-8">{{ nc.date_detection|date:"d/m/Y" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Statut</dt>
+                        <dd class="col-sm-8">
+                            {% if nc.statut == 'ouverte' %}
+                            <span class="badge bg-danger">Ouverte</span>
+                            {% elif nc.statut == 'en_analyse' %}
+                            <span class="badge bg-info">En analyse</span>
+                            {% elif nc.statut == 'plan_action' %}
+                            <span class="badge bg-primary">Plan défini</span>
+                            {% elif nc.statut == 'en_correction' %}
+                            <span class="badge bg-warning text-dark">En correction</span>
+                            {% elif nc.statut == 'verifiee' %}
+                            <span class="badge bg-success">Vérifiée</span>
+                            {% else %}
+                            <span class="badge bg-dark">Clôturée</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Description</dt>
+                        <dd class="col-sm-8">{{ nc.description|linebreaks }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if nc.cause_racine or nc.impact %}
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Analyse</h5>
+                </div>
+                <div class="card-body">
+                    {% if nc.cause_racine %}
+                    <h6 class="text-muted">Cause racine</h6>
+                    <p>{{ nc.cause_racine|linebreaks }}</p>
+                    {% endif %}
+                    {% if nc.impact %}
+                    <h6 class="text-muted">Impact</h6>
+                    <p class="mb-0">{{ nc.impact|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if nc.actions_correctives or nc.actions_preventives %}
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Plan d'action</h5>
+                </div>
+                <div class="card-body">
+                    {% if nc.actions_correctives %}
+                    <h6 class="text-muted">Actions correctives</h6>
+                    <p>{{ nc.actions_correctives|linebreaks }}</p>
+                    {% endif %}
+                    {% if nc.actions_preventives %}
+                    <h6 class="text-muted">Actions préventives</h6>
+                    <p class="mb-0">{{ nc.actions_preventives|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-person"></i> Responsabilités</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Responsable correction :</strong> {{ nc.responsable_correction|default:"-" }}</p>
+                    <p class="mb-1"><strong>Date d'échéance :</strong> {{ nc.date_echeance|date:"d/m/Y"|default:"-" }}</p>
+                    {% if nc.date_resolution %}
+                    <p class="mb-0"><strong>Date de résolution :</strong> {{ nc.date_resolution|date:"d/m/Y" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if nc.verifie_par or nc.date_verification %}
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-check-circle"></i> Vérification</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Vérifié par :</strong> {{ nc.verifie_par|default:"-" }}</p>
+                    <p class="mb-1"><strong>Date :</strong> {{ nc.date_verification|date:"d/m/Y"|default:"-" }}</p>
+                    <p class="mb-0"><strong>Efficacité vérifiée :</strong> 
+                        {% if nc.efficacite_verifiee %}
+                        <span class="badge bg-success">Oui</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Non</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-link-45deg"></i> Liens</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Procédure :</strong> 
+                        {% if nc.procedure %}
+                        <a href="{% url 'comptabilite:controle_procedure_detail' nc.procedure.pk %}">{{ nc.procedure.code }}</a>
+                        {% else %}-{% endif %}
+                    </p>
+                    <p class="mb-1"><strong>Test :</strong> 
+                        {% if nc.test %}
+                        <a href="{% url 'comptabilite:controle_test_detail' nc.test.pk %}">{{ nc.test.reference }}</a>
+                        {% else %}-{% endif %}
+                    </p>
+                    <p class="mb-0"><strong>Risque :</strong> 
+                        {% if nc.risque %}
+                        <a href="{% url 'comptabilite:controle_risque_detail' nc.risque.pk %}">{{ nc.risque.reference }}</a>
+                        {% else %}-{% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Métadonnées</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Créé par : {{ nc.cree_par|default:"-" }}</p>
+                    <p class="mb-0">Créé le : {{ nc.date_creation|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

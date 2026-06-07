@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Catalogue des Formations - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-book"></i> Catalogue des Formations</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'formation:creer_formation' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouvelle Formation
+        </a>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Type de Formation</label>
+                <select name="type" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="interne">Interne</option>
+                    <option value="externe">Externe</option>
+                    <option value="en_ligne">En ligne</option>
+                    <option value="certifiante">Certifiante</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Domaine</label>
+                <select name="domaine" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="technique">Technique</option>
+                    <option value="management">Management</option>
+                    <option value="securite">Sécurité</option>
+                    <option value="informatique">Informatique</option>
+                    <option value="langues">Langues</option>
+                    <option value="soft_skills">Soft Skills</option>
+                    <option value="reglementaire">Réglementaire</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des formations -->
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="mb-0">Formations Disponibles ({{ formations.count }})</h5>
+    </div>
+    <div class="card-body">
+        {% if formations %}
+        <div class="row">
+            {% for formation in formations %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-left-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">{{ formation.intitule }}</h5>
+                            <div>
+                                {% if formation.publiee %}
+                                    <span class="badge bg-primary" title="Publiée sur la page d'accueil"><i class="bi bi-globe"></i></span>
+                                {% endif %}
+                                {% if formation.actif %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <p class="text-muted small mb-2">
+                            <strong>{{ formation.code_formation }}</strong>
+                        </p>
+                        
+                        <div class="mb-2">
+                            <span class="badge bg-primary">{{ formation.get_type_formation_display }}</span>
+                            <span class="badge bg-info">{{ formation.get_domaine_display }}</span>
+                        </div>
+                        
+                        {% if formation.description %}
+                        <p class="card-text small">
+                            {{ formation.description|truncatewords:20 }}
+                        </p>
+                        {% endif %}
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i> {{ formation.duree_jours }} jour(s) - {{ formation.duree_heures }}h
+                            </small>
+                        </div>
+                        
+                        {% if formation.cout_unitaire %}
+                        <div class="mb-2">
+                            <small class="text-success">
+                                <i class="bi bi-cash"></i> {{ formation.cout_unitaire|floatformat:0 }} GNF/pers.
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        {% if formation.organisme_formateur %}
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-building"></i> {{ formation.organisme_formateur }}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-2">
+                            <small class="text-info">
+                                <i class="bi bi-calendar-event"></i> {{ formation.nb_sessions }} session(s)
+                            </small>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'formation:detail_formation' formation.pk %}" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                <i class="bi bi-eye"></i> Détails
+                            </a>
+                            <a href="{% url 'formation:modifier_formation' formation.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{% url 'formation:supprimer_formation' formation.pk %}" method="post" style="display: inline;"
+                                  onsubmit="return confirm('Supprimer la formation {{ formation.intitule }} ?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Aucune formation dans le catalogue.
+            <a href="{% url 'formation:creer_formation' %}" class="alert-link">Créer une formation</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Légende -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle"></i> Types de Formation</h6>
+                <div class="row">
+                    <div class="col-md-3">
+                        <span class="badge bg-primary">Interne</span> - Formation en interne
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-primary">Externe</span> - Organisme externe
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-primary">En ligne</span> - E-learning
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-primary">Certifiante</span> - Avec certification
+                    </div>
+                </div>
+                <hr>
+                <h6><i class="bi bi-tag"></i> Domaines</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <span class="badge bg-info">Technique</span> - Compétences techniques
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-info">Management</span> - Leadership, gestion
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-info">Sécurité</span> - HSE, sécurité
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-4">
+                        <span class="badge bg-info">Informatique</span> - IT, logiciels
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-info">Langues</span> - Langues étrangères
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-info">Soft Skills</span> - Communication
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

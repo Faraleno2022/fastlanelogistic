@@ -1,0 +1,206 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Procédure {{ procedure.code }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-clipboard-check text-primary"></i> {{ procedure.code }}
+            </h1>
+            <p class="text-muted mb-0">{{ procedure.titre }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:controle_procedure_update' procedure.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:controle_procedures' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Code</dt>
+                        <dd class="col-sm-8">{{ procedure.code }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Titre</dt>
+                        <dd class="col-sm-8">{{ procedure.titre }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Type de contrôle</dt>
+                        <dd class="col-sm-8">
+                            {% if procedure.type_controle == 'preventif' %}
+                            <span class="badge bg-info">Préventif</span>
+                            {% elif procedure.type_controle == 'detectif' %}
+                            <span class="badge bg-warning text-dark">Détectif</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Correctif</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Fréquence</dt>
+                        <dd class="col-sm-8">{{ procedure.get_frequence_display }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Processus</dt>
+                        <dd class="col-sm-8">{{ procedure.processus }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Responsable</dt>
+                        <dd class="col-sm-8">{{ procedure.responsable|default:"-" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Statut</dt>
+                        <dd class="col-sm-8">
+                            {% if procedure.statut == 'brouillon' %}
+                            <span class="badge bg-secondary">Brouillon</span>
+                            {% elif procedure.statut == 'active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif procedure.statut == 'suspendue' %}
+                            <span class="badge bg-warning text-dark">Suspendue</span>
+                            {% else %}
+                            <span class="badge bg-dark">Obsolète</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Version</dt>
+                        <dd class="col-sm-8">{{ procedure.version }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Description et objectif</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted">Description</h6>
+                    <p>{{ procedure.description|linebreaks }}</p>
+                    <h6 class="text-muted">Objectif</h6>
+                    <p class="mb-0">{{ procedure.objectif|linebreaks }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Étapes du contrôle</h5>
+                </div>
+                <div class="card-body">
+                    {{ procedure.etapes_controle|linebreaks }}
+                </div>
+            </div>
+
+            {% if procedure.documents_requis or procedure.criteres_succes %}
+            <div class="row g-3">
+                {% if procedure.documents_requis %}
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0">Documents requis</h6>
+                        </div>
+                        <div class="card-body">
+                            {{ procedure.documents_requis|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if procedure.criteres_succes %}
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0">Critères de succès</h6>
+                        </div>
+                        <div class="card-body">
+                            {{ procedure.criteres_succes|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-calendar"></i> Dates</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Mise en vigueur : {{ procedure.date_mise_en_vigueur|date:"d/m/Y"|default:"-" }}</p>
+                    <p class="mb-1">Dernière revue : {{ procedure.date_derniere_revue|date:"d/m/Y"|default:"-" }}</p>
+                    <p class="mb-0">Prochaine revue : {{ procedure.prochaine_revue|date:"d/m/Y"|default:"-" }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-shield-exclamation"></i> Risques couverts</h6>
+                </div>
+                <div class="card-body">
+                    {% if procedure.risques.exists %}
+                    <ul class="list-unstyled mb-0">
+                        {% for risque in procedure.risques.all %}
+                        <li class="mb-2">
+                            <a href="{% url 'comptabilite:controle_risque_detail' risque.pk %}">{{ risque.reference }}</a>
+                            <small class="text-muted d-block">{{ risque.titre|truncatechars:30 }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">Aucun risque lié.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-check2-square"></i> Tests récents</h6>
+                    <a href="{% url 'comptabilite:controle_test_create' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if procedure.tests.exists %}
+                    <ul class="list-unstyled mb-0">
+                        {% for test in procedure.tests.all|slice:":5" %}
+                        <li class="mb-2">
+                            <a href="{% url 'comptabilite:controle_test_detail' test.pk %}">{{ test.reference }}</a>
+                            {% if test.resultat == 'reussi' %}
+                            <span class="badge bg-success ms-1">Réussi</span>
+                            {% elif test.resultat == 'echoue' %}
+                            <span class="badge bg-danger ms-1">Échoué</span>
+                            {% elif test.resultat == 'partiel' %}
+                            <span class="badge bg-warning text-dark ms-1">Partiel</span>
+                            {% else %}
+                            <span class="badge bg-secondary ms-1">{{ test.get_resultat_display }}</span>
+                            {% endif %}
+                            <small class="text-muted d-block">{{ test.date_execution|date:"d/m/Y" }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">Aucun test effectué.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Métadonnées</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p class="mb-1">Créé par : {{ procedure.cree_par|default:"-" }}</p>
+                    <p class="mb-1">Créé le : {{ procedure.date_creation|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-0">Modifié le : {{ procedure.date_modification|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

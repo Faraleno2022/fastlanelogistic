@@ -1,0 +1,105 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if matrice %}Modifier{% else %}Nouvelle{% endif %} Matrice{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-grid-3x3 text-primary"></i> 
+            {% if matrice %}Modifier la matrice{% else %}Nouvelle matrice de consolidation{% endif %}
+        </h1>
+        <a href="{% url 'comptabilite:matrice_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Code *</label>
+                                <input type="text" name="code" class="form-control" 
+                                       value="{{ form.code.value|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Exercice *</label>
+                                <select name="exercice" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    {% for ex in exercices %}
+                                    <option value="{{ ex.pk }}" {% if form.exercice.value == ex.pk %}selected{% endif %}>{{ ex }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Libellé *</label>
+                            <input type="text" name="libelle" class="form-control" 
+                                   value="{{ form.libelle.value|default:'' }}" required>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Type de consolidation *</label>
+                                <select name="type_consolidation" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    <option value="integration_globale" {% if form.type_consolidation.value == 'integration_globale' %}selected{% endif %}>Intégration globale</option>
+                                    <option value="integration_proportionnelle" {% if form.type_consolidation.value == 'integration_proportionnelle' %}selected{% endif %}>Intégration proportionnelle</option>
+                                    <option value="mise_equivalence" {% if form.type_consolidation.value == 'mise_equivalence' %}selected{% endif %}>Mise en équivalence</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Méthode</label>
+                                <select name="methode" class="form-select">
+                                    <option value="directe" {% if form.methode.value == 'directe' %}selected{% endif %}>Directe</option>
+                                    <option value="par_paliers" {% if form.methode.value == 'par_paliers' %}selected{% endif %}>Par paliers</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3">{{ form.description.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="est_active" class="form-check-input" id="est_active"
+                                   {% if form.est_active.value %}checked{% endif %}>
+                            <label class="form-check-label" for="est_active">Matrice active</label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:matrice_list' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Aide</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Intégration globale</strong> : Pour les filiales contrôlées à 100%</p>
+                    <p><strong>Intégration proportionnelle</strong> : Pour les co-entreprises</p>
+                    <p><strong>Mise en équivalence</strong> : Pour les participations significatives</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

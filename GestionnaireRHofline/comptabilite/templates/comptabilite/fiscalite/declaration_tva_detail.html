@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Déclaration TVA" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'comptabilite:dashboard' %}">{% trans "Accueil" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'comptabilite:declaration_tva_list' %}">{% trans "Déclarations TVA" %}</a></li>
+                    <li class="breadcrumb-item active">{{ declaration.get_periode_display }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">
+                {% trans "Déclaration TVA" %}
+                <small class="text-muted">{{ declaration.get_periode_display }}</small>
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if can_edit %}
+            <a href="{% url 'comptabilite:declaration_tva_update' pk=declaration.id %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> {% trans "Modifier" %}
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Informations générales -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{% trans "Informations" %}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">{% trans "Régime TVA" %}</dt>
+                        <dd class="col-sm-8">{{ declaration.regime.nom }}</dd>
+                        <dt class="col-sm-4">{% trans "Période" %}</dt>
+                        <dd class="col-sm-8">
+                            {{ declaration.periode_debut|date:"d/m/Y" }} 
+                            au 
+                            {{ declaration.periode_fin|date:"d/m/Y" }}
+                        </dd>
+                        <dt class="col-sm-4">{% trans "Statut" %}</dt>
+                        <dd class="col-sm-8">
+                            {% if declaration.statut == 'brouillon' %}
+                                <span class="badge bg-secondary">{% trans "Brouillon" %}</span>
+                            {% elif declaration.statut == 'validee' %}
+                                <span class="badge bg-info">{% trans "Validée" %}</span>
+                            {% elif declaration.statut == 'deposee' %}
+                                <span class="badge bg-success">{% trans "Déposée" %}</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">{% trans "Montant HT" %}</dt>
+                        <dd class="col-sm-8 text-end">{{ montant_total_ht|floatformat:2 }} €</dd>
+                        <dt class="col-sm-4">{% trans "Montant TVA" %}</dt>
+                        <dd class="col-sm-8 text-end">{{ montant_total_tva|floatformat:2 }} €</dd>
+                        <dt class="col-sm-4">{% trans "Montant TTC" %}</dt>
+                        <dd class="col-sm-8 text-end fw-bold">{{ montant_total_ttc|floatformat:2 }} €</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lignes de déclaration -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{% trans "Lignes de déclaration" %}</h5>
+            {% if can_edit %}
+            <a href="{% url 'comptabilite:ligne_declaration_tva_create' declaration.id %}" class="btn btn-sm btn-success">
+                <i class="fas fa-plus"></i> {% trans "Ajouter une ligne" %}
+            </a>
+            {% endif %}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{% trans "Code" %}</th>
+                        <th>{% trans "Libellé" %}</th>
+                        <th>{% trans "Taux" %}</th>
+                        <th class="text-end">{% trans "Montant HT" %}</th>
+                        <th class="text-end">{% trans "Montant TVA" %}</th>
+                        <th class="text-end">{% trans "Montant TTC" %}</th>
+                        {% if can_edit %}<th>{% trans "Actions" %}</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ligne in lignes %}
+                    <tr>
+                        <td>{{ ligne.code }}</td>
+                        <td>{{ ligne.libelle }}</td>
+                        <td>{{ ligne.taux_tva.taux }}%</td>
+                        <td class="text-end">{{ ligne.montant_ht|floatformat:2 }} €</td>
+                        <td class="text-end">{{ ligne.montant_tva|floatformat:2 }} €</td>
+                        <td class="text-end">{{ ligne.montant_ttc|floatformat:2 }} €</td>
+                        {% if can_edit %}
+                        <td>
+                            <a href="{% url 'comptabilite:ligne_declaration_tva_update' pk=ligne.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'comptabilite:ligne_declaration_tva_delete' pk=ligne.id %}" 
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <p class="text-muted">{% trans "Aucune ligne dans cette déclaration" %}</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="row">
+        <div class="col-md-12">
+            {% if can_validate %}
+            <form method="post" action="{% url 'comptabilite:declaration_tva_validate' pk=declaration.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-info">
+                    <i class="fas fa-check"></i> {% trans "Valider la déclaration" %}
+                </button>
+            </form>
+            {% endif %}
+
+            {% if can_depot %}
+            <form method="post" action="{% url 'comptabilite:declaration_tva_depot' pk=declaration.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-upload"></i> {% trans "Déposer la déclaration" %}
+                </button>
+            </form>
+            {% endif %}
+
+            <a href="{% url 'comptabilite:declaration_tva_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> {% trans "Retour" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

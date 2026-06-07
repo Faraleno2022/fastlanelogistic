@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Envoi en masse des bulletins{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-send-check"></i> Envoi en masse des bulletins</h1>
+    <a href="{% url 'paie:liste_bulletins' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Période</label>
+                <select name="periode" class="form-select">
+                    <option value="">Toutes les périodes</option>
+                    {% for p in periodes %}
+                    <option value="{{ p }}" {% if p == periode_filtre %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Statut</label>
+                <select name="statut" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="valide" {% if statut_filtre == 'valide' %}selected{% endif %}>Validé</option>
+                    <option value="calcule" {% if statut_filtre == 'calcule' %}selected{% endif %}>Calculé</option>
+                    <option value="paye" {% if statut_filtre == 'paye' %}selected{% endif %}>Payé</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des bulletins -->
+<form id="formEnvoi" method="post">
+    {% csrf_token %}
+    
+    <div class="card shadow">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-list-check"></i> Sélectionner les bulletins à envoyer</span>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAll()">Tout sélectionner</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">Tout désélectionner</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"><input type="checkbox" id="checkAll" onclick="toggleAll()"></th>
+                        <th>Employé</th>
+                        <th>Période</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th class="text-end">Net à payer</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in bulletins %}
+                    <tr>
+                        <td><input type="checkbox" name="bulletins" value="{{ b.id }}" class="bulletin-check"></td>
+                        <td>{{ b.employe.nom }} {{ b.employe.prenoms }}</td>
+                        <td>{{ b.periode }}</td>
+                        <td>
+                            {% if b.employe.email %}
+                            <span class="text-success"><i class="bi bi-check-circle"></i> {{ b.employe.email }}</span>
+                            {% else %}
+                            <span class="text-danger"><i class="bi bi-x-circle"></i> Non renseigné</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if b.employe.telephone %}
+                            <span class="text-success"><i class="bi bi-check-circle"></i> {{ b.employe.telephone }}</span>
+                            {% else %}
+                            <span class="text-danger"><i class="bi bi-x-circle"></i> Non renseigné</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">{{ b.net_a_payer|floatformat:0|intcomma }} GNF</td>
+                        <td>
+                            <span class="badge bg-{% if b.statut_bulletin == 'valide' %}success{% elif b.statut_bulletin == 'paye' %}dark{% else %}secondary{% endif %}">
+                                {{ b.get_statut_bulletin_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Aucun bulletin trouvé</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label class="form-label">Message personnalisé (optionnel)</label>
+                        <textarea name="message" class="form-control" rows="3" placeholder="Laissez vide pour le message par défaut..."></textarea>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <p class="text-muted small mb-2"><span id="countSelected">0</span> bulletin(s) sélectionné(s)</p>
+                    <div class="d-grid gap-2">
+                        <button type="submit" formaction="{% url 'paie:envoyer_masse_email' %}" class="btn btn-primary">
+                            <i class="bi bi-envelope"></i> Envoyer par Email
+                        </button>
+                        <button type="submit" formaction="{% url 'paie:generer_liens_whatsapp' %}" class="btn btn-success">
+                            <i class="bi bi-whatsapp"></i> Générer liens WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+function toggleAll() {
+    const checkAll = document.getElementById('checkAll');
+    document.querySelectorAll('.bulletin-check').forEach(cb => cb.checked = checkAll.checked);
+    updateCount();
+}
+
+function selectAll() {
+    document.querySelectorAll('.bulletin-check').forEach(cb => cb.checked = true);
+    document.getElementById('checkAll').checked = true;
+    updateCount();
+}
+
+function deselectAll() {
+    document.querySelectorAll('.bulletin-check').forEach(cb => cb.checked = false);
+    document.getElementById('checkAll').checked = false;
+    updateCount();
+}
+
+function updateCount() {
+    const count = document.querySelectorAll('.bulletin-check:checked').length;
+    document.getElementById('countSelected').textContent = count;
+}
+
+document.querySelectorAll('.bulletin-check').forEach(cb => {
+    cb.addEventListener('change', updateCount);
+});
+</script>
+{% endblock %}

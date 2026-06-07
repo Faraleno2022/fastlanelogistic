@@ -1,0 +1,229 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}Règlement {{ reglement.numero }} - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Règlement {{ reglement.numero }}</h1>
+            <p class="text-muted mb-0">Détails du règlement</p>
+        </div>
+        <div>
+            <a href="{% url 'comptabilite:reglement_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+            </a>
+            <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>Imprimer
+            </button>
+        </div>
+    </div>
+
+    <!-- Détails du règlement -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations du règlement</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">N° Règlement</label>
+                            <p class="form-control-plaintext"><strong>{{ reglement.numero }}</strong></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Date Règlement</label>
+                            <p class="form-control-plaintext">{{ reglement.date_reglement|date:"d/m/Y" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Montant</label>
+                            <p class="form-control-plaintext"><strong>{{ reglement.montant|floatformat:0 }} GNF</strong></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Mode de Paiement</label>
+                            <p class="form-control-plaintext">
+                                <span class="badge bg-{% if reglement.mode_paiement == 'especes' %}success{% elif reglement.mode_paiement == 'virement' %}primary{% elif reglement.mode_paiement == 'mobile' %}info{% else %}secondary{% endif %}">
+                                    {{ reglement.get_mode_paiement_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Référence Paiement</label>
+                            <p class="form-control-plaintext">
+                                {% if reglement.reference %}
+                                    <code>{{ reglement.reference }}</code>
+                                {% else %}
+                                    <span class="text-muted">Non spécifié</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Date de création</label>
+                            <p class="form-control-plaintext">{{ reglement.date_creation|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+
+                    {% if reglement.notes %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Notes</label>
+                            <p class="form-control-plaintext">{{ reglement.notes|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Détails de la facture associée -->
+            {% if reglement.facture %}
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Facture associée</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">N° Facture</label>
+                                <p class="form-control-plaintext">
+                                    <a href="{% url 'comptabilite:facture_detail' reglement.facture.pk %}" class="text-decoration-none">
+                                        <strong>{{ reglement.facture.numero }}</strong>
+                                    </a>
+                                </p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Date Facture</label>
+                                <p class="form-control-plaintext">{{ reglement.facture.date_facture|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Tiers</label>
+                                <p class="form-control-plaintext">{{ reglement.facture.tiers.raison_sociale }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Type Facture</label>
+                                <p class="form-control-plaintext">
+                                    <span class="badge bg-{% if reglement.facture.type_facture == 'vente' %}success{% else %}info{% endif %}">
+                                        {{ reglement.facture.get_type_facture_display }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted">Montant HT</label>
+                                <p class="form-control-plaintext">{{ reglement.facture.montant_ht|floatformat:0 }} GNF</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted">Montant TVA</label>
+                                <p class="form-control-plaintext">{{ reglement.facture.montant_tva|floatformat:0 }} GNF</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted">Montant TTC</label>
+                                <p class="form-control-plaintext"><strong>{{ reglement.facture.montant_ttc|floatformat:0 }} GNF</strong></p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Montant déjà payé</label>
+                                <p class="form-control-plaintext">
+                                    {% with total_paye=reglement.facture.reglements.all.aggregate(total=models.Sum('montant')).total %}
+                                        {{ total_paye|default:0|floatformat:0 }} GNF
+                                    {% endwith %}
+                                </p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Reste à payer</label>
+                                <p class="form-control-plaintext">
+                                    {% with total_paye=reglement.facture.reglements.all.aggregate(total=models.Sum('montant')).total %}
+                                        {% with reste=reglement.facture.montant_ttc|add:total_paye.negate %}
+                                            <strong class="{% if reste > 0 %}text-warning{% else %}text-success{% endif %}">
+                                                {{ reste|floatformat:0 }} GNF
+                                            </strong>
+                                        {% endwith %}
+                                    {% endwith %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="window.print()">
+                            <i class="bi bi-printer me-2"></i>Imprimer
+                        </button>
+                        <button class="btn btn-outline-success" onclick="exportPDF()">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Exporter en PDF
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="alert('Modification non disponible pour le moment')">
+                            <i class="bi bi-pencil me-2"></i>Modifier
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="confirmDelete()">
+                            <i class="bi bi-trash me-2"></i>Supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Résumé</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Statut</label>
+                        <p class="form-control-plaintext">
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle me-1"></i>Enregistré
+                            </span>
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Écriture comptable</label>
+                        <p class="form-control-plaintext">
+                            {% if reglement.ecriture %}
+                                <a href="#" class="text-decoration-none">
+                                    {{ reglement.ecriture.numero_ecriture }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Non générée</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportPDF() {
+    alert('Export PDF - Cette fonctionnalité sera bientôt disponible.');
+}
+
+function confirmDelete() {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce règlement ? Cette action est irréversible.')) {
+        alert('Suppression non disponible pour le moment.');
+    }
+}
+</script>
+{% endblock %}

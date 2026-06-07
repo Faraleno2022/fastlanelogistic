@@ -1,0 +1,119 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Déclaration CVAE {{ declaration.reference }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-file-earmark-ruled text-primary"></i> {{ declaration.reference }}
+            </h1>
+            <p class="text-muted mb-0">Déclaration CVAE - {{ declaration.annee }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:fiscalite_declaration_cvae_update' declaration.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:fiscalite_declarations_cvae' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Calcul de la valeur ajoutée</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Chiffre d'affaires</td>
+                                <td class="text-end fw-semibold">{{ declaration.chiffre_affaires|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Achats</td>
+                                <td class="text-end">- {{ declaration.achats|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Services extérieurs</td>
+                                <td class="text-end">- {{ declaration.services_exterieurs|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Autres charges externes</td>
+                                <td class="text-end">- {{ declaration.autres_charges_externes|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td class="fw-bold">Valeur ajoutée</td>
+                                <td class="text-end fw-bold">{{ declaration.valeur_ajoutee|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Calcul CVAE</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Valeur ajoutée × Taux ({{ declaration.taux_cvae }})</td>
+                                <td class="text-end fw-semibold">{{ declaration.cvae_brute|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Dégrèvement</td>
+                                <td class="text-end">- {{ declaration.degrevement|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Cotisation minimum</td>
+                                <td class="text-end">{{ declaration.cotisation_minimum|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td class="fw-bold">CVAE Nette</td>
+                                <td class="text-end fw-bold">{{ declaration.cvae_nette|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-sm-5 text-muted">Année</dt>
+                        <dd class="col-sm-7">{{ declaration.annee }}</dd>
+
+                        <dt class="col-sm-5 text-muted">Statut</dt>
+                        <dd class="col-sm-7">
+                            {% if declaration.statut == 'brouillon' %}
+                            <span class="badge bg-secondary">Brouillon</span>
+                            {% elif declaration.statut == 'valide' %}
+                            <span class="badge bg-primary">Validé</span>
+                            {% elif declaration.statut == 'depose' %}
+                            <span class="badge bg-success">Déposé</span>
+                            {% elif declaration.statut == 'paye' %}
+                            <span class="badge bg-dark">Payé</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5 text-muted">Créé le</dt>
+                        <dd class="col-sm-7">{{ declaration.date_creation|date:"d/m/Y H:i" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

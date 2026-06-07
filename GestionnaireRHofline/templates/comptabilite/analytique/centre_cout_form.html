@@ -1,0 +1,94 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouveau{% endif %} Centre de Coûts{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-diagram-3 text-primary"></i> 
+            {% if object %}Modifier le centre{% else %}Nouveau centre de coûts{% endif %}
+        </h1>
+        <a href="{% url 'comptabilite:analytique_centres_couts' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Code *</label>
+                                <input type="text" name="code" class="form-control" 
+                                       value="{{ form.code.value|default:'' }}" required>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Libellé *</label>
+                                <input type="text" name="libelle" class="form-control" 
+                                       value="{{ form.libelle.value|default:'' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Type de centre</label>
+                                <select name="type_centre" class="form-select">
+                                    <option value="">-- Sélectionner --</option>
+                                    <option value="principal" {% if form.type_centre.value == 'principal' %}selected{% endif %}>Principal</option>
+                                    <option value="auxiliaire" {% if form.type_centre.value == 'auxiliaire' %}selected{% endif %}>Auxiliaire</option>
+                                    <option value="structure" {% if form.type_centre.value == 'structure' %}selected{% endif %}>Structure</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Centre parent</label>
+                                <select name="parent" class="form-select">
+                                    <option value="">-- Aucun --</option>
+                                    {% for c in centres %}
+                                    <option value="{{ c.pk }}" {% if form.parent.value == c.pk %}selected{% endif %}>{{ c }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Responsable</label>
+                            <select name="responsable" class="form-select">
+                                <option value="">-- Aucun --</option>
+                                {% for emp in employes %}
+                                <option value="{{ emp.pk }}" {% if form.responsable.value == emp.pk %}selected{% endif %}>{{ emp }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3">{{ form.description.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="est_actif" class="form-check-input" id="est_actif"
+                                   {% if form.est_actif.value %}checked{% endif %}>
+                            <label class="form-check-label" for="est_actif">Centre actif</label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:analytique_centres_couts' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

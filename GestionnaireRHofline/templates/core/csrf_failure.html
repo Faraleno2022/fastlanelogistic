@@ -1,0 +1,76 @@
+{% extends 'base_auth.html' %}
+{% load static %}
+
+{% block title %}Erreur de Sécurité - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-shield-alt fa-4x text-warning mb-3"></i>
+                    <h2 class="h3 mb-3 font-weight-bold text-warning">Erreur de Vérification CSRF</h2>
+                </div>
+
+                <div class="alert alert-warning" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle"></i> Requête Refusée
+                    </h5>
+                    <hr>
+                    <p class="mb-0">
+                        Votre requête a été refusée pour des raisons de sécurité. 
+                        Le jeton de sécurité CSRF est manquant ou invalide.
+                    </p>
+                </div>
+
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="font-weight-bold mb-3">
+                            <i class="fas fa-question-circle text-primary"></i> Pourquoi cette erreur ?
+                        </h6>
+                        <p class="mb-2">Cette erreur peut se produire si :</p>
+                        <ul class="mb-0">
+                            <li>Votre session a expiré</li>
+                            <li>Vous avez désactivé les cookies dans votre navigateur</li>
+                            <li>Vous avez ouvert le formulaire depuis un lien externe</li>
+                            <li>Votre navigateur bloque les cookies tiers</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card border-info">
+                    <div class="card-body">
+                        <h6 class="font-weight-bold text-info mb-3">
+                            <i class="fas fa-lightbulb"></i> Solutions possibles :
+                        </h6>
+                        <ol class="mb-0">
+                            <li>Actualisez la page et réessayez</li>
+                            <li>Vérifiez que les cookies sont activés</li>
+                            <li>Videz le cache de votre navigateur</li>
+                            <li>Reconnectez-vous à votre compte</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> Retour
+                    </a>
+                    <a href="{% url 'core:login' %}" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Se reconnecter
+                    </a>
+                </div>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Si le problème persiste, contactez l'administrateur système
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nouvelle Note de Frais{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'paie:liste_notes_frais' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-plus-circle me-2"></i>Nouvelle Note de Frais</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="employe" class="form-label">Employé *</label>
+                            <select class="form-select" id="employe" name="employe" required>
+                                <option value="">Sélectionner un employé</option>
+                                {% for emp in employes %}
+                                <option value="{{ emp.id }}">{{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="titre" class="form-label">Titre / Objet *</label>
+                            <input type="text" class="form-control" id="titre" name="titre" required
+                                   placeholder="Ex: Déplacement Conakry-Labé">
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date_debut" class="form-label">Date début *</label>
+                                <input type="date" class="form-control" id="date_debut" name="date_debut" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_fin" class="form-label">Date fin *</label>
+                                <input type="date" class="form-control" id="date_fin" name="date_fin" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mission" class="form-label">Mission / Projet</label>
+                            <input type="text" class="form-control" id="mission" name="mission"
+                                   placeholder="Mission ou projet associé (optionnel)">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      placeholder="Description détaillée (optionnel)"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'paie:liste_notes_frais' %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Créer la note
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Instructions</h6>
+                </div>
+                <div class="card-body small">
+                    <ol class="mb-0">
+                        <li>Créez d'abord la note de frais</li>
+                        <li>Ajoutez ensuite les lignes de dépenses</li>
+                        <li>Joignez les justificatifs requis</li>
+                        <li>Soumettez pour validation</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

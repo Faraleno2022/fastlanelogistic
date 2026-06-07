@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Terminer Mission{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:detail_mission' mission.pk %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-check-circle me-2"></i>Terminer la Mission {{ mission.reference }}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">Récapitulatif</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td class="text-muted">Employé</td>
+                            <td><strong>{{ mission.employe.nom }} {{ mission.employe.prenoms }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Destination</td>
+                            <td>{{ mission.destination }} ({{ mission.pays }})</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Période</td>
+                            <td>{{ mission.date_debut|date:"d/m/Y" }} - {{ mission.date_fin|date:"d/m/Y" }} ({{ mission.duree_jours }} jours)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Objet</td>
+                            <td>{{ mission.objet }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">Rapport de mission</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Compte-rendu de la mission *</label>
+                            <textarea class="form-control" name="rapport_mission" rows="6" required
+                                      placeholder="Décrivez le déroulement de la mission, les résultats obtenus, les difficultés rencontrées..."></textarea>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input type="checkbox" class="form-check-input" id="objectifs_atteints" name="objectifs_atteints">
+                            <label class="form-check-label" for="objectifs_atteints">
+                                <strong>Les objectifs de la mission ont été atteints</strong>
+                            </label>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'employes:detail_mission' mission.pk %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i>Terminer la mission
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

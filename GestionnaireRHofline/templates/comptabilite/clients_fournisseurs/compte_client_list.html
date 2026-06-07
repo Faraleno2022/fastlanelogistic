@@ -1,0 +1,105 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}Comptes Clients{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-people me-2"></i>Comptes Clients</h4>
+    <div>
+        <a href="{% url 'comptabilite:vieillissement_creances' %}" class="btn btn-outline-warning me-2">
+            <i class="bi bi-clock-history me-1"></i>Vieillissement
+        </a>
+        <a href="{% url 'comptabilite:impayes_clients' %}" class="btn btn-outline-danger">
+            <i class="bi bi-exclamation-triangle me-1"></i>Impayés
+        </a>
+    </div>
+</div>
+
+<!-- Résumé -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body text-center">
+                <h6 class="mb-1">Total Créances</h6>
+                <h3 class="mb-0">{{ total_creances|floatformat:0|default:"0" }} GNF</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Nombre de Clients</h6>
+                <h3 class="mb-0 text-primary">{{ nb_clients }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Créance Moyenne</h6>
+                <h3 class="mb-0 text-info">{{ creance_moyenne|floatformat:0 }} GNF</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des clients -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background-color: #FFD699;">
+                    <tr>
+                        <th>Code</th>
+                        <th>Raison Sociale</th>
+                        <th class="text-center">Nb Factures</th>
+                        <th class="text-end">Total Facturé</th>
+                        <th class="text-end">Total Payé</th>
+                        <th class="text-end">Solde</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr>
+                        <td><strong>{{ client.code }}</strong></td>
+                        <td>{{ client.raison_sociale }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">{{ client.nb_factures|default:0 }}</span>
+                        </td>
+                        <td class="text-end">{{ client.total_factures|floatformat:0|default:"0" }}</td>
+                        <td class="text-end text-success">{{ client.total_paye|floatformat:0|default:"0" }}</td>
+                        <td class="text-end">
+                            {% if client.solde_calcule > 0 %}
+                                <span class="text-danger fw-bold">{{ client.solde_calcule|floatformat:0 }}</span>
+                            {% else %}
+                                <span class="text-success">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'comptabilite:compte_client_detail' client.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Détail
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Aucun client enregistré
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot style="background-color: #FFD699; font-weight: bold;">
+                    <tr>
+                        <td colspan="5" class="text-end">TOTAL CRÉANCES :</td>
+                        <td class="text-end text-danger">{{ total_creances|floatformat:0|default:"0" }} GNF</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

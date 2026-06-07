@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Évaluations - {{ employe.nom }} {{ employe.prenoms }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0">Évaluations - {{ employe.nom }} {{ employe.prenoms }}</h1>
+    <div class="btn-group" role="group">
+        <a class="btn btn-sm btn-primary" href="{% url 'employes:evaluation_create' employe.id %}">Nouvelle évaluation</a>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'employes:detail' employe.id %}">Retour fiche</a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        {% if evaluations %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Année</th>
+                        <th>Période</th>
+                        <th>Évaluateur</th>
+                        <th>Note</th>
+                        <th>Appréciation</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ev in evaluations %}
+                    <tr>
+                        <td>{{ ev.date_evaluation|date:"d/m/Y" }}</td>
+                        <td>{{ ev.annee_evaluation }}</td>
+                        <td>{{ ev.get_periode_display }}</td>
+                        <td>{{ ev.evaluateur.nom }} {{ ev.evaluateur.prenoms|default:"" }}</td>
+                        <td>{{ ev.note_globale|default:"-" }}</td>
+                        <td>{{ ev.get_appreciation_display|default:"-" }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'employes:evaluation_detail' ev.id %}">Voir</a>
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'employes:evaluation_delete' ev.id %}">Supprimer</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">Aucune évaluation enregistrée.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,746 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Offres & Tarifs - GuineeRH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pricing-hero {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        color: white;
+        padding: 3rem 0;
+        margin: -1.5rem -0.75rem 2rem;
+        text-align: center;
+    }
+    .pricing-hero h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+    }
+    .pricing-hero p {
+        font-size: 1.1rem;
+        opacity: 0.85;
+    }
+    .pricing-toggle {
+        display: inline-flex;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50px;
+        padding: 4px;
+        gap: 4px;
+    }
+    .pricing-toggle .btn-toggle {
+        padding: 8px 24px;
+        border-radius: 50px;
+        border: none;
+        background: transparent;
+        color: rgba(255,255,255,0.7);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .pricing-toggle .btn-toggle.active {
+        background: white;
+        color: #1a1a2e;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .pricing-toggle .btn-toggle:hover:not(.active) {
+        color: white;
+    }
+    .save-badge {
+        background: #198754;
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 20px;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+
+    /* Cards */
+    .plan-card {
+        border: 2px solid #e9ecef;
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+        background: white;
+    }
+    .plan-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+    }
+    .plan-card.featured {
+        border-color: #EF7707;
+        box-shadow: 0 8px 30px rgba(239,119,7,0.2);
+    }
+    .plan-card.featured:hover {
+        box-shadow: 0 20px 50px rgba(239,119,7,0.3);
+    }
+    .plan-badge {
+        position: absolute;
+        top: 0;
+        right: 20px;
+        padding: 4px 16px 8px;
+        border-radius: 0 0 12px 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    .plan-header {
+        padding: 2rem 1.5rem 1rem;
+        text-align: center;
+    }
+    .plan-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    .plan-subtitle {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    /* Prix */
+    .plan-price {
+        text-align: center;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f0f0;
+        background: #fafbfc;
+    }
+    .price-amount {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .price-period {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    .price-annual {
+        display: none;
+    }
+    .price-installation {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 6px;
+    }
+    .price-installation strong {
+        color: #495057;
+    }
+
+    /* Features */
+    .plan-features {
+        padding: 1.5rem;
+    }
+    .plan-features .section-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #adb5bd;
+        margin-bottom: 0.5rem;
+        margin-top: 1rem;
+    }
+    .plan-features .section-label:first-child {
+        margin-top: 0;
+    }
+    .feature-item {
+        display: flex;
+        align-items: center;
+        padding: 6px 0;
+        font-size: 0.9rem;
+    }
+    .feature-item .icon-check {
+        color: #198754;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+    .feature-item .icon-x {
+        color: #dee2e6;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+    .feature-item.disabled {
+        color: #adb5bd;
+    }
+
+    /* Limites */
+    .limits-row {
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+        padding: 0.75rem 1.5rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin: 0 1.5rem 1rem;
+    }
+    .limit-item .limit-value {
+        font-size: 1.4rem;
+        font-weight: 800;
+    }
+    .limit-item .limit-label {
+        font-size: 0.7rem;
+        color: #6c757d;
+        text-transform: uppercase;
+    }
+
+    /* CTA */
+    .plan-cta {
+        padding: 0 1.5rem 1.5rem;
+    }
+    .plan-cta .btn {
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    /* Installation section */
+    .installation-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-top: 2rem;
+    }
+
+    /* Comparaison */
+    .comparison-table th {
+        background: #1a1a2e;
+        color: white;
+        font-weight: 600;
+        text-align: center;
+        padding: 12px;
+    }
+    .comparison-table td {
+        text-align: center;
+        padding: 10px 12px;
+        vertical-align: middle;
+    }
+    .comparison-table .feature-name {
+        text-align: left;
+        font-weight: 500;
+    }
+
+    /* Payment methods */
+    .payment-methods {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    /* FAQ */
+    .faq-section {
+        margin-top: 2rem;
+    }
+    .faq-section .accordion-button {
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    .faq-section .accordion-button:not(.collapsed) {
+        background: #f0f4ff;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="pricing-hero">
+    <h1><i class="bi bi-gem me-2"></i>Offres & Tarifs GuineeRH</h1>
+    <p class="mb-3">La solution RH n&deg;1 en Guinee - Conforme CGI 2022</p>
+
+    {% if abonnement_actuel %}
+    <div class="d-inline-block mb-3">
+        <div class="alert alert-light py-2 px-4 mb-0 d-inline-flex align-items-center" style="border-radius:50px;">
+            <i class="bi bi-check-circle-fill text-success me-2"></i>
+            <span class="text-dark">
+                <strong>Plan actuel :</strong> {{ abonnement_actuel.plan.nom }}
+                {% if abonnement_actuel.est_actif %}
+                    <span class="badge bg-success ms-1">Actif</span>
+                    - {{ abonnement_actuel.jours_restants }} jours restants
+                {% else %}
+                    <span class="badge bg-danger ms-1">Expire</span>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Toggle Mensuel / Annuel -->
+    <div class="d-block">
+        <div class="pricing-toggle" id="pricingToggle">
+            <button class="btn-toggle active" data-period="mensuel">Mensuel</button>
+            <button class="btn-toggle" data-period="annuel">
+                Annuel <span class="save-badge">-17%</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-4">
+    <!-- Plans -->
+    <div class="row justify-content-center g-4">
+        {% for plan in plans %}
+        <div class="col-lg-4 col-md-6">
+            <div class="plan-card h-100 {% if plan.badge %}featured{% endif %}">
+                {% if plan.badge %}
+                <div class="plan-badge text-white" style="background: {{ plan.couleur }};">
+                    <i class="bi bi-star-fill me-1"></i> {{ plan.badge }}
+                </div>
+                {% endif %}
+
+                <!-- Header -->
+                <div class="plan-header">
+                    <div class="plan-icon" style="background: {{ plan.couleur }}15; color: {{ plan.couleur }};">
+                        <i class="bi {{ plan.icone }}"></i>
+                    </div>
+                    <div class="plan-name">{{ plan.nom }}</div>
+                    {% if plan.sous_titre %}
+                    <div class="plan-subtitle">{{ plan.sous_titre }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Limites -->
+                <div class="limits-row">
+                    <div class="limit-item">
+                        <div class="limit-value" style="color: {{ plan.couleur }};">{{ plan.max_utilisateurs }}</div>
+                        <div class="limit-label">Utilisateurs</div>
+                    </div>
+                    <div class="limit-item">
+                        <div class="limit-value" style="color: {{ plan.couleur }};">
+                            {% if plan.max_employes >= 9999 %}Illimite{% else %}{{ plan.max_employes }}{% endif %}
+                        </div>
+                        <div class="limit-label">Employes</div>
+                    </div>
+                </div>
+
+                <!-- Prix -->
+                <div class="plan-price">
+                    <div class="price-monthly">
+                        <span class="price-amount" style="color: {{ plan.couleur }};">{{ plan.prix_mensuel|intcomma }}</span>
+                        <span class="price-period">GNF / mois</span>
+                    </div>
+                    <div class="price-annual" style="display:none;">
+                        <span class="price-amount" style="color: {{ plan.couleur }};">{{ plan.prix_annuel|intcomma }}</span>
+                        <span class="price-period">GNF / an</span>
+                    </div>
+                    {% if plan.prix_installation %}
+                    <div class="price-installation">
+                        <i class="bi bi-tools"></i> Installation : <strong>{{ plan.prix_installation|intcomma }} GNF</strong> (unique)
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Features -->
+                <div class="plan-features">
+                    <div class="section-label">Modules inclus</div>
+
+                    <div class="feature-item">
+                        <i class="bi bi-check-circle-fill icon-check"></i>
+                        Paie complete (CNSS, RTS, VF, TA)
+                    </div>
+                    <div class="feature-item">
+                        <i class="bi bi-check-circle-fill icon-check"></i>
+                        Bulletins PDF automatiques
+                    </div>
+                    <div class="feature-item">
+                        <i class="bi bi-check-circle-fill icon-check"></i>
+                        Gestion des conges
+                    </div>
+                    <div class="feature-item {% if not plan.module_recrutement %}disabled{% endif %}">
+                        {% if plan.module_recrutement %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Module Recrutement
+                    </div>
+                    <div class="feature-item {% if not plan.module_formation %}disabled{% endif %}">
+                        {% if plan.module_formation %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Module Formation
+                    </div>
+                    <div class="feature-item {% if not plan.module_comptabilite %}disabled{% endif %}">
+                        {% if plan.module_comptabilite %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Comptabilite integree
+                    </div>
+                    <div class="feature-item {% if not plan.module_portail %}disabled{% endif %}">
+                        {% if plan.module_portail %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Portail employe
+                    </div>
+
+                    <div class="section-label">Fiscalite & conformite</div>
+
+                    <div class="feature-item {% if not plan.declarations_fiscales %}disabled{% endif %}">
+                        {% if plan.declarations_fiscales %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Declarations fiscales auto
+                    </div>
+                    <div class="feature-item {% if not plan.export_comptable %}disabled{% endif %}">
+                        {% if plan.export_comptable %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Export comptable (Excel/PDF)
+                    </div>
+
+                    <div class="section-label">Support & services</div>
+
+                    <div class="feature-item {% if not plan.support_prioritaire %}disabled{% endif %}">
+                        {% if plan.support_prioritaire %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Support prioritaire
+                    </div>
+                    <div class="feature-item {% if not plan.support_telephonique %}disabled{% endif %}">
+                        {% if plan.support_telephonique %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Support telephonique
+                    </div>
+                    <div class="feature-item {% if not plan.formation_incluse %}disabled{% endif %}">
+                        {% if plan.formation_incluse %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Formation incluse
+                    </div>
+                    <div class="feature-item {% if not plan.personnalisation %}disabled{% endif %}">
+                        {% if plan.personnalisation %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Personnalisation & branding
+                    </div>
+                    <div class="feature-item {% if not plan.multi_entreprise %}disabled{% endif %}">
+                        {% if plan.multi_entreprise %}
+                            <i class="bi bi-check-circle-fill icon-check"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle icon-x"></i>
+                        {% endif %}
+                        Multi-entreprise
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <div class="plan-cta">
+                    {% if abonnement_actuel and abonnement_actuel.plan.slug == plan.slug and abonnement_actuel.est_actif %}
+                        <button class="btn btn-secondary w-100" disabled>
+                            <i class="bi bi-check-lg"></i> Votre plan actuel
+                        </button>
+                    {% else %}
+                        <a href="{% url 'payments:checkout' plan.slug %}"
+                           class="btn w-100 {% if plan.badge %}text-white{% else %}btn-outline-dark{% endif %}"
+                           style="{% if plan.badge %}background: {{ plan.couleur }};{% endif %}">
+                            <i class="bi bi-cart-plus me-1"></i> Choisir {{ plan.nom }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> Aucun plan disponible pour le moment.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Section Installation -->
+    <div class="installation-section">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h3><i class="bi bi-tools text-primary me-2"></i>Service d'Installation & Configuration</h3>
+                <p class="text-muted mb-3">
+                    Notre equipe se deplace dans votre entreprise pour une mise en route complete.
+                </p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check2-circle text-success fs-5 me-2 mt-1"></i>
+                            <div>
+                                <strong>Installation du logiciel</strong>
+                                <div class="text-muted small">Sur tous les postes de votre entreprise</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check2-circle text-success fs-5 me-2 mt-1"></i>
+                            <div>
+                                <strong>Configuration complete</strong>
+                                <div class="text-muted small">Parametrage paie, employes, baremes</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check2-circle text-success fs-5 me-2 mt-1"></i>
+                            <div>
+                                <strong>Import des donnees</strong>
+                                <div class="text-muted small">Migration depuis Excel ou autre logiciel</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check2-circle text-success fs-5 me-2 mt-1"></i>
+                            <div>
+                                <strong>Formation equipe</strong>
+                                <div class="text-muted small">Formation pratique de votre equipe RH</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 text-center mt-4 mt-lg-0">
+                <div class="bg-white rounded-4 p-4 shadow-sm">
+                    <div class="text-muted small mb-2">A partir de</div>
+                    <div class="display-5 fw-bold text-primary">1 500 000</div>
+                    <div class="text-muted">GNF (paiement unique)</div>
+                    <hr>
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span>Starter</span>
+                        <strong class="text-dark">1 500 000 GNF</strong>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span>Pro</span>
+                        <strong class="text-dark">3 000 000 GNF</strong>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Premium</span>
+                        <strong class="text-dark">5 000 000 GNF</strong>
+                    </div>
+                    <a href="https://wa.me/224622613559?text=Bonjour%2C%20je%20souhaite%20demander%20une%20installation%20GuineeRH"
+                       class="btn btn-success w-100 mt-3" target="_blank">
+                        <i class="bi bi-whatsapp me-1"></i> Demander un devis
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Arguments commerciaux -->
+    <div class="row mt-5 g-4">
+        <div class="col-12 text-center mb-2">
+            <h3><i class="bi bi-shield-check text-success me-2"></i>Pourquoi choisir GuineeRH ?</h3>
+        </div>
+        <div class="col-md-3 text-center">
+            <div class="bg-white rounded-4 p-4 h-100 shadow-sm">
+                <i class="bi bi-patch-check-fill text-primary fs-1 mb-3 d-block"></i>
+                <h6 class="fw-bold">Conforme CGI 2022</h6>
+                <small class="text-muted">Bareme RTS progressif, CNSS, VF, TA — 100% conforme legislation guineenne</small>
+            </div>
+        </div>
+        <div class="col-md-3 text-center">
+            <div class="bg-white rounded-4 p-4 h-100 shadow-sm">
+                <i class="bi bi-currency-exchange text-success fs-1 mb-3 d-block"></i>
+                <h6 class="fw-bold">Moins cher que Sage</h6>
+                <small class="text-muted">Jusqu'a 70% moins cher que les solutions internationales, adapte aux realites locales</small>
+            </div>
+        </div>
+        <div class="col-md-3 text-center">
+            <div class="bg-white rounded-4 p-4 h-100 shadow-sm">
+                <i class="bi bi-headset text-warning fs-1 mb-3 d-block"></i>
+                <h6 class="fw-bold">Support local rapide</h6>
+                <small class="text-muted">Equipe basee en Guinee, assistance en francais, intervention sur site possible</small>
+            </div>
+        </div>
+        <div class="col-md-3 text-center">
+            <div class="bg-white rounded-4 p-4 h-100 shadow-sm">
+                <i class="bi bi-shield-lock-fill text-danger fs-1 mb-3 d-block"></i>
+                <h6 class="fw-bold">Donnees securisees</h6>
+                <small class="text-muted">Chiffrement, protection anti-piratage, vos donnees restent chez vous</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodes de paiement -->
+    <div class="payment-methods text-center">
+        <h5 class="text-muted mb-3"><i class="bi bi-credit-card me-2"></i>Methodes de paiement acceptees</h5>
+        <div class="d-flex justify-content-center gap-5 flex-wrap mb-3">
+            <div class="text-center">
+                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:56px;height:56px;">
+                    <span class="fw-bold text-warning">OM</span>
+                </div>
+                <div class="small text-muted">Orange Money</div>
+            </div>
+            <div class="text-center">
+                <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:56px;height:56px;">
+                    <span class="fw-bold text-info">MTN</span>
+                </div>
+                <div class="small text-muted">MTN Money</div>
+            </div>
+            <div class="text-center">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:56px;height:56px;">
+                    <i class="bi bi-credit-card text-primary fs-4"></i>
+                </div>
+                <div class="small text-muted">Visa / MC</div>
+            </div>
+            <div class="text-center">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:56px;height:56px;">
+                    <i class="bi bi-cash-stack text-success fs-4"></i>
+                </div>
+                <div class="small text-muted">Especes</div>
+            </div>
+        </div>
+        <p class="text-muted small mb-0">
+            <i class="bi bi-shield-check"></i> Paiements securises via CinetPay | Facture officielle fournie
+        </p>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section mb-5">
+        <h4 class="text-center mb-4"><i class="bi bi-question-circle me-2"></i>Questions frequentes</h4>
+        <div class="accordion" id="faqAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                        Puis-je tester avant d'acheter ?
+                    </button>
+                </h2>
+                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Oui ! Nous offrons <strong>1 mois d'essai gratuit</strong> avec le plan Starter.
+                        Vous pouvez tester toutes les fonctionnalites de paie sans engagement.
+                        Contactez-nous sur WhatsApp pour activer votre essai.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                        Est-ce que GuineeRH est conforme a la legislation guineenne ?
+                    </button>
+                </h2>
+                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <strong>100% conforme.</strong> Notre moteur de paie applique le bareme RTS progressif 2022,
+                        le plafond CNSS a 2 500 000 GNF, le versement forfaitaire (VF) et la taxe d'apprentissage (TA)
+                        selon les regles exactes du Code General des Impots de Guinee.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                        Puis-je changer de plan a tout moment ?
+                    </button>
+                </h2>
+                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Oui, vous pouvez upgrader votre plan a tout moment. La difference de prix est calculee
+                        au prorata. Pour un downgrade, il sera effectif a la fin de votre periode en cours.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                        Les frais d'installation sont-ils obligatoires ?
+                    </button>
+                </h2>
+                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Non, l'installation est optionnelle. Vous pouvez installer le logiciel vous-meme.
+                        Cependant, nous recommandons notre service d'installation pour une mise en route optimale
+                        avec configuration complete, import de vos donnees existantes et formation de votre equipe.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                        Comment fonctionne le support technique ?
+                    </button>
+                </h2>
+                <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <strong>Starter :</strong> Support par email (reponse sous 48h)<br>
+                        <strong>Pro :</strong> Support prioritaire par email + telephone (reponse sous 24h)<br>
+                        <strong>Premium :</strong> Support VIP avec ligne directe + intervention sur site si necessaire
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="text-center mb-5">
+        <div class="bg-white rounded-4 p-4 shadow-sm d-inline-block">
+            <h5><i class="bi bi-telephone-fill text-primary me-2"></i>Besoin d'aide pour choisir ?</h5>
+            <p class="text-muted mb-3">Notre equipe est a votre disposition pour vous conseiller.</p>
+            <a href="https://wa.me/224622613559?text=Bonjour%2C%20je%20souhaite%20des%20informations%20sur%20GuineeRH"
+               class="btn btn-success me-2" target="_blank">
+                <i class="bi bi-whatsapp me-1"></i> WhatsApp
+            </a>
+            <a href="tel:+224622613559" class="btn btn-outline-primary">
+                <i class="bi bi-telephone me-1"></i> +224 622 613 559
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtns = document.querySelectorAll('.btn-toggle');
+    const monthlyPrices = document.querySelectorAll('.price-monthly');
+    const annualPrices = document.querySelectorAll('.price-annual');
+
+    toggleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            toggleBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const period = this.dataset.period;
+            if (period === 'annuel') {
+                monthlyPrices.forEach(el => el.style.display = 'none');
+                annualPrices.forEach(el => el.style.display = 'block');
+            } else {
+                monthlyPrices.forEach(el => el.style.display = 'block');
+                annualPrices.forEach(el => el.style.display = 'none');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

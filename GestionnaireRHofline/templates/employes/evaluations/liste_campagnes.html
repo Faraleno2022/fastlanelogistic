@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Campagnes d'Évaluation{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-chart-bar me-2"></i>Campagnes d'Évaluation</h2>
+                <a href="{% url 'employes:creer_campagne' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Nouvelle campagne
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for campagne in campagnes %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header {% if campagne.statut == 'en_cours' %}bg-primary text-white{% elif campagne.statut == 'cloturee' %}bg-success text-white{% else %}bg-light{% endif %}">
+                    <h5 class="mb-0">{{ campagne.titre }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{{ campagne.description|truncatewords:20 }}</p>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Période:</small><br>
+                        {{ campagne.date_debut|date:"d/m/Y" }} - {{ campagne.date_fin|date:"d/m/Y" }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Progression</span>
+                            <span>{{ campagne.nb_terminees }}/{{ campagne.nb_evaluations }}</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" style="width: {{ campagne.taux_completion }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <span class="badge 
+                        {% if campagne.statut == 'preparation' %}bg-secondary
+                        {% elif campagne.statut == 'en_cours' %}bg-primary
+                        {% elif campagne.statut == 'cloturee' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                        {{ campagne.get_statut_display }}
+                    </span>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'employes:detail_campagne' campagne.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i>Voir
+                    </a>
+                    {% if campagne.statut == 'en_cours' or campagne.statut == 'cloturee' %}
+                    <a href="{% url 'employes:synthese_evaluations' %}?annee={{ campagne.annee }}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-chart-pie me-1"></i>Synthèse
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <p>Aucune campagne d'évaluation</p>
+                <a href="{% url 'employes:creer_campagne' %}" class="btn btn-primary">
+                    Créer la première campagne
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}International Consulting Guinea (ICG) — Conseil RH, HSE & RSE en Guinée{% endblock %}</title>
+
+    <meta name="description" content="{% block meta_description %}International Consulting Guinea (ICG) — Cabinet de conseil en Ressources Humaines, Hygiène-Sécurité-Environnement (HSE) et Responsabilité Sociétale (RSE) à Conakry, Guinée. Recrutement, formation, accompagnement stratégique.{% endblock %}">
+    <meta name="keywords" content="ICG, International Consulting Guinea, ICG Guinea, ICG Guinée, cabinet conseil Guinée, ressources humaines Conakry, recrutement Guinée, HSE Guinée, RSE Guinée, formation entreprise Conakry, icguinea, conseil entreprise Guinée">
+    <meta name="author" content="International Consulting Guinea (ICG)">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="googlebot" content="index, follow">
+    <meta name="language" content="French">
+    <meta name="geo.region" content="GN">
+    <meta name="geo.placename" content="Conakry">
+
+    <link rel="canonical" href="https://www.icguinea.com{{ request.path }}">
+
+    {# Open Graph #}
+    <meta property="og:site_name" content="International Consulting Guinea (ICG)">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:title" content="{% block og_title %}International Consulting Guinea (ICG) — Conseil RH, HSE & RSE{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}ICG (International Consulting Guinea) accompagne les entreprises en Guinée : recrutement, formation, HSE, RSE et conseil stratégique.{% endblock %}">
+    <meta property="og:url" content="https://www.icguinea.com{{ request.path }}">
+    <meta property="og:image" content="{% block og_image %}https://www.icguinea.com{% static 'images/home2.png' %}{% endblock %}">
+
+    {# Twitter Card #}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="International Consulting Guinea (ICG)">
+    <meta name="twitter:description" content="Cabinet de conseil RH, HSE & RSE à Conakry, Guinée.">
+    <meta name="twitter:image" content="https://www.icguinea.com{% static 'images/home2.png' %}">
+
+    {# JSON-LD Organization — aide Google à afficher le nom officiel #}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "International Consulting Guinea",
+        "alternateName": ["ICG", "ICG Guinea", "ICG Guinée", "International Consulting Guinea (ICG)"],
+        "legalName": "International Consulting Guinea",
+        "url": "https://www.icguinea.com",
+        "logo": "https://www.icguinea.com{% static 'favicon.ico' %}",
+        "description": "Cabinet de conseil en Ressources Humaines, HSE et RSE basé à Conakry, Guinée.",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Carrefour T6, 2ème Étage Immeuble Le Général",
+            "addressLocality": "Conakry",
+            "addressCountry": "GN"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+224620113225",
+            "contactType": "customer service",
+            "email": "contact@icguinea.com",
+            "areaServed": "GN",
+            "availableLanguage": ["French"]
+        },
+        "sameAs": []
+    }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="{% static 'css/navbar.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet"> {# Ce fichier contient maintenant les styles du footer #}
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    {% block extra_head %}{% endblock %}
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% block navbar %}
+        {% include 'includes/navbar.html' %}
+    {% endblock %}
+
+    {% block content %}
+    {% endblock %}
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-section about">
+                <h3>À Propos de ICG</h3>
+                <p>
+                    ICG : Nous aidons les entreprises à atteindre l'excellence et la réussite durable.
+                </p>
+                <div class="social-icons">
+                    <a href="#" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" target="_blank" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-section links">
+                <h3>Liens Rapides</h3>
+                <ul>
+                    <li><a href="{% url 'show_entreprise' %}">Accueil</a></li>
+                    <li><a href="{% url 'event_list' %}">Événements</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section contact">
+                <h3>Contactez-nous</h3>
+                <p>
+                    <i class="fas fa-map-marker-alt"></i> Carrefour T6, 2em Etage Immeuble Le Général
+                </p>
+                <p>
+                    <i class="fas fa-phone-alt"></i>
+                    <a href="tel:+224620113225" class="contact-link">+224 620 11 32 25</a>
+                </p>
+                <p>
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:contact@icguinea.com" class="contact-link">contact@icguinea.com</a>
+                </p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; {% now "Y" %} International Consulting Guinea. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+
+    <script src="{% static 'js/navbar.js' %}"></script>
+</body>
+</html>

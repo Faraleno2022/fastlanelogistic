@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Feuille de Présence — {{ mois_label }} {{ annee }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .grille-cell {
+        width: 28px;
+        min-width: 28px;
+        max-width: 28px;
+        text-align: center;
+        font-size: 0.7rem;
+        padding: 2px !important;
+    }
+    .grille-cell.present { background-color: #C6EFCE; color: #006100; font-weight: bold; }
+    .grille-cell.absent { background-color: #FFC7CE; color: #9C0006; font-weight: bold; }
+    .grille-cell.retard { background-color: #FFEB9C; color: #9C5700; }
+    .grille-cell.dimanche { background-color: #D6E4F0; }
+    .grille-cell.ferie { background-color: #FFF2CC; }
+    .grille-hdr { font-size: 0.65rem; }
+    .grille-hdr.dimanche { background-color: #5B9BD5 !important; color: white !important; }
+    .grille-hdr.ferie { background-color: #FFD966 !important; color: #333 !important; }
+    .table-presence { font-size: 0.75rem; }
+    .table-presence th, .table-presence td { vertical-align: middle; }
+    .sticky-col { position: sticky; left: 0; z-index: 1; background: white; }
+    .sticky-col-2 { position: sticky; left: 80px; z-index: 1; background: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-calendar-check me-2 text-success"></i>Feuille de Présence</h2>
+                <p class="text-muted mb-0">Grille de pointage mensuel — {{ mois_label }} {{ annee }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                {% if rows %}
+                <a href="{% url 'paie:rapport_feuille_presence_excel' %}?{{ request.GET.urlencode }}"
+                   class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel me-1"></i>Export Excel
+                </a>
+                <a href="{% url 'paie:rapport_feuille_presence_pdf' %}?{{ request.GET.urlencode }}"
+                   class="btn btn-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                </a>
+                {% endif %}
+                <a href="{% url 'paie:home' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <i class="fas fa-filter me-2"></i>Filtres
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Année</label>
+                    <select name="annee" class="form-select">
+                        {% for a in annees_dispo %}
+                        <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                        {% empty %}
+                        <option value="{{ annee }}" selected>{{ annee }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Mois</label>
+                    <select name="mois" class="form-select" required>
+                        {% for m in mois_liste %}
+                        <option value="{{ m }}" {% if mois == m|stringformat:"s" %}selected{% endif %}>
+                            {% if m == 1 %}Janvier{% elif m == 2 %}Février{% elif m == 3 %}Mars
+                            {% elif m == 4 %}Avril{% elif m == 5 %}Mai{% elif m == 6 %}Juin
+                            {% elif m == 7 %}Juillet{% elif m == 8 %}Août{% elif m == 9 %}Septembre
+                            {% elif m == 10 %}Octobre{% elif m == 11 %}Novembre{% else %}Décembre{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Service</label>
+                    <select name="service" class="form-select">
+                        <option value="">Tous les services</option>
+                        {% for s in services %}
+                        <option value="{{ s.pk }}" {% if service_id == s.pk|stringformat:"s" %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Légende -->
+    {% if rows %}
+    <div class="d-flex flex-wrap gap-3 mb-3 small">
+        <span><span class="badge" style="background-color: #C6EFCE; color: #006100;">P</span> Présent</span>
+        <span><span class="badge" style="background-color: #FFC7CE; color: #9C0006;">A</span> Absent</span>
+        <span><span class="badge" style="background-color: #FFEB9C; color: #9C5700;">R</span> Retard</span>
+        <span><span class="badge" style="background-color: #FFEB9C; color: #9C5700;">AJ</span> Absence justifiée</span>
+        <span><span class="badge" style="background-color: #5B9BD5; color: white;">Dim</span> Dimanche</span>
+        <span><span class="badge" style="background-color: #FFD966; color: #333;">Fér</span> Jour férié</span>
+    </div>
+
+    <!-- KPI -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center py-2">
+                    <h6 class="text-muted mb-0">Effectif</h6>
+                    <h3 class="text-primary mb-0">{{ nb_employes }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-info">
+                <div class="card-body text-center py-2">
+                    <h6 class="text-muted mb-0">Jours du mois</h6>
+                    <h3 class="text-info mb-0">{{ nb_jours }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille de présence -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <i class="fas fa-calendar-alt me-2"></i>Grille de pointage — {{ nb_employes }} employés
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 75vh; overflow: auto;">
+                <table class="table table-sm table-bordered table-presence mb-0">
+                    <thead class="table-dark" style="position: sticky; top: 0; z-index: 3;">
+                        <tr>
+                            <th class="text-nowrap px-2" style="min-width: 80px;">Nom</th>
+                            <th class="text-nowrap px-2" style="min-width: 80px;">Prénom</th>
+                            <th class="text-nowrap px-2" style="min-width: 70px;">Matricule</th>
+                            {% for ji in jours_info %}
+                            <th class="grille-cell grille-hdr {% if ji.dimanche %}dimanche{% elif ji.ferie %}ferie{% endif %}">
+                                {{ ji.jour }}<br>{{ ji.nom }}
+                            </th>
+                            {% endfor %}
+                            <th class="text-center px-1" style="font-size: 0.7rem;">P</th>
+                            <th class="text-center px-1" style="font-size: 0.7rem;">AM</th>
+                            <th class="text-center px-1" style="font-size: 0.7rem;">PM</th>
+                            <th class="text-center px-1" style="font-size: 0.7rem;">AM+PM</th>
+                            <th class="text-center px-1" style="font-size: 0.7rem;">A</th>
+                            <th class="text-center px-1" style="font-size: 0.7rem;">R</th>
+                            <th class="text-center px-1" style="font-size: 0.7rem;">AJ</th>
+                            <th class="text-center px-1" style="font-size: 0.7rem;">M</th>
+                            <th class="text-center px-1" style="font-size: 0.7rem;">Dim.T</th>
+                            <th class="text-center px-1" style="font-size: 0.7rem;">Fér.T</th>
+                            <th class="text-end px-1" style="font-size: 0.7rem;">Sal. Base</th>
+                            <th class="text-end px-1" style="font-size: 0.7rem;">Net</th>
+                            <th class="text-end px-1" style="font-size: 0.7rem;">Avance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                        <tr>
+                            <td class="text-nowrap fw-bold px-2">{{ row.nom }}</td>
+                            <td class="text-nowrap px-2">{{ row.prenom }}</td>
+                            <td class="text-center px-1">{{ row.matricule }}</td>
+                            {% for code in row.grille %}
+                            <td class="grille-cell {% if code == 'P' %}present{% elif code == 'A' or code == 'AJ' %}absent{% elif code == 'R' %}retard{% elif code == 'AM' or code == 'PM' or code == 'AM+PM' %}present{% elif code == 'M' %}malade{% endif %}">
+                                {{ code }}
+                            </td>
+                            {% endfor %}
+                            <td class="text-center fw-bold">{{ row.count_p }}</td>
+                            <td class="text-center">{{ row.count_am }}</td>
+                            <td class="text-center">{{ row.count_pm }}</td>
+                            <td class="text-center">{{ row.count_am_pm }}</td>
+                            <td class="text-center {% if row.count_a > 0 %}text-danger{% endif %}">{{ row.count_a }}</td>
+                            <td class="text-center">{{ row.count_r }}</td>
+                            <td class="text-center">{{ row.count_aj }}</td>
+                            <td class="text-center">{{ row.count_m }}</td>
+                            <td class="text-center">{{ row.nb_dim_travailles }}</td>
+                            <td class="text-center">{{ row.feries_travailles }}</td>
+                            <td class="text-end">{{ row.salaire_base|floatformat:0|intcomma }}</td>
+                            <td class="text-end fw-bold">{{ row.net|floatformat:0|intcomma }}</td>
+                            <td class="text-end {% if row.avance > 0 %}text-danger{% endif %}">{{ row.avance|floatformat:0|intcomma }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center mt-4">
+        <i class="fas fa-info-circle me-2"></i>
+        Aucune donnée pour la période sélectionnée. Vérifiez qu'il y a des employés actifs et des pointages pour ce mois.
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

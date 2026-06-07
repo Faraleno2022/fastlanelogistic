@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Nouveau contrat - {{ employe.nom }} {{ employe.prenoms }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-file-earmark-text"></i> Nouveau contrat
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'employes:telecharger_modele_contrat_cdi' %}" class="btn btn-sm btn-outline-primary me-2">
+            <i class="bi bi-download"></i> Modèle CDI
+        </a>
+        <a href="{% url 'employes:detail' employe.pk %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                <h5 class="mb-0">
+                    <i class="bi bi-person"></i> 
+                    Contrat pour : {{ employe.civilite }} {{ employe.nom }} {{ employe.prenoms }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Matricule :</strong> {{ employe.matricule }} | 
+                    <strong>Service :</strong> {{ employe.service.nom_service|default:"-" }} | 
+                    <strong>Poste :</strong> {{ employe.poste.intitule_poste|default:"-" }}
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% crispy form %}
+                    
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save"></i> Enregistrer le contrat
+                        </button>
+                        <a href="{% url 'employes:detail' employe.pk %}" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-x-lg"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h6>
+            </div>
+            <div class="card-body">
+                <h6>Types de contrat en Guinée :</h6>
+                <ul class="small">
+                    <li><strong>CDI</strong> : Contrat à Durée Indéterminée</li>
+                    <li><strong>CDD</strong> : Contrat à Durée Déterminée (max 2 ans renouvelable 1 fois)</li>
+                    <li><strong>Stage</strong> : Convention de stage</li>
+                    <li><strong>Temporaire</strong> : Contrat temporaire</li>
+                </ul>
+
+                <h6 class="mt-3">Période d'essai :</h6>
+                <ul class="small">
+                    <li><strong>Cadres</strong> : 3 mois renouvelable 1 fois</li>
+                    <li><strong>Agents de maîtrise</strong> : 2 mois renouvelable 1 fois</li>
+                    <li><strong>Employés/Ouvriers</strong> : 1 mois renouvelable 1 fois</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Important</h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-0">
+                    Assurez-vous que le contrat est conforme au Code du Travail de Guinée (Loi L/2014/072/CNT).
+                    Le fichier PDF du contrat signé doit être uploadé.
+                </p>
+                <a href="{% url 'employes:telecharger_modele_contrat_cdi' %}" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                    <i class="bi bi-file-earmark-word"></i> Télécharger le modèle CDI
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Gestion du type de contrat
+    $('#id_type_contrat').on('change', function() {
+        let type = $(this).val();
+        
+        if (type === 'CDI') {
+            // Pour CDI, date de fin non obligatoire
+            $('#id_date_fin').prop('required', false);
+            $('#id_date_fin').closest('.form-group').hide();
+        } else {
+            // Pour CDD, date de fin obligatoire
+            $('#id_date_fin').prop('required', true);
+            $('#id_date_fin').closest('.form-group').show();
+        }
+    }).trigger('change');
+
+    // Calcul automatique de la durée en mois
+    function calculerDuree() {
+        let dateDebut = new Date($('#id_date_debut').val());
+        let dateFin = new Date($('#id_date_fin').val());
+        
+        if (dateDebut && dateFin && dateFin > dateDebut) {
+            let mois = (dateFin.getFullYear() - dateDebut.getFullYear()) * 12;
+            mois -= dateDebut.getMonth();
+            mois += dateFin.getMonth();
+            
+            $('#id_duree_mois').val(mois);
+        }
+    }
+    
+    $('#id_date_debut, #id_date_fin').on('change', calculerDuree);
+
+    // Calcul de la date de fin d'essai
+    $('#id_periode_essai_mois, #id_date_debut').on('change', function() {
+        let dateDebut = new Date($('#id_date_debut').val());
+        let periodeEssai = parseInt($('#id_periode_essai_mois').val());
+        
+        if (dateDebut && periodeEssai > 0) {
+            let dateFinEssai = new Date(dateDebut);
+            dateFinEssai.setMonth(dateFinEssai.getMonth() + periodeEssai);
+            
+            let year = dateFinEssai.getFullYear();
+            let month = String(dateFinEssai.getMonth() + 1).padStart(2, '0');
+            let day = String(dateFinEssai.getDate()).padStart(2, '0');
+            
+            $('#id_date_fin_essai').val(year + '-' + month + '-' + day);
+        }
+    });
+});
+</script>
+{% endblock %}
+

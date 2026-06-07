@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Simulation de Paie{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-calculator me-2"></i>Simulateur de Paie</h2>
+            <p class="text-muted">Calculez un bulletin de paie sans l'enregistrer - Conforme législation guinéenne</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Formulaire de saisie -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Paramètres de simulation</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="employe" class="form-label">Employé (optionnel)</label>
+                            <select class="form-select" id="employe" name="employe">
+                                <option value="">-- Simulation libre --</option>
+                                {% for emp in employes %}
+                                <option value="{{ emp.id }}" {% if employe_selectionne and emp.id == employe_selectionne.id %}selected{% endif %}>
+                                    {{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <hr>
+                        <h6 class="text-primary">Rémunération de base</h6>
+                        
+                        <div class="mb-3">
+                            <label for="salaire_base" class="form-label">Salaire de base *</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="salaire_base" name="salaire_base" 
+                                       value="{{ resultat.salaire_base|default:'0' }}" required>
+                                <span class="input-group-text">GNF</span>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h6 class="text-success">Primes et Indemnités</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="prime_transport" class="form-label">Prime transport <span class="badge bg-info">Exon. CNSS</span></label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="prime_transport" name="prime_transport" 
+                                           value="{{ resultat.prime_transport|default:'0' }}">
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="prime_logement" class="form-label">Allocation logement <span class="badge bg-info">Exon. CNSS</span></label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="prime_logement" name="prime_logement" 
+                                           value="{{ resultat.prime_logement|default:'0' }}">
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="prime_cherte_vie" class="form-label">Cherté de vie <span class="badge bg-info">Exon. CNSS</span></label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="prime_cherte_vie" name="prime_cherte_vie" 
+                                           value="{{ resultat.prime_cherte_vie|default:'0' }}">
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="prime_panier" class="form-label">Prime panier/repas</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="prime_panier" name="prime_panier" 
+                                           value="{{ resultat.prime_panier|default:'0' }}">
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="prime_anciennete" class="form-label">Prime ancienneté</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="prime_anciennete" name="prime_anciennete" 
+                                           value="{{ resultat.prime_anciennete|default:'0' }}">
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="prime_responsabilite" class="form-label">Prime responsabilité</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="prime_responsabilite" name="prime_responsabilite" 
+                                           value="{{ resultat.prime_responsabilite|default:'0' }}">
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="autres_primes" class="form-label">Autres primes</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="autres_primes" name="autres_primes" 
+                                           value="{{ resultat.autres_primes|default:'0' }}">
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-3">
+                        <h6 class="text-muted"><i class="fas fa-exchange-alt me-2"></i>Rappels / Manquements (hors base)</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="rappel_salaire" class="form-label">Rappel/Complément salaire</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text text-success">+</span>
+                                    <input type="text" class="form-control" id="rappel_salaire" name="rappel_salaire" 
+                                           value="{{ resultat.rappel_salaire|default:'0' }}">
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                                <small class="text-muted">Non soumis aux charges sociales</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="retenue_trop_percu" class="form-label">Retenue trop-perçu</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text text-danger">-</span>
+                                    <input type="text" class="form-control" id="retenue_trop_percu" name="retenue_trop_percu" 
+                                           value="{{ resultat.retenue_trop_percu|default:'0' }}">
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                                <small class="text-muted">Non soumis aux charges sociales</small>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-calculator me-2"></i>Calculer
+                            </button>
+                            <a href="{% url 'paie:simulation_paie' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo me-2"></i>Réinitialiser
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Rappel des règles -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Règles appliquées</h6>
+                </div>
+                <div class="card-body small">
+                    <ul class="mb-0">
+                        <li><strong>CNSS:</strong> 5% employé, 18% employeur (plancher 550K, plafond 2,5M)</li>
+                        <li><strong>RTS:</strong> Barème progressif (0% à 20%)</li>
+                        <li><strong>VF:</strong> 6% de la base VF</li>
+                        <li><strong>TA/ONFPP:</strong> Mutuellement exclusifs (&lt;{{ resultat.seuil_ta_onfpp|default:30 }} salariés = TA 2%, &ge;{{ resultat.seuil_ta_onfpp|default:30 }} = ONFPP 1,5%)</li>
+                        <li><strong>Primes exonérées CNSS:</strong> Transport, logement, cherté de vie</li>
+                        <li><strong>Indemnités:</strong> Plafond 25% du brut</li>
+                        <li><strong>Rappels/Manquements:</strong> Hors base (non soumis CNSS, RTS, VF, TA, ONFPP)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résultats -->
+        <div class="col-lg-7">
+            {% if resultat %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>
+                        Résultat de la simulation
+                        {% if employe_selectionne %}
+                        - {{ employe_selectionne.nom }} {{ employe_selectionne.prenoms }}
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Gains -->
+                    <h6 class="border-bottom pb-2 text-success"><i class="fas fa-plus-circle me-2"></i>GAINS</h6>
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Salaire de base</td>
+                                <td class="text-end">{{ resultat.salaire_base|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% if resultat.prime_transport > 0 %}
+                            <tr>
+                                <td>Prime de transport</td>
+                                <td class="text-end">{{ resultat.prime_transport|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            {% if resultat.prime_logement > 0 %}
+                            <tr>
+                                <td>Allocation logement</td>
+                                <td class="text-end">{{ resultat.prime_logement|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            {% if resultat.prime_panier > 0 %}
+                            <tr>
+                                <td>Prime panier/repas</td>
+                                <td class="text-end">{{ resultat.prime_panier|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            {% if resultat.prime_anciennete > 0 %}
+                            <tr>
+                                <td>Prime d'ancienneté</td>
+                                <td class="text-end">{{ resultat.prime_anciennete|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            {% if resultat.prime_responsabilite > 0 %}
+                            <tr>
+                                <td>Prime de responsabilité</td>
+                                <td class="text-end">{{ resultat.prime_responsabilite|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            {% if resultat.prime_cherte_vie > 0 %}
+                            <tr>
+                                <td>Cherté de vie <span class="badge bg-info">Exon. CNSS</span></td>
+                                <td class="text-end">{{ resultat.prime_cherte_vie|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            {% if resultat.autres_primes > 0 %}
+                            <tr>
+                                <td>Autres primes</td>
+                                <td class="text-end">{{ resultat.autres_primes|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            {% if resultat.primes_exonerees_cnss > 0 %}
+                            <tr class="small text-info">
+                                <td colspan="2"><i class="fas fa-info-circle me-1"></i>Primes exonérées CNSS (transport, logement, cherté de vie): {{ resultat.primes_exonerees_cnss|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="table-success fw-bold">
+                                <td>SALAIRE BRUT</td>
+                                <td class="text-end">{{ resultat.salaire_brut|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Retenues -->
+                    <h6 class="border-bottom pb-2 text-danger mt-4"><i class="fas fa-minus-circle me-2"></i>RETENUES</h6>
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>CNSS Employé ({{ resultat.taux_cnss_employe }}%)</td>
+                                <td class="text-end text-danger">- {{ resultat.cnss_employe|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            <tr class="small text-muted">
+                                <td colspan="2">Assiette CNSS: {{ resultat.assiette_cnss|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            <tr>
+                                <td>RTS (Impôt sur salaire)</td>
+                                <td class="text-end text-danger">- {{ resultat.rts|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            <tr class="small text-muted">
+                                <td colspan="2">
+                                    Base RTS: {{ resultat.base_imposable|floatformat:0|intcomma }} GNF | Taux effectif: {{ resultat.taux_effectif_rts|floatformat:2 }}%
+                                </td>
+                            </tr>
+                            {% if resultat.detail_rts %}
+                            <tr class="small text-muted">
+                                <td colspan="2">
+                                    Détail RTS:
+                                    {% for t in resultat.detail_rts %}
+                                    {{ t.taux }}% sur {{ t.montant|floatformat:0|intcomma }} = {{ t.impot|floatformat:0|intcomma }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            <tr class="table-danger fw-bold">
+                                <td>TOTAL RETENUES</td>
+                                <td class="text-end">- {{ resultat.total_retenues|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Rappels / Manquements hors base -->
+                    {% if resultat.rappel_salaire > 0 or resultat.retenue_trop_percu > 0 %}
+                    <h6 class="border-bottom pb-2 text-info mt-4"><i class="fas fa-exchange-alt me-2"></i>RAPPELS / MANQUEMENTS (hors base)</h6>
+                    <table class="table table-sm">
+                        <tbody>
+                            {% if resultat.rappel_salaire > 0 %}
+                            <tr>
+                                <td>Rappel/Complément salaire précédent</td>
+                                <td class="text-end text-success">+ {{ resultat.rappel_salaire|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            {% if resultat.retenue_trop_percu > 0 %}
+                            <tr>
+                                <td>Retenue trop-perçu salaire précédent</td>
+                                <td class="text-end text-danger">- {{ resultat.retenue_trop_percu|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+
+                    <!-- Net à payer -->
+                    <div class="alert alert-success mt-4">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="mb-0">NET À PAYER</h5>
+                                {% if resultat.rappel_salaire > 0 or resultat.retenue_trop_percu > 0 %}
+                                <small class="text-muted">Incluant rappels/manquements hors base</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-auto">
+                                <h3 class="mb-0">{{ resultat.net_a_payer|floatformat:0|intcomma }} GNF</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Plafond indemnités -->
+                    {% if resultat.exces_indemnites > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Plafond 25% dépassé:</strong> {{ resultat.exces_indemnites|floatformat:0|intcomma }} GNF réintégrés dans la base imposable
+                    </div>
+                    {% endif %}
+
+                    <!-- Charges patronales -->
+                    <h6 class="border-bottom pb-2 text-primary mt-4"><i class="fas fa-building me-2"></i>CHARGES PATRONALES</h6>
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>CNSS Employeur ({{ resultat.taux_cnss_employeur }}%)</td>
+                                <td class="text-end">{{ resultat.cnss_employeur|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            <tr>
+                                <td>Versement Forfaitaire ({{ resultat.taux_vf }}%)</td>
+                                <td class="text-end">{{ resultat.vf|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% if resultat.ta > 0 %}
+                            <tr>
+                                <td>Taxe d'Apprentissage TA ({{ resultat.taux_ta }}%) <span class="badge bg-secondary">&lt;{{ resultat.seuil_ta_onfpp|default:30 }} salariés</span></td>
+                                <td class="text-end">{{ resultat.ta|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            {% if resultat.onfpp > 0 %}
+                            <tr>
+                                <td>Contribution ONFPP ({{ resultat.taux_onfpp }}%) <span class="badge bg-secondary">&ge;{{ resultat.seuil_ta_onfpp|default:30 }} salariés</span></td>
+                                <td class="text-end">{{ resultat.onfpp|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="table-primary fw-bold">
+                                <td>TOTAL CHARGES PATRONALES</td>
+                                <td class="text-end">{{ resultat.total_charges_patronales|floatformat:0|intcomma }} GNF</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Coût total employeur -->
+                    <div class="alert alert-primary">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h6 class="mb-0">COÛT TOTAL EMPLOYEUR</h6>
+                                <small>Brut + Charges patronales</small>
+                            </div>
+                            <div class="col-auto">
+                                <h4 class="mb-0">{{ resultat.cout_total_employeur|floatformat:0|intcomma }} GNF</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-calculator fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">Saisissez les paramètres et cliquez sur "Calculer"</h5>
+                    <p class="text-muted">Le résultat de la simulation s'affichera ici</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

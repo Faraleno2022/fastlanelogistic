@@ -1,0 +1,73 @@
+{% extends 'base_public.html' %}
+
+{% block title %}Inscriptions suspendues{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        {% if bloquee %}
+                        <i class="bi bi-shield-x text-danger" style="font-size: 5rem;"></i>
+                        {% else %}
+                        <i class="bi bi-shield-lock text-warning" style="font-size: 5rem;"></i>
+                        {% endif %}
+                    </div>
+                    
+                    {% if bloquee %}
+                    <h2 class="mb-3 text-danger">Accès temporairement bloqué</h2>
+                    <p class="text-muted mb-4">
+                        Trop de tentatives de code incorrect.
+                        Veuillez patienter avant de réessayer.
+                    </p>
+                    {% else %}
+                    <h2 class="mb-3">Accès restreint</h2>
+                    <p class="text-muted mb-4">
+                        Les créations de nouveaux comptes sont réservées à l'administrateur général.
+                        Si vous avez un code d'accès, veuillez le saisir ci-dessous.
+                    </p>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Formulaire code admin -->
+                    <form method="get" action="{% url 'core:register_entreprise' %}" class="mb-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text"><i class="bi bi-key"></i></span>
+                            <input type="text" name="code" class="form-control" placeholder="Code de vérification"
+                                   required maxlength="20" autocomplete="off">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i>Vérifier
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'core:index' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-house me-2"></i>Retour à l'accueil
+                        </a>
+                        <a href="{% url 'core:login' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+                        </a>
+                    </div>
+                    <hr class="my-4">
+                    <p class="small text-muted mb-0">
+                        <i class="bi bi-envelope me-1"></i>Contact: faraleno16@gmail.com
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

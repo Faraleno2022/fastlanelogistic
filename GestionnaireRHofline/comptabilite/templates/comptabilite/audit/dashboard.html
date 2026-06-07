@@ -1,0 +1,218 @@
+{% extends "comptabilite/base_module.html" %}
+{% load static %}
+
+{% block title %}Tableau de Bord Conformité{% endblock %}
+
+{% block page_header %}
+<div class="mb-4">
+    <h1 class="mb-0">Tableau de Bord Conformité</h1>
+    <p class="text-muted mt-2">Vue d'ensemble de la conformité et des risques</p>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- KPIs principaux -->
+<div class="row mb-4">
+    <div class="col-lg-3 mb-3">
+        <div class="card border-left border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-muted mb-2">Score de Conformité</h6>
+                        <h2 class="mb-0">{{ score_conformite }}%</h2>
+                    </div>
+                    <div class="display-6 text-primary opacity-50">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="progress" style="height: 3px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ score_conformite }}%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 mb-3">
+        <div class="card border-left border-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-muted mb-2">Alertes Critiques</h6>
+                        <h2 class="mb-0">{{ alertes_critique }}</h2>
+                    </div>
+                    <div class="display-6 text-danger opacity-50">
+                        <i class="bi bi-exclamation-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 mb-3">
+        <div class="card border-left border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-muted mb-2">Alertes Majeures</h6>
+                        <h2 class="mb-0">{{ alertes_majeure }}</h2>
+                    </div>
+                    <div class="display-6 text-warning opacity-50">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 mb-3">
+        <div class="card border-left border-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-muted mb-2">Rapports Actifs</h6>
+                        <h2 class="mb-0">{{ rapports_actifs }}</h2>
+                    </div>
+                    <div class="display-6 text-info opacity-50">
+                        <i class="bi bi-file-text"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Alertes par statut -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Distribution des Alertes</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>Détectées</span>
+                        <span class="badge bg-secondary">{{ alertes_detectees }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ alertes_detectees_percent }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>En correction</span>
+                        <span class="badge bg-info">{{ alertes_correction }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ alertes_correction_percent }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>Corrigées</span>
+                        <span class="badge bg-warning">{{ alertes_corrigees }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ alertes_corrigees_percent }}%"></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>Vérifiées</span>
+                        <span class="badge bg-success">{{ alertes_verifiees }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ alertes_verifiees_percent }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modules en conformité -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Conformité par Module</h5>
+            </div>
+            <div class="card-body">
+                {% for module in modules_conformite %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>{{ module.nom }}</span>
+                        <span class="badge bg-{{ module.couleur }}">{{ module.score }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-{{ module.couleur }}" role="progressbar" style="width: {{ module.score }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Rapports récents -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Rapports Récents</h5>
+                <a href="{% url 'comptabilite:rapport_list' %}" class="btn btn-sm btn-outline-primary">Voir tous</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for rapport in rapports_recents %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">
+                                <a href="{% url 'comptabilite:rapport_detail' rapport.pk %}">
+                                    {{ rapport.titre }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar"></i> {{ rapport.date_modification|date:"d/m/Y" }} |
+                                <span class="badge bg-{{ rapport.get_statut_badge }}">
+                                    {{ rapport.get_statut_display }}
+                                </span>
+                            </small>
+                        </div>
+                        <span class="badge bg-danger">{{ rapport.alertes_nonconformite.all|length }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="list-group-item text-muted text-center py-3">
+                    Aucun rapport récent
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions rapides -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Actions Rapides</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'comptabilite:rapport_create' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-plus-circle"></i> Nouveau Rapport
+                </a>
+                <a href="{% url 'comptabilite:alerte_create' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-exclamation-circle"></i> Nouvelle Alerte
+                </a>
+                <a href="{% url 'comptabilite:conformite_check' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-play-circle"></i> Vérifier Conformité
+                </a>
+                <a href="{% url 'comptabilite:historique_list' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-clock-history"></i> Historique
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

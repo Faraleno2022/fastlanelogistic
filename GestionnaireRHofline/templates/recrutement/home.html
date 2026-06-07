@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recrutement - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-briefcase"></i> Gestion du Recrutement</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100">
+            <div class="card-body">
+                <h5><i class="bi bi-megaphone"></i> Offres d'Emploi</h5>
+                <p>Gérez vos offres d'emploi et publications.</p>
+                <a href="{% url 'recrutement:offres' %}" class="btn btn-primary">
+                    <i class="bi bi-list"></i> Voir les offres
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100">
+            <div class="card-body">
+                <h5><i class="bi bi-person-check"></i> Candidatures</h5>
+                <p>Suivez les candidatures reçues.</p>
+                <a href="{% url 'recrutement:candidatures' %}" class="btn btn-success">
+                    <i class="bi bi-list"></i> Voir les candidatures
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-4">
+    <i class="bi bi-tools"></i> Module en développement
+</div>
+{% endblock %}
+

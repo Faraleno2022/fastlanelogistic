@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Demander un Congé{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'temps_travail:mes_conges' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-calendar-plus me-2"></i>Demander un Congé</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h6 class="mb-0">Formulaire de demande</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="formConge">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Type de congé *</label>
+                            <select class="form-select" name="type_conge" required>
+                                <option value="">Sélectionner</option>
+                                {% for code, libelle in types_conge %}
+                                <option value="{{ code }}">{{ libelle }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Date de début *</label>
+                                <input type="date" class="form-control" name="date_debut" id="date_debut" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date de fin *</label>
+                                <input type="date" class="form-control" name="date_fin" id="date_fin" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre de jours (calculé automatiquement)</label>
+                            <input type="text" class="form-control" id="nombre_jours" readonly 
+                                   placeholder="Sélectionnez les dates">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Motif / Commentaire</label>
+                            <textarea class="form-control" name="motif" rows="3" 
+                                      placeholder="Précisez le motif de votre demande..."></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'temps_travail:mes_conges' %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i>Soumettre la demande
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Solde actuel -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Mon solde</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Jours acquis:</span>
+                        <strong>{{ solde.conges_acquis|floatformat:1 }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Jours pris:</span>
+                        <strong>{{ solde.conges_pris|floatformat:1 }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Reports:</span>
+                        <strong>{{ solde.conges_reports|floatformat:1 }}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">Disponibles:</span>
+                        <span class="badge bg-primary fs-5">{{ solde.conges_restants|floatformat:1 }} j</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aide -->
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations</h6>
+                </div>
+                <div class="card-body small">
+                    <ul class="mb-0">
+                        <li>Les weekends sont automatiquement exclus du calcul</li>
+                        <li>Votre demande sera soumise à validation</li>
+                        <li>Vous recevrez une notification une fois traitée</li>
+                        <li>Vous pouvez annuler une demande en attente</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateDebut = document.getElementById('date_debut');
+    const dateFin = document.getElementById('date_fin');
+    const nombreJours = document.getElementById('nombre_jours');
+    
+    function calculerJours() {
+        if (dateDebut.value && dateFin.value) {
+            const debut = new Date(dateDebut.value);
+            const fin = new Date(dateFin.value);
+            
+            if (fin >= debut) {
+                let jours = 0;
+                let current = new Date(debut);
+                
+                while (current <= fin) {
+                    const dayOfWeek = current.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        jours++;
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+                
+                nombreJours.value = jours + ' jour(s) ouvré(s)';
+            } else {
+                nombreJours.value = 'Dates invalides';
+            }
+        }
+    }
+    
+    dateDebut.addEventListener('change', calculerJours);
+    dateFin.addEventListener('change', calculerJours);
+    
+    // Date minimum = aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
+    dateDebut.setAttribute('min', today);
+    dateFin.setAttribute('min', today);
+});
+</script>
+{% endblock %}

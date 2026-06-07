@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Télédéclaration CNSS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-building"></i> Télédéclaration CNSS</h1>
+    <div class="btn-group">
+        <a href="{% url 'core:cnss_generer' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Nouvelle déclaration</a>
+        <a href="{% url 'core:cnss_configuration' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-gear"></i> Configuration</a>
+    </div>
+</div>
+
+{% if not config %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i> Configuration CNSS non définie. 
+    <a href="{% url 'core:cnss_configuration' %}">Configurer maintenant</a>
+</div>
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ stats.total_transmissions }}</h3>
+                <small class="text-muted">Déclarations</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">{{ stats.accepte }}</h3>
+                <small class="text-muted">Acceptées</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-info">{{ stats.transmis }}</h3>
+                <small class="text-muted">Transmises</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ stats.en_attente }}</h3>
+                <small class="text-muted">En attente</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header d-flex justify-content-between">
+        <span><i class="bi bi-clock-history"></i> Dernières déclarations</span>
+        <a href="{% url 'core:cnss_historique' %}" class="btn btn-sm btn-link">Voir tout</a>
+    </div>
+    <div class="card-body">
+        {% if transmissions %}
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Période</th>
+                    <th>Référence</th>
+                    <th class="text-end">Salariés</th>
+                    <th class="text-end">Total cotisations</th>
+                    <th>Statut</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transmissions %}
+                <tr>
+                    <td>{{ t.periode_mois|stringformat:"02d" }}/{{ t.periode_annee }}</td>
+                    <td><code>{{ t.reference }}</code></td>
+                    <td class="text-end">{{ t.nombre_salaries }}</td>
+                    <td class="text-end">{{ t.total_cotisations|floatformat:0 }} GNF</td>
+                    <td>
+                        <span class="badge bg-{% if t.statut == 'accepte' %}success{% elif t.statut == 'transmis' %}info{% elif t.statut == 'rejete' %}danger{% else %}secondary{% endif %}">
+                            {{ t.get_statut_display }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'core:cnss_detail' t.id %}" class="btn btn-sm btn-outline-primary">Détails</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted mb-0">Aucune déclaration</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

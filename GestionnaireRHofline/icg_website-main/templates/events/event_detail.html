@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-bg: #0f0f0f;
+        --secondary-bg: #1a1a1a;
+        --card-bg: #242424;
+        --accent-color: #ff6b00;
+        --accent-hover: #ff8c3a;
+        --text-primary: #ffffff;
+        --text-secondary: #d1d1d1;
+        --glass-effect: rgba(255, 255, 255, 0.05);
+    }
+
+    .events-container {
+        padding: 4rem 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .event-detail {
+        background: var(--card-bg);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--glass-effect);
+    }
+
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0;
+    }
+
+    .col-md-6 {
+        padding: 0;
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .event-image {
+        height: 100%;
+        min-height: 500px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .event-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.8s ease;
+    }
+
+    .event-image:hover img {
+        transform: scale(1.03);
+    }
+
+    .event-content {
+        padding: 3rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .event-header {
+        position: relative;
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--glass-effect);
+    }
+
+    .event-date-badge {
+        background: var(--accent-color);
+        color: #000;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+    }
+
+    .event-day {
+        font-size: 1.8rem;
+        line-height: 1;
+    }
+
+    .event-month {
+        font-size: 0.9rem;
+        margin-top: -5px;
+        letter-spacing: 1px;
+    }
+
+    .event-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 1rem 0 0.5rem;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+
+    .event-header h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 0;
+    }
+
+    .event-meta {
+        background: rgba(255, 107, 0, 0.1);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 2rem 0;
+    }
+
+    .event-meta p {
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.1rem;
+    }
+
+    .event-meta i {
+        font-size: 1.3rem;
+        width: 25px;
+        text-align: center;
+    }
+
+    .event-description h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--accent-color);
+        position: relative;
+        padding-bottom: 10px;
+    }
+
+    .event-description h3::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--accent-color);
+    }
+
+    .event-description p {
+        line-height: 1.8;
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+    }
+
+    .event-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+        border: 1px solid var(--glass-effect);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px);
+    }
+
+    .btn-primary {
+        background: var(--accent-color);
+        color: #000;
+    }
+
+    .btn-primary:hover {
+        background: var(--accent-hover);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(255, 107, 0, 0.3);
+    }
+
+    .btn-danger {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-danger:hover {
+        background: rgba(220, 53, 69, 0.3);
+        transform: translateY(-3px);
+    }
+
+    @media (max-width: 992px) {
+        .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .event-image {
+            min-height: 300px;
+        }
+
+        .event-content {
+            padding: 2rem;
+        }
+
+        .event-header h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="events-container">
+    <div class="event-detail">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="event-image">
+                    {% if event.event_picture %}
+                    <img src="{{ event.event_picture.url }}" class="img-fluid" alt="{{ event.event_name }}">
+                    {% else %}
+                    <img src="{% static 'images/event-default.jpg' %}" class="img-fluid" alt="Événement par défaut">
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="event-content">
+                    <div class="event-header">
+                        <div class="event-date-badge">
+                            <span class="event-day">{{ event.event_date|date:"d" }}</span>
+                            <span class="event-month">{{ event.event_date|date:"M"|upper }}</span>
+                        </div>
+                        <h1>{{ event.event_name }}</h1>
+                        {% if event.event_title %}
+                        <h2>{{ event.event_title }}</h2>
+                        {% endif %}
+                    </div>
+
+                    <div class="event-meta">
+                        <p><i class="fas fa-map-marker-alt"></i> <strong>Lieu :</strong> {{ event.event_address }}</p>
+                        {% if event.event_start_hours and event.event_end_hours %}
+                        <p><i class="fas fa-clock"></i> <strong>Horaire :</strong> {{ event.event_start_hours|time:"H:i" }} - {{ event.event_end_hours|time:"H:i" }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="event-description">
+                        <h3>Description</h3>
+                        <p>{{ event.event_description|linebreaks }}</p>
+                    </div>
+
+                    <div class="event-actions">
+                        <a href="{% url 'event_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                        {% if request.user.is_authenticated and request.user.is_superuser %}
+                        <a href="{% url 'event_update' event.pk %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        <a href="{% url 'event_delete' event.pk %}" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

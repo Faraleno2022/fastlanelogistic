@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Configuration CNSS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-gear"></i> Configuration CNSS</h1>
+    <a href="{% url 'core:cnss_dashboard' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Numéro employeur CNSS *</label>
+                    <input type="text" name="numero_employeur" class="form-control" required value="{{ config.numero_employeur|default:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Code agence</label>
+                    <input type="text" name="code_agence" class="form-control" value="{{ config.code_agence|default:'' }}">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Format fichier</label>
+                    <select name="format_fichier" class="form-select">
+                        <option value="csv" {% if config.format_fichier == 'csv' %}selected{% endif %}>CSV</option>
+                        <option value="xml" {% if config.format_fichier == 'xml' %}selected{% endif %}>XML</option>
+                        <option value="json" {% if config.format_fichier == 'json' %}selected{% endif %}>JSON</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Mode déclaration</label>
+                    <select name="mode_declaration" class="form-select">
+                        <option value="manuel" {% if config.mode_declaration == 'manuel' %}selected{% endif %}>Manuel (fichier)</option>
+                        <option value="api" {% if config.mode_declaration == 'api' %}selected{% endif %}>API automatique</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

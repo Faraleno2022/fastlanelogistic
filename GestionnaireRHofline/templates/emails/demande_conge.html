@@ -1,0 +1,48 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Demande de congé{% endblock %}
+{% block header %}Demande de Congé{% endblock %}
+
+{% block content %}
+<p>Bonjour,</p>
+
+<p>Une nouvelle demande de congé a été soumise et nécessite votre validation.</p>
+
+<div class="info-box">
+    <strong>Employé:</strong> {{ employe.nom }} {{ employe.prenoms }}<br>
+    <strong>Matricule:</strong> {{ employe.matricule }}<br>
+    <strong>Département:</strong> {{ employe.service.nom_service|default:"-" }}
+</div>
+
+<table>
+    <tr>
+        <th>Type de congé</th>
+        <td>{{ conge.get_type_conge_display }}</td>
+    </tr>
+    <tr>
+        <th>Date de début</th>
+        <td>{{ conge.date_debut|date:"d/m/Y" }}</td>
+    </tr>
+    <tr>
+        <th>Date de fin</th>
+        <td>{{ conge.date_fin|date:"d/m/Y" }}</td>
+    </tr>
+    <tr>
+        <th>Nombre de jours</th>
+        <td>{{ conge.nombre_jours }} jour(s)</td>
+    </tr>
+    {% if conge.motif %}
+    <tr>
+        <th>Motif</th>
+        <td>{{ conge.motif }}</td>
+    </tr>
+    {% endif %}
+</table>
+
+<p style="text-align: center;">
+    <a href="#" class="btn btn-success">Approuver</a>
+    <a href="#" class="btn btn-danger">Refuser</a>
+</p>
+
+<p>Connectez-vous au système RH pour traiter cette demande.</p>
+{% endblock %}

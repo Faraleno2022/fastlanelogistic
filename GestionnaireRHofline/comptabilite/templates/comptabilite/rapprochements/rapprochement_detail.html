@@ -1,0 +1,379 @@
+{% extends "comptabilite/base.html" %}
+{% load i18n %}
+
+{% block title %}Rapprochement du {{ rapprochement.date_rapprochement|date:"d/m/Y" }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Rapprochement - {{ rapprochement.compte_bancaire.numero_compte }}</h1>
+            <p class="text-muted">{{ rapprochement.compte_bancaire.intitule_tiers }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'comptabilite:rapprochement-list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+            <a href="{% url 'comptabilite:rapprochement-update' rapprochement.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Éditer
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary">
+                <div class="card-body">
+                    <h6 class="text-muted">Date rapprochement</h6>
+                    <h4>{{ rapprochement.date_rapprochement|date:"d M Y" }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <h6 class="text-muted">Solde comptable</h6>
+                    <h4 class="text-success">{{ rapprochement.solde_comptable|floatformat:2 }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <h6 class="text-muted">Solde bancaire</h6>
+                    <h4 class="text-info">{{ rapprochement.solde_bancaire|floatformat:2 }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-{% if rapprochement.ecart == 0 %}success{% else %}warning{% endif %}">
+                <div class="card-body">
+                    <h6 class="text-muted">Écart</h6>
+                    <h4 class="text-{% if rapprochement.ecart == 0 %}success{% else %}warning{% endif %}">
+                        {{ rapprochement.ecart|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="operations-tab" data-bs-toggle="tab" 
+                    data-bs-target="#operations" type="button" role="tab">
+                <i class="fas fa-list"></i> Opérations ({{ rapprochement.operations.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="lettrage-tab" data-bs-toggle="tab" 
+                    data-bs-target="#lettrage" type="button" role="tab">
+                <i class="fas fa-link"></i> Lettrage
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="ecarts-tab" data-bs-toggle="tab" 
+                    data-bs-target="#ecarts" type="button" role="tab">
+                <i class="fas fa-exclamation-triangle"></i> Écarts ({{ ecarts.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="audit-tab" data-bs-toggle="tab" 
+                    data-bs-target="#audit" type="button" role="tab">
+                <i class="fas fa-history"></i> Audit
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Operations Tab -->
+        <div class="tab-pane fade show active" id="operations" role="tabpanel">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Libellé</th>
+                                <th>Débit</th>
+                                <th>Crédit</th>
+                                <th>Solde</th>
+                                <th>Lettré</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for op in rapprochement.operations.all %}
+                            <tr class="{% if op.lettree %}table-light{% endif %}">
+                                <td>{{ op.date_operation|date:"d/m/Y" }}</td>
+                                <td>
+                                    <strong>{{ op.libelle }}</strong>
+                                    {% if op.reference %}
+                                    <br><small class="text-muted">Ref: {{ op.reference }}</small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if op.montant_debit %}
+                                    <span class="badge bg-danger">{{ op.montant_debit|floatformat:2 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if op.montant_credit %}
+                                    <span class="badge bg-success">{{ op.montant_credit|floatformat:2 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end"><code>{{ op.solde|floatformat:2 }}</code></td>
+                                <td>
+                                    {% if op.lettree %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> Oui
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Non</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary lettrer-btn" 
+                                            data-op-id="{{ op.id }}"
+                                            {% if op.lettree %}disabled{% endif %}>
+                                        <i class="fas fa-link"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lettrage Tab -->
+        <div class="tab-pane fade" id="lettrage" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Lettrage opérations avec écritures comptables</h5>
+                </div>
+                <div class="card-body">
+                    <form id="lettrage-form" method="post" action="{% url 'comptabilite:rapprochement-lettrage' rapprochement.id %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Sélectionner une opération bancaire</label>
+                                <select id="operation-select" class="form-select" required>
+                                    <option value="">-- Choisir une opération --</option>
+                                    {% for op in rapprochement.operations.all %}
+                                    {% if not op.lettree %}
+                                    <option value="{{ op.id }}" data-montant="{{ op.montant_debit|default:op.montant_credit }}">
+                                        {{ op.date_operation|date:"d/m" }} - {{ op.libelle }} 
+                                        ({{ op.montant_debit|default:op.montant_credit|floatformat:2 }})
+                                    </option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sélectionner une écriture comptable</label>
+                                <select id="ecriture-select" class="form-select" required>
+                                    <option value="">-- Choisir une écriture --</option>
+                                    {% for ecr in ecritures %}
+                                    <option value="{{ ecr.id }}" data-montant="{{ ecr.montant }}">
+                                        {{ ecr.date|date:"d/m" }} - {{ ecr.libelle }} 
+                                        ({{ ecr.montant|floatformat:2 }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-link"></i> Lettrer
+                            </button>
+                            <button type="reset" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo"></i> Réinitialiser
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Lettrages existants -->
+                    <div class="mt-4">
+                        <h6>Lettrages effectués</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Opération bancaire</th>
+                                        <th>Écriture comptable</th>
+                                        <th>Montant</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for lettrage in rapprochement.lettrages.all %}
+                                    <tr>
+                                        <td>{{ lettrage.operation_bancaire.libelle }}</td>
+                                        <td>{{ lettrage.ecriture_comptable.libelle }}</td>
+                                        <td class="text-end">{{ lettrage.montant|floatformat:2 }}</td>
+                                        <td>{{ lettrage.date_lettrage|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="deleteLettrage({{ lettrage.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-3">
+                                            Aucun lettrage effectué
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Écarts Tab -->
+        <div class="tab-pane fade" id="ecarts" role="tabpanel">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Montant</th>
+                                <th>Date détection</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ecart in ecarts %}
+                            <tr>
+                                <td>
+                                    {% if ecart.type == "OPERATION_MANQUANTE" %}
+                                    <span class="badge bg-warning">Opération manquante</span>
+                                    {% elif ecart.type == "MONTANT_DIVERGENT" %}
+                                    <span class="badge bg-danger">Montant divergent</span>
+                                    {% else %}
+                                    <span class="badge bg-info">Autre</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ ecart.description }}</td>
+                                <td class="text-end">{{ ecart.montant|floatformat:2 }}</td>
+                                <td>{{ ecart.date_detection|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if ecart.resolu %}
+                                    <span class="badge bg-success">Résolu</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">À traiter</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#ecartModal{{ ecart.id }}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    {% if rapprochement.ecart == 0 %}
+                                    <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                                    <p class="mt-2">Rapprochement parfait - Aucun écart détecté</p>
+                                    {% else %}
+                                    Écarts en cours d'analyse
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Tab -->
+        <div class="tab-pane fade" id="audit" role="tabpanel">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Utilisateur</th>
+                                <th>Action</th>
+                                <th>Détails</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for audit in audit_trail %}
+                            <tr>
+                                <td>{{ audit.date_action|date:"d/m/Y H:i" }}</td>
+                                <td>{{ audit.utilisateur.get_full_name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if audit.action == "CREATE" %}success{% elif audit.action == "UPDATE" %}info{% else %}danger{% endif %}">
+                                        {{ audit.action }}
+                                    </span>
+                                </td>
+                                <td><small>{{ audit.details|truncatewords:10 }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="mt-4">
+        {% if rapprochement.statut != "FINALIZE" %}
+        <form method="post" action="{% url 'comptabilite:rapprochement-finalize' rapprochement.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success" onclick="return confirm('Finaliser ce rapprochement ?')">
+                <i class="fas fa-check-circle"></i> Finaliser le rapprochement
+            </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'comptabilite:rapprochement-delete' rapprochement.id %}" class="btn btn-outline-danger">
+            <i class="fas fa-trash"></i> Supprimer
+        </a>
+    </div>
+</div>
+
+<script>
+function deleteLettrage(lettrageId) {
+    if (confirm('Supprimer ce lettrage ?')) {
+        // AJAX call to delete lettrage
+        fetch(`{% url 'comptabilite:rapprochement-detail' rapprochement.id %}/lettrage/${lettrageId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+}
+
+document.querySelectorAll('.lettrer-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const opId = this.dataset.opId;
+        // Open lettrage modal or form
+    });
+});
+</script>
+{% endblock %}

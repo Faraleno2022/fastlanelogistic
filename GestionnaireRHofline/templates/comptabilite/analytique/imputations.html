@@ -1,0 +1,222 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Imputations Analytiques{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-diagram-2 text-primary"></i> Imputations analytiques
+            </h1>
+            <p class="text-muted mb-0">Suivez et analysez les imputations directes, indirectes et répartitions par centre, section ou commande.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:analytique_imputation_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle imputation
+            </a>
+            <a href="{% url 'comptabilite:analytique_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <form method="get" class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-3">
+                    <label class="form-label">Recherche</label>
+                    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Libellé, période, écriture...">
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select">
+                        <option value="">Tous</option>
+                        {% for value, label in types_imputation %}
+                        <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label">Centre de coûts</label>
+                    <select name="centre" class="form-select">
+                        <option value="">Tous</option>
+                        {% for centre in centres %}
+                        <option value="{{ centre.pk }}" {% if request.GET.centre == centre.pk|stringformat:'s' %}selected{% endif %}>{{ centre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label">Section</label>
+                    <select name="section" class="form-select">
+                        <option value="">Toutes</option>
+                        {% for section in sections %}
+                        <option value="{{ section.pk }}" {% if request.GET.section == section.pk|stringformat:'s' %}selected{% endif %}>{{ section }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label">Commande</label>
+                    <select name="commande" class="form-select">
+                        <option value="">Toutes</option>
+                        {% for commande in commandes %}
+                        <option value="{{ commande.pk }}" {% if request.GET.commande == commande.pk|stringformat:'s' %}selected{% endif %}>{{ commande.numero }} - {{ commande.libelle|truncatechars:25 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-1 col-md-3">
+                    <label class="form-label">Période</label>
+                    <input type="text" name="periode" value="{{ request.GET.periode }}" class="form-control" placeholder="YYYY-MM">
+                </div>
+                <div class="col-lg-12 col-xl-2 col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'comptabilite:analytique_imputations' %}" class="btn btn-outline-secondary" title="Réinitialiser">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Nombre d'imputations</h6>
+                        <i class="bi bi-collection text-primary"></i>
+                    </div>
+                    <p class="display-6 fw-bold mb-0">{{ page_obj.paginator.count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Total débit</h6>
+                        <i class="bi bi-graph-up text-success"></i>
+                    </div>
+                    <p class="display-6 fw-bold mb-0">{{ total_debit|floatformat:2 }} GNF</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Total crédit</h6>
+                        <i class="bi bi-graph-down text-danger"></i>
+                    </div>
+                    <p class="display-6 fw-bold mb-0">{{ total_credit|floatformat:2 }} GNF</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if imputations %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Libellé</th>
+                            <th>Type</th>
+                            <th>Centre</th>
+                            <th>Section</th>
+                            <th>Commande</th>
+                            <th class="text-end">Débit</th>
+                            <th class="text-end">Crédit</th>
+                            <th>Période</th>
+                            <th>Écriture</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for imputation in imputations %}
+                        <tr>
+                            <td>{{ imputation.date_imputation|date:"d/m/Y" }}</td>
+                            <td class="fw-semibold">{{ imputation.libelle }}</td>
+                            <td>
+                                {% if imputation.type_imputation == 'directe' %}
+                                <span class="badge bg-success">Directe</span>
+                                {% elif imputation.type_imputation == 'indirecte' %}
+                                <span class="badge bg-warning text-dark">Indirecte</span>
+                                {% else %}
+                                <span class="badge bg-info text-dark">Répartition</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ imputation.centre_couts|default:'-' }}</td>
+                            <td>{{ imputation.section|default:'-' }}</td>
+                            <td>{{ imputation.commande|default:'-' }}</td>
+                            <td class="text-end">{{ imputation.montant_debit|floatformat:2 }}</td>
+                            <td class="text-end">{{ imputation.montant_credit|floatformat:2 }}</td>
+                            <td>{{ imputation.periode }}</td>
+                            <td>
+                                {% if imputation.ecriture %}
+                                {{ imputation.ecriture.numero_ecriture }}<br>
+                                <small class="text-muted">{{ imputation.ecriture.journal }} • {{ imputation.ecriture.date_ecriture|date:"d/m/Y" }}</small>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'comptabilite:analytique_imputation_detail' imputation.pk %}" class="btn btn-sm btn-outline-primary" title="Détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'comptabilite:analytique_imputation_update' imputation.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if is_paginated %}
+            <nav aria-label="Pagination imputations" class="mt-3">
+                <ul class="pagination justify-content-end mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ querystring }}" aria-label="Précédent">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{{ querystring }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ querystring }}" aria-label="Suivant">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-diagram-3 text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Aucune imputation trouvée</h5>
+                <p class="text-muted mb-3">Ajustez vos filtres ou créez une nouvelle imputation analytique.</p>
+                <a href="{% url 'comptabilite:analytique_imputation_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Enregistrer une imputation
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

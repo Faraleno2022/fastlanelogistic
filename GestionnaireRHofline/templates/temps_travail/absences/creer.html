@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Enregistrer une Absence{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-plus me-2"></i>Enregistrer une Absence</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="employe" class="form-label">Employé *</label>
+                            <select class="form-select" id="employe" name="employe" required>
+                                <option value="">Sélectionner un employé</option>
+                                {% for emp in employes %}
+                                <option value="{{ emp.id }}">{{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="date_absence" class="form-label">Date *</label>
+                            <input type="date" class="form-control" id="date_absence" name="date_absence" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="type_absence" class="form-label">Type d'absence *</label>
+                            <select class="form-select" id="type_absence" name="type_absence" required>
+                                <option value="maladie">Maladie</option>
+                                <option value="accident_travail">Accident de travail</option>
+                                <option value="absence_injustifiee">Absence injustifiée</option>
+                                <option value="permission">Permission</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="duree_jours" class="form-label">Durée (jours) *</label>
+                            <input type="number" class="form-control" id="duree_jours" name="duree_jours" value="1" min="0.5" step="0.5" required>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="justifie" name="justifie">
+                            <label class="form-check-label" for="justifie">
+                                Absence justifiée
+                            </label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observations" class="form-label">Observations</label>
+                            <textarea class="form-control" id="observations" name="observations" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Enregistrer
+                            </button>
+                            <a href="{% url 'temps_travail:absences' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

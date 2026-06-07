@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Récapitulatif Missions {{ annee }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:liste_missions' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-chart-bar me-2"></i>Récapitulatif des Missions {{ annee }}</h2>
+        </div>
+    </div>
+
+    <!-- Totaux -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3>{{ totaux.nb_missions|default:"0" }}</h3>
+                    <p class="mb-0">Missions terminées</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3>{{ totaux.total_budget|floatformat:0|intcomma|default:"0" }} GNF</h3>
+                    <p class="mb-0">Budget total</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3>{{ totaux.total_depenses|floatformat:0|intcomma|default:"0" }} GNF</h3>
+                    <p class="mb-0">Dépenses réelles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3>{{ totaux.total_avances|floatformat:0|intcomma|default:"0" }} GNF</h3>
+                    <p class="mb-0">Avances accordées</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Par employé -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Par Employé</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-orange-light">
+                                <tr>
+                                    <th>Employé</th>
+                                    <th class="text-center">Missions</th>
+                                    <th class="text-end">Dépenses</th>
+                                    <th class="text-end">Avances</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in recap_employes %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ r.employe__nom }} {{ r.employe__prenoms }}</strong><br>
+                                        <small class="text-muted">{{ r.employe__matricule }}</small>
+                                    </td>
+                                    <td class="text-center">{{ r.nb_missions }}</td>
+                                    <td class="text-end">{{ r.total_depenses|floatformat:0|intcomma|default:"0" }} GNF</td>
+                                    <td class="text-end">{{ r.total_avances|floatformat:0|intcomma|default:"0" }} GNF</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        Aucune donnée pour {{ annee }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Par destination -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Top Destinations</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for dest in recap_destinations %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ dest.destination }}</strong><br>
+                                <small class="text-muted">{{ dest.nb_missions }} mission(s)</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ dest.total_depenses|floatformat:0|intcomma }} GNF</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted py-4">
+                            Aucune donnée
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

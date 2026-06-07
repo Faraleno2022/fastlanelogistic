@@ -1,0 +1,371 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}Compte de Résultat - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Compte de Résultat</h1>
+            <p class="text-muted mb-0">Analyse des charges et produits de l'exercice</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>Imprimer
+            </button>
+            <button class="btn btn-success" onclick="exportPDF()">
+                <i class="bi bi-file-pdf me-2"></i>Exporter PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Période -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="date_debut" class="form-label">Période du</label>
+                    <input type="date" name="date_debut" id="date_debut" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label for="date_fin" class="form-label">Au</label>
+                    <input type="date" name="date_fin" id="date_fin" class="form-control" value="{{ today|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-search me-2"></i>Générer
+                    </button>
+                    <a href="{% url 'comptabilite:compte_resultat' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Informations générales -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Entreprise: {{ request.user.entreprise.nom_entreprise }}</h6>
+                            <p class="text-muted mb-0">Exercice: {{ today|date:"Y" }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h6>Période d'analyse</h6>
+                            <p class="text-muted mb-0">Du 01/01/{{ today|date:"Y" }} au {{ today|date:"d/m/Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Résumé principal -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card {% if resultat >= 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ resultat|floatformat:0 }} GNF</h4>
+                            <p class="mb-0">
+                                {% if resultat >= 0 %}
+                                    Bénéfice Net
+                                {% else %}
+                                    Perte Net
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="align-self-center">
+                            {% if resultat >= 0 %}
+                                <i class="bi bi-graph-up-arrow fs-2"></i>
+                            {% else %}
+                                <i class="bi bi-graph-down-arrow fs-2"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_charges|floatformat:0 }} GNF</h4>
+                            <p class="mb-0">Total Charges</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-arrow-down-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_produits|floatformat:0 }} GNF</h4>
+                            <p class="mb-0">Total Produits</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-arrow-up-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compte de Résultat détaillé -->
+    <div class="row">
+        <!-- Charges -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">CHARGES</h5>
+                </div>
+                <div class="card-body">
+                    {% if charges_data %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Compte</th>
+                                        <th>Intitulé</th>
+                                        <th class="text-end">Montant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in charges_data %}
+                                    <tr>
+                                        <td><strong>{{ item.compte.numero_compte }}</strong></td>
+                                        <td>{{ item.compte.intitule }}</td>
+                                        <td class="text-end">{{ item.solde|floatformat:0 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-warning">
+                                    <tr class="fw-bold">
+                                        <td colspan="2">TOTAL CHARGES</td>
+                                        <td class="text-end">{{ total_charges|floatformat:0 }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">Aucune charge trouvée</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Produits -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">PRODUITS</h5>
+                </div>
+                <div class="card-body">
+                    {% if produits_data %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Compte</th>
+                                        <th>Intitulé</th>
+                                        <th class="text-end">Montant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in produits_data %}
+                                    <tr>
+                                        <td><strong>{{ item.compte.numero_compte }}</strong></td>
+                                        <td>{{ item.compte.intitule }}</td>
+                                        <td class="text-end">{{ item.solde|floatformat:0 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-info">
+                                    <tr class="fw-bold">
+                                        <td colspan="2">TOTAL PRODUITS</td>
+                                        <td class="text-end">{{ total_produits|floatformat:0 }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">Aucun produit trouvé</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Résultat Net -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-calculator me-2"></i>Calcul du Résultat Net
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td width="40%">Total Produits</td>
+                                    <td class="text-end">{{ total_produits|floatformat:0 }} GNF</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Charges</td>
+                                    <td class="text-end">({{ total_charges|floatformat:0 }} GNF)</td>
+                                </tr>
+                                <tr class="table-primary fw-bold">
+                                    <td>RÉSULTAT NET</td>
+                                    <td class="text-end {% if resultat >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ resultat|floatformat:0 }} GNF
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card {% if resultat >= 0 %}border-success bg-success bg-opacity-10{% else %}border-danger bg-danger bg-opacity-10{% endif %}">
+                                <div class="card-body text-center">
+                                    <h5 class="{% if resultat >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if resultat >= 0 %}
+                                            <i class="bi bi-trophy me-2"></i>BÉNÉFICE
+                                        {% else %}
+                                            <i class="bi bi-exclamation-triangle me-2"></i>PERTE
+                                        {% endif %}
+                                    </h5>
+                                    <h4 class="{% if resultat >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ resultat|floatformat:0 }} GNF
+                                    </h4>
+                                    <p class="text-muted mb-0">
+                                        {% if resultat >= 0 %}
+                                            Rentabilité positive
+                                        {% else %}
+                                            Déficit à analyser
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indicateurs de performance -->
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <h6 class="text-primary mb-1">Marge Brute</h6>
+                                    <h5 class="mb-1">
+                                        {% if total_charges > 0 %}
+                                            {% widthratio resultat total_charges 100 %}
+                                        {% else %}
+                                            0
+                                        {% endif %}%
+                                    </h5>
+                                    <p class="mb-0 text-muted">Résultat / Charges</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <h6 class="text-info mb-1">Rentabilité</h6>
+                                    <h5 class="mb-1">
+                                        {% if total_produits > 0 %}
+                                            {% widthratio resultat total_produits 100 %}
+                                        {% else %}
+                                            0
+                                        {% endif %}%
+                                    </h5>
+                                    <p class="mb-0 text-muted">Résultat / Produits</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <h6 class="text-warning mb-1">Ratio C/P</h6>
+                                    <h5 class="mb-1">
+                                        {% if total_produits > 0 %}
+                                            {% widthratio total_charges total_produits 100 %}
+                                        {% else %}
+                                            0
+                                        {% endif %}%
+                                    </h5>
+                                    <p class="mb-0 text-muted">Charges / Produits</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommandations -->
+    {% if resultat < 0 %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <h6 class="alert-heading">
+                    <i class="bi bi-lightbulb me-2"></i>Recommandations
+                </h6>
+                <p class="mb-2">
+                    <strong>Analyse de la situation:</strong> L'entreprise enregistre une perte de {{ resultat|floatformat:0 }} GNF.
+                </p>
+                <ul class="mb-0">
+                    <li>Analysez les postes de charges les plus élevés pour identifier des économies possibles</li>
+                    <li>Examinez si tous les produits ont été correctement enregistrés</li>
+                    <li>Considérez des stratégies pour augmenter les revenus ou réduire les coûts</li>
+                    <li>Comparez avec les périodes précédentes pour identifier les tendances</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+$(document).ready(function() {
+    // Ajouter des animations pour les chiffres
+    $('.card-body h4, .card-body h5').each(function() {
+        var $this = $(this);
+        var countTo = parseInt($this.text().replace(/[^0-9]/g, ''));
+        
+        if (!isNaN(countTo)) {
+            $this.prop('Counter', 0).animate({
+                Counter: countTo
+            }, {
+                duration: 2000,
+                easing: 'swing',
+                step: function(now) {
+                    $this.text(Math.ceil(now).toLocaleString('fr-FR'));
+                }
+            });
+        }
+    });
+});
+
+function exportPDF() {
+    window.print();
+}
+</script>
+{% endblock %}

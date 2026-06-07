@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ formation.intitule }} - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-book"></i> {{ formation.intitule }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'formation:catalogue' %}" class="btn btn-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'formation:modifier_formation' formation.pk %}" class="btn btn-warning me-2">
+            <i class="bi bi-pencil"></i> Modifier
+        </a>
+        <a href="{% url 'formation:planifier_session' %}" class="btn btn-primary">
+            <i class="bi bi-calendar-plus"></i> Planifier Session
+        </a>
+    </div>
+</div>
+
+<!-- Informations principales -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informations de la formation</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Code:</strong> {{ formation.code_formation }}</p>
+                        <p><strong>Intitulé:</strong> {{ formation.intitule }}</p>
+                        <p><strong>Type:</strong> 
+                            <span class="badge bg-primary">{{ formation.get_type_formation_display }}</span>
+                        </p>
+                        <p><strong>Domaine:</strong> 
+                            <span class="badge bg-info">{{ formation.get_domaine_display }}</span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Durée:</strong> {{ formation.duree_jours }} jour(s) / {{ formation.duree_heures }} heures</p>
+                        <p><strong>Organisme:</strong> {{ formation.organisme_formateur|default:"-" }}</p>
+                        <p><strong>Coût unitaire:</strong> 
+                            {% if formation.cout_unitaire %}
+                                {{ formation.cout_unitaire|floatformat:0|intcomma }} GNF
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                        <p><strong>Statut:</strong> 
+                            {% if formation.actif %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Statistiques -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-graph-up"></i> Sessions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total sessions:</span>
+                    <strong>{{ sessions.count }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Planifiées:</span>
+                    <span class="badge bg-info">{{ sessions|length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Description et objectifs -->
+<div class="row mb-4">
+    {% if formation.description %}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-file-text"></i> Description</h6>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ formation.description }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if formation.objectifs %}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-bullseye"></i> Objectifs</h6>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ formation.objectifs }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if formation.contenu or formation.prerequis %}
+<div class="row mb-4">
+    {% if formation.contenu %}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-list-check"></i> Contenu</h6>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ formation.contenu }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if formation.prerequis %}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-check2-square"></i> Prérequis</h6>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ formation.prerequis }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Candidatures / Inscriptions publiques -->
+{% if inscriptions_publiques %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-people"></i> Candidatures reçues ({{ inscriptions_publiques.count }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Entreprise</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidat in inscriptions_publiques %}
+                    <tr>
+                        <td>{{ candidat.date_inscription|date:"d/m/Y H:i" }}</td>
+                        <td><strong>{{ candidat.nom }}</strong></td>
+                        <td>{{ candidat.prenom }}</td>
+                        <td><a href="mailto:{{ candidat.email }}">{{ candidat.email }}</a></td>
+                        <td><a href="tel:{{ candidat.telephone }}">{{ candidat.telephone }}</a></td>
+                        <td>{{ candidat.entreprise|default:"-" }}</td>
+                        <td>
+                            {% if candidat.statut == 'en_attente' %}
+                                <span class="badge bg-warning text-dark">En attente</span>
+                            {% elif candidat.statut == 'contacte' %}
+                                <span class="badge bg-info">Contacté</span>
+                            {% elif candidat.statut == 'confirme' %}
+                                <span class="badge bg-success">Confirmé</span>
+                            {% elif candidat.statut == 'refuse' %}
+                                <span class="badge bg-danger">Refusé</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Annulé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'formation:gerer_candidature' candidat.pk %}" class="btn btn-sm btn-primary" title="Gérer">
+                                <i class="bi bi-gear"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Liste des sessions -->
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Sessions planifiées ({{ sessions.count }})</h5>
+    </div>
+    <div class="card-body">
+        {% if sessions %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Date début</th>
+                        <th>Date fin</th>
+                        <th>Lieu</th>
+                        <th>Formateur</th>
+                        <th>Places</th>
+                        <th>Inscrits</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                        <td><strong>{{ session.reference_session }}</strong></td>
+                        <td>{{ session.date_debut|date:"d/m/Y" }}</td>
+                        <td>{{ session.date_fin|date:"d/m/Y" }}</td>
+                        <td>{{ session.lieu|default:"-" }}</td>
+                        <td>{{ session.formateur|default:"-" }}</td>
+                        <td>{{ session.nombre_places }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ session.nb_inscrits|default:0 }}</span>
+                        </td>
+                        <td>
+                            {% if session.statut == 'planifiee' %}
+                                <span class="badge bg-info">Planifiée</span>
+                            {% elif session.statut == 'en_cours' %}
+                                <span class="badge bg-primary">En cours</span>
+                            {% elif session.statut == 'terminee' %}
+                                <span class="badge bg-success">Terminée</span>
+                            {% else %}
+                                <span class="badge bg-danger">Annulée</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'formation:detail_session' session.pk %}" class="btn btn-sm btn-info" title="Détails">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'formation:inscrire_employe' session.pk %}" class="btn btn-sm btn-success" title="Inscrire">
+                                <i class="bi bi-person-plus"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="bi bi-calendar-x fs-1"></i>
+            <p class="mt-2">Aucune session planifiée pour cette formation</p>
+            <a href="{% url 'formation:planifier_session' %}" class="btn btn-primary">
+                <i class="bi bi-calendar-plus"></i> Planifier une session
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

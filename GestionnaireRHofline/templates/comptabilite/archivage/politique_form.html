@@ -1,0 +1,75 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouvelle{% endif %} Politique{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        {% if object %}Modifier la politique{% else %}Nouvelle politique de rétention{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Type de document *</label>
+                                {{ form.type_document }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Durée conservation (années) *</label>
+                                {{ form.duree_conservation_annees }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Base légale *</label>
+                                {{ form.base_legale }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Référence légale</label>
+                                {{ form.reference_legale }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Action à expiration</label>
+                                {{ form.action_expiration }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Alerte avant expiration (jours)</label>
+                                {{ form.alerte_avant_expiration_jours }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.est_actif }}
+                                <label class="form-check-label">Actif</label>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:archivage_politiques' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>{% if object %}Enregistrer{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

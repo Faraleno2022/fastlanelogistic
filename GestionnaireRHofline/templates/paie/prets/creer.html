@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nouveau Prêt{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'paie:liste_prets' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-plus-circle me-2"></i>Nouveau Prêt</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employe" class="form-label">Employé *</label>
+                                <select class="form-select" id="employe" name="employe" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    {% for emp in employes %}
+                                    <option value="{{ emp.id }}">{{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="type_pret" class="form-label">Type de prêt *</label>
+                                <select class="form-select" id="type_pret" name="type_pret" required>
+                                    {% for code, libelle in types_pret %}
+                                    <option value="{{ code }}">{{ libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="montant" class="form-label">Montant du prêt *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="montant" name="montant" required>
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="taux_interet" class="form-label">Taux d'intérêt annuel</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="taux_interet" name="taux_interet" 
+                                           value="0" step="0.1" min="0" max="50">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nombre_echeances" class="form-label">Nombre d'échéances *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="nombre_echeances" name="nombre_echeances" 
+                                           value="1" min="1" max="60" required>
+                                    <span class="input-group-text">mois</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_debut" class="form-label">Date 1ère échéance *</label>
+                                <input type="date" class="form-control" id="date_debut" name="date_debut" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="motif" class="form-label">Motif de la demande</label>
+                            <textarea class="form-control" id="motif" name="motif" rows="3" 
+                                      placeholder="Raison de la demande de prêt..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'paie:liste_prets' %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Créer le prêt
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Simulation</h6>
+                </div>
+                <div class="card-body">
+                    <div id="simulation">
+                        <p class="text-muted">Remplissez le formulaire pour voir la simulation</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Types de prêts</h6>
+                </div>
+                <div class="card-body small">
+                    <ul class="mb-0">
+                        <li><strong>Avance sur salaire:</strong> Remboursement sur 1-3 mois</li>
+                        <li><strong>Prêt personnel:</strong> Jusqu'à 12 mois</li>
+                        <li><strong>Prêt logement:</strong> Jusqu'à 24 mois</li>
+                        <li><strong>Prêt véhicule:</strong> Jusqu'à 36 mois</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const montantInput = document.getElementById('montant');
+    const tauxInput = document.getElementById('taux_interet');
+    const echeancesInput = document.getElementById('nombre_echeances');
+    const simulationDiv = document.getElementById('simulation');
+    
+    function calculerSimulation() {
+        const montant = parseFloat(montantInput.value.replace(/\s/g, '').replace(',', '.')) || 0;
+        const taux = parseFloat(tauxInput.value) || 0;
+        const echeances = parseInt(echeancesInput.value) || 1;
+        
+        if (montant > 0 && echeances > 0) {
+            const dureeAnnees = echeances / 12;
+            const interets = montant * (taux / 100) * dureeAnnees;
+            const total = montant + interets;
+            const mensualite = total / echeances;
+            
+            simulationDiv.innerHTML = `
+                <table class="table table-sm mb-0">
+                    <tr><td>Montant prêt</td><td class="text-end">${montant.toLocaleString('fr-FR')} GNF</td></tr>
+                    <tr><td>Intérêts (${taux}%)</td><td class="text-end">${Math.round(interets).toLocaleString('fr-FR')} GNF</td></tr>
+                    <tr class="table-primary"><td><strong>Total à rembourser</strong></td><td class="text-end"><strong>${Math.round(total).toLocaleString('fr-FR')} GNF</strong></td></tr>
+                    <tr class="table-success"><td><strong>Mensualité</strong></td><td class="text-end"><strong>${Math.round(mensualite).toLocaleString('fr-FR')} GNF</strong></td></tr>
+                </table>
+            `;
+        }
+    }
+    
+    montantInput.addEventListener('input', calculerSimulation);
+    tauxInput.addEventListener('input', calculerSimulation);
+    echeancesInput.addEventListener('input', calculerSimulation);
+});
+</script>
+{% endblock %}

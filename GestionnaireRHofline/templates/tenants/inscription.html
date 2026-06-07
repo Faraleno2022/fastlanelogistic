@@ -1,0 +1,269 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription Entreprise - GestionnaireRH</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 100%);
+            min-height: 100vh;
+        }
+        .registration-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .form-control:focus {
+            border-color: #EF7707;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            color: #6c757d;
+        }
+        .step.active {
+            background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 100%);
+            color: white;
+        }
+        .step-line {
+            width: 50px;
+            height: 2px;
+            background: #e9ecef;
+            align-self: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="registration-card p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-primary">
+                            <i class="bi bi-building me-2"></i>Créer votre espace entreprise
+                        </h2>
+                        <p class="text-muted">Inscrivez-vous pour obtenir votre propre espace de gestion RH sécurisé</p>
+                    </div>
+                    
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" id="registrationForm">
+                        {% csrf_token %}
+                        
+                        <!-- Section Entreprise -->
+                        <div class="card mb-4">
+                            <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                                <i class="bi bi-building me-2"></i>Informations de l'entreprise
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Nom de l'entreprise <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nom_entreprise" 
+                                               value="{{ form_data.nom_entreprise|default:'' }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email entreprise <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" name="email_entreprise" 
+                                               value="{{ form_data.email_entreprise|default:'' }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Téléphone</label>
+                                        <input type="tel" class="form-control" name="telephone" 
+                                               value="{{ form_data.telephone|default:'' }}" placeholder="+224 XXX XXX XXX">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">NIF</label>
+                                        <input type="text" class="form-control" name="nif" 
+                                               value="{{ form_data.nif|default:'' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">N° CNSS</label>
+                                        <input type="text" class="form-control" name="num_cnss" 
+                                               value="{{ form_data.num_cnss|default:'' }}">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label">Adresse</label>
+                                        <input type="text" class="form-control" name="adresse" 
+                                               value="{{ form_data.adresse|default:'' }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Ville</label>
+                                        <input type="text" class="form-control" name="ville" 
+                                               value="{{ form_data.ville|default:'Conakry' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section Administrateur -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-person-badge me-2"></i>Compte Administrateur
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nom <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="admin_nom" 
+                                               value="{{ form_data.admin_nom|default:'' }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Prénoms <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="admin_prenoms" 
+                                               value="{{ form_data.admin_prenoms|default:'' }}" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Email administrateur <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" name="admin_email" 
+                                               value="{{ form_data.admin_email|default:'' }}" required>
+                                        <small class="text-muted">Cet email servira à vous connecter</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mot de passe <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" name="admin_password" 
+                                                   id="password" required minlength="8">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Minimum 8 caractères</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Confirmer le mot de passe <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" name="admin_password_confirm" 
+                                                   id="password_confirm" required minlength="8">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password_confirm')">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Conditions -->
+                        <div class="form-check mb-4">
+                            <input type="checkbox" class="form-check-input" id="acceptTerms" required>
+                            <label class="form-check-label" for="acceptTerms">
+                                J'accepte les <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">conditions d'utilisation</a>
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-rocket me-2"></i>Créer mon espace entreprise
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <p class="mb-0">Déjà inscrit ? <a href="{% url 'login' %}">Connectez-vous</a></p>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Avantages -->
+                <div class="row mt-5 text-white">
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="bi bi-shield-check fs-1"></i>
+                        <h5>Sécurisé</h5>
+                        <p class="small">Vos données sont isolées et protégées</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="bi bi-lightning fs-1"></i>
+                        <h5>Rapide</h5>
+                        <p class="small">Création instantanée de votre espace</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="bi bi-graph-up fs-1"></i>
+                        <h5>Évolutif</h5>
+                        <p class="small">Adaptez votre plan selon vos besoins</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal CGU -->
+    <div class="modal fade" id="termsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Conditions Générales d'Utilisation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Objet</h6>
+                    <p>Les présentes CGU régissent l'utilisation de la plateforme GestionnaireRH.</p>
+                    
+                    <h6>2. Protection des données</h6>
+                    <p>Vos données sont stockées de manière sécurisée et isolée dans un espace dédié à votre entreprise.</p>
+                    
+                    <h6>3. Responsabilités</h6>
+                    <p>Vous êtes responsable de la confidentialité de vos identifiants de connexion.</p>
+                    
+                    <h6>4. Disponibilité</h6>
+                    <p>Nous nous efforçons d'assurer une disponibilité optimale du service.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">J'ai compris</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            field.type = field.type === 'password' ? 'text' : 'password';
+        }
+        
+        // Validation mot de passe
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            const pwd = document.getElementById('password').value;
+            const pwdConfirm = document.getElementById('password_confirm').value;
+            
+            if (pwd !== pwdConfirm) {
+                e.preventDefault();
+                alert('Les mots de passe ne correspondent pas');
+            }
+        });
+    </script>
+</body>
+</html>

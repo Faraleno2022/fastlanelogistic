@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calculer la Période {{ periode }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-calculator me-2"></i>Calculer la Période {{ periode }}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle me-2"></i>Calcul Automatique de la Paie</h5>
+                        <p class="mb-0">
+                            Le système va calculer automatiquement les bulletins de paie pour 
+                            <strong>{{ employes_count }} employé(s) actif(s)</strong>.
+                        </p>
+                    </div>
+
+                    <h5 class="mt-4 mb-3">Éléments calculés automatiquement :</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Salaire brut</strong> : Salaire de base + primes + indemnités
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>CNSS Employé</strong> : 5% du salaire brut
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>CNSS Employeur</strong> : 18% du salaire brut
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>INAM</strong> : 2.5% de la masse salariale
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>IRG</strong> : Selon le barème progressif guinéen avec déductions familiales
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Net à payer</strong> : Brut - CNSS - IRG - autres retenues
+                        </li>
+                    </ul>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Attention :</strong> Les bulletins existants pour cette période seront supprimés et recalculés.
+                    </div>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'paie:detail_periode' periode.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-calculator me-2"></i>Lancer le Calcul
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

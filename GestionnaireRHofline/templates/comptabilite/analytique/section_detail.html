@@ -1,0 +1,190 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Section Analytique - {{ section.code }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-columns-gap text-primary"></i> {{ section.libelle }}
+            </h1>
+            <p class="text-muted mb-0">Code : {{ section.code }} • Type : {{ section.get_type_section_display }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:analytique_section_update' section.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:analytique_sections' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-4 col-lg-5">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Informations générales</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-5 text-muted">Code</dt>
+                        <dd class="col-7">{{ section.code }}</dd>
+                        <dt class="col-5 text-muted">Libellé</dt>
+                        <dd class="col-7">{{ section.libelle }}</dd>
+                        <dt class="col-5 text-muted">Type</dt>
+                        <dd class="col-7">{{ section.get_type_section_display }}</dd>
+                        <dt class="col-5 text-muted">Centre de coûts</dt>
+                        <dd class="col-7">{{ section.centre_couts|default:"-" }}</dd>
+                        <dt class="col-5 text-muted">Section parente</dt>
+                        <dd class="col-7">{{ section.section_parent|default:"-" }}</dd>
+                        <dt class="col-5 text-muted">Statut</dt>
+                        <dd class="col-7">
+                            {% if section.est_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </dd>
+                        <dt class="col-5 text-muted">Créée le</dt>
+                        <dd class="col-7">{{ section.date_creation|date:"d/m/Y H:i" }}</dd>
+                    </dl>
+                </div>
+            </div>
+            {% if section.description %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-chat-square-text"></i> Description</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 text-muted">{{ section.description|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-diagram-3"></i> Sous-sections</h6>
+                    <span class="badge bg-light text-dark">{{ sous_sections|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if sous_sections %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Libellé</th>
+                                    <th>Type</th>
+                                    <th>Statut</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in sous_sections %}
+                                <tr>
+                                    <td class="fw-semibold">{{ sub.code }}</td>
+                                    <td>{{ sub.libelle }}</td>
+                                    <td>{{ sub.get_type_section_display }}</td>
+                                    <td>
+                                        {% if sub.est_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'comptabilite:analytique_section_detail' sub.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Cette section n'a pas encore de sous-sections.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-receipt"></i> Commandes associées</h6>
+                    <span class="badge bg-light text-dark">{{ commandes_recents|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if commandes_recents %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Numéro</th>
+                                    <th>Libellé</th>
+                                    <th>Période</th>
+                                    <th>Budget</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for commande in commandes_recents %}
+                                <tr>
+                                    <td>{{ commande.numero }}</td>
+                                    <td>{{ commande.libelle }}</td>
+                                    <td>{{ commande.date_debut|date:"d/m/Y" }} → {{ commande.date_fin_prevue|date:"d/m/Y" }}</td>
+                                    <td>{{ commande.budget_prevu|floatformat:0 }} GNF</td>
+                                    <td>{{ commande.get_statut_display }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Aucune commande analytique liée à cette section.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-journal-text"></i> Imputations récentes</h6>
+                    <span class="badge bg-light text-dark">{{ imputations_recentes|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if imputations_recentes %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Libellé</th>
+                                    <th class="text-end">Débit</th>
+                                    <th class="text-end">Crédit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for imputation in imputations_recentes %}
+                                <tr>
+                                    <td>{{ imputation.date_imputation|date:"d/m/Y" }}</td>
+                                    <td>{{ imputation.libelle }}</td>
+                                    <td class="text-end">{{ imputation.montant_debit|floatformat:0 }} GNF</td>
+                                    <td class="text-end">{{ imputation.montant_credit|floatformat:0 }} GNF</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Aucune imputation analytique enregistrée pour cette section.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

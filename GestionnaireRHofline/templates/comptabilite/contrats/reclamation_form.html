@@ -1,0 +1,136 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouvelle{% endif %} Réclamation{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-chat-dots me-2"></i>
+                        {% if object %}Modifier la réclamation {{ object.numero_reclamation }}{% else %}Nouvelle réclamation{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3"><i class="bi bi-info-circle me-1"></i>Identification</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">N° Réclamation *</label>
+                                    {{ form.numero_reclamation }}
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Type *</label>
+                                        {{ form.type_reclamation }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Priorité *</label>
+                                        {{ form.priorite }}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Objet *</label>
+                                    {{ form.objet }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Description *</label>
+                                    {{ form.description }}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3"><i class="bi bi-currency-exchange me-1"></i>Montants</h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Montant réclamé</label>
+                                        {{ form.montant_reclame }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Montant accordé</label>
+                                        {{ form.montant_accorde }}
+                                    </div>
+                                </div>
+                                
+                                <h6 class="text-primary mb-3 mt-4"><i class="bi bi-calendar me-1"></i>Dates</h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Date réclamation *</label>
+                                        {{ form.date_reclamation }}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Date limite réponse</label>
+                                        {{ form.date_limite_reponse }}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Date résolution</label>
+                                        {{ form.date_resolution }}
+                                    </div>
+                                </div>
+                                
+                                <h6 class="text-primary mb-3 mt-4"><i class="bi bi-gear me-1"></i>Gestion</h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Statut</label>
+                                        {{ form.statut }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Responsable</label>
+                                        {{ form.responsable }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Résolution</label>
+                                    {{ form.resolution }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Pièces jointes</label>
+                                    {{ form.pieces_jointes }}
+                                    {% if object.pieces_jointes %}
+                                    <small class="text-muted d-block mt-1">
+                                        Fichier actuel: <a href="{{ object.pieces_jointes.url }}" target="_blank">{{ object.pieces_jointes.name }}</a>
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:contrats_reclamations' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>{% if object %}Enregistrer{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

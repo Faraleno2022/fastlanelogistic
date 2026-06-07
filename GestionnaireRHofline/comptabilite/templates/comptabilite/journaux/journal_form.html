@@ -1,0 +1,226 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}Nouveau Journal Comptable - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Nouveau Journal Comptable</h1>
+            <p class="text-muted mb-0">Créer un journal comptable</p>
+        </div>
+        <div>
+            <a href="{% url 'comptabilite:journal_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <!-- Message de succès -->
+    {% if success %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>Succès!</strong> Journal comptable créé avec succès.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+
+    <!-- Formulaire -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations du journal</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="journalForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">Code Journal *</label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.code.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Code unique (max 5 caractères)</small>
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.libelle.id_for_label }}" class="form-label">Libellé *</label>
+                                {{ form.libelle }}
+                                {% if form.libelle.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.libelle.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Nom descriptif du journal</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.type_journal.id_for_label }}" class="form-label">Type Journal *</label>
+                                {{ form.type_journal }}
+                                {% if form.type_journal.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.type_journal.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Type d'opérations du journal</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.compte_contrepartie.id_for_label }}" class="form-label">Compte Contrepartie</label>
+                                {{ form.compte_contrepartie }}
+                                {% if form.compte_contrepartie.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.compte_contrepartie.errors }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Compte utilisé par défaut pour la contrepartie</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.est_actif }}
+                                <label class="form-check-label" for="{{ form.est_actif.id_for_label }}">
+                                    Journal actif
+                                </label>
+                            </div>
+                            <small class="text-muted">Cochez si le journal est utilisable dans les écritures</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:journal_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Créer le journal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Types de journaux</h6>
+                </div>
+                <div class="card-body">
+                    <h6>Types disponibles</h6>
+                    <ul class="list-unstyled small">
+                        <li><strong>AC:</strong> Journal des Achats</li>
+                        <li><strong>VT:</strong> Journal des Ventes</li>
+                        <li><strong>BQ:</strong> Journal de Banque</li>
+                        <li><strong>CA:</strong> Journal de Caisse</li>
+                        <li><strong>OD:</strong> Journal des Opérations Diverses</li>
+                        <li><strong>AN:</strong> Journal À Nouveau</li>
+                        <li><strong>SA:</strong> Journal des Salaires</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Codification</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Les codes de journal suivent généralement les normes comptables :
+                    </p>
+                    <ul class="list-unstyled small">
+                        <li><code>AC</code> - Achats</li>
+                        <li><code>VT</code> - Ventes</li>
+                        <li><code>BQ</code> - Banque</li>
+                        <li><code>CA</code> - Caisse</li>
+                        <li><code>OD</code> - Opérations Diverses</li>
+                        <li><code>AN</code> - À Nouveau</li>
+                        <li><code>SA</code> - Salaires</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Compte de contrepartie</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Le compte de contrepartie est utilisé automatiquement lors de la saisie des écritures dans ce journal.
+                    </p>
+                    <p class="text-muted small">
+                        Par exemple :
+                        <br>- Journal Ventes : <strong>411 Clients</strong>
+                        <br>- Journal Achats : <strong>401 Fournisseurs</strong>
+                        <br>- Journal Banque : <strong>521 Banque</strong>
+                    </p>
+                    <a href="{% url 'comptabilite:plan_comptable_list' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-list me-1"></i>Voir le plan comptable
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('journalForm');
+    const codeInput = document.getElementById('{{ form.code.id_for_label }}');
+    const typeSelect = document.getElementById('{{ form.type_journal.id_for_label }}');
+    
+    // Suggérer un code basé sur le type
+    typeSelect.addEventListener('change', function() {
+        const type = this.value;
+        if (!codeInput.value) {
+            // Le code est déjà le type sélectionné
+            codeInput.value = type;
+        }
+    });
+    
+    // Validation du formulaire
+    form.addEventListener('submit', function(e) {
+        const code = codeInput.value.trim();
+        const libelle = document.getElementById('{{ form.libelle.id_for_label }}').value.trim();
+        
+        if (!code) {
+            e.preventDefault();
+            alert('Le code du journal est obligatoire');
+            codeInput.focus();
+            return;
+        }
+        
+        if (code.length > 5) {
+            e.preventDefault();
+            alert('Le code du journal ne doit pas dépasser 5 caractères');
+            codeInput.focus();
+            return;
+        }
+        
+        if (!libelle) {
+            e.preventDefault();
+            alert('Le libellé du journal est obligatoire');
+            document.getElementById('{{ form.libelle.id_for_label }}').focus();
+            return;
+        }
+        
+        // Confirmer la soumission
+        if (!confirm('Êtes-vous sûr de vouloir créer ce journal comptable ?')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Mettre le code en majuscules automatiquement
+    codeInput.addEventListener('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+});
+</script>
+{% endblock %}

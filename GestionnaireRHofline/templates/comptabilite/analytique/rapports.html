@@ -1,0 +1,25 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Rapports Analytiques{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-bar-chart-line text-primary"></i> Rapports analytiques
+        </h1>
+        <a href="{% url 'comptabilite:analytique_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-file-earmark-bar-graph text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3">Fonctionnalité à venir</h5>
+            <p class="text-muted">Les rapports analytiques seront disponibles prochainement.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

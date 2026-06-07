@@ -1,0 +1,1977 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>International Consulting Guinea ICG - Solution complète de gestion des ressources humaines</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="International Consulting Guinea (ICG) - Solution RH complète pour la Guinée. Gestion de paie, ressources humaines, conformité légale. GuinéeRH.space">
+    <meta name="keywords" content="International Consulting Guinea, ICG, GuineeRH, Guinearh.space, RH Guinée, paie Guinée, ressources humaines Guinée, gestion personnel Guinée">
+    <meta name="author" content="International Consulting Guinea">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.guineerh.space/">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.guineerh.space/">
+    <meta property="og:title" content="International Consulting Guinea (ICG) - Solution RH">
+    <meta property="og:description" content="Solution RH complète pour la Guinée. Gestion de paie, ressources humaines, conformité légale.">
+    <meta property="og:image" content="{% static 'img/home3.png' %}">
+    <meta property="og:image:alt" content="International Consulting Guinea - Plateforme RH">
+    <meta property="og:site_name" content="GuinéeRH">
+    <meta property="og:locale" content="fr_GN">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.guineerh.space/">
+    <meta name="twitter:title" content="International Consulting Guinea (ICG) - Solution RH">
+    <meta name="twitter:description" content="Solution RH complète pour la Guinée. Gestion de paie, ressources humaines, conformité légale.">
+    <meta name="twitter:image" content="{% static 'img/home3.png' %}">
+    
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "International Consulting Guinea",
+        "alternateName": ["ICG", "GuinéeRH", "Guinearh.space"],
+        "url": "https://www.guineerh.space",
+        "logo": "https://www.guineerh.space/static/img/logo.png",
+        "image": [
+            "https://www.guineerh.space/static/img/home3.png",
+            "https://www.guineerh.space/static/img/home4.png",
+            "https://www.guineerh.space/static/img/home5.png"
+        ],
+        "description": "Solution RH complète pour la Guinée - Gestion de paie, ressources humaines, conformité légale",
+        "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "GN",
+            "addressLocality": "Conakry",
+            "streetAddress": "Lambagny, en face de l'ISSEG"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+224-614-11-41-73",
+            "email": "contact@icguinea.com",
+            "contactType": "customer service"
+        },
+        "sameAs": []
+    }
+    </script>
+    
+    <!-- Bootstrap 5 CSS - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    
+    <!-- Bootstrap Icons - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    
+    <!-- Font Awesome - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}">
+    
+    <!-- AOS CSS - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/aos.css' %}">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    
+    <style>
+        :root {
+            --orange-main: #EF7707;
+            --gray-light: #939393;
+            --gray-dark: #212121;
+            --dark-bg: #f0f2f5;
+            --dark-card: #ffffff;
+            --dark-border: rgba(0,0,0,0.1);
+            --text-primary: #212121;
+            --text-secondary: rgba(0,0,0,0.6);
+            --text-muted: #939393;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        /* Scrollbar personnalisé */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, var(--orange-main), var(--gray-dark));
+            border-radius: 4px;
+        }
+        
+        /* Navbar Glass Effect */
+        .navbar-glass {
+            background: rgba(45, 45, 55, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 15px 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .navbar-glass.scrolled {
+            background: rgba(35, 35, 45, 0.98);
+            padding: 10px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.6rem;
+            letter-spacing: -0.5px;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            padding: 8px 20px !important;
+            transition: all 0.3s ease;
+            position: relative;
+            color: #ffffff !important;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(to right, var(--orange-main), var(--orange-main), var(--gray-dark));
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover::after {
+            width: 80%;
+        }
+        
+        .btn-login {
+            background: #ffffff;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #000000 !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
+            background: #f0f0f0;
+            color: #000000 !important;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            padding-top: 80px;
+        }
+        
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(206, 17, 38, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(252, 209, 22, 0.06) 0%, transparent 40%),
+                radial-gradient(ellipse at 60% 80%, rgba(0, 154, 73, 0.06) 0%, transparent 40%),
+                linear-gradient(135deg, #e8ecf1 0%, #f5f7fa 50%, #e8ecf1 100%);
+        }
+        
+        .hero-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: particleFloat 20s infinite ease-in-out;
+            opacity: 0.5;
+        }
+        
+        @keyframes particleFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(100px, -100px) rotate(90deg); }
+            50% { transform: translate(50px, 100px) rotate(180deg); }
+            75% { transform: translate(-50px, 50px) rotate(270deg); }
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(206, 17, 38, 0.1);
+            border: 1px solid rgba(206, 17, 38, 0.3);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--orange-main);
+            margin-bottom: 25px;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(252, 209, 22, 0.2); }
+            50% { box-shadow: 0 0 0 10px rgba(252, 209, 22, 0); }
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            letter-spacing: -2px;
+        }
+        
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--orange-main), var(--orange-main), var(--gray-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero .lead {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 35px;
+            max-width: 540px;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+        
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, var(--orange-main), var(--orange-main), var(--gray-dark));
+            background-size: 200% 200%;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: white;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 30px rgba(206, 17, 38, 0.3);
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .btn-primary-gradient:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(206, 17, 38, 0.4);
+            color: white;
+        }
+        
+        .btn-outline-glass {
+            background: rgba(0,0,0,0.05);
+            border: 2px solid var(--text-primary);
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn-outline-glass:hover {
+            background: var(--text-primary);
+            border-color: var(--text-primary);
+            transform: translateY(-4px);
+            color: white;
+        }
+        
+        .hero-visual {
+            position: relative;
+        }
+        
+        .hero-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 24px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--orange-main), var(--orange-main), var(--gray-dark));
+        }
+        
+        .floating-card {
+            position: absolute;
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: floatCard 4s ease-in-out infinite;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .floating-card.card-1 {
+            top: 10%;
+            right: -20px;
+            animation-delay: 0s;
+        }
+        
+        .floating-card.card-2 {
+            bottom: 20%;
+            left: -30px;
+            animation-delay: 1s;
+        }
+        
+        .floating-card.card-3 {
+            bottom: 5%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+        
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .floating-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .floating-card-text {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+        
+        .floating-card-text strong {
+            display: block;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+        
+        /* Section Titles */
+        .section-header {
+            text-align: center;
+            margin-bottom: 70px;
+        }
+        
+        .section-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(206,17,38,0.1), rgba(0,154,73,0.1));
+            border: 1px solid var(--dark-border);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--orange-main);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .section-header h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        
+        .section-header p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 120px 0;
+            position: relative;
+        }
+        
+        .feature-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            height: 100%;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(206,17,38,0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(206, 17, 38, 0.3);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+        
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+        
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-icon.red { 
+            background: linear-gradient(135deg, rgba(239,119,7,0.2), rgba(239,119,7,0.05));
+            color: var(--orange-main);
+        }
+        .feature-icon.yellow { 
+            background: linear-gradient(135deg, rgba(239,119,7,0.3), rgba(239,119,7,0.1));
+            color: var(--orange-main);
+        }
+        .feature-icon.green { 
+            background: linear-gradient(135deg, rgba(239,119,7,0.2), rgba(239,119,7,0.05));
+            color: var(--orange-main);
+        }
+        .feature-icon.blue { 
+            background: linear-gradient(135deg, rgba(0,123,255,0.2), rgba(0,123,255,0.05));
+            color: #4dabf7;
+        }
+        .feature-icon.purple { 
+            background: linear-gradient(135deg, rgba(111,66,193,0.2), rgba(111,66,193,0.05));
+            color: #b197fc;
+        }
+        .feature-icon.orange { 
+            background: linear-gradient(135deg, rgba(253,126,20,0.2), rgba(253,126,20,0.05));
+            color: #ffa94d;
+        }
+        
+        .feature-card h4 {
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Modules Section */
+        .modules {
+            padding: 120px 0;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
+        }
+        
+        .module-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 25px;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+        
+        .module-card:hover {
+            background: rgba(255,255,255,0.03);
+            border-color: var(--dark-border);
+            transform: translateX(10px);
+        }
+        
+        .module-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        
+        .module-card h5 {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .module-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        /* Stats Section */
+        .stats {
+            padding: 100px 0;
+            position: relative;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+        }
+        
+        @media (max-width: 992px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 20px;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(252, 209, 22, 0.3);
+        }
+        
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--orange-main), var(--orange-main), var(--gray-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 120px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at center, rgba(206, 17, 38, 0.05) 0%, transparent 60%),
+                linear-gradient(135deg, #f0f2f5 0%, #e8ecf1 100%);
+        }
+        
+        .cta-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 30px;
+            padding: 80px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--orange-main), var(--orange-main), var(--gray-dark));
+        }
+        
+        .cta h2 {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+        
+        .cta p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 35px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Footer */
+        footer {
+            background: #1a1a2e;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 80px 0 40px;
+            color: #ffffff;
+        }
+        
+        .footer-brand {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+        
+        .footer-text {
+            color: rgba(255,255,255,0.8) !important;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+        
+        .footer-title {
+            font-weight: 700;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+            color: #ffffff !important;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links a {
+            color: rgba(255,255,255,0.8) !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .footer-links a:hover {
+            color: var(--orange-main) !important;
+            padding-left: 5px;
+        }
+        
+        .footer-contact li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            color: rgba(255,255,255,0.8) !important;
+        }
+        
+        .footer-contact li span {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        
+        .footer-contact i {
+            color: var(--orange-main);
+            font-size: 1.1rem;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 30px;
+            margin-top: 50px;
+            text-align: center;
+        }
+        
+        .footer-bottom p {
+            color: rgba(255,255,255,0.7) !important;
+            font-size: 0.9rem;
+        }
+        
+        
+        /* ========== RESPONSIVE DESIGN ========== */
+        
+        /* Extra Large (≥1400px) - Grands écrans */
+        @media (min-width: 1400px) {
+            .container { max-width: 1320px; }
+            .hero h1 { font-size: 4.5rem; }
+            .section-header h2 { font-size: 3.2rem; }
+        }
+        
+        /* Large (≥1200px) - Desktop */
+        @media (max-width: 1399px) {
+            .hero h1 { font-size: 3.8rem; }
+            .stat-number { font-size: 3rem; }
+        }
+        
+        /* Medium-Large (≥992px) - Petit desktop / Grande tablette */
+        @media (max-width: 1199px) {
+            .hero h1 { font-size: 3.2rem; }
+            .hero .lead { font-size: 1.15rem; }
+            .section-header h2 { font-size: 2.5rem; }
+            .features { padding: 80px 0; }
+            .modules { padding: 80px 0; }
+            .stats { padding: 70px 0; }
+            .cta { padding: 80px 0; }
+            .stat-number { font-size: 2.8rem; }
+            .feature-card { padding: 30px 25px; }
+        }
+        
+        /* Medium (≥768px) - Tablette */
+        @media (max-width: 991px) {
+            .hero { padding-top: 70px; min-height: auto; padding-bottom: 60px; }
+            .hero h1 { font-size: 2.8rem; letter-spacing: -1px; }
+            .hero .lead { font-size: 1.1rem; max-width: 100%; }
+            .hero-buttons { justify-content: center; }
+            .hero-visual { margin-top: 40px; }
+            .floating-card { display: none; }
+            .section-header { margin-bottom: 50px; }
+            .section-header h2 { font-size: 2.2rem; }
+            .section-header p { font-size: 1rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .stat-card { padding: 30px 15px; }
+            .stat-number { font-size: 2.5rem; }
+            .stat-label { font-size: 0.9rem; }
+            .cta-card { padding: 50px 40px; }
+            .cta h2 { font-size: 2rem; }
+            .cta p { font-size: 1rem; }
+            .module-card { padding: 20px; }
+            .feature-card { padding: 25px 20px; }
+            .feature-icon { width: 60px; height: 60px; font-size: 1.5rem; }
+            footer { padding: 50px 0 30px; }
+            .footer-bottom { margin-top: 30px; padding-top: 20px; }
+        }
+        
+        /* Small (≥576px) - Grand mobile / Petite tablette */
+        @media (max-width: 767px) {
+            .hero { padding-top: 60px; padding-bottom: 40px; }
+            .hero h1 { font-size: 2.2rem; letter-spacing: -0.5px; margin-bottom: 20px; }
+            .hero .lead { font-size: 1rem; margin-bottom: 25px; }
+            .hero-badge { font-size: 0.75rem; padding: 6px 14px; margin-bottom: 20px; }
+            .hero-buttons { flex-direction: column; align-items: stretch; }
+            .hero-buttons .btn { width: 100%; text-align: center; padding: 14px 30px; }
+            .hero-card { padding: 20px; }
+            .section-header h2 { font-size: 1.8rem; }
+            .section-header p { font-size: 0.95rem; }
+            .features { padding: 60px 0; }
+            .modules { padding: 60px 0; }
+            .stats { padding: 50px 0; }
+            .cta { padding: 60px 0; }
+            .feature-card { margin-bottom: 20px; }
+            .module-card { padding: 15px; gap: 15px; }
+            .module-icon { width: 45px; height: 45px; font-size: 1.2rem; }
+            .module-card h5 { font-size: 1rem; }
+            .module-card p { font-size: 0.85rem; }
+            .stats-grid { gap: 15px; }
+            .stat-card { padding: 25px 10px; border-radius: 15px; }
+            .stat-number { font-size: 2.2rem; }
+            .stat-label { font-size: 0.85rem; }
+            .cta-card { padding: 40px 25px; border-radius: 20px; }
+            .cta h2 { font-size: 1.7rem; }
+            .cta p { font-size: 0.95rem; margin-bottom: 25px; }
+            .job-card { padding: 20px; }
+            .job-title { font-size: 1.05rem; }
+            .job-details { gap: 8px; }
+            .job-detail { font-size: 0.8rem; }
+            footer { padding: 40px 0 25px; }
+            .footer-brand { font-size: 1.4rem; }
+            .footer-text { font-size: 0.9rem; }
+            .footer-title { font-size: 1rem; margin-bottom: 15px; }
+            .footer-links a { font-size: 0.9rem; }
+            .footer-contact li { font-size: 0.9rem; }
+        }
+        
+        /* Extra Small (<576px) - Petit mobile */
+        @media (max-width: 575px) {
+            body { font-size: 14px; }
+            .navbar-glass { padding: 10px 0; }
+            .navbar-brand img { height: 32px !important; max-width: 110px !important; }
+            .hero { padding-top: 50px; padding-bottom: 30px; }
+            .hero h1 { font-size: 1.8rem; line-height: 1.2; }
+            .hero .lead { font-size: 0.95rem; line-height: 1.5; }
+            .hero-badge { font-size: 0.7rem; padding: 5px 12px; }
+            .hero-buttons .btn { padding: 12px 24px; font-size: 0.95rem; }
+            .btn-primary-gradient { font-size: 0.9rem; }
+            .btn-outline-glass { font-size: 0.9rem; }
+            .section-header { margin-bottom: 40px; }
+            .section-badge { font-size: 0.7rem; padding: 6px 14px; letter-spacing: 1px; }
+            .section-header h2 { font-size: 1.5rem; }
+            .section-header p { font-size: 0.9rem; }
+            .features { padding: 50px 0; }
+            .modules { padding: 50px 0; }
+            .stats { padding: 40px 0; }
+            .cta { padding: 50px 0; }
+            .feature-card { padding: 20px 15px; border-radius: 16px; }
+            .feature-icon { width: 50px; height: 50px; font-size: 1.3rem; margin-bottom: 15px; border-radius: 14px; }
+            .feature-card h4 { font-size: 1.05rem; margin-bottom: 10px; }
+            .feature-card p { font-size: 0.85rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .stat-card { padding: 20px 8px; border-radius: 12px; }
+            .stat-number { font-size: 1.8rem; }
+            .stat-label { font-size: 0.75rem; }
+            .cta-card { padding: 30px 20px; border-radius: 16px; }
+            .cta h2 { font-size: 1.4rem; }
+            .cta p { font-size: 0.9rem; }
+            .job-card { padding: 18px; border-radius: 14px; }
+            .job-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .job-title { font-size: 1rem; }
+            .job-description { font-size: 0.85rem; }
+            .jobs { padding: 50px 0; }
+            footer { padding: 30px 0 20px; }
+            .footer-brand { font-size: 1.2rem; margin-bottom: 15px; }
+            .footer-text { font-size: 0.85rem; margin-bottom: 15px; }
+            .footer-title { font-size: 0.95rem; margin-bottom: 12px; }
+            .footer-links li { margin-bottom: 8px; }
+            .footer-links a { font-size: 0.85rem; }
+            .footer-contact li { margin-bottom: 10px; font-size: 0.85rem; gap: 8px; }
+            .footer-bottom { margin-top: 20px; padding-top: 15px; }
+            .footer-bottom p { font-size: 0.8rem; }
+        }
+        
+        /* Très petit écran (<400px) */
+        @media (max-width: 399px) {
+            .hero h1 { font-size: 1.6rem; }
+            .hero .lead { font-size: 0.9rem; }
+            .hero-badge { display: none; }
+            .section-header h2 { font-size: 1.35rem; }
+            .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+            .stat-number { font-size: 2rem; }
+            .cta h2 { font-size: 1.25rem; }
+            .feature-card h4 { font-size: 1rem; }
+        }
+        
+        /* Orientation paysage sur mobile */
+        @media (max-width: 767px) and (orientation: landscape) {
+            .hero { min-height: auto; padding: 40px 0; }
+            .hero h1 { font-size: 1.8rem; }
+            .hero-buttons { flex-direction: row; }
+            .hero-buttons .btn { width: auto; }
+        }
+        
+        /* Navbar mobile améliorée */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: rgba(35, 35, 45, 0.98);
+                margin: 15px -12px -15px;
+                padding: 20px;
+                border-radius: 0 0 15px 15px;
+            }
+            .navbar-nav { gap: 5px; }
+            .nav-link { 
+                padding: 12px 15px !important; 
+                border-radius: 8px;
+                transition: background 0.2s ease;
+            }
+            .nav-link:hover { background: rgba(255,255,255,0.1); }
+            .nav-link::after { display: none; }
+            .btn-login { 
+                margin-top: 10px; 
+                width: 100%; 
+                text-align: center;
+                padding: 12px 20px;
+            }
+        }
+        
+        /* Touch-friendly pour mobile */
+        @media (hover: none) and (pointer: coarse) {
+            .feature-card:hover,
+            .stat-card:hover,
+            .job-card:hover,
+            .module-card:hover {
+                transform: none;
+            }
+            .btn-primary-gradient:hover,
+            .btn-outline-glass:hover,
+            .btn-login:hover {
+                transform: none;
+            }
+        }
+        
+        /* Animations supplémentaires */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Glow effects */
+        .glow-red { filter: drop-shadow(0 0 20px rgba(206, 17, 38, 0.3)); }
+        .glow-yellow { filter: drop-shadow(0 0 20px rgba(252, 209, 22, 0.3)); }
+        .glow-green { filter: drop-shadow(0 0 20px rgba(0, 154, 73, 0.3)); }
+        
+        /* Affichage immédiat - les éléments sont visibles avant le chargement de AOS */
+        [data-aos] {
+            opacity: 1 !important;
+            transform: none !important;
+            transition: opacity 0.6s ease, transform 0.6s ease !important;
+        }
+        
+        /* Une fois AOS initialisé, on réactive les animations */
+        .aos-initialized [data-aos] {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .aos-initialized [data-aos].aos-animate {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+        
+        /* Hero Slider Section */
+        .hero-slider {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .hero-slider .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .hero-slider .slide.active {
+            opacity: 1;
+        }
+        
+        .hero-slider .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .hero-slider .slide-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        }
+        
+        .slider-dots {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+        
+        .slider-dots .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .slider-dots .dot.active {
+            background: var(--orange-main);
+            transform: scale(1.2);
+        }
+        
+        .slider-dots .dot:hover {
+            background: rgba(255,255,255,0.8);
+        }
+        
+        .slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .slider-nav:hover {
+            background: var(--orange-main);
+        }
+        
+        .slider-nav.prev { left: 20px; }
+        .slider-nav.next { right: 20px; }
+        
+        @media (max-width: 767px) {
+            .hero-slider { height: 60vh; }
+            .slider-nav { width: 40px; height: 40px; font-size: 1.2rem; }
+            .slider-nav.prev { left: 10px; }
+            .slider-nav.next { right: 10px; }
+            .slider-dots { bottom: 20px; }
+            .slider-dots .dot { width: 10px; height: 10px; }
+        }
+        
+        /* About Us Section */
+        .about-us-section {
+            padding: 80px 0;
+            background: #e9ecef;
+            color: #212121;
+        }
+        
+        .about-us-section .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .about-us-section .section-subtitle {
+            font-size: 1.1rem;
+            color: #555;
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .about-us-section .orange-text {
+            color: var(--orange-main);
+        }
+        
+        .about-intro-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        .about-intro-text p {
+            color: #444;
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        
+        .about-right-column .about-image img {
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 25px;
+        }
+        
+        .about-services-list h3 {
+            color: var(--orange-main);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .about-services-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .about-services-list li {
+            color: #444;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .about-services-list li i {
+            color: var(--orange-main);
+            margin-top: 4px;
+        }
+        
+        .mission-vision-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .mv-card {
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        
+        .mv-card h4 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #212121;
+        }
+        
+        .mv-card p {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+        
+        @media (max-width: 991px) {
+            .about-intro-content {
+                grid-template-columns: 1fr;
+            }
+            .mission-vision-grid {
+                grid-template-columns: 1fr;
+            }
+            .about-us-section { padding: 60px 0; }
+        }
+        
+        @media (max-width: 767px) {
+            .about-us-section .section-title { font-size: 1.6rem; }
+            .about-us-section .section-subtitle { font-size: 1rem; }
+            .about-intro-text p { font-size: 0.95rem; }
+            .mv-card { padding: 20px; }
+        }
+        
+        /* Jobs Section */
+        .jobs {
+            padding: 120px 0;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
+        }
+        
+        .job-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 20px;
+            padding: 35px;
+            height: 100%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .job-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--orange-main), var(--orange-main), var(--gray-dark));
+        }
+        
+        .job-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: rgba(206, 17, 38, 0.2);
+        }
+        
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .job-company {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .job-company i {
+            color: var(--gray-dark);
+        }
+        
+        .job-badge {
+            background: linear-gradient(135deg, rgba(206,17,38,0.1), rgba(252,209,22,0.1));
+            color: var(--orange-main);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .job-title {
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+        
+        .job-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .job-detail {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .job-detail i {
+            color: var(--orange-main);
+            font-size: 0.9rem;
+        }
+        
+        .job-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .job-footer {
+            padding-top: 15px;
+            border-top: 1px solid var(--dark-border);
+        }
+        
+        .job-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .job-date i {
+            color: var(--gray-dark);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-glass">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="{% static 'img/logo.png' %}" alt="ICG Logo" style="height: 40px; max-width: 140px; object-fit: contain; background-color: rgba(45, 45, 55, 0.95); padding: 4px; border-radius: 4px;">
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#ffffff" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#features">Fonctionnalités</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#modules">Modules</a></li>
+                    {% if offres_emploi %}<li class="nav-item"><a class="nav-link" href="#jobs">Offres d'Emploi</a></li>{% endif %}
+                    {% if formations %}<li class="nav-item"><a class="nav-link" href="#formations">Formations</a></li>{% endif %}
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-login" href="{% url 'core:login' %}">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Connexion
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Slider plein écran -->
+    <section class="hero-slider">
+        <div class="slide active">
+            <img src="{% static 'img/home3.png' %}" alt="International Consulting Guinea">
+            <div class="slide-overlay"></div>
+        </div>
+        <div class="slide">
+            <img src="{% static 'img/home4.png' %}" alt="ICG GuinéeRH">
+            <div class="slide-overlay"></div>
+        </div>
+        <div class="slide">
+            <img src="{% static 'img/home5.png' %}" alt="Guinearh.space">
+            <div class="slide-overlay"></div>
+        </div>
+        
+        <button class="slider-nav prev" onclick="changeSlide(-1)">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="slider-nav next" onclick="changeSlide(1)">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+        
+        <div class="slider-dots">
+            <span class="dot active" onclick="goToSlide(0)"></span>
+            <span class="dot" onclick="goToSlide(1)"></span>
+            <span class="dot" onclick="goToSlide(2)"></span>
+        </div>
+    </section>
+
+    <!-- Section QUI SOMMES-NOUS -->
+    <section class="about-us-section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">QUI SOMMES-<span class="orange-text">NOUS</span> ?</h2>
+            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">International Consulting Guinea : Votre partenaire de confiance pour un développement qui fait du bien à tous.</p>
+            
+            <div class="about-intro-content">
+                <div class="about-intro-text" data-aos="fade-right" data-aos-delay="200">
+                    <p>
+                        Chez International Consulting Guinea (ICG), nous ne sommes pas juste des conseillers. Nous sommes des bâtisseurs de liens, unissant les envies des personnes aux besoins des entreprises, pour de très bons résultats partout dans le monde. Notre rôle est d'accompagner les entreprises, les organisations et les institutions pour qu'elles grandissent, en leur donnant des solutions simples et faites pour leurs besoins précis.
+                    </p>
+                    <p>
+                        Depuis le début, nous transformons les défis en de belles occasions de développement qui durent. Nous sommes convaincus qu'une entreprise qui marche bien fait attention à ses équipes, travaille en sécurité, prend soin de notre planète et s'implique vraiment pour le bien de tous. C'est pourquoi nos services couvrent tous ces points importants, toujours avec une approche humaine et respectueuse.
+                    </p>
+                </div>
+                <div class="about-right-column" data-aos="fade-left" data-aos-delay="300">
+                    <div class="about-image">
+                        <img src="{% static 'img/rse2.jpeg' %}" alt="ICG Team Vision">
+                    </div>
+                    <div class="about-services-list">
+                        <h3>Nos domaines d'aide pour vous :</h3>
+                        <ul>
+                            <li><i class="bi bi-check-circle-fill"></i> Ressources Humaines : pour le recrutement, la formation et la gestion des parcours de travail</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Hygiène, Sécurité et Environnement (HSE) : pour un cadre de travail sain et sécurisé</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Responsabilité Sociétale de l'Entreprise (RSE) : pour un impact positif sur la société</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Accompagnement et Conseil : pour vous guider dans vos grandes décisions</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Systèmes de Gestion de la Qualité : pour que ce que vous faites soit toujours de la meilleure qualité</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mission-vision-grid">
+                <div class="mv-card" data-aos="fade-up" data-aos-delay="400">
+                    <h4>NOTRE <span class="orange-text">MISSION</span></h4>
+                    <p>
+                        Notre mission est de vous donner les outils, les idées et l'aide qu'il vous faut pour avancer et bien réussir dans le monde des affaires. Que ce soit en améliorant votre capital humain, en assurant un environnement de travail sûr et bon pour la nature, en intégrant le bien-être social à votre activité ou en atteignant le meilleur niveau de qualité, nous sommes là pour vous.
+                    </p>
+                </div>
+                <div class="mv-card" data-aos="fade-up" data-aos-delay="500">
+                    <h4>NOTRE <span class="orange-text">VISION</span></h4>
+                    <p>
+                        Nous voulons être un cabinet de conseil reconnu dans le monde entier, grâce aux résultats positifs que nous apportons à nos clients et à notre participation au développement des pays où nous travaillons. Nous rêvons d'un futur où chaque entreprise, petite ou grande, peut obtenir l'aide nécessaire pour bien fonctionner de façon juste et sur le long terme, partout dans le monde.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <div class="section-badge">Fonctionnalités</div>
+                <h2>Tout ce dont vous avez besoin</h2>
+                <p>Une suite complète d'outils pour gérer efficacement vos ressources humaines</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card">
+                        <div class="feature-icon red">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h4>Gestion des Employés</h4>
+                        <p>Centralisez toutes les informations de vos employés : contrats, documents, historique de carrière et informations personnelles.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-card">
+                        <div class="feature-icon yellow">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <h4>Paie & Bulletins</h4>
+                        <p>Calcul automatique des salaires, CNSS et IRPP selon la législation guinéenne. Envoi par email et WhatsApp.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-card">
+                        <div class="feature-icon green">
+                            <i class="bi bi-calendar-check-fill"></i>
+                        </div>
+                        <h4>Congés & Absences</h4>
+                        <p>Gestion complète des demandes de congés, suivi des soldes, validation hiérarchique et calendrier partagé.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-card">
+                        <div class="feature-icon blue">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <h4>Pointage & Temps</h4>
+                        <p>Suivi des heures de travail, gestion des heures supplémentaires et des retards. Rapports détaillés.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-card">
+                        <div class="feature-icon purple">
+                            <i class="bi bi-file-earmark-ruled-fill"></i>
+                        </div>
+                        <h4>Déclarations Sociales</h4>
+                        <p>Génération automatique des déclarations CNSS, télédéclaration et suivi des cotisations sociales.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="600">
+                    <div class="feature-card">
+                        <div class="feature-icon orange">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <h4>Tableaux de Bord</h4>
+                        <p>Visualisez vos indicateurs RH clés : effectifs, masse salariale, turnover et statistiques en temps réel.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modules Section -->
+    <section class="modules" id="modules">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <div class="section-badge">Modules</div>
+                <h2>Une suite complète d'outils</h2>
+                <p>Des modules puissants pour répondre à tous vos besoins RH</p>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="module-card" data-aos="fade-right" data-aos-delay="100">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(206,17,38,0.2), rgba(206,17,38,0.05)); color: var(--orange-main);">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
+                        <div>
+                            <h5>Gestion du Personnel</h5>
+                            <p>Fiches employés complètes, contrats, documents administratifs et suivi des compétences.</p>
+                        </div>
+                    </div>
+                    <div class="module-card" data-aos="fade-right" data-aos-delay="200">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(252,209,22,0.2), rgba(252,209,22,0.05)); color: var(--orange-main);">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                        <div>
+                            <h5>Module Paie</h5>
+                            <p>Calcul automatisé, rubriques personnalisables, barème IRPP progressif et simulateur fiscal.</p>
+                        </div>
+                    </div>
+                    <div class="module-card" data-aos="fade-right" data-aos-delay="300">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(0,154,73,0.2), rgba(0,154,73,0.05)); color: var(--gray-dark);">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div>
+                            <h5>Interface CNSS</h5>
+                            <p>Télédéclaration, génération de fichiers (CSV, XML, JSON) et historique des déclarations.</p>
+                        </div>
+                    </div>
+                    <div class="module-card" data-aos="fade-right" data-aos-delay="400">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(0,123,255,0.2), rgba(0,123,255,0.05)); color: #4dabf7;">
+                            <i class="bi bi-airplane-fill"></i>
+                        </div>
+                        <div>
+                            <h5>Gestion des Expatriés</h5>
+                            <p>Suivi des visas et permis de travail, alertes d'expiration et conformité administrative.</p>
+                        </div>
+                    </div>
+                    <div class="module-card" data-aos="fade-right" data-aos-delay="500">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(23,162,184,0.2), rgba(23,162,184,0.05)); color: #17a2b8;">
+                            <i class="bi bi-briefcase-fill"></i>
+                        </div>
+                        <div>
+                            <h5>Recrutement</h5>
+                            <p>Publication d'offres, gestion des candidatures, suivi des entretiens et scoring automatisé.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="module-card" data-aos="fade-left" data-aos-delay="100">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(111,66,193,0.2), rgba(111,66,193,0.05)); color: #b197fc;">
+                            <i class="bi bi-calendar2-week-fill"></i>
+                        </div>
+                        <div>
+                            <h5>Gestion des Congés</h5>
+                            <p>Demandes en ligne, workflow de validation, calcul automatique des soldes et jours fériés.</p>
+                        </div>
+                    </div>
+                    <div class="module-card" data-aos="fade-left" data-aos-delay="200">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(253,126,20,0.2), rgba(253,126,20,0.05)); color: #ffa94d;">
+                            <i class="bi bi-clipboard2-check-fill"></i>
+                        </div>
+                        <div>
+                            <h5>Conformité Inspection</h5>
+                            <p>Checklist de conformité, registres obligatoires et rapports pour l'inspection du travail.</p>
+                        </div>
+                    </div>
+                    <div class="module-card" data-aos="fade-left" data-aos-delay="300">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(220,53,69,0.2), rgba(220,53,69,0.05)); color: #ff6b6b;">
+                            <i class="bi bi-send-fill"></i>
+                        </div>
+                        <div>
+                            <h5>Envoi Bulletins</h5>
+                            <p>Envoi des bulletins par email et WhatsApp, individuel ou en masse avec message personnalisé.</p>
+                        </div>
+                    </div>
+                    <div class="module-card" data-aos="fade-left" data-aos-delay="400">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(32,201,151,0.2), rgba(32,201,151,0.05)); color: #38d9a9;">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <div>
+                            <h5>Sécurité & Audit</h5>
+                            <p>Gestion des utilisateurs, journal d'activité et traçabilité complète des actions.</p>
+                        </div>
+                    </div>
+                    <div class="module-card" data-aos="fade-left" data-aos-delay="500">
+                        <div class="module-icon" style="background: linear-gradient(135deg, rgba(102,16,242,0.2), rgba(102,16,242,0.05)); color: #6610f2;">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <div>
+                            <h5>Formation et développement de compétence</h5>
+                            <p>Planification des formations, suivi des compétences, évaluations et certifications.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats" id="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Conforme à la législation</div>
+                </div>
+                <div class="stat-card" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Accessible partout</div>
+                </div>
+                <div class="stat-card" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="stat-number">10+</div>
+                    <div class="stat-label">Modules intégrés</div>
+                </div>
+                <div class="stat-card" data-aos="zoom-in" data-aos-delay="400">
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">Employés gérés</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Offres d'Emploi Section -->
+    {% if offres_emploi %}
+    <section class="jobs" id="jobs">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <div class="section-badge">Recrutement</div>
+                <h2>Offres d'Emploi</h2>
+                <p>Découvrez les opportunités de carrière disponibles auprès de nos entreprises partenaires</p>
+            </div>
+            <div class="row g-3">
+                {% for offre in offres_emploi %}
+                <div class="col-12 col-md-6 col-lg-4" data-aos="fade-up">
+                    <div class="job-card" style="padding:0.9rem;">
+                        {% if offre.image %}
+                        <div class="job-image" style="height:130px;overflow:hidden;border-radius:0.5rem 0.5rem 0 0;margin:-0.9rem -0.9rem 0.75rem -0.9rem;">
+                            <img src="{{ offre.image.url }}" alt="{{ offre.intitule_poste }}" style="width:100%;height:100%;object-fit:cover;">
+                        </div>
+                        {% endif %}
+                        <div class="job-header" style="margin-bottom:0.4rem;">
+                            <div class="job-company" style="font-size:0.8rem;">
+                                <i class="bi bi-building"></i>
+                                <span>{{ offre.entreprise.nom_entreprise|default:"Entreprise"|truncatechars:25 }}</span>
+                            </div>
+                            <span class="job-badge" style="font-size:0.72rem;padding:0.2rem 0.5rem;">{{ offre.get_type_contrat_display|default:offre.type_contrat|default:"CDI" }}</span>
+                        </div>
+                        <h6 class="job-title" style="font-size:0.95rem;margin-bottom:0.35rem;">{{ offre.intitule_poste|truncatechars:50 }}</h6>
+                        <div class="job-details" style="font-size:0.8rem;margin-bottom:0.4rem;">
+                            {% if offre.service %}
+                            <div class="job-detail">
+                                <i class="bi bi-diagram-3"></i>
+                                <span>{{ offre.service.nom_service|truncatechars:22 }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="job-detail">
+                                <i class="bi bi-people"></i>
+                                <span>{{ offre.nombre_postes }} poste{{ offre.nombre_postes|pluralize }}</span>
+                            </div>
+                            {% if offre.date_limite_candidature %}
+                            <div class="job-detail">
+                                <i class="bi bi-calendar-event"></i>
+                                <span>Limite : {{ offre.date_limite_candidature|date:"d/m/Y" }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if offre.description_poste %}
+                        <p class="job-description" style="font-size:0.8rem;margin-bottom:0.4rem;">{{ offre.description_poste|truncatewords:18 }}</p>
+                        {% endif %}
+                        <div class="job-footer d-flex justify-content-between align-items-center">
+                            <span class="job-date" style="font-size:0.75rem;">
+                                <i class="bi bi-clock"></i> {{ offre.date_publication|date:"d/m/Y" }}
+                            </span>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'recrutement:offre_public' offre.uuid %}" class="btn btn-sm btn-outline-primary" style="font-size:0.78rem;">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                                {% if offre.date_limite_candidature and offre.date_limite_candidature < today %}
+                                <span class="btn btn-sm btn-danger disabled" style="font-size:0.78rem;cursor:not-allowed;">
+                                    <i class="bi bi-x-circle me-1"></i>Expiré
+                                </span>
+                                {% else %}
+                                <a href="{% url 'recrutement:postuler' offre.uuid %}" class="btn btn-sm btn-success" style="font-size:0.78rem;">
+                                    <i class="bi bi-send me-1"></i>Postuler
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-5" data-aos="fade-up">
+                <p class="text-muted mb-3">Vous êtes une entreprise et souhaitez publier vos offres ?</p>
+                <a href="{% url 'core:login' %}" class="btn btn-outline-glass">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Connectez-vous pour gérer vos recrutements
+                </a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Formations Section -->
+    {% if formations %}
+    <section class="jobs" id="formations" style="background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 50%, #f8f9fa 100%);">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <div class="section-badge">Formation</div>
+                <h2>Formations Disponibles</h2>
+                <p>Développez vos compétences avec nos formations professionnelles</p>
+            </div>
+            <div class="row g-3">
+                {% for formation in formations %}
+                <div class="col-12 col-md-6 col-lg-6" data-aos="fade-up">
+                    <div class="job-card" style="padding:1.5rem;">
+                        {% if formation.image %}
+                        <div class="job-image" style="height:200px;overflow:hidden;border-radius:0.5rem 0.5rem 0 0;margin:-1.5rem -1.5rem 1rem -1.5rem;">
+                            <img src="{{ formation.image.url }}" alt="{{ formation.intitule }}" style="width:100%;height:100%;object-fit:cover;">
+                        </div>
+                        {% endif %}
+                        <div class="job-header" style="margin-bottom:0.4rem;">
+                            <div class="job-company" style="font-size:0.8rem;">
+                                <i class="bi bi-building"></i>
+                                <span>{{ formation.entreprise.nom_entreprise|default:"Organisme"|truncatechars:25 }}</span>
+                            </div>
+                            <span class="job-badge" style="font-size:0.72rem;padding:0.2rem 0.5rem;">{{ formation.get_type_formation_display|truncatechars:14 }}</span>
+                        </div>
+                        <h6 class="job-title" style="font-size:0.95rem;margin-bottom:0.35rem;">{{ formation.intitule|truncatechars:50 }}</h6>
+                        <div class="job-details" style="font-size:0.8rem;margin-bottom:0.4rem;">
+                            <div class="job-detail">
+                                <i class="bi bi-folder2"></i>
+                                <span>{{ formation.get_domaine_display|truncatechars:22 }}</span>
+                            </div>
+                            <div class="job-detail">
+                                <i class="bi bi-clock"></i>
+                                <span>{{ formation.duree_jours }} jour{{ formation.duree_jours|pluralize }} ({{ formation.duree_heures }}h)</span>
+                            </div>
+                            {% if formation.organisme_formateur %}
+                            <div class="job-detail">
+                                <i class="bi bi-person-badge"></i>
+                                <span>{{ formation.organisme_formateur|truncatechars:22 }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if formation.description %}
+                        <p class="job-description" style="font-size:0.8rem;margin-bottom:0.4rem;">{{ formation.description|truncatewords:18 }}</p>
+                        {% endif %}
+                        <div class="job-footer d-flex justify-content-between align-items-center">
+                            {% if formation.cout_unitaire %}
+                            <span class="job-date" style="font-size:0.75rem;">
+                                <i class="bi bi-cash"></i> {{ formation.cout_unitaire|floatformat:0 }} GNF
+                            </span>
+                            {% else %}
+                            <span class="job-date text-success" style="font-size:0.75rem;">
+                                <i class="bi bi-gift"></i> Gratuit
+                            </span>
+                            {% endif %}
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'formation:formation_public' formation.pk %}" class="btn btn-sm btn-outline-primary" style="font-size:0.78rem;">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                                <a href="{% url 'formation:inscription_formation_public' formation.pk %}" class="btn btn-sm btn-primary" style="font-size:0.78rem;">
+                                    <i class="bi bi-mortarboard me-1"></i>S'inscrire
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-5" data-aos="fade-up">
+                <p class="text-muted mb-3">Vous êtes une entreprise et souhaitez publier vos formations ?</p>
+                <a href="{% url 'core:login' %}" class="btn btn-outline-glass">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Connectez-vous pour gérer vos formations
+                </a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- CTA Section -->
+    <section class="cta" id="contact">
+        <div class="cta-bg"></div>
+        <div class="container position-relative">
+            <div class="cta-card" data-aos="zoom-in-up">
+                <h2>Prêt à transformer votre gestion RH ?</h2>
+                <p>Rejoignez les entreprises qui ont déjà simplifié leur gestion des ressources humaines</p>
+                <a href="{% url 'core:demande_partenariat' %}" class="btn btn-primary-gradient btn-lg">
+                    <i class="bi bi-handshake me-2"></i>Devenir Partenaire
+                </a>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0" data-aos="fade-up">
+                    <img src="{% static 'img/logo.png' %}" alt="ICG Logo" style="height: 40px; max-width: 140px; object-fit: contain; margin: 10px 0; background-color: rgba(45, 45, 55, 0.95); padding: 4px; border-radius: 4px;">
+                    <p class="footer-text">
+                        Solution de gestion RH adaptée au contexte guinéen, respectant les normes locales et les spécificités administratives du pays.
+                    </p>
+                </div>
+                <div class="col-6 col-lg-2" data-aos="fade-up" data-aos-delay="100">
+                    <h5 class="footer-title">Modules</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">Personnel</a></li>
+                        <li><a href="#">Paie</a></li>
+                        <li><a href="#">Congés</a></li>
+                        <li><a href="#">Pointage</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-lg-2" data-aos="fade-up" data-aos-delay="200">
+                    <h5 class="footer-title">Légal</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">CNSS</a></li>
+                        <li><a href="#">IRPP</a></li>
+                        <li><a href="#">Inspection</a></li>
+                        <li><a href="#">Conformité</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
+                    <h5 class="footer-title">Contact</h5>
+                    <ul class="footer-contact list-unstyled">
+                        <li><i class="bi bi-geo-alt-fill"></i><span>Lambagny, en face de l'ISSEG, Conakry, Guinée</span></li>
+                        <li><i class="bi bi-envelope-fill"></i><span>contact@icguinea.com</span></li>
+                        <li><i class="bi bi-phone-fill"></i><span>+224 614 11 41 73</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 International Consulting Guinea. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts - LOCAL -->
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/aos.js' %}"></script>
+    <script>
+        // Hero Slider
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.hero-slider .slide');
+        const dots = document.querySelectorAll('.slider-dots .dot');
+        
+        function showSlide(index) {
+            if (index >= slides.length) currentSlide = 0;
+            if (index < 0) currentSlide = slides.length - 1;
+            
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+        
+        function changeSlide(direction) {
+            currentSlide += direction;
+            showSlide(currentSlide);
+        }
+        
+        function goToSlide(index) {
+            currentSlide = index;
+            showSlide(currentSlide);
+        }
+        
+        // Auto-slide toutes les 5 secondes
+        setInterval(() => {
+            currentSlide++;
+            showSlide(currentSlide);
+        }, 5000);
+        
+        // Initialisation rapide dès que le DOM est prêt
+        document.addEventListener('DOMContentLoaded', function() {
+            // AOS - vérifier si chargé, sinon attendre
+            function initAOS() {
+                if (typeof AOS !== 'undefined') {
+                    document.body.classList.add('aos-initialized');
+                    AOS.init({
+                        duration: 500,
+                        easing: 'ease-out',
+                        once: true,
+                        offset: 20,
+                        delay: 0
+                    });
+                } else {
+                    setTimeout(initAOS, 50);
+                }
+            }
+            initAOS();
+            
+            // Navbar scroll effect
+            const navbar = document.querySelector('.navbar-glass');
+            if (navbar) {
+                let ticking = false;
+                window.addEventListener('scroll', () => {
+                    if (!ticking) {
+                        requestAnimationFrame(() => {
+                            navbar.classList.toggle('scrolled', window.scrollY > 50);
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                }, { passive: true });
+            }
+            
+            // Smooth scroll pour ancres
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        e.preventDefault();
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+            
+            // Counter animation avec IntersectionObserver
+            const statObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target.querySelector('.stat-number');
+                        if (el) {
+                            const target = parseInt(el.textContent);
+                            if (!isNaN(target)) {
+                                let current = 0;
+                                const increment = target / 40;
+                                const timer = setInterval(() => {
+                                    current += increment;
+                                    if (current >= target) {
+                                        el.textContent = target;
+                                        clearInterval(timer);
+                                    } else {
+                                        el.textContent = Math.floor(current);
+                                    }
+                                }, 25);
+                            }
+                        }
+                        statObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            document.querySelectorAll('.stat-card').forEach(card => statObserver.observe(card));
+            
+            // Parallax particles (désactivé sur mobile pour performance)
+            if (window.innerWidth > 768) {
+                document.addEventListener('mousemove', (e) => {
+                    const particles = document.querySelectorAll('.particle');
+                    const x = e.clientX / window.innerWidth;
+                    const y = e.clientY / window.innerHeight;
+                    particles.forEach((p, i) => {
+                        p.style.transform = `translate(${x * (i + 1) * 20}px, ${y * (i + 1) * 20}px)`;
+                    });
+                }, { passive: true });
+            }
+        });
+    </script>
+</body>
+</html>

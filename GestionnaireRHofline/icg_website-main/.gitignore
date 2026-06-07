@@ -1,0 +1,87 @@
+# .gitignore pour Django sous Kali Linux
+
+### Django/Python ###
+*.py[cod]
+__pycache__/
+*.so
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+*.pot
+.env
+.env.local
+.env.production
+.env.test
+.env.development
+.env/*
+
+# Virtual env
+venv/
+ENV/
+env/
+pythonenv*
+venv.bak/
+env.bak/
+
+
+# Fichiers sensibles
+secrets.py
+*.key
+*.cert
+*.pem
+
+### Kali Linux spécifique ###
+# Fichiers système Kali
+.*.swp
+*~
+.Trash-*
+.nano*
+.cache/
+.config/
+.local/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*~
+
+# Fichiers de lock
+*.lock
+*.pid
+
+### IDE/Editeurs ###
+.vscode/
+.idea/
+*.swp
+*.sublime-workspace
+*.sublime-project
+
+### Système ###
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+### Tests/coverage ###
+.coverage
+htmlcov/
+.pytest_cache/
+tests/__pycache__/
+
+### Déploiement ###
+*.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+*.whl
+
+####Pour le fichier note.txt#####
+note.txt
+
+# Django static files
+staticfiles/
+
+# Django media files
+media/

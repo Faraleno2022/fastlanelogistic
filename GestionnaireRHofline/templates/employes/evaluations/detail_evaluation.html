@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Évaluation - {{ evaluation.employe }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:detail_campagne' evaluation.campagne.pk %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour à la campagne
+            </a>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-user-check me-2"></i>Évaluation de {{ evaluation.employe.nom }} {{ evaluation.employe.prenoms }}</h2>
+                    <span class="badge 
+                        {% if evaluation.statut == 'validee' %}bg-success
+                        {% elif evaluation.statut == 'entretien' %}bg-info
+                        {% elif evaluation.statut == 'evaluation_manager' %}bg-primary
+                        {% else %}bg-secondary{% endif %} fs-6">
+                        {{ evaluation.get_statut_display }}
+                    </span>
+                </div>
+                <a href="{% url 'employes:modifier_evaluation' evaluation.pk %}" class="btn btn-primary">
+                    <i class="fas fa-edit me-1"></i>Modifier
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations employé -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h6 class="mb-0"><i class="fas fa-user me-2"></i>Employé</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td>Nom</td>
+                            <td>{{ evaluation.employe.nom }} {{ evaluation.employe.prenoms }}</td>
+                        </tr>
+                        <tr>
+                            <td>Matricule</td>
+                            <td>{{ evaluation.employe.matricule }}</td>
+                        </tr>
+                        <tr>
+                            <td>Département</td>
+                            <td>{{ evaluation.employe.service.nom_service|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Poste</td>
+                            <td>{{ evaluation.employe.poste.intitule|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Évaluateur</td>
+                            <td>{{ evaluation.evaluateur.nom|default:"-" }} {{ evaluation.evaluateur.prenoms|default:"" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Note globale -->
+            <div class="card shadow-sm mb-4 {% if evaluation.note_globale %}
+                {% if evaluation.note_globale >= 4 %}bg-success
+                {% elif evaluation.note_globale >= 3 %}bg-info
+                {% elif evaluation.note_globale >= 2 %}bg-warning
+                {% else %}bg-danger{% endif %} text-white{% endif %}">
+                <div class="card-body text-center">
+                    <h6>Note Globale</h6>
+                    <h1>{% if evaluation.note_globale %}{{ evaluation.note_globale|floatformat:1 }}/5{% else %}-{% endif %}</h1>
+                    {% if evaluation.appreciation %}
+                    <p class="mb-0">{{ evaluation.appreciation }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Notes détaillées -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-star me-2"></i>Notes</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label>Objectifs</label>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar" style="width: {% widthratio evaluation.note_objectifs|default:0 5 100 %}%">
+                                {{ evaluation.note_objectifs|default:"-" }}/5
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Compétences</label>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-info" style="width: {% widthratio evaluation.note_competences|default:0 5 100 %}%">
+                                {{ evaluation.note_competences|default:"-" }}/5
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label>Comportement</label>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" style="width: {% widthratio evaluation.note_comportement|default:0 5 100 %}%">
+                                {{ evaluation.note_comportement|default:"-" }}/5
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenu principal -->
+        <div class="col-lg-8">
+            <!-- Objectifs -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-bullseye me-2"></i>Objectifs</h6>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalObjectif">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>Objectif</th>
+                                    <th class="text-center">Priorité</th>
+                                    <th class="text-center">Réalisation</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for obj in objectifs %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ obj.intitule }}</strong>
+                                        {% if obj.description %}
+                                        <br><small class="text-muted">{{ obj.description|truncatewords:15 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {% if obj.priorite == 'haute' %}bg-danger{% elif obj.priorite == 'moyenne' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ obj.get_priorite_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 20px; width: 100px;">
+                                            <div class="progress-bar" style="width: {{ obj.taux_realisation }}%">
+                                                {{ obj.taux_realisation }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if obj.statut == 'atteint' %}bg-success{% elif obj.statut == 'partiellement' %}bg-warning{% elif obj.statut == 'non_atteint' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ obj.get_statut_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3 text-muted">Aucun objectif défini</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commentaires -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="fas fa-thumbs-up me-2"></i>Points forts</h6>
+                        </div>
+                        <div class="card-body">
+                            {{ evaluation.points_forts|default:"Non renseigné"|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Axes d'amélioration</h6>
+                        </div>
+                        <div class="card-body">
+                            {{ evaluation.axes_amelioration|default:"Non renseigné"|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plan de développement -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-road me-2"></i>Plan de développement</h6>
+                </div>
+                <div class="card-body">
+                    {{ evaluation.plan_developpement|default:"Non renseigné"|linebreaks }}
+                    {% if evaluation.besoins_formation %}
+                    <hr>
+                    <strong>Besoins en formation:</strong><br>
+                    {{ evaluation.besoins_formation|linebreaks }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter Objectif -->
+<div class="modal fade" id="modalObjectif" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'employes:ajouter_objectif' evaluation.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter un objectif</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Intitulé *</label>
+                        <input type="text" class="form-control" name="intitule" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Priorité</label>
+                            <select class="form-select" name="priorite">
+                                <option value="haute">Haute</option>
+                                <option value="moyenne" selected>Moyenne</option>
+                                <option value="basse">Basse</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Échéance</label>
+                            <input type="date" class="form-control" name="date_echeance">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

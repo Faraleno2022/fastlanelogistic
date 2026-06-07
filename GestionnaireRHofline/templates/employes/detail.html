@@ -1,0 +1,1172 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ employe.nom }} {{ employe.prenoms }} - Gestionnaire RH Guinée{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 100%);
+        color: #333333;
+        padding: 30px;
+        border-radius: 10px 10px 0 0;
+    }
+    .profile-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid white;
+        object-fit: cover;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    .info-value {
+        font-size: 1rem;
+        color: #212529;
+    }
+    .nav-tabs .nav-link {
+        color: #495057;
+    }
+    .nav-tabs .nav-link.active {
+        color: #EF7707;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête du profil -->
+<div class="card shadow mb-4">
+    <div class="profile-header">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                {% if employe.photo %}
+                <img src="{{ employe.photo.url }}" alt="{{ employe.nom }}" class="profile-photo">
+                {% else %}
+                <div class="profile-photo bg-white text-primary d-flex align-items-center justify-content-center" style="font-size: 3rem;">
+                    {{ employe.nom.0 }}{{ employe.prenoms.0 }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                <h2 class="mb-1">{{ employe.civilite }} {{ employe.nom }} {{ employe.prenoms }}</h2>
+                <p class="mb-2">
+                    <i class="bi bi-briefcase"></i> {{ employe.poste.intitule_poste|default:"Poste non défini" }}
+                    <span class="mx-2">|</span>
+                    <i class="bi bi-building"></i> {{ employe.service.nom_service|default:"Service non défini" }}
+                </p>
+                <div>
+                    <span class="badge bg-light text-dark me-2">
+                        <i class="bi bi-person-badge"></i> {{ employe.matricule }}
+                    </span>
+                    <span class="badge bg-light text-dark me-2">
+                        <i class="bi bi-card-list"></i> {{ employe.num_cnss_individuel|default:"N° CNSS non renseigné" }}
+                    </span>
+                    {% if employe.statut_employe == 'Actif' %}
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle"></i> {{ employe.statut_employe }}
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ employe.statut_employe }}</span>
+                    {% endif %}
+                    <span class="badge bg-info">{{ employe.type_contrat }}</span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'employes:edit' employe.pk %}" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Modifier / Sauvegarder
+                    </a>
+                    <button type="button" class="btn btn-light" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Imprimer
+                    </button>
+                    <a href="{% url 'employes:list' %}" class="btn btn-light">
+                        <i class="bi bi-arrow-left"></i> Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Âge</div>
+                <div class="h5 mb-0">
+                    {% if age is not None %}
+                        {{ age }} an{{ age|pluralize }}
+                    {% else %}
+                        <span class="text-muted small">Non renseigné</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-success shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Ancienneté</div>
+                <div class="h5 mb-0">
+                    {% if anciennete is not None %}
+                        {{ anciennete }} an{{ anciennete|pluralize }}
+                    {% elif employe.date_embauche %}
+                        0 an
+                    {% else %}
+                        <span class="text-muted small">Non renseigné</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-info shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Congés restants</div>
+                <div class="h5 mb-0">
+                    {% if solde_conges %}
+                        {{ solde_conges.conges_restants }} jours
+                    {% else %}
+                        <span class="text-muted small">Non défini</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-warning shadow-sm">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Salaire de base</div>
+                <div class="h5 mb-0">
+                    {% if salaire_base %}
+                        {{ salaire_base|floatformat:0|intcomma }} GNF
+                    {% else %}
+                        <span class="text-muted small">Non défini</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Onglets -->
+<div class="card shadow">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="employeeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button">
+                    <i class="bi bi-person"></i> Informations générales
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="contrats-tab" data-bs-toggle="tab" data-bs-target="#contrats" type="button">
+                    <i class="bi bi-file-earmark-text"></i> Contrats
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="evaluations-tab" data-bs-toggle="tab" data-bs-target="#evaluations" type="button">
+                    <i class="bi bi-graph-up"></i> Évaluations
+                    <span class="badge bg-secondary ms-1">{{ evaluations_count|default:0 }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="discipline-tab" data-bs-toggle="tab" data-bs-target="#discipline" type="button">
+                    <i class="bi bi-shield-exclamation"></i> Discipline
+                    <span class="badge bg-secondary ms-1">{{ sanctions_count|default:0 }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="salaire-tab" data-bs-toggle="tab" data-bs-target="#salaire" type="button">
+                    <i class="bi bi-cash-stack"></i> Salaire
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="conges-tab" data-bs-toggle="tab" data-bs-target="#conges" type="button">
+                    <i class="bi bi-calendar-check"></i> Congés
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="famille-tab" data-bs-toggle="tab" data-bs-target="#famille" type="button">
+                    <i class="bi bi-people"></i> Famille
+                    <span class="badge bg-secondary ms-1">{{ employe.enfants.count|default:0 }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">
+                    <i class="bi bi-folder"></i> Documents
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="employeeTabsContent">
+            <!-- Onglet Informations générales -->
+            <div class="tab-pane fade show active" id="info" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-3"><i class="bi bi-person-vcard"></i> État civil</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="info-label">Nom complet</td>
+                                <td class="info-value">{{ employe.civilite }} {{ employe.nom }} {{ employe.prenoms }}</td>
+                            </tr>
+                            {% if employe.nom_jeune_fille %}
+                            <tr>
+                                <td class="info-label">Nom de jeune fille</td>
+                                <td class="info-value">{{ employe.nom_jeune_fille }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="info-label">Sexe</td>
+                                <td class="info-value">
+                                    {% if employe.sexe == 'M' %}Masculin{% else %}Féminin{% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Date de naissance</td>
+                                <td class="info-value">{{ employe.date_naissance|date:"d/m/Y"|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Lieu de naissance</td>
+                                <td class="info-value">{{ employe.lieu_naissance|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Nationalité</td>
+                                <td class="info-value">{{ employe.nationalite }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Situation matrimoniale</td>
+                                <td class="info-value">{{ employe.situation_matrimoniale|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Nombre d'enfants</td>
+                                <td class="info-value">{{ employe.nombre_enfants }}</td>
+                            </tr>
+                        </table>
+
+                        <h5 class="mb-3 mt-4"><i class="bi bi-card-checklist"></i> Identification</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="info-label">Type de pièce</td>
+                                <td class="info-value">{{ employe.type_piece_identite|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">N° pièce d'identité</td>
+                                <td class="info-value">{{ employe.numero_piece_identite|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Date de délivrance</td>
+                                <td class="info-value">{{ employe.date_delivrance_piece|date:"d/m/Y"|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Date d'expiration</td>
+                                <td class="info-value">{{ employe.date_expiration_piece|date:"d/m/Y"|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">N° CNSS individuel</td>
+                                <td class="info-value"><strong>{{ employe.num_cnss_individuel|default:"-" }}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="mb-3"><i class="bi bi-telephone"></i> Contact</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="info-label">Adresse</td>
+                                <td class="info-value">{{ employe.adresse_actuelle|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Commune</td>
+                                <td class="info-value">{{ employe.commune_residence|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Préfecture</td>
+                                <td class="info-value">{{ employe.prefecture_residence|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Téléphone principal</td>
+                                <td class="info-value">
+                                    <i class="bi bi-phone"></i> {{ employe.telephone_principal|default:"-" }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Téléphone secondaire</td>
+                                <td class="info-value">
+                                    <i class="bi bi-phone"></i> {{ employe.telephone_secondaire|default:"-" }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Email professionnel</td>
+                                <td class="info-value">
+                                    <i class="bi bi-envelope"></i> {{ employe.email_professionnel|default:"-" }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Email personnel</td>
+                                <td class="info-value">
+                                    <i class="bi bi-envelope"></i> {{ employe.email_personnel|default:"-" }}
+                                </td>
+                            </tr>
+                        </table>
+
+                        <h5 class="mb-3 mt-4"><i class="bi bi-exclamation-triangle"></i> Contact d'urgence</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="info-label">Nom</td>
+                                <td class="info-value">{{ employe.contact_urgence_nom|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Lien</td>
+                                <td class="info-value">{{ employe.contact_urgence_lien|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Téléphone</td>
+                                <td class="info-value">{{ employe.contact_urgence_telephone|default:"-" }}</td>
+                            </tr>
+                        </table>
+
+                        <h5 class="mb-3 mt-4"><i class="bi bi-bank"></i> Informations bancaires</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="info-label">Mode de paiement</td>
+                                <td class="info-value">{{ employe.mode_paiement|default:"-" }}</td>
+                            </tr>
+                            {% if employe.mode_paiement == 'Virement' %}
+                            <tr>
+                                <td class="info-label">Banque</td>
+                                <td class="info-value">{{ employe.nom_banque|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Agence</td>
+                                <td class="info-value">{{ employe.agence_banque|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">N° compte</td>
+                                <td class="info-value">{{ employe.numero_compte|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">RIB</td>
+                                <td class="info-value">{{ employe.rib|default:"-" }}</td>
+                            </tr>
+                            {% elif employe.mode_paiement == 'Mobile Money' %}
+                            <tr>
+                                <td class="info-label">Opérateur</td>
+                                <td class="info-value">{{ employe.operateur_mobile_money|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Numéro</td>
+                                <td class="info-value">{{ employe.numero_mobile_money|default:"-" }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Contrats -->
+            <div class="tab-pane fade" id="contrats" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="bi bi-file-earmark-text"></i> Historique des contrats</h5>
+                    <a href="{% url 'employes:contrat_create' employe.pk %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle"></i> Nouveau contrat
+                    </a>
+                </div>
+
+                {% if contrats %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>N° Contrat</th>
+                                <th>Type</th>
+                                <th>Date début</th>
+                                <th>Date fin</th>
+                                <th>Durée</th>
+                                <th>Période d'essai</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contrat in contrats %}
+                            <tr>
+                                <td><strong>{{ contrat.num_contrat }}</strong></td>
+                                <td><span class="badge bg-info">{{ contrat.type_contrat }}</span></td>
+                                <td>{{ contrat.date_debut|date:"d/m/Y" }}</td>
+                                <td>{{ contrat.date_fin|date:"d/m/Y"|default:"-" }}</td>
+                                <td>{{ contrat.duree_mois }} mois</td>
+                                <td>{{ contrat.periode_essai_mois|default:"0" }} mois</td>
+                                <td>
+                                    {% if contrat.statut_contrat == 'En cours' %}
+                                    <span class="badge bg-success">{{ contrat.statut_contrat }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ contrat.statut_contrat }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if contrat.fichier_contrat %}
+                                    <a href="{{ contrat.fichier_contrat.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="bi bi-file-pdf"></i> Voir
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'employes:generer_contrat_employe' contrat.pk %}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-file-earmark-word"></i> Générer
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Aucun contrat enregistré pour cet employé.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Onglet Évaluations -->
+            <div class="tab-pane fade" id="evaluations" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="bi bi-graph-up"></i> Évaluations</h5>
+                    <a href="{% url 'employes:evaluation_list' employe.pk %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-box-arrow-up-right"></i> Ouvrir la liste
+                    </a>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total</h6>
+                                <h3 class="text-primary">{{ evaluations_count|default:0 }}</h3>
+                                <small>évaluation(s)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        {% if last_evaluation %}
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="mb-2">Dernière évaluation</h6>
+                                <div class="small text-muted">{{ last_evaluation.date_evaluation|date:"d/m/Y" }} - {{ last_evaluation.annee_evaluation }} ({{ last_evaluation.get_periode_display }})</div>
+                                <div class="mt-2">
+                                    <span class="badge bg-info">Note: {{ last_evaluation.note_globale|default:"-" }}</span>
+                                    {% if last_evaluation.appreciation %}
+                                    <span class="badge bg-secondary">{{ last_evaluation.get_appreciation_display }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning mb-0">
+                            <i class="bi bi-exclamation-triangle"></i> Aucune évaluation enregistrée pour cet employé.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Discipline -->
+            <div class="tab-pane fade" id="discipline" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="bi bi-shield-exclamation"></i> Sanctions disciplinaires</h5>
+                    <a href="{% url 'employes:sanction_list' employe.pk %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-box-arrow-up-right"></i> Ouvrir la liste
+                    </a>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total</h6>
+                                <h3 class="text-danger">{{ sanctions_count|default:0 }}</h3>
+                                <small>sanction(s)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        {% if last_sanction %}
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="mb-2">Dernière sanction</h6>
+                                <div class="small text-muted">
+                                    {{ last_sanction.get_type_sanction_display }}
+                                    {% if last_sanction.date_notification %}
+                                        - Notifiée le {{ last_sanction.date_notification|date:"d/m/Y" }}
+                                    {% else %}
+                                        - Faits du {{ last_sanction.date_faits|date:"d/m/Y" }}
+                                    {% endif %}
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-secondary">{{ last_sanction.get_statut_display }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle"></i> Aucune sanction disciplinaire enregistrée.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Salaire -->
+            <div class="tab-pane fade" id="salaire" role="tabpanel">
+                <h5 class="mb-3"><i class="bi bi-cash-stack"></i> Informations salariales</h5>
+                
+                {% if salaire_base %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Salaire de base : <strong>{{ salaire_base|floatformat:0|intcomma }} GNF</strong>
+                        </div>
+                        <p class="text-muted">
+                            Pour consulter et gérer tous les éléments de salaire (primes, indemnités, retenues) :
+                        </p>
+                        <a href="{% url 'paie:elements_salaire_employe' employe.id %}" class="btn btn-primary">
+                            <i class="bi bi-cash-coin"></i> Gérer les Éléments de Salaire
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Aucun élément de salaire défini pour cet employé.
+                    <br><br>
+                    <a href="{% url 'paie:ajouter_element_salaire' employe.id %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Ajouter des Éléments de Salaire
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Onglet Congés -->
+            <div class="tab-pane fade" id="conges" role="tabpanel">
+                <h5 class="mb-3"><i class="bi bi-calendar-check"></i> Solde de congés {{ solde_conges.annee|default:"" }}</h5>
+                
+                {% if solde_conges %}
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Acquis</h6>
+                                <h3 class="text-primary">{{ solde_conges.conges_acquis }}</h3>
+                                <small>jours</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Pris</h6>
+                                <h3 class="text-danger">{{ solde_conges.conges_pris }}</h3>
+                                <small>jours</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Restants</h6>
+                                <h3 class="text-success">{{ solde_conges.conges_restants }}</h3>
+                                <small>jours</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Reports</h6>
+                                <h3 class="text-info">{{ solde_conges.conges_reports }}</h3>
+                                <small>jours</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Aucun solde de congés pour l'année en cours.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Onglet Famille -->
+            <div class="tab-pane fade" id="famille" role="tabpanel">
+                <!-- Section Conjoint -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="bi bi-heart"></i> Conjoint(e)</h5>
+                        {% if not conjoint %}
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#conjointModal">
+                            <i class="bi bi-plus-circle"></i> Ajouter conjoint
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#conjointModal">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    {% if conjoint %}
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td class="info-label">Nom complet</td>
+                                            <td class="info-value">{{ conjoint.nom }} {{ conjoint.prenoms }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">Date de naissance</td>
+                                            <td class="info-value">{{ conjoint.date_naissance|date:"d/m/Y"|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">Profession</td>
+                                            <td class="info-value">{{ conjoint.profession|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">Employeur</td>
+                                            <td class="info-value">{{ conjoint.employeur|default:"-" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td class="info-label">Téléphone</td>
+                                            <td class="info-value">{{ conjoint.telephone|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">Date de mariage</td>
+                                            <td class="info-value">{{ conjoint.date_mariage|date:"d/m/Y"|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">Lieu de mariage</td>
+                                            <td class="info-value">{{ conjoint.lieu_mariage|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">Acte de mariage</td>
+                                            <td class="info-value">
+                                                {% if conjoint.acte_mariage %}
+                                                <a href="{{ conjoint.acte_mariage.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-file-pdf"></i> Voir
+                                                </a>
+                                                {% else %}
+                                                <span class="text-muted">Non fourni</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Aucun conjoint enregistré.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Section Enfants -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="bi bi-people"></i> Enfants ({{ enfants.count|default:0 }})</h5>
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#enfantModal">
+                            <i class="bi bi-plus-circle"></i> Ajouter un enfant
+                        </button>
+                    </div>
+                    
+                    {% if enfants %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Prénoms</th>
+                                    <th>Date de naissance</th>
+                                    <th>Âge</th>
+                                    <th>Sexe</th>
+                                    <th>Scolarisé</th>
+                                    <th>Éligible AF</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for enfant in enfants %}
+                                <tr>
+                                    <td>{{ enfant.nom }}</td>
+                                    <td>{{ enfant.prenoms }}</td>
+                                    <td>{{ enfant.date_naissance|date:"d/m/Y" }}</td>
+                                    <td>{{ enfant.age }} ans</td>
+                                    <td>{% if enfant.sexe == 'M' %}Masculin{% elif enfant.sexe == 'F' %}Féminin{% else %}-{% endif %}</td>
+                                    <td>
+                                        {% if enfant.scolarise %}
+                                        <span class="badge bg-success"><i class="bi bi-check"></i> Oui</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Non</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if enfant.est_eligible_allocation %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Oui</span>
+                                        {% else %}
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Non</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                onclick="editEnfant({{ enfant.id }}, '{{ enfant.nom|escapejs }}', '{{ enfant.prenoms|escapejs }}', '{{ enfant.date_naissance|date:'Y-m-d' }}', '{{ enfant.sexe|default:'' }}', '{{ enfant.lieu_naissance|default:''|escapejs }}', {{ enfant.scolarise|yesno:'true,false' }}, '{{ enfant.etablissement_scolaire|default:''|escapejs }}')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <a href="{% url 'employes:supprimer_enfant' enfant.id %}" class="btn btn-sm btn-outline-danger" 
+                                           onclick="return confirm('Supprimer cet enfant ?')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Aucun enfant enregistré.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Onglet Documents -->
+            <div class="tab-pane fade" id="documents" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="bi bi-folder"></i> Documents de l'employé</h5>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                        <i class="bi bi-cloud-upload"></i> Ajouter un document
+                    </button>
+                </div>
+
+                <!-- Statistiques documents -->
+                {% if documents %}
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> <strong>{{ documents.count }}</strong> document(s) au total
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liste des documents -->
+                <div class="row">
+                    {% for document in documents %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title mb-1">
+                                            <i class="{{ document.get_icon }} fs-4"></i>
+                                            {{ document.titre }}
+                                        </h6>
+                                        <span class="badge bg-primary">{{ document.get_type_document_display }}</span>
+                                        {% if document.confidentiel %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-lock"></i> Confidentiel
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="{{ document.fichier.url }}" target="_blank">
+                                                    <i class="bi bi-eye"></i> Voir
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ document.fichier.url }}" download>
+                                                    <i class="bi bi-download"></i> Télécharger
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#" onclick="return confirmDeleteDocument({{ document.id }}, '{{ document.titre|escapejs }}');">
+                                                    <i class="bi bi-trash"></i> Supprimer
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                {% if document.description %}
+                                <p class="card-text small text-muted mb-2">{{ document.description|truncatewords:15 }}</p>
+                                {% endif %}
+                                
+                                <div class="small text-muted">
+                                    <div><i class="bi bi-calendar"></i> Ajouté le {{ document.date_ajout|date:"d/m/Y à H:i" }}</div>
+                                    {% if document.date_document %}
+                                    <div><i class="bi bi-file-earmark"></i> Date du document : {{ document.date_document|date:"d/m/Y" }}</div>
+                                    {% endif %}
+                                    {% if document.date_expiration %}
+                                    <div>
+                                        <i class="bi bi-clock-history"></i> Expire le {{ document.date_expiration|date:"d/m/Y" }}
+                                        {% if document.date_expiration < today %}
+                                        <span class="badge bg-danger">Expiré</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                    {% if document.ajoute_par %}
+                                    <div><i class="bi bi-person"></i> Par {{ document.ajoute_par.get_full_name|default:document.ajoute_par.username }}</div>
+                                    {% endif %}
+                                    <div><i class="bi bi-hdd"></i> Taille : {{ document.get_taille_lisible }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Aucun document enregistré pour cet employé.
+                    <button type="button" class="btn btn-sm btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                        <i class="bi bi-cloud-upload"></i> Ajouter le premier document
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Barre de sauvegarde fixe en bas -->
+<div id="bottom-bar" class="fixed-bottom bg-white border-top shadow-lg py-2 px-4 d-flex justify-content-between align-items-center" style="z-index: 1020;">
+    <span class="text-muted">
+        <i class="bi bi-person-badge"></i> {{ employe.matricule }} - {{ employe.nom }} {{ employe.prenoms }}
+    </span>
+    <div>
+        <a href="{% url 'employes:list' %}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'employes:edit' employe.pk %}" class="btn btn-primary">
+            <i class="bi bi-save"></i> Modifier / Sauvegarder
+        </a>
+    </div>
+</div>
+
+<!-- Modal Upload Document -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-cloud-upload"></i> Ajouter un document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'employes:document_upload' employe.pk %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="type_document" class="form-label">Type de document <span class="text-danger">*</span></label>
+                            <select class="form-select" id="type_document" name="type_document" required>
+                                <option value="">-- Sélectionner --</option>
+                                <option value="cv">CV</option>
+                                <option value="diplome">Diplôme</option>
+                                <option value="attestation">Attestation</option>
+                                <option value="certificat">Certificat</option>
+                                <option value="piece_identite">Pièce d'identité</option>
+                                <option value="acte_naissance">Acte de naissance</option>
+                                <option value="acte_mariage">Acte de mariage</option>
+                                <option value="livret_famille">Livret de famille</option>
+                                <option value="certificat_medical">Certificat médical</option>
+                                <option value="contrat">Contrat de travail</option>
+                                <option value="avenant">Avenant au contrat</option>
+                                <option value="attestation_travail">Attestation de travail</option>
+                                <option value="lettre_recommandation">Lettre de recommandation</option>
+                                <option value="certificat_emploi">Certificat d'emploi antérieur</option>
+                                <option value="fiche_paie">Fiche de paie</option>
+                                <option value="photo">Photo d'identité</option>
+                                <option value="autre">Autre document</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="titre" class="form-label">Titre du document <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="titre" name="titre" required placeholder="Ex: Diplôme de Master">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2" placeholder="Description optionnelle du document"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date_document" class="form-label">Date du document</label>
+                            <input type="date" class="form-control" id="date_document" name="date_document">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="date_expiration" class="form-label">Date d'expiration</label>
+                            <input type="date" class="form-control" id="date_expiration" name="date_expiration">
+                            <small class="text-muted">Si le document a une date d'expiration</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fichier" class="form-label">Fichier <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="fichier" name="fichier" required>
+                        <small class="text-muted">Formats acceptés : PDF, Word, Excel, Images (Max 10 Mo)</small>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confidentiel" name="confidentiel">
+                        <label class="form-check-label" for="confidentiel">
+                            <i class="bi bi-lock"></i> Document confidentiel
+                        </label>
+                    </div>
+
+                    <hr>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg"></i> Annuler
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-cloud-upload"></i> Télécharger le document
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Formulaire de suppression caché -->
+<form id="deleteDocumentForm" method="post" style="display: none;">
+    {% csrf_token %}
+</form>
+
+<!-- Modal Conjoint -->
+<div class="modal fade" id="conjointModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-heart"></i> {% if conjoint %}Modifier{% else %}Ajouter{% endif %} le conjoint</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'employes:sauvegarder_conjoint' employe.pk %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nom <span class="text-danger">*</span></label>
+                            <input type="text" name="nom" class="form-control" required value="{{ conjoint.nom|default:'' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Prénoms <span class="text-danger">*</span></label>
+                            <input type="text" name="prenoms" class="form-control" required value="{{ conjoint.prenoms|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Date de naissance</label>
+                            <input type="date" name="date_naissance" class="form-control" value="{% if conjoint.date_naissance %}{{ conjoint.date_naissance|date:'Y-m-d' }}{% endif %}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Sexe</label>
+                            <select name="sexe" class="form-select">
+                                <option value="">--</option>
+                                <option value="M" {% if conjoint.sexe == 'M' %}selected{% endif %}>Masculin</option>
+                                <option value="F" {% if conjoint.sexe == 'F' %}selected{% endif %}>Féminin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Téléphone</label>
+                            <input type="text" name="telephone" class="form-control" value="{{ conjoint.telephone|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Profession</label>
+                            <input type="text" name="profession" class="form-control" value="{{ conjoint.profession|default:'' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Employeur</label>
+                            <input type="text" name="employeur" class="form-control" value="{{ conjoint.employeur|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Date de mariage</label>
+                            <input type="date" name="date_mariage" class="form-control" value="{% if conjoint.date_mariage %}{{ conjoint.date_mariage|date:'Y-m-d' }}{% endif %}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Lieu de mariage</label>
+                            <input type="text" name="lieu_mariage" class="form-control" value="{{ conjoint.lieu_mariage|default:'' }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Acte de mariage</label>
+                            <input type="file" name="acte_mariage" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                            {% if conjoint.acte_mariage %}
+                            <small class="text-muted">Fichier actuel : <a href="{{ conjoint.acte_mariage.url }}" target="_blank">Voir</a></small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg"></i> Annuler
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save"></i> Enregistrer
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Enfant -->
+<div class="modal fade" id="enfantModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i> <span id="enfantModalTitle">Ajouter un enfant</span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'employes:sauvegarder_enfant' employe.pk %}" enctype="multipart/form-data" id="enfantForm">
+                {% csrf_token %}
+                <input type="hidden" name="enfant_id" id="enfant_id" value="">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nom <span class="text-danger">*</span></label>
+                            <input type="text" name="nom" id="enfant_nom" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Prénoms <span class="text-danger">*</span></label>
+                            <input type="text" name="prenoms" id="enfant_prenoms" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Date de naissance <span class="text-danger">*</span></label>
+                            <input type="date" name="date_naissance" id="enfant_date_naissance" class="form-control" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Sexe</label>
+                            <select name="sexe" id="enfant_sexe" class="form-select">
+                                <option value="">--</option>
+                                <option value="M">Masculin</option>
+                                <option value="F">Féminin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Lieu de naissance</label>
+                            <input type="text" name="lieu_naissance" id="enfant_lieu_naissance" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" name="scolarise" id="enfant_scolarise">
+                                <label class="form-check-label" for="enfant_scolarise">
+                                    Scolarisé (éligible AF jusqu'à 20 ans)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Établissement scolaire</label>
+                            <input type="text" name="etablissement_scolaire" id="enfant_etablissement" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Acte de naissance</label>
+                            <input type="file" name="acte_naissance" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Certificat de scolarité</label>
+                            <input type="file" name="certificat_scolarite" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg"></i> Annuler
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save"></i> Enregistrer
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cacher la barre fixe quand un modal est ouvert
+document.addEventListener('show.bs.modal', function () {
+    var bar = document.getElementById('bottom-bar');
+    if (bar) bar.style.display = 'none';
+});
+document.addEventListener('hidden.bs.modal', function () {
+    var bar = document.getElementById('bottom-bar');
+    if (bar) bar.style.display = 'flex';
+});
+
+// Activer les tooltips Bootstrap
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+
+// Fonction de confirmation de suppression de document
+function confirmDeleteDocument(documentId, titre) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer le document "' + titre + '" ?\n\nCette action est irréversible.')) {
+        var form = document.getElementById('deleteDocumentForm');
+        form.action = '/employes/document/' + documentId + '/delete/';
+        form.submit();
+    }
+    return false;
+}
+
+// Fonction pour éditer un enfant
+function editEnfant(id, nom, prenoms, dateNaissance, sexe, lieuNaissance, scolarise, etablissement) {
+    document.getElementById('enfantModalTitle').textContent = 'Modifier l\'enfant';
+    document.getElementById('enfant_id').value = id;
+    document.getElementById('enfant_nom').value = nom;
+    document.getElementById('enfant_prenoms').value = prenoms;
+    document.getElementById('enfant_date_naissance').value = dateNaissance;
+    document.getElementById('enfant_sexe').value = sexe;
+    document.getElementById('enfant_lieu_naissance').value = lieuNaissance;
+    document.getElementById('enfant_scolarise').checked = scolarise;
+    document.getElementById('enfant_etablissement').value = etablissement;
+    
+    var modal = new bootstrap.Modal(document.getElementById('enfantModal'));
+    modal.show();
+}
+
+// Reset du modal enfant à la fermeture
+document.getElementById('enfantModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('enfantModalTitle').textContent = 'Ajouter un enfant';
+    document.getElementById('enfantForm').reset();
+    document.getElementById('enfant_id').value = '';
+});
+</script>
+{% endblock %}
+

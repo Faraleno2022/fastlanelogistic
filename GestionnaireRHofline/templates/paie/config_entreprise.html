@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configuration Paie Entreprise{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-gear me-2"></i>Configuration Paie - {{ config.entreprise.nom_entreprise }}</h2>
+        <a href="{% url 'paie:home' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Heures Supplémentaires -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Heures Supplémentaires</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mode de calcul</label>
+                            <select name="mode_heures_sup" class="form-select" id="mode_hs">
+                                {% for value, label in modes_hs %}
+                                <option value="{{ value }}" {% if config.mode_heures_sup == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="alert alert-light border mb-3">
+                            <small>
+                                <strong>Code du Travail Art. 221 :</strong> +30%/+60%<br>
+                                <strong>Convention Collective :</strong> +15%/+25%/+50%/+100%
+                            </small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">4 premières HS/semaine (%)</label>
+                                <input type="number" name="taux_hs_4_premieres" class="form-control" 
+                                       value="{{ config.taux_hs_4_premieres }}" step="0.01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">HS au-delà (%)</label>
+                                <input type="number" name="taux_hs_au_dela" class="form-control" 
+                                       value="{{ config.taux_hs_au_dela }}" step="0.01">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Heures de nuit 20h-6h (%)</label>
+                                <input type="number" name="taux_hs_nuit" class="form-control" 
+                                       value="{{ config.taux_hs_nuit }}" step="0.01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Dimanche/Férié jour (%)</label>
+                                <input type="number" name="taux_hs_dimanche" class="form-control" 
+                                       value="{{ config.taux_hs_dimanche }}" step="0.01">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Férié nuit (%)</label>
+                            <input type="number" name="taux_hs_ferie_nuit" class="form-control" 
+                                   value="{{ config.taux_hs_ferie_nuit }}" step="0.01">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Congés -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Congés Payés</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mode de calcul</label>
+                            <select name="mode_conges" class="form-select" id="mode_conges">
+                                {% for value, label in modes_conges %}
+                                <option value="{{ value }}" {% if config.mode_conges == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="alert alert-light border mb-3">
+                            <small>
+                                <strong>Code du Travail :</strong> 1,5 j/mois = 18 j/an<br>
+                                <strong>Convention Collective :</strong> 2,5 j/mois = 30 j/an
+                            </small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Jours acquis/mois</label>
+                                <input type="number" name="jours_conges_par_mois" class="form-control" 
+                                       value="{{ config.jours_conges_par_mois }}" step="0.5" min="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Bonus ancienneté (jours)</label>
+                                <input type="number" name="jours_conges_anciennete" class="form-control" 
+                                       value="{{ config.jours_conges_anciennete }}" step="0.5">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tranche ancienneté (années)</label>
+                            <input type="number" name="tranche_anciennete_annees" class="form-control" 
+                                   value="{{ config.tranche_anciennete_annees }}" min="1">
+                            <small class="text-muted">Ex: +2 jours tous les 5 ans</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- CNSS -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>CNSS</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Taux employé (%)</label>
+                                <input type="number" name="taux_cnss_employe" class="form-control" 
+                                       value="{{ config.taux_cnss_employe }}" step="0.01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Taux employeur (%)</label>
+                                <input type="number" name="taux_cnss_employeur" class="form-control" 
+                                       value="{{ config.taux_cnss_employeur }}" step="0.01">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Plancher/SMIG (GNF)</label>
+                                <input type="number" name="plancher_cnss" class="form-control" 
+                                       value="{{ config.plancher_cnss|floatformat:0 }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Plafond (GNF)</label>
+                                <input type="number" name="plafond_cnss" class="form-control" 
+                                       value="{{ config.plafond_cnss|floatformat:0 }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charges patronales -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Charges Patronales</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Versement Forfaitaire VF (%)</label>
+                                <input type="number" name="taux_versement_forfaitaire" class="form-control" 
+                                       value="{{ config.taux_versement_forfaitaire }}" step="0.01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Taxe Apprentissage TA (%)</label>
+                                <input type="number" name="taux_taxe_apprentissage" class="form-control" 
+                                       value="2.00" step="0.01" readonly>
+                                <small class="text-muted">Taux legal fixe utilise par le calcul de paie.</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Contribution ONFPP (%)</label>
+                                <input type="number" name="taux_onfpp" class="form-control"
+                                       value="1.50" step="0.01" readonly>
+                                <small class="text-muted">Taux legal fixe utilise par le calcul de paie.</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Arrondi du net à payer</label>
+                                <select name="arrondi_net" class="form-select">
+                                    {% for val, label in arrondis_net %}
+                                    <option value="{{ val }}" {% if config.arrondi_net == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Bases CNSS/RTS restent à l'unité (conformité).</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 justify-content-between">
+                    <div>
+                        <button type="submit" name="action" value="code_travail" class="btn btn-outline-primary">
+                            <i class="bi bi-book me-1"></i>Appliquer Code du Travail
+                        </button>
+                        <button type="submit" name="action" value="convention" class="btn btn-outline-success">
+                            <i class="bi bi-file-text me-1"></i>Appliquer Convention Collective
+                        </button>
+                    </div>
+                    <button type="submit" name="action" value="save" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-lg me-1"></i>Enregistrer la configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('mode_hs').addEventListener('change', function() {
+    if (this.value === 'code_travail') {
+        document.querySelector('[name="taux_hs_4_premieres"]').value = '30.00';
+        document.querySelector('[name="taux_hs_au_dela"]').value = '60.00';
+        document.querySelector('[name="taux_hs_nuit"]').value = '20.00';
+    } else if (this.value === 'convention') {
+        document.querySelector('[name="taux_hs_4_premieres"]').value = '15.00';
+        document.querySelector('[name="taux_hs_au_dela"]').value = '25.00';
+        document.querySelector('[name="taux_hs_nuit"]').value = '50.00';
+        document.querySelector('[name="taux_hs_dimanche"]').value = '100.00';
+        document.querySelector('[name="taux_hs_ferie_nuit"]').value = '100.00';
+    }
+});
+
+document.getElementById('mode_conges').addEventListener('change', function() {
+    if (this.value === 'code_travail') {
+        document.querySelector('[name="jours_conges_par_mois"]').value = '1.50';
+    } else if (this.value === 'convention') {
+        document.querySelector('[name="jours_conges_par_mois"]').value = '2.50';
+    }
+});
+</script>
+{% endblock %}

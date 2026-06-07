@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sanctions disciplinaires - Gestion RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-exclamation-triangle"></i> Sanctions disciplinaires</h1>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-primary">{{ total }}</h3>
+                <small class="text-muted">Total sanctions</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="Rechercher (nom, matricule, motif)...">
+            </div>
+            <div class="col-md-4">
+                <select name="type" class="form-select">
+                    <option value="">-- Type de sanction --</option>
+                    <option value="avertissement_verbal" {% if type_filter == 'avertissement_verbal' %}selected{% endif %}>Avertissement verbal</option>
+                    <option value="avertissement_ecrit" {% if type_filter == 'avertissement_ecrit' %}selected{% endif %}>Avertissement écrit</option>
+                    <option value="blame" {% if type_filter == 'blame' %}selected{% endif %}>Blâme</option>
+                    <option value="mise_a_pied" {% if type_filter == 'mise_a_pied' %}selected{% endif %}>Mise à pied</option>
+                    <option value="retrogradation" {% if type_filter == 'retrogradation' %}selected{% endif %}>Rétrogradation</option>
+                    <option value="mutation_disciplinaire" {% if type_filter == 'mutation_disciplinaire' %}selected{% endif %}>Mutation disciplinaire</option>
+                    <option value="licenciement" {% if type_filter == 'licenciement' %}selected{% endif %}>Licenciement</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn w-100" style="background-color: #EF7707; color: white;">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tableau -->
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Employé</th>
+                    <th>Type</th>
+                    <th>Date des faits</th>
+                    <th>Date notification</th>
+                    <th>Statut</th>
+                    <th>Motif</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sanction in sanctions %}
+                <tr>
+                    <td>
+                        <a href="{% url 'employes:detail' sanction.employe.pk %}">
+                            {{ sanction.employe.nom }} {{ sanction.employe.prenoms }}
+                        </a>
+                        <br><small class="text-muted">{{ sanction.employe.matricule }}</small>
+                    </td>
+                    <td>{{ sanction.get_type_sanction_display }}</td>
+                    <td>{{ sanction.date_faits|date:"d/m/Y" }}</td>
+                    <td>{{ sanction.date_notification|date:"d/m/Y"|default:"-" }}</td>
+                    <td>
+                        {% if sanction.statut == 'en_cours' %}
+                            <span class="badge bg-warning text-dark">En cours</span>
+                        {% elif sanction.statut == 'notifiee' %}
+                            <span class="badge bg-info">Notifiée</span>
+                        {% elif sanction.statut == 'executee' %}
+                            <span class="badge bg-success">Exécutée</span>
+                        {% elif sanction.statut == 'contestee' %}
+                            <span class="badge bg-danger">Contestée</span>
+                        {% elif sanction.statut == 'annulee' %}
+                            <span class="badge bg-secondary">Annulée</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ sanction.motif|truncatewords:10 }}</td>
+                    <td>
+                        <a href="{% url 'employes:sanction_detail' sanction.pk %}" class="btn btn-sm btn-outline-primary" title="Détails">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Aucune sanction trouvée</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1713 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ajouter un Élément de Salaire - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-plus-circle"></i> Ajouter un Élément de Salaire
+        <br><small class="text-muted">{{ employe.nom_complet }} ({{ employe.matricule }})</small>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'paie:elements_salaire_employe' employe.id %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<!-- ================================================================
+     WIDGET STRUCTURATION SALARIALE : Brut → Base + Indemnités
+     ================================================================ -->
+<div class="card border-primary shadow mb-4">
+    <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+        <i class="bi bi-pie-chart-fill fs-5"></i>
+        <strong>Structuration salariale intelligente</strong>
+        <span class="badge bg-white text-primary ms-2">Brut → Base + Indemnités</span>
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">
+            Saisissez le salaire brut total. L'application le répartit en <strong>Salaire de base</strong>,
+            <strong>Transport</strong>, <strong>Logement</strong> et <strong>Cherté de vie</strong>.
+            Verrouillez des composantes, ajustez les pourcentages, puis créez les 4 éléments en un clic.
+        </p>
+
+        <!-- Inputs principaux -->
+        <div class="row g-3 align-items-end mb-3">
+            <div class="col-md-5">
+                <label for="dec_brut" class="form-label fw-semibold">
+                    <i class="bi bi-currency-exchange"></i> Montant brut total (GNF) <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control form-control-lg" id="dec_brut"
+                       placeholder="Ex: 5 500 000" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="col-md-3">
+                <label for="dec_date_debut" class="form-label fw-semibold">
+                    <i class="bi bi-calendar3"></i> Date de début
+                </label>
+                <input type="date" class="form-control" id="dec_date_debut" value="{{ today|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <button type="button" class="btn btn-primary btn-lg w-100" id="dec_btn_repartir">
+                    <i class="bi bi-distribute-horizontal"></i> Répartir
+                </button>
+            </div>
+        </div>
+
+        <!-- Zone résultat (masquée jusqu'au clic) -->
+        <div id="dec_zone_resultat" style="display:none;">
+
+            <!-- Sélecteur de mode de répartition -->
+            <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
+                <span class="text-muted small fw-semibold me-1"><i class="bi bi-sliders2"></i> Mode :</span>
+                <button type="button" class="btn btn-sm btn-primary" id="dec_mode_standard">
+                    <i class="bi bi-grid-3x2-gap-fill"></i> Standard (60/40)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success" id="dec_mode_fiscal">
+                    <i class="bi bi-shield-check"></i> Optimisation fiscale (75/25)
+                </button>
+                <span class="badge bg-light text-secondary border ms-1" id="dec_mode_badge">Base 60% + Indemnités 40%</span>
+            </div>
+
+            <!-- Répartition en % avec verrouillage -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-sliders"></i> Répartition
+                    <small class="text-muted ms-1">— cliquez <i class="bi bi-lock"></i> pour verrouiller une composante</small>
+                </label>
+                <div class="row g-2 align-items-center" id="dec_sliders_container">
+                    {% for comp in ""|ljust:"4" %}{% endfor %}
+                    <!-- Base -->
+                    <div class="col-md-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-primary text-white" style="width:110px">
+                                <i class="bi bi-briefcase-fill me-1"></i> Base
+                            </span>
+                            <input type="number" class="form-control dec-pct-input text-center" id="dec_pct_base"
+                                   value="60" min="0" max="100" data-cle="base">
+                            <span class="input-group-text">%</span>
+                            <button type="button" class="btn btn-outline-secondary btn-sm dec-lock-btn" data-cle="base" title="Verrouiller">
+                                <i class="bi bi-unlock" id="dec_lock_icon_base"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Transport -->
+                    <div class="col-md-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-info text-white" style="width:110px">
+                                <i class="bi bi-bus-front-fill me-1"></i> Transport
+                            </span>
+                            <input type="number" class="form-control dec-pct-input text-center" id="dec_pct_transport"
+                                   value="15" min="0" max="25" data-cle="transport">
+                            <span class="input-group-text">%</span>
+                            <button type="button" class="btn btn-outline-secondary btn-sm dec-lock-btn" data-cle="transport" title="Verrouiller">
+                                <i class="bi bi-unlock" id="dec_lock_icon_transport"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Logement -->
+                    <div class="col-md-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-warning text-dark" style="width:110px">
+                                <i class="bi bi-house-fill me-1"></i> Logement
+                            </span>
+                            <input type="number" class="form-control dec-pct-input text-center" id="dec_pct_logement"
+                                   value="15" min="0" max="25" data-cle="logement">
+                            <span class="input-group-text">%</span>
+                            <button type="button" class="btn btn-outline-secondary btn-sm dec-lock-btn" data-cle="logement" title="Verrouiller">
+                                <i class="bi bi-unlock" id="dec_lock_icon_logement"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Cherté -->
+                    <div class="col-md-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-success text-white" style="width:110px">
+                                <i class="bi bi-basket-fill me-1"></i> Cherté
+                            </span>
+                            <input type="number" class="form-control dec-pct-input text-center" id="dec_pct_cherte"
+                                   value="10" min="0" max="25" data-cle="cherte">
+                            <span class="input-group-text">%</span>
+                            <button type="button" class="btn btn-outline-secondary btn-sm dec-lock-btn" data-cle="cherte" title="Verrouiller">
+                                <i class="bi bi-unlock" id="dec_lock_icon_cherte"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Alerte total != 100% -->
+                <div id="dec_alerte_total" class="alert alert-warning py-1 px-2 mt-2 small" style="display:none;">
+                    <i class="bi bi-exclamation-triangle"></i> La somme des pourcentages doit être égale à <strong>100%</strong>.
+                    Actuellement : <strong id="dec_somme_pct">0</strong>%.
+                </div>
+            </div>
+
+            <!-- Barre visuelle de répartition -->
+            <div class="mb-3">
+                <div class="progress" style="height:22px;" id="dec_barre">
+                    <div class="progress-bar bg-primary" id="dec_bar_base" style="width:60%">Base 60%</div>
+                    <div class="progress-bar bg-info" id="dec_bar_transport" style="width:15%">Transp. 15%</div>
+                    <div class="progress-bar bg-warning" id="dec_bar_logement" style="width:15%">Log. 15%</div>
+                    <div class="progress-bar bg-success" id="dec_bar_cherte" style="width:10%">Cherté 10%</div>
+                </div>
+            </div>
+
+            <!-- Indicateurs fiscaux temps réel -->
+            <div class="row g-2 mb-3">
+                <div class="col-6 col-md-3">
+                    <div class="card text-center p-2" id="dec_net_card">
+                        <div class="small fw-bold" id="dec_net_label">NET ESTIMÉ</div>
+                        <div class="fw-bold" id="dec_net_estime">—</div>
+                        <div class="text-muted" style="font-size:11px" id="dec_net_sub">GNF</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-danger text-center p-2">
+                        <div class="text-danger small fw-bold" id="dec_rts_label">RTS</div>
+                        <div class="fw-semibold text-danger" id="dec_rts">—</div>
+                        <div class="text-muted" style="font-size:11px">GNF</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-warning text-center p-2">
+                        <div class="text-warning small fw-bold">CNSS</div>
+                        <div class="fw-semibold text-warning" id="dec_cnss">—</div>
+                        <div class="text-muted" style="font-size:11px">GNF</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-secondary text-center p-2">
+                        <div class="text-secondary small fw-bold">Taux RTS eff.</div>
+                        <div class="fw-semibold text-secondary" id="dec_taux_rts">—</div>
+                        <div class="text-muted" style="font-size:11px">% du brut</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info exonération -->
+            <div class="alert alert-light border py-2 px-3 small mb-3" id="dec_info_exon">
+                <i class="bi bi-info-circle text-primary"></i>
+                <span id="dec_exon_texte">—</span>
+            </div>
+
+            <!-- Alerte conformité fiscale -->
+            <div id="dec_alerte_conformite" class="alert py-2 px-3 small mb-3" style="display:none;"></div>
+
+            <!-- ROI optimisation -->
+            <div id="dec_roi_optimisation" class="alert py-2 px-3 small mb-3" style="display:none;"></div>
+
+            <!-- Charges patronales -->
+            <div class="card border-secondary mb-3">
+                <div class="card-header bg-secondary text-white py-1 px-3 small fw-bold">
+                    <i class="bi bi-building"></i> Charges patronales (coût employeur supplémentaire)
+                </div>
+                <div class="card-body py-2 px-3">
+                    <div class="row g-2 text-center">
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">CNSS patronal (18%)</div>
+                            <div class="fw-bold" id="dec_pat_cnss">—</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">Vers. Forfaitaire (6%)</div>
+                            <div class="fw-bold" id="dec_pat_vf">—</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted"><span id="dec_pat_ta_label">TA (2%)</span></div>
+                            <div class="fw-bold" id="dec_pat_ta">—</div>
+                        </div>
+                        <div class="col-6 col-md-3 border-start">
+                            <div class="small text-danger fw-bold">TOTAL CHARGES PAT.</div>
+                            <div class="fw-bold text-danger" id="dec_pat_total">—</div>
+                        </div>
+                    </div>
+                    <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small">
+                        <span class="text-muted">Coût total employeur (brut + charges) :</span>
+                        <span class="fw-bold text-dark" id="dec_cout_total">—</span>
+                    </div>
+                    <div class="mt-1 d-flex justify-content-between align-items-center small">
+                        <span class="text-muted">Taux de charge global <span class="text-muted" style="font-size:10px">(Coût − Net) / Net</span> :</span>
+                        <span>
+                            <span class="fw-bold text-primary" id="dec_taux_charge_global">—</span>
+                            <span id="dec_taux_charge_badge"></span>
+                        </span>
+                    </div>
+                    <div class="mt-1 d-flex justify-content-between align-items-center small">
+                        <span class="text-muted">Charges patronales :</span>
+                        <span>
+                            <span class="fw-bold" id="dec_charges_pat_recap">—</span>
+                            <span id="dec_charges_total_badge"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table de décomposition avec <select> de rubriques -->
+            <h6 class="fw-bold mb-2"><i class="bi bi-table"></i> Détail de la répartition et rubriques</h6>
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered table-sm align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Composante</th>
+                            <th class="text-center" style="width:70px">%</th>
+                            <th class="text-end" style="width:155px">Montant (GNF)</th>
+                            <th>Rubrique à utiliser</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Salaire de base -->
+                        <tr>
+                            <td><i class="bi bi-briefcase-fill text-primary me-1"></i>Salaire de base</td>
+                            <td class="text-center fw-bold text-primary" id="dec_cell_pct_base">60%</td>
+                            <td class="text-end fw-bold text-primary" id="dec_cell_montant_base">—</td>
+                            <td>
+                                <select class="form-select form-select-sm scrollable-select" id="dec_sel_base">
+                                    <option value="">— Choisir une rubrique —</option>
+                                    {% for rub in rubriques %}
+                                        {% if rub.type_rubrique == 'gain' %}
+                                        <option value="{{ rub.id }}"
+                                                data-cat="{{ rub.categorie_rubrique }}"
+                                                data-label="{{ rub.libelle_rubrique|lower }}">
+                                            {{ rub.libelle_rubrique }} ({{ rub.code_rubrique }})
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        <!-- Indemnité de transport -->
+                        <tr>
+                            <td><i class="bi bi-bus-front-fill text-info me-1"></i>Indemnité de transport</td>
+                            <td class="text-center fw-bold text-info" id="dec_cell_pct_transport">15%</td>
+                            <td class="text-end fw-bold text-info" id="dec_cell_montant_transport">—</td>
+                            <td>
+                                <select class="form-select form-select-sm scrollable-select" id="dec_sel_transport">
+                                    <option value="">— Choisir une rubrique —</option>
+                                    {% for rub in rubriques %}
+                                        {% if rub.type_rubrique == 'gain' %}
+                                        <option value="{{ rub.id }}"
+                                                data-cat="{{ rub.categorie_rubrique }}"
+                                                data-label="{{ rub.libelle_rubrique|lower }}">
+                                            {{ rub.libelle_rubrique }} ({{ rub.code_rubrique }})
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        <!-- Indemnité de logement -->
+                        <tr>
+                            <td><i class="bi bi-house-fill text-warning me-1"></i>Indemnité de logement</td>
+                            <td class="text-center fw-bold text-warning" id="dec_cell_pct_logement">15%</td>
+                            <td class="text-end fw-bold text-warning" id="dec_cell_montant_logement">—</td>
+                            <td>
+                                <select class="form-select form-select-sm scrollable-select" id="dec_sel_logement">
+                                    <option value="">— Choisir une rubrique —</option>
+                                    {% for rub in rubriques %}
+                                        {% if rub.type_rubrique == 'gain' %}
+                                        <option value="{{ rub.id }}"
+                                                data-cat="{{ rub.categorie_rubrique }}"
+                                                data-label="{{ rub.libelle_rubrique|lower }}">
+                                            {{ rub.libelle_rubrique }} ({{ rub.code_rubrique }})
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        <!-- Cherté de vie -->
+                        <tr>
+                            <td><i class="bi bi-basket-fill text-success me-1"></i>Cherté de vie</td>
+                            <td class="text-center fw-bold text-success" id="dec_cell_pct_cherte">10%</td>
+                            <td class="text-end fw-bold text-success" id="dec_cell_montant_cherte">—</td>
+                            <td>
+                                <select class="form-select form-select-sm scrollable-select" id="dec_sel_cherte">
+                                    <option value="">— Choisir une rubrique —</option>
+                                    {% for rub in rubriques %}
+                                        {% if rub.type_rubrique == 'gain' %}
+                                        <option value="{{ rub.id }}"
+                                                data-cat="{{ rub.categorie_rubrique }}"
+                                                data-label="{{ rub.libelle_rubrique|lower }}">
+                                            {{ rub.libelle_rubrique }} ({{ rub.code_rubrique }})
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        <!-- Total -->
+                        <tr class="table-light fw-bold">
+                            <td>TOTAL</td>
+                            <td class="text-center">100%</td>
+                            <td class="text-end" id="dec_cell_total">—</td>
+                            <td class="text-muted small">Brut = Base + Transport + Logement + Cherté</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bouton créer en lot -->
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <button type="button" class="btn btn-success btn-lg" id="dec_btn_creer">
+                    <i class="bi bi-plus-square-fill"></i> Créer les 4 éléments en lot
+                </button>
+                <span class="text-muted small">
+                    Chaque composante sera enregistrée comme élément de salaire distinct pour
+                    <strong>{{ employe.nom_complet }}</strong>.
+                </span>
+            </div>
+        </div>
+
+        <!-- Erreur / Succès -->
+        <div id="dec_erreur" class="alert alert-danger mt-3" style="display:none;"></div>
+        <div id="dec_succes" class="alert alert-success mt-3" style="display:none;"></div>
+    </div>
+</div>
+<!-- Fin widget structuration salariale -->
+
+<!-- ================================================================
+     WIDGET RÉTRO-PAIE : Net convenu → Brut  /  Budget total → Brut + Net
+     ================================================================ -->
+<div class="card border-success shadow mb-4">
+    <div class="card-header bg-success text-white">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-calculator-fill fs-5"></i>
+            <strong>Calcul rétrograde du salaire</strong>
+        </div>
+        <!-- Onglets de mode -->
+        <ul class="nav nav-tabs nav-tabs-sm" id="rp_tabs" role="tablist" style="border-bottom:none;">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active text-dark bg-white" id="rp_tab_net" data-bs-toggle="tab"
+                        data-bs-target="#rp_panel_net" type="button" role="tab">
+                    <i class="bi bi-person-check"></i> Net convenu → Brut
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-white" id="rp_tab_budget" data-bs-toggle="tab"
+                        data-bs-target="#rp_panel_budget" type="button" role="tab">
+                    <i class="bi bi-building-fill-gear"></i> Budget total employeur → Brut + Net
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="rp_tab_content">
+
+            <!-- ── ONGLET 1 : Net → Brut ── -->
+            <div class="tab-pane fade show active" id="rp_panel_net" role="tabpanel">
+                <p class="text-muted small mb-3">
+                    Vous avez convenu d'un salaire <strong>net</strong> avec l'employé ?
+                    Saisissez ce montant et l'application calcule le <strong>brut</strong>
+                    pour qu'il reçoive exactement ce montant après déduction CNSS et RTS.
+                </p>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="rp_net_cible" class="form-label fw-semibold">
+                            <i class="bi bi-currency-exchange"></i> Net souhaité (GNF) <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control form-control-lg" id="rp_net_cible"
+                               placeholder="Ex: 5 500 000" inputmode="numeric" autocomplete="off">
+                        <small class="text-muted">Montant net mensuel convenu</small>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="rp_pct_indem" class="form-label fw-semibold">
+                            <i class="bi bi-percent"></i> % Indemnités forfaitaires
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="rp_pct_indem"
+                                   value="0" min="0" max="25" step="1">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <small class="text-muted">Part du brut exonérée de RTS</small>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Précision</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="rp_mode" id="rp_mode_min" value="minimum" checked>
+                            <label class="btn btn-outline-success btn-sm" for="rp_mode_min" title="Net ≥ objectif">
+                                <i class="bi bi-shield-check"></i> Min.
+                            </label>
+                            <input type="radio" class="btn-check" name="rp_mode" id="rp_mode_exact" value="exact">
+                            <label class="btn btn-outline-primary btn-sm" for="rp_mode_exact" title="Net exact">
+                                <i class="bi bi-bullseye"></i> Exact
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-success btn-lg w-100" id="rp_btn_calculer">
+                            <i class="bi bi-calculator"></i> Calculer le brut
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="rp_comparer_baremes">
+                        <label class="form-check-label small" for="rp_comparer_baremes">
+                            Comparer avec les autres barèmes RTS disponibles
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── ONGLET 2 : Budget total → Brut + Net ── -->
+            <div class="tab-pane fade" id="rp_panel_budget" role="tabpanel">
+                <div class="alert alert-info py-2 small mb-3">
+                    <i class="bi bi-info-circle-fill"></i>
+                    Saisissez le <strong>budget total</strong> que l'entreprise consacre à ce poste
+                    (salaire brut <strong>+</strong> toutes les charges patronales CNSS 18% + VF 6% + TA 2%).
+                    L'application en déduit le brut et le net de l'employé.
+                </div>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="ct_montant" class="form-label fw-semibold">
+                            <i class="bi bi-building-fill-gear"></i> Budget total employeur (GNF) <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control form-control-lg" id="ct_montant"
+                               placeholder="Ex: 5 500 000" inputmode="numeric" autocomplete="off">
+                        <small class="text-muted">Coût total pour l'entreprise (brut + charges pat.)</small>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="ct_pct_indem" class="form-label fw-semibold">
+                            <i class="bi bi-percent"></i> % Indemnités forfaitaires
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="ct_pct_indem"
+                                   value="0" min="0" max="25" step="1">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <small class="text-muted">Part du brut exonérée de RTS</small>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="ct_nb_salaries" class="form-label fw-semibold">
+                            <i class="bi bi-people"></i> Nb salariés
+                        </label>
+                        <input type="number" class="form-control" id="ct_nb_salaries"
+                               value="0" min="0" placeholder="0">
+                        <small class="text-muted">≥ 30 → ONFPP 1.5%</small>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-warning btn-lg w-100 text-dark fw-bold" id="ct_btn_calculer">
+                            <i class="bi bi-calculator-fill"></i> Décomposer le budget
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Résultat Budget total -->
+                <div id="ct_resultat" class="mt-4" style="display:none;">
+                    <hr>
+                    <h6 class="fw-bold text-warning mb-3">
+                        <i class="bi bi-pie-chart-fill"></i> Décomposition du budget <span id="ct_budget_affiche" class="text-dark"></span>
+                    </h6>
+
+                    <!-- Synthèse visuelle en cascade -->
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered table-sm mb-0">
+                            <tbody>
+                                <tr class="table-secondary">
+                                    <td class="fw-bold"><i class="bi bi-building me-1"></i>Budget total employeur</td>
+                                    <td class="text-end fw-bold fs-6" id="ct_aff_budget">—</td>
+                                    <td class="text-muted small">= Brut + Charges patronales</td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td class="ps-4 text-danger"><i class="bi bi-dash-circle me-1"></i>CNSS employeur (18%)</td>
+                                    <td class="text-end text-danger fw-semibold" id="ct_aff_cnss_pat">—</td>
+                                    <td class="text-muted small">sur min(brut, 2 500 000)</td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td class="ps-4 text-danger"><i class="bi bi-dash-circle me-1"></i>Versement Forfaitaire (6%)</td>
+                                    <td class="text-end text-danger fw-semibold" id="ct_aff_vf">—</td>
+                                    <td class="text-muted small">sur brut - indemnites exonerees</td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td class="ps-4 text-danger"><i class="bi bi-dash-circle me-1"></i><span id="ct_aff_ta_label">TA (2%)</span></td>
+                                    <td class="text-end text-danger fw-semibold" id="ct_aff_ta">—</td>
+                                    <td class="text-muted small">TA/ONFPP sur base VF optimisee</td>
+                                </tr>
+                                <tr class="table-primary fw-bold">
+                                    <td><i class="bi bi-briefcase-fill me-1 text-primary"></i>Salaire BRUT employé</td>
+                                    <td class="text-end text-primary fs-6" id="ct_aff_brut">—</td>
+                                    <td class="text-muted small">Budget − charges patronales</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td class="ps-4 text-warning"><i class="bi bi-dash-circle me-1"></i>CNSS employé (5%)</td>
+                                    <td class="text-end text-warning fw-semibold" id="ct_aff_cnss_emp">—</td>
+                                    <td class="text-muted small">sur min(brut, 2 500 000)</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td class="ps-4 text-warning"><i class="bi bi-dash-circle me-1"></i>RTS / IRG</td>
+                                    <td class="text-end text-warning fw-semibold" id="ct_aff_rts">—</td>
+                                    <td class="text-muted small">impôt progressif sur revenu</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td class="fw-bold fs-5"><i class="bi bi-wallet2 me-1 text-success"></i>NET à payer à l'employé</td>
+                                    <td class="text-end text-success fw-bold fs-5" id="ct_aff_net">—</td>
+                                    <td class="text-muted small">Ce que l'employé reçoit</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Bouton appliquer -->
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <button type="button" class="btn btn-primary" id="ct_btn_appliquer">
+                            <i class="bi bi-arrow-down-circle-fill"></i> Appliquer le brut dans le formulaire
+                        </button>
+                        <span class="text-muted small">
+                            Le brut calculé sera copié dans le champ <strong>Montant Fixe</strong>.
+                        </span>
+                    </div>
+                </div>
+                <div id="ct_erreur" class="alert alert-danger mt-3" style="display:none;"></div>
+            </div>
+
+        </div><!-- fin tab-content -->
+
+        <!-- Résultat -->
+        <div id="rp_resultat" class="mt-3" style="display:none;">
+            <hr>
+            <h6 class="fw-bold text-success mb-3">
+                <i class="bi bi-check-circle-fill"></i>
+                Net convenu : <span id="rp_net_cible_affiche" class="text-success fw-bold">—</span> GNF
+                &nbsp;→&nbsp; Brut à saisir : <span id="rp_brut_affiche" class="text-primary fw-bold">—</span> GNF
+            </h6>
+
+            <!-- Cascade bulletin de paie -->
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered table-sm align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Ligne bulletin de paie</th>
+                            <th class="text-end">Montant</th>
+                            <th class="text-muted small">Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-primary">
+                            <td class="fw-bold"><i class="bi bi-briefcase-fill text-primary me-1"></i>Salaire BRUT</td>
+                            <td class="text-end fw-bold fs-5 text-primary" id="rp_brut_cell">—</td>
+                            <td class="text-muted small">Dépasse les 5 500 000 pour couvrir CNSS + RTS</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td class="ps-4"><i class="bi bi-dash-circle text-warning me-1"></i>− CNSS employé (5%)</td>
+                            <td class="text-end fw-semibold text-warning" id="rp_cnss_affiche">—</td>
+                            <td class="text-muted small">base : <span id="rp_base_cnss_affiche">—</span> GNF</td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td class="ps-4"><i class="bi bi-dash-circle text-danger me-1"></i>− RTS / IRG (progressif)</td>
+                            <td class="text-end fw-semibold text-danger" id="rp_rts_affiche">—</td>
+                            <td class="text-muted small">base imposable : <span id="rp_base_rts_affiche">—</span> GNF</td>
+                        </tr>
+                        <tr style="background:#d1e7dd;">
+                            <td class="fw-bold"><i class="bi bi-wallet2 text-success me-1"></i><strong>= NET À PAYER</strong></td>
+                            <td class="text-end fw-bold fs-4 text-success" id="rp_net_affiche">—</td>
+                            <td class="text-success fw-bold small" id="rp_net_note"><i class="bi bi-check-circle-fill"></i> Montant convenu à l'embauche</td>
+                        </tr>
+                        <!-- Charges patronales (hors bulletin salarié) -->
+                        <tr class="table-light">
+                            <td colspan="3" class="py-1 text-center">
+                                <small class="text-muted fst-italic">Charges patronales — payées par l'entreprise en plus du brut (non visibles sur le bulletin salarié)</small>
+                            </td>
+                        </tr>
+                        <tr class="text-secondary small">
+                            <td class="ps-4"><i class="bi bi-building me-1"></i>CNSS employeur (18%)</td>
+                            <td class="text-end" id="rp_pat_cnss">—</td>
+                            <td class="text-muted" style="font-size:11px">versé à la CNSS par l'entreprise</td>
+                        </tr>
+                        <tr class="text-secondary small">
+                            <td class="ps-4"><i class="bi bi-building me-1"></i>Versement Forfaitaire (6%)</td>
+                            <td class="text-end" id="rp_pat_vf">—</td>
+                            <td class="text-muted" style="font-size:11px">impôt sur salaires versé au Trésor</td>
+                        </tr>
+                        <tr class="text-secondary small">
+                            <td class="ps-4"><i class="bi bi-building me-1"></i><span id="rp_pat_ta_label">TA (2%)</span></td>
+                            <td class="text-end" id="rp_pat_ta">—</td>
+                            <td class="text-muted" style="font-size:11px">formation professionnelle</td>
+                        </tr>
+                        <tr class="table-secondary fw-bold">
+                            <td><i class="bi bi-calculator me-1"></i>Coût TOTAL employeur (Brut + charges)</td>
+                            <td class="text-end" id="rp_cout_total">—</td>
+                            <td class="text-muted small">Ce que l'entreprise paie réellement</td>
+                        </tr>
+                        <tr class="table-info">
+                            <td><i class="bi bi-percent me-1 text-primary"></i><strong>Taux de charge global</strong> <span class="text-muted small">(Coût − Net) / Net</span></td>
+                            <td class="text-end fw-bold text-primary fs-5" id="rp_taux_charge">—</td>
+                            <td class="text-muted small">Surcoût employeur vs net perçu</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Détail tranches RTS -->
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        onclick="var t=document.getElementById('rp_tranches_table'); t.style.display=t.style.display==='none'?'block':'none'">
+                    <i class="bi bi-table"></i> Détail du barème RTS tranche par tranche
+                </button>
+                <div id="rp_tranches_table" style="display:none;" class="mt-2">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr><th>Tranche</th><th class="text-end">Montant imposable</th><th class="text-end">Taux</th><th class="text-end">Impôt</th></tr>
+                        </thead>
+                        <tbody id="rp_tranches_tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="rp_detail_tranches_container"></div>
+
+            <!-- Comparaison multi-barèmes -->
+            <div id="rp_comparaison_container" style="display:none;" class="mb-3">
+                <h6 class="fw-bold text-secondary mb-2"><i class="bi bi-bar-chart"></i> Comparaison multi-barèmes</h6>
+                <table class="table table-sm table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr><th>Barème</th><th class="text-end">Brut</th><th class="text-end">CNSS</th><th class="text-end">RTS</th><th class="text-end">Net</th></tr>
+                    </thead>
+                    <tbody id="rp_comparaison_tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex align-items-center gap-2 flex-wrap mt-2">
+                <button type="button" class="btn btn-primary" id="rp_btn_appliquer">
+                    <i class="bi bi-arrow-down-circle-fill"></i> Appliquer le brut (1 élément)
+                </button>
+                <button type="button" class="btn btn-success fw-bold" id="rp_btn_repartir_brut">
+                    <i class="bi bi-distribute-horizontal"></i> Répartir ce brut en Base + Indemnités
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" id="rp_btn_pdf">
+                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                </button>
+            </div>
+            <div class="text-muted small mt-1">
+                <strong>Appliquer</strong> copie le brut dans le formulaire (1 rubrique).
+                <strong>Répartir</strong> alimente le widget Structuration ci-dessus pour créer Base + Transport + Logement + Cherté.
+            </div>
+        </div>
+
+        <!-- Erreur -->
+        <div id="rp_erreur" class="alert alert-danger mt-3" style="display:none;"></div>
+    </div>
+</div>
+<!-- Fin widget rétro-paie -->
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Rubrique -->
+            <div class="mb-3">
+                <label for="rubrique" class="form-label">Rubrique <span class="text-danger">*</span></label>
+                <select class="form-select scrollable-select" id="rubrique" name="rubrique" required onchange="updateRubriqueType()">
+                    <option value="">-- Sélectionner une rubrique --</option>
+                    <optgroup label="GAINS">
+                        {% for rub in rubriques %}
+                            {% if rub.type_rubrique == 'gain' %}
+                            <option value="{{ rub.id }}" data-type="gain">{{ rub.libelle_rubrique }} ({{ rub.code_rubrique }})</option>
+                            {% endif %}
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="RETENUES">
+                        {% for rub in rubriques %}
+                            {% if rub.type_rubrique == 'retenue' %}
+                            <option value="{{ rub.id }}" data-type="retenue">{{ rub.libelle_rubrique }} ({{ rub.code_rubrique }})</option>
+                            {% endif %}
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="COTISATIONS">
+                        {% for rub in rubriques %}
+                            {% if rub.type_rubrique == 'cotisation' %}
+                            <option value="{{ rub.id }}" data-type="cotisation">{{ rub.libelle_rubrique }} ({{ rub.code_rubrique }})</option>
+                            {% endif %}
+                        {% endfor %}
+                    </optgroup>
+                </select>
+                <small class="text-muted">Choisissez la rubrique à ajouter (prime, indemnité, avance, etc.)</small>
+            </div>
+
+            <!-- Montant ou Taux -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="montant" class="form-label">Montant Fixe (GNF)</label>
+                    <input type="text" class="form-control" id="montant" name="montant" inputmode="decimal" placeholder="Ex: 300 000 ou 300000,50">
+                    <small class="text-muted">Montant fixe mensuel</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="taux" class="form-label">Taux (%)</label>
+                    <input type="number" class="form-control" id="taux" name="taux" step="0.01" placeholder="Ex: 10.00">
+                    <small class="text-muted">Pourcentage d'une base</small>
+                </div>
+            </div>
+
+            <!-- Base de calcul (si taux) -->
+            <div class="mb-3" id="base-calcul-group" style="display: none;">
+                <label for="base_calcul" class="form-label">Base de Calcul</label>
+                <select class="form-select scrollable-select" id="base_calcul" name="base_calcul">
+                    <option value="">-- Sélectionner --</option>
+                    <option value="SALAIRE_BASE">Salaire de base</option>
+                    <option value="BRUT">Salaire brut</option>
+                    <option value="CNSS_BASE">Base CNSS</option>
+                </select>
+                <small class="text-muted">Sur quelle base calculer le pourcentage</small>
+            </div>
+
+            <!-- Dates -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="date_debut" class="form-label">Date de Début <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="date_debut" name="date_debut" required value="{{ today|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="date_fin" class="form-label">Date de Fin</label>
+                    <input type="date" class="form-control" id="date_fin" name="date_fin">
+                    <small class="text-muted">Laisser vide pour un élément permanent</small>
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="actif" name="actif" checked>
+                        <label class="form-check-label" for="actif">
+                            <strong>Actif</strong> - Pris en compte dans les calculs
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="recurrent" name="recurrent" checked>
+                        <label class="form-check-label" for="recurrent">
+                            <strong>Récurrent</strong> - Appliqué chaque mois
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aide -->
+            <div class="alert alert-info">
+                <h6><i class="bi bi-info-circle"></i> Aide</h6>
+                <ul class="mb-0">
+                    <li><strong>Montant fixe</strong> : Utilisez ce champ pour les primes, indemnités ou retenues à montant fixe (ex: Prime de transport 300,000 GNF)</li>
+                    <li><strong>Taux</strong> : Utilisez ce champ pour les éléments calculés en pourcentage (ex: Prime d'ancienneté 5% du salaire de base)</li>
+                    <li><strong>Récurrent</strong> : Cochez si l'élément doit être appliqué chaque mois (primes régulières)</li>
+                    <li><strong>Non récurrent</strong> : Décochez pour les éléments ponctuels (avances, bonus exceptionnels)</li>
+                    <li><strong>Date de fin</strong> : Définissez une date de fin pour les éléments temporaires (ex: remboursement de prêt sur 12 mois)</li>
+                </ul>
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'paie:elements_salaire_employe' employe.id %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Ajouter l'Élément
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function fmt(n) {
+    return parseInt(n || 0).toLocaleString('fr-FR').replace(/\u202f/g, '\u00a0');
+}
+function parseEntier(val) {
+    return parseInt(String(val).replace(/[\s\u00a0\u202f,.]/g, ''), 10) || 0;
+}
+
+// ── Affichage base de calcul selon taux ─────────────────────────────────────
+document.getElementById('taux').addEventListener('input', function () {
+    document.getElementById('base-calcul-group').style.display = this.value ? 'block' : 'none';
+});
+function updateRubriqueType() {}
+
+// ============================================================================
+// WIDGET STRUCTURATION SALARIALE : Brut → Base + Indemnités
+// ============================================================================
+(function () {
+    const IMPACT_URL   = "{% url 'paie:api_impact_fiscal' %}";
+    const CREER_URL    = "{% url 'paie:api_creer_elements_lot' employe.id %}";
+    const CSRF         = "{{ csrf_token }}";
+    const EMPLOYE_ID   = {{ employe.id }};
+
+    // ── Mode garanti : quand le brut vient de la rétro-paie ──────────────
+    // netGaranti > 0 = le brut a été calculé pour garantir ce net exact
+    // Dans ce mode, on affiche le net garanti (pas le net estimé du barème)
+    var netGaranti = 0;
+
+    // Exposer pour le widget rétro-paie (autre closure)
+    window._setNetGaranti = function (val) {
+        netGaranti = val || 0;
+        majModeNetUI();
+        // ── Synchroniser l'affichage "NET À PAYER" du widget rétro-paie ──
+        // Remplace net_calcule par le net garanti pour éviter la confusion visuelle
+        if (netGaranti > 0) {
+            var rpNetEl = document.getElementById('rp_net_affiche');
+            var rpNetCibleEl = document.getElementById('rp_net_cible_affiche');
+            var rpNetNote = document.getElementById('rp_net_note');
+            if (rpNetEl) {
+                rpNetEl.textContent = fmt(netGaranti) + ' GNF';
+                rpNetEl.title = 'Net garanti exact — RTS ajusté pour couvrir exactement ce montant';
+            }
+            if (rpNetCibleEl) rpNetCibleEl.textContent = fmt(netGaranti) + ' GNF';
+            if (rpNetNote) rpNetNote.innerHTML = '<i class="bi bi-lock-fill text-success me-1"></i> <span class="badge bg-success">Net garanti exact</span>';
+        }
+    };
+
+    const btnRepartir  = document.getElementById('dec_btn_repartir');
+    const btnCreer     = document.getElementById('dec_btn_creer');
+    const zoneResultat = document.getElementById('dec_zone_resultat');
+    const divErreur    = document.getElementById('dec_erreur');
+    const divSucces    = document.getElementById('dec_succes');
+
+    // État du verrouillage par composante
+    const verrous = { base: false, transport: false, logement: false, cherte: false };
+
+    // ── Verrouillage ─────────────────────────────────────────────────────────
+    document.querySelectorAll('.dec-lock-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const cle = this.getAttribute('data-cle');
+            verrous[cle] = !verrous[cle];
+            const icon = document.getElementById('dec_lock_icon_' + cle);
+            if (verrous[cle]) {
+                icon.className = 'bi bi-lock-fill text-danger';
+                this.classList.replace('btn-outline-secondary', 'btn-danger');
+                document.getElementById('dec_pct_' + cle).disabled = true;
+            } else {
+                icon.className = 'bi bi-unlock';
+                this.classList.replace('btn-danger', 'btn-outline-secondary');
+                document.getElementById('dec_pct_' + cle).disabled = false;
+            }
+        });
+    });
+
+    // ── Sélecteur de mode (Standard vs Fiscal) ───────────────────────────────
+    const MODES = {
+        standard: { base: 60, transport: 15, logement: 15, cherte: 10,
+                    label: 'Base 60% + Indemnités 40%' },
+        fiscal:   { base: 75, transport: 10, logement: 10, cherte:  5,
+                    label: 'Base 75% + Indemnités 25% (exonération max CGI)' },
+    };
+    function appliquerMode(mode) {
+        const m = MODES[mode];
+        if (!m) return;
+        ['base','transport','logement','cherte'].forEach(function(cle) {
+            const inp = document.getElementById('dec_pct_' + cle);
+            if (inp && !verrous[cle]) inp.value = m[cle];
+        });
+        // Recalcul base en cas de verrous partiels
+        const pctT = parseInt(document.getElementById('dec_pct_transport').value) || 0;
+        const pctL = parseInt(document.getElementById('dec_pct_logement').value) || 0;
+        const pctC = parseInt(document.getElementById('dec_pct_cherte').value) || 0;
+        const inpBase = document.getElementById('dec_pct_base');
+        if (!verrous.base) inpBase.value = 100 - pctT - pctL - pctC;
+
+        // Cacher immédiatement les alertes (seront recalculées par l'API)
+        const alertConf = document.getElementById('dec_alerte_conformite');
+        if (alertConf) { alertConf.style.display = 'none'; alertConf.innerHTML = ''; }
+
+        // Réinitialiser immédiatement l'affichage exonération pour éviter le résidu
+        const elExonReset = document.getElementById('dec_exon_texte');
+        const elInfoExonReset = document.getElementById('dec_info_exon');
+        if (elExonReset) elExonReset.textContent = 'Calcul en cours…';
+        if (elInfoExonReset) elInfoExonReset.className = 'alert alert-light border py-2 px-3 small mb-3';
+
+        // Réinitialiser badge conformité charges
+        const elChargesBadgeReset = document.getElementById('dec_charges_total_badge');
+        if (elChargesBadgeReset) elChargesBadgeReset.innerHTML = '';
+
+        const badge = document.getElementById('dec_mode_badge');
+        if (badge) badge.textContent = m.label;
+        document.getElementById('dec_mode_standard').className =
+            'btn btn-sm ' + (mode === 'standard' ? 'btn-primary' : 'btn-outline-primary');
+        document.getElementById('dec_mode_fiscal').className =
+            'btn btn-sm ' + (mode === 'fiscal' ? 'btn-success' : 'btn-outline-success');
+
+        rafraichirBarre();
+        const brut = parseEntier(document.getElementById('dec_brut').value);
+        if (brut > 0) calculerImpact();
+    }
+    document.getElementById('dec_mode_standard').addEventListener('click', function() { appliquerMode('standard'); });
+    document.getElementById('dec_mode_fiscal').addEventListener('click',   function() { appliquerMode('fiscal'); });
+
+    // ── Auto-balance des % (la base absorbe le reste) ─────────────────────────
+    document.querySelectorAll('.dec-pct-input').forEach(function (input) {
+        input.addEventListener('input', function () {
+            netGaranti = 0; majModeNetUI();  // modification manuelle → quitter mode garanti
+            // Cacher immédiatement l'alerte stale (les % changent, l'API recalculera)
+            var _ac = document.getElementById('dec_alerte_conformite');
+            if (_ac) { _ac.style.display = 'none'; _ac.innerHTML = ''; }
+            const cle = this.getAttribute('data-cle');
+            if (cle === 'base') return; // la base se calcule automatiquement
+
+            // Recalculer la base
+            const pctT = parseInt(document.getElementById('dec_pct_transport').value) || 0;
+            const pctL = parseInt(document.getElementById('dec_pct_logement').value) || 0;
+            const pctC = parseInt(document.getElementById('dec_pct_cherte').value) || 0;
+            const pctB = 100 - pctT - pctL - pctC;
+
+            const inputBase = document.getElementById('dec_pct_base');
+            if (!verrous.base) {
+                inputBase.value = pctB;
+            }
+
+            const somme = pctT + pctL + pctC + parseInt(inputBase.value || 0);
+            const alerteTotal = document.getElementById('dec_alerte_total');
+            document.getElementById('dec_somme_pct').textContent = somme;
+            alerteTotal.style.display = somme !== 100 ? 'block' : 'none';
+
+            rafraichirBarre();
+            if (somme === 100) {
+                calculerImpact();
+            }
+        });
+    });
+
+    // ── Barre de répartition ─────────────────────────────────────────────────
+    function rafraichirBarre() {
+        const pctB = parseInt(document.getElementById('dec_pct_base').value) || 0;
+        const pctT = parseInt(document.getElementById('dec_pct_transport').value) || 0;
+        const pctL = parseInt(document.getElementById('dec_pct_logement').value) || 0;
+        const pctC = parseInt(document.getElementById('dec_pct_cherte').value) || 0;
+
+        document.getElementById('dec_bar_base').style.width      = pctB + '%';
+        document.getElementById('dec_bar_transport').style.width = pctT + '%';
+        document.getElementById('dec_bar_logement').style.width  = pctL + '%';
+        document.getElementById('dec_bar_cherte').style.width    = pctC + '%';
+
+        document.getElementById('dec_bar_base').textContent      = pctB > 5 ? 'Base ' + pctB + '%' : '';
+        document.getElementById('dec_bar_transport').textContent = pctT > 5 ? 'Transp. ' + pctT + '%' : '';
+        document.getElementById('dec_bar_logement').textContent  = pctL > 5 ? 'Log. ' + pctL + '%' : '';
+        document.getElementById('dec_bar_cherte').textContent    = pctC > 5 ? 'Cherté ' + pctC + '%' : '';
+    }
+
+    // ── Calcul des montants ───────────────────────────────────────────────────
+    function calcMontants(brut) {
+        const pctT = parseInt(document.getElementById('dec_pct_transport').value) || 0;
+        const pctL = parseInt(document.getElementById('dec_pct_logement').value) || 0;
+        const pctC = parseInt(document.getElementById('dec_pct_cherte').value) || 0;
+        const pctB = parseInt(document.getElementById('dec_pct_base').value) || 0;
+
+        const mT = Math.floor(brut * pctT / 100);
+        const mL = Math.floor(brut * pctL / 100);
+        const mC = Math.floor(brut * pctC / 100);
+        const mB = brut - mT - mL - mC;
+
+        // Afficher dans les cellules
+        document.getElementById('dec_cell_pct_base').textContent       = pctB + '%';
+        document.getElementById('dec_cell_pct_transport').textContent  = pctT + '%';
+        document.getElementById('dec_cell_pct_logement').textContent   = pctL + '%';
+        document.getElementById('dec_cell_pct_cherte').textContent     = pctC + '%';
+
+        document.getElementById('dec_cell_montant_base').textContent      = fmt(mB) + ' GNF';
+        document.getElementById('dec_cell_montant_transport').textContent = fmt(mT) + ' GNF';
+        document.getElementById('dec_cell_montant_logement').textContent  = fmt(mL) + ' GNF';
+        document.getElementById('dec_cell_montant_cherte').textContent    = fmt(mC) + ' GNF';
+        document.getElementById('dec_cell_total').textContent            = fmt(brut) + ' GNF';
+
+        return { base: mB, transport: mT, logement: mL, cherte: mC, total: brut };
+    }
+
+    // ── Auto-sélection des rubriques par mots-clés ───────────────────────────
+    function autoSelect(selectId, keywords) {
+        const sel = document.getElementById(selectId);
+        if (!sel) return;
+        for (let i = 1; i < sel.options.length; i++) {
+            const label = (sel.options[i].getAttribute('data-label') || '').toLowerCase();
+            const cat   = (sel.options[i].getAttribute('data-cat') || '').toLowerCase();
+            const combined = label + ' ' + cat;
+            if (keywords.some(function (kw) { return combined.includes(kw.toLowerCase()); })) {
+                sel.selectedIndex = i;
+                return;
+            }
+        }
+    }
+
+    function autoSelectAll() {
+        autoSelect('dec_sel_base',      ['salaire de base', 'salaire_base', 'sal_base', 'sal base', 'base salaire']);
+        autoSelect('dec_sel_transport', ['transport']);
+        autoSelect('dec_sel_logement',  ['logement']);
+        autoSelect('dec_sel_cherte',    ['cherté', 'cherte', 'cherté de vie', 'cherte de vie', 'pcv', 'pvc']);
+    }
+
+    // ── Gestion du mode Net garanti vs Net estimé ──────────────────────────────
+    function majModeNetUI() {
+        const card = document.getElementById('dec_net_card');
+        const label = document.getElementById('dec_net_label');
+        const sub = document.getElementById('dec_net_sub');
+        const rtsLabel = document.getElementById('dec_rts_label');
+        const elNet = document.getElementById('dec_net_estime');
+        if (netGaranti > 0) {
+            // Mode garanti : fond vert vif, label clair, net immédiat
+            card.className = 'card bg-success bg-opacity-10 border-success border-2 text-center p-2';
+            label.textContent = 'NET GARANTI';
+            label.className = 'small fw-bold text-success';
+            sub.textContent = 'Exact';
+            rtsLabel.textContent = 'RTS ajusté';
+            elNet.className = 'fw-bold fs-5 text-success';
+            // Afficher immédiatement le net garanti (avant l'API)
+            elNet.textContent = fmt(netGaranti) + ' GNF';
+        } else {
+            // Mode estimé : style standard
+            card.className = 'card border-success text-center p-2';
+            label.textContent = 'NET ESTIMÉ';
+            label.className = 'small fw-bold text-success';
+            sub.textContent = 'GNF';
+            rtsLabel.textContent = 'RTS';
+            elNet.className = 'fw-bold text-success';
+            // Restaurer la note originale du widget rétro-paie
+            var rpNetNote = document.getElementById('rp_net_note');
+            if (rpNetNote) rpNetNote.innerHTML = '<i class="bi bi-check-circle-fill"></i> Montant convenu à l\'embauche';
+        }
+    }
+
+    // ── Impact fiscal (appel API) ─────────────────────────────────────────────
+    let timerImpact = null;
+    let impactRequestId = 0;  // compteur anti-race-condition
+    function calculerImpact() {
+        clearTimeout(timerImpact);
+        // ── Reset immédiat de TOUS les indicateurs fiscaux (anti-stale) ──
+        var _alertC = document.getElementById('dec_alerte_conformite');
+        if (_alertC) { _alertC.style.display = 'none'; _alertC.innerHTML = ''; }
+        var _exonTxt = document.getElementById('dec_exon_texte');
+        var _infoExon = document.getElementById('dec_info_exon');
+        if (_exonTxt) _exonTxt.textContent = 'Calcul en cours…';
+        if (_infoExon) _infoExon.className = 'alert alert-light border py-2 px-3 small mb-3';
+        var _chargesBadge = document.getElementById('dec_charges_total_badge');
+        if (_chargesBadge) _chargesBadge.innerHTML = '';
+        timerImpact = setTimeout(function () {
+            const brut = parseEntier(document.getElementById('dec_brut').value);
+            if (!brut) return;
+
+            const pctT = parseInt(document.getElementById('dec_pct_transport').value) || 0;
+            const pctL = parseInt(document.getElementById('dec_pct_logement').value) || 0;
+            const pctC = parseInt(document.getElementById('dec_pct_cherte').value) || 0;
+            const indemnites = Math.floor(brut * (pctT + pctL + pctC) / 100);
+
+            const myRequestId = ++impactRequestId;
+
+            fetch(IMPACT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+                body: JSON.stringify({ brut: brut, indemnites: indemnites }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                // Ignorer les réponses périmées (race condition)
+                if (myRequestId !== impactRequestId) return;
+                if (data.error) return;
+
+                // Mode garanti : afficher le net cible exact et le RTS ajusté
+                if (netGaranti > 0) {
+                    document.getElementById('dec_net_estime').textContent = fmt(netGaranti) + ' GNF';
+                    var rtsAjuste = brut - (data.cnss || 0) - netGaranti;
+                    document.getElementById('dec_rts').textContent = fmt(rtsAjuste) + ' GNF';
+                    var tauxRts = brut > 0 ? (rtsAjuste / brut * 100).toFixed(1) : '0.0';
+                    document.getElementById('dec_taux_rts').textContent = tauxRts + '%';
+                } else {
+                    document.getElementById('dec_net_estime').textContent = fmt(data.net) + ' GNF';
+                    document.getElementById('dec_rts').textContent        = fmt(data.rts) + ' GNF';
+                    document.getElementById('dec_taux_rts').textContent   =
+                        (data.taux_effectif ? parseFloat(data.taux_effectif).toFixed(1) : '0.0') + '%';
+                }
+                document.getElementById('dec_cnss').textContent = fmt(data.cnss) + ' GNF';
+
+                // Exonération
+                const exon    = data.exon   || 0;
+                const plafond = data.plafond_exon || 0;
+                const depasse = data.depasse || 0;
+                const elExon = document.getElementById('dec_exon_texte');
+                const elInfoExon = document.getElementById('dec_info_exon');
+                let exonTxt = '';
+                if (depasse > 0) {
+                    exonTxt = 'Dépassement exonération : +' + fmt(depasse) + ' GNF '
+                            + '(indemnités ' + fmt(exon + depasse) + ' > plafond 25% = ' + fmt(plafond) + ')';
+                    elInfoExon.className = 'alert alert-warning border py-2 px-3 small mb-3';
+                } else if (exon > 0 && exon === plafond) {
+                    exonTxt = 'Exonération maximale atteinte : ' + fmt(exon) + ' / ' + fmt(plafond) + ' GNF — Optimisation parfaite';
+                    elInfoExon.className = 'alert alert-success border py-2 px-3 small mb-3';
+                } else {
+                    exonTxt = 'Exonération : ' + fmt(exon) + ' / ' + fmt(plafond) + ' GNF — Aucun dépassement';
+                    elInfoExon.className = 'alert alert-light border py-2 px-3 small mb-3';
+                }
+                elExon.textContent = exonTxt;
+
+                // ── Charges patronales ──────────────────────────────────────
+                const cp = data.charges_employeur || {};
+                document.getElementById('dec_pat_cnss').textContent  = fmt(cp.cnss_employeur || 0) + ' GNF';
+                document.getElementById('dec_pat_vf').textContent    = fmt(cp.vf || 0) + ' GNF';
+                document.getElementById('dec_pat_ta').textContent    = fmt(cp.ta || 0) + ' GNF';
+                document.getElementById('dec_pat_total').textContent = fmt(cp.total || 0) + ' GNF';
+                const elChargesRecap = document.getElementById('dec_charges_pat_recap');
+                if (elChargesRecap) elChargesRecap.textContent = fmt(cp.total || 0) + ' GNF';
+                const totalCout = brut + (cp.total || 0);
+                document.getElementById('dec_cout_total').textContent = fmt(totalCout) + ' GNF';
+
+                // Taux de charge global
+                const tcg = data.taux_charge_global || 0;
+                const tci = data.taux_charge_interpretation || {};
+                const elTcg = document.getElementById('dec_taux_charge_global');
+                const elTcgBadge = document.getElementById('dec_taux_charge_badge');
+                if (elTcg) elTcg.textContent = tcg.toFixed(1) + '%';
+                if (elTcgBadge) {
+                    elTcgBadge.textContent = tci.label || '';
+                    elTcgBadge.className = 'badge ms-2 bg-' + (tci.color || 'secondary');
+                }
+
+                // Charges patronales total avec badge conformité
+                const elChargesTotal = document.getElementById('dec_charges_total_badge');
+                if (elChargesTotal) {
+                    if (depasse > 0) {
+                        elChargesTotal.innerHTML = '<span class="badge bg-warning text-dark ms-2">À vérifier</span>';
+                    } else {
+                        elChargesTotal.innerHTML = '<span class="badge bg-success ms-2">Conforme fiscalement</span>';
+                    }
+                }
+
+                // Alerte conformité
+                const alertConf = document.getElementById('dec_alerte_conformite');
+                const avertissements = data.avertissements || [];
+
+                // ROI optimisation
+                const roi = data.roi_optimisation || {};
+                const conseils = data.conseils_optimisation || [];
+                const elRoi = document.getElementById('dec_roi_optimisation');
+                if (elRoi) {
+                    if (roi.level) {
+                        var roiHtml = '<div class="d-flex align-items-center gap-2 mb-2">'
+                            + '<strong>ROI optimisation :</strong> '
+                            + '<span class="badge bg-' + (roi.color || 'secondary') + '">' + (roi.label || '') + '</span>';
+                        if (data.gain_vs_charges !== undefined) {
+                            roiHtml += '<span class="ms-auto small text-muted">Part gain/charges : <strong>' + data.gain_vs_charges + '%</strong></span>';
+                        }
+                        roiHtml += '</div>';
+
+                        // ── Bloc 1 : Décision ──
+                        if (roi.message) {
+                            var iconClass = roi.level === 'fort' ? 'bi-check-circle-fill text-success'
+                                          : roi.level === 'moyen' ? 'bi-info-circle-fill text-info'
+                                          : 'bi-exclamation-triangle-fill text-warning';
+                            roiHtml += '<div class="small"><i class="bi ' + iconClass + ' me-1"></i>' + roi.message + '</div>';
+                        }
+
+                        // ── Bloc 2 : Recommandation ──
+                        if (roi.message_segment || roi.recommandation) {
+                            roiHtml += '<div class="small mt-1 ps-2 border-start border-2 border-secondary-subtle">';
+                            if (roi.message_segment) {
+                                roiHtml += '<div><i class="bi bi-arrow-right-circle-fill text-secondary me-1"></i>' + roi.message_segment + '</div>';
+                            }
+                            if (roi.recommandation) {
+                                roiHtml += '<div class="fst-italic text-muted"><i class="bi bi-bookmark-star-fill me-1"></i>' + roi.recommandation + '</div>';
+                            }
+                            roiHtml += '</div>';
+                        }
+
+                        // ── Bloc 3 : Impact financier ──
+                        if (data.economie_annuelle) {
+                            var ecoVal = new Intl.NumberFormat('fr-GN').format(data.economie_annuelle);
+                            if (data.economie_annuelle >= 1000000) {
+                                roiHtml += '<div class="mt-2 p-2 bg-success bg-opacity-10 border border-success rounded">';
+                                roiHtml += '<div><i class="bi bi-trophy-fill text-success me-1"></i>';
+                                roiHtml += '<strong class="text-success">Économie annuelle : ' + ecoVal + ' GNF</strong></div>';
+                                if (data.gain_vs_charges !== undefined) {
+                                    roiHtml += '<div class="small text-muted mt-1">Représente <strong>' + data.gain_vs_charges + '%</strong> des charges employeur</div>';
+                                }
+                                if (roi.impact_annuel) roiHtml += '<div class="small text-muted">' + roi.impact_annuel + '</div>';
+                                roiHtml += '</div>';
+                            } else {
+                                roiHtml += '<div class="small mt-1"><i class="bi bi-calendar-check-fill text-success me-1"></i>'
+                                    + 'Économie annuelle : <strong>' + ecoVal + ' GNF</strong>';
+                                if (data.gain_vs_charges !== undefined) {
+                                    roiHtml += ' <span class="text-muted">(' + data.gain_vs_charges + '% des charges)</span>';
+                                }
+                                if (roi.impact_annuel) roiHtml += ' — ' + roi.impact_annuel;
+                                roiHtml += '</div>';
+                            }
+                        }
+
+                        // ── Bloc 4 : Détails techniques (réductible) ──
+                        roiHtml += '<details class="mt-2 small"><summary class="text-muted" style="cursor:pointer"><i class="bi bi-gear-fill me-1"></i>Détails techniques</summary>';
+                        roiHtml += '<div class="mt-1 ps-3">';
+                        var _f = function(v) { return new Intl.NumberFormat('fr-GN').format(v); };
+                        if (data.base_rts !== undefined) {
+                            roiHtml += '<div><i class="bi bi-calculator me-1 text-info"></i>Base imposable (RTS) : <strong>' + _f(data.base_rts) + ' GNF</strong></div>';
+                        }
+                        if (data.cnss !== undefined) {
+                            var cnssInfo = _f(data.cnss) + ' GNF';
+                            if (data.brut >= 2500000) cnssInfo += ' <span class="badge bg-secondary ms-1">plafonnée</span>';
+                            roiHtml += '<div><i class="bi bi-shield-check me-1 text-info"></i>CNSS employé : <strong>' + cnssInfo + '</strong></div>';
+                        }
+                        if (data.exon !== undefined) {
+                            roiHtml += '<div><i class="bi bi-percent me-1 text-info"></i>Exonération : <strong>' + _f(data.exon) + ' GNF</strong>';
+                            if (data.exon > 0 && data.plafond_exon > 0 && data.exon >= data.plafond_exon) {
+                                roiHtml += ' <span class="badge bg-success ms-1">max 25%</span>';
+                            }
+                            roiHtml += '</div>';
+                        }
+                        if (data.taux_effectif !== undefined) {
+                            roiHtml += '<div><i class="bi bi-graph-up me-1 text-info"></i>Taux effectif RTS : <strong>' + data.taux_effectif + ' %</strong></div>';
+                        }
+                        if (data.regles && data.regles.reference) {
+                            roiHtml += '<div class="text-muted fst-italic mt-1"><i class="bi bi-book me-1"></i>' + data.regles.reference + '</div>';
+                        }
+                        if (data.regles && data.regles.reference_vf) {
+                            roiHtml += '<div class="text-muted fst-italic mt-1"><i class="bi bi-book me-1"></i>' + data.regles.reference_vf + '</div>';
+                        }
+                        if (conseils.length > 0) {
+                            conseils.forEach(function(c) {
+                                roiHtml += '<div><i class="bi bi-lightbulb-fill text-warning me-1"></i>' + c + '</div>';
+                            });
+                        }
+                        roiHtml += '</div></details>';
+                        var alertClass = roi.level === 'fort' ? 'alert-success' : roi.level === 'moyen' ? 'alert-info' : 'alert-warning';
+                        elRoi.className = 'alert py-2 px-3 small mb-3 ' + alertClass;
+                        elRoi.innerHTML = roiHtml;
+                        elRoi.style.display = 'block';
+                    } else {
+                        elRoi.style.display = 'none';
+                    }
+                }
+
+                if (avertissements.length > 0) {
+                    const conformite = data.conformite || 'a_verifier';
+                    const classes = { 'conforme': 'alert-success', 'a_verifier': 'alert-warning', 'non_conforme': 'alert-danger' };
+                    alertConf.className = 'alert py-2 px-3 small mb-3 ' + (classes[conformite] || 'alert-warning');
+                    alertConf.innerHTML = avertissements.map(function (a) {
+                        return '<i class="bi bi-exclamation-triangle me-1"></i>' + a;
+                    }).join('<br>');
+                    alertConf.style.display = 'block';
+                } else {
+                    alertConf.style.display = 'none';
+                }
+            })
+            .catch(function () {});
+        }, 400);
+    }
+
+    // ── Bouton Répartir ───────────────────────────────────────────────────────
+    btnRepartir.addEventListener('click', function () {
+        divErreur.style.display = 'none';
+        divSucces.style.display = 'none';
+
+        const brut = parseEntier(document.getElementById('dec_brut').value);
+        if (!brut || brut <= 0) {
+            divErreur.textContent = 'Veuillez saisir un montant brut valide.';
+            divErreur.style.display = 'block';
+            return;
+        }
+
+        calcMontants(brut);
+        rafraichirBarre();
+        autoSelectAll();
+        calculerImpact();
+        zoneResultat.style.display = 'block';
+        zoneResultat.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // Recalcul en temps réel quand le brut change
+    document.getElementById('dec_brut').addEventListener('input', function () {
+        netGaranti = 0;  // L'utilisateur modifie le brut → quitter le mode garanti
+        majModeNetUI();
+        // Cacher l'alerte stale immédiatement
+        var _ac2 = document.getElementById('dec_alerte_conformite');
+        if (_ac2) { _ac2.style.display = 'none'; _ac2.innerHTML = ''; }
+        const brut = parseEntier(this.value);
+        if (brut > 0 && zoneResultat.style.display !== 'none') {
+            calcMontants(brut);
+            calculerImpact();
+        }
+    });
+
+    // ── Bouton Créer en lot ───────────────────────────────────────────────────
+    btnCreer.addEventListener('click', function () {
+        divErreur.style.display = 'none';
+        divSucces.style.display = 'none';
+
+        const brut = parseEntier(document.getElementById('dec_brut').value);
+        if (!brut) {
+            divErreur.textContent = 'Montant brut manquant.';
+            divErreur.style.display = 'block';
+            return;
+        }
+
+        const montants = calcMontants(brut);
+        const dateDebut = document.getElementById('dec_date_debut').value || '{{ today|date:"Y-m-d" }}';
+
+        // Collecter les rubriques sélectionnées
+        const elements = [
+            { cle: 'base',      selectId: 'dec_sel_base',      montant: montants.base },
+            { cle: 'transport', selectId: 'dec_sel_transport',  montant: montants.transport },
+            { cle: 'logement',  selectId: 'dec_sel_logement',   montant: montants.logement },
+            { cle: 'cherte',    selectId: 'dec_sel_cherte',     montant: montants.cherte },
+        ];
+
+        const payload = [];
+        const manquants = [];
+        elements.forEach(function (e) {
+            const sel = document.getElementById(e.selectId);
+            const rubriqueId = sel ? sel.value : '';
+            if (!rubriqueId) {
+                manquants.push(e.cle);
+            } else if (e.montant > 0) {
+                payload.push({ rubrique_id: parseInt(rubriqueId), montant: e.montant });
+            }
+        });
+
+        if (manquants.length > 0) {
+            divErreur.textContent = 'Veuillez sélectionner une rubrique pour : ' + manquants.join(', ');
+            divErreur.style.display = 'block';
+            return;
+        }
+
+        if (payload.length === 0) {
+            divErreur.textContent = 'Aucun élément à créer (montants nuls).';
+            divErreur.style.display = 'block';
+            return;
+        }
+
+        btnCreer.disabled = true;
+        btnCreer.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Création en cours…';
+
+        fetch(CREER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ elements: payload, date_debut: dateDebut }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            btnCreer.disabled = false;
+            btnCreer.innerHTML = '<i class="bi bi-plus-square-fill"></i> Créer les 4 éléments en lot';
+
+            if (data.success || data.nb_crees > 0) {
+                let msg = '<strong>' + (data.crees ? data.crees.length : data.nb_crees) + ' élément(s) créé(s)</strong> avec succès :<br>';
+                if (data.crees) {
+                    data.crees.forEach(function (c) {
+                        msg += '&nbsp;&nbsp;• ' + c.rubrique + ' : ' + fmt(c.montant) + ' GNF<br>';
+                    });
+                }
+                if (data.erreurs && data.erreurs.length > 0) {
+                    msg += '<br><strong>Avertissements :</strong> ' + data.erreurs.join(', ');
+                }
+                divSucces.innerHTML = msg + '<br><a href="{% url "paie:elements_salaire_employe" employe.id %}" class="btn btn-sm btn-success mt-2"><i class="bi bi-arrow-left"></i> Voir les éléments</a>';
+                divSucces.style.display = 'block';
+                zoneResultat.style.display = 'none';
+            } else {
+                divErreur.textContent = data.error || data.message || 'Erreur lors de la création.';
+                divErreur.style.display = 'block';
+            }
+        })
+        .catch(function (err) {
+            btnCreer.disabled = false;
+            btnCreer.innerHTML = '<i class="bi bi-plus-square-fill"></i> Créer les 4 éléments en lot';
+            divErreur.textContent = 'Erreur réseau : ' + err.message;
+            divErreur.style.display = 'block';
+        });
+    });
+
+    // Entrée sur le champ brut → déclenche Répartir
+    document.getElementById('dec_brut').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); btnRepartir.click(); }
+    });
+})();
+
+// ============================================================================
+// WIDGET BUDGET TOTAL EMPLOYEUR → BRUT + NET
+// ============================================================================
+(function () {
+    const COUT_URL  = "{% url 'paie:api_cout_total' %}";
+    const CSRF      = "{{ csrf_token }}";
+
+    const btnCalc   = document.getElementById('ct_btn_calculer');
+    const btnAppli  = document.getElementById('ct_btn_appliquer');
+    const divRes    = document.getElementById('ct_resultat');
+    const divErr    = document.getElementById('ct_erreur');
+    let dernierBrut = null;
+
+    btnCalc.addEventListener('click', function () {
+        divRes.style.display = 'none';
+        divErr.style.display = 'none';
+        dernierBrut = null;
+
+        const montant = parseEntier(document.getElementById('ct_montant').value);
+        if (!montant || montant <= 0) {
+            divErr.textContent = 'Veuillez saisir un budget total valide.';
+            divErr.style.display = 'block';
+            return;
+        }
+
+        const pctIndem    = parseFloat(document.getElementById('ct_pct_indem').value) || 0;
+        const nbSalaries  = parseInt(document.getElementById('ct_nb_salaries').value) || 0;
+
+        btnCalc.disabled = true;
+        btnCalc.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Calcul…';
+
+        fetch(COUT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({
+                cout_total: montant,
+                pct_indemnites_forfaitaires: pctIndem,
+                nb_salaries: nbSalaries,
+            }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            btnCalc.disabled = false;
+            btnCalc.innerHTML = '<i class="bi bi-calculator-fill"></i> Décomposer le budget';
+
+            if (data.error) {
+                divErr.textContent = data.error;
+                divErr.style.display = 'block';
+                return;
+            }
+
+            const cp = data.charges_patronales;
+            const f  = data.formatted;
+
+            document.getElementById('ct_budget_affiche').textContent = '— ' + f.cout_total + ' GNF';
+            document.getElementById('ct_aff_budget').textContent     = f.cout_total    + ' GNF';
+            document.getElementById('ct_aff_cnss_pat').textContent   = '− ' + f.cnss_employeur + ' GNF';
+            document.getElementById('ct_aff_vf').textContent         = '− ' + f.vf             + ' GNF';
+            document.getElementById('ct_aff_ta').textContent         = '− ' + f.ta             + ' GNF';
+            document.getElementById('ct_aff_ta_label').textContent   = cp.libelle_ta + ' (' + (cp.libelle_ta === 'ONFPP' ? '1.5' : '2') + '%)';
+            document.getElementById('ct_aff_brut').textContent       = f.brut         + ' GNF';
+            document.getElementById('ct_aff_cnss_emp').textContent   = '− ' + f.cnss_employe   + ' GNF';
+            document.getElementById('ct_aff_rts').textContent        = '− ' + f.rts             + ' GNF';
+            document.getElementById('ct_aff_net').textContent        = f.net           + ' GNF';
+
+            dernierBrut = data.brut;
+            divRes.style.display = 'block';
+            divRes.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        })
+        .catch(function (err) {
+            btnCalc.disabled = false;
+            btnCalc.innerHTML = '<i class="bi bi-calculator-fill"></i> Décomposer le budget';
+            divErr.textContent = 'Erreur réseau : ' + err.message;
+            divErr.style.display = 'block';
+        });
+    });
+
+    // Appliquer le brut dans le formulaire du bas
+    btnAppli.addEventListener('click', function () {
+        if (!dernierBrut) return;
+        const champ = document.getElementById('montant');
+        if (champ) {
+            champ.value = dernierBrut;
+            champ.focus();
+            champ.classList.add('border-success', 'border-3');
+            setTimeout(function () { champ.classList.remove('border-success', 'border-3'); }, 2000);
+            champ.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    document.getElementById('ct_montant').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); btnCalc.click(); }
+    });
+})();
+
+// ============================================================================
+// WIDGET RÉTRO-PAIE : Net → Brut
+// ============================================================================
+(function () {
+    const RETROPAIE_URL     = "{% url 'paie:api_retropaie' %}";
+    const RETROPAIE_PDF_URL = "{% url 'paie:retropaie_pdf' %}";
+    const CSRF_TOKEN        = "{{ csrf_token }}";
+
+    const btnCalculer  = document.getElementById('rp_btn_calculer');
+    const btnAppliquer = document.getElementById('rp_btn_appliquer');
+    const btnPdf       = document.getElementById('rp_btn_pdf');
+    const divResultat  = document.getElementById('rp_resultat');
+    const divErreur    = document.getElementById('rp_erreur');
+
+    let dernierBrut = null;
+    let dernierParams = null;
+
+    btnCalculer.addEventListener('click', function () {
+        divResultat.style.display = 'none';
+        divErreur.style.display   = 'none';
+        dernierBrut = null;
+        dernierParams = null;
+
+        const netBrut = parseEntier(document.getElementById('rp_net_cible').value);
+        const pctIndem = parseFloat(document.getElementById('rp_pct_indem').value) || 0;
+        const modeSelectionne = document.querySelector('input[name="rp_mode"]:checked');
+        const modeValeur = modeSelectionne ? modeSelectionne.value : 'minimum';
+        const garantirNetMinimum = (modeValeur === 'minimum');
+        const comparerBaremes = document.getElementById('rp_comparer_baremes').checked;
+
+        if (!netBrut || isNaN(netBrut) || netBrut <= 0) {
+            divErreur.textContent = 'Veuillez saisir un montant net valide.';
+            divErreur.style.display = 'block';
+            return;
+        }
+
+        btnCalculer.disabled = true;
+        btnCalculer.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Calcul…';
+
+        fetch(RETROPAIE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+            body: JSON.stringify({
+                net_cible: netBrut,
+                pct_indemnites_forfaitaires: pctIndem,
+                garantir_net_minimum: garantirNetMinimum,
+                comparer_baremes: comparerBaremes,
+            }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            btnCalculer.disabled = false;
+            btnCalculer.innerHTML = '<i class="bi bi-calculator"></i> Calculer le brut';
+
+            if (data.error) {
+                divErreur.textContent = data.error;
+                divErreur.style.display = 'block';
+                return;
+            }
+
+            document.getElementById('rp_net_cible_affiche').textContent = fmt(data.net_cible || data.net_calcule) + ' GNF';
+            document.getElementById('rp_brut_affiche').textContent      = fmt(data.brut) + ' GNF';
+            document.getElementById('rp_brut_cell').textContent         = fmt(data.brut) + ' GNF';
+            document.getElementById('rp_cnss_affiche').textContent      = '− ' + fmt(data.cnss) + ' GNF';
+            document.getElementById('rp_rts_affiche').textContent       = '− ' + fmt(data.rts)  + ' GNF';
+            document.getElementById('rp_net_affiche').textContent       = fmt(data.net_calcule) + ' GNF';
+            document.getElementById('rp_base_cnss_affiche').textContent = fmt(data.base_cnss);
+            document.getElementById('rp_base_rts_affiche').textContent  = fmt(data.base_rts);
+
+            // Charges patronales
+            const cp = data.charges_patronales || {};
+            document.getElementById('rp_pat_cnss').textContent     = fmt(cp.cnss_employeur || 0) + ' GNF';
+            document.getElementById('rp_pat_vf').textContent       = fmt(cp.vf || 0) + ' GNF';
+            document.getElementById('rp_pat_ta').textContent       = fmt(cp.ta || 0) + ' GNF';
+            document.getElementById('rp_pat_ta_label').textContent = (cp.libelle_ta || 'TA') + ' (2%)';
+            document.getElementById('rp_cout_total').textContent   = fmt(cp.cout_total_employeur || (data.brut + (cp.total || 0))) + ' GNF';
+            const taux = data.taux_charge_global;
+            const elTaux = document.getElementById('rp_taux_charge');
+            if (elTaux) {
+                elTaux.textContent = (taux !== undefined && taux !== null) ? taux.toFixed(1) + ' %' : '—';
+                elTaux.title = 'Pour ' + fmt(data.net_calcule) + ' GNF net, l\'entreprise paie ' + fmt(cp.cout_total_employeur || 0) + ' GNF — surcoût de ' + (taux || 0).toFixed(1) + '%';
+            }
+
+            // Détail tranches
+            const tranches = data.detail_tranches || [];
+            const container = document.getElementById('rp_detail_tranches_container');
+            const tbody = document.getElementById('rp_tranches_tbody');
+            tbody.innerHTML = '';
+            if (tranches.length > 0) {
+                tranches.forEach(function (t) {
+                    const borneSup = t.borne_sup ? fmt(t.borne_sup) + ' GNF' : 'Au-delà';
+                    tbody.insertAdjacentHTML('beforeend',
+                        '<tr><td>' + fmt(t.borne_inf) + ' – ' + borneSup + '</td>' +
+                        '<td class="text-end">' + fmt(t.montant_tranche) + ' GNF</td>' +
+                        '<td class="text-end">' + t.taux + ' %</td>' +
+                        '<td class="text-end fw-semibold">' + fmt(t.impot_tranche) + ' GNF</td></tr>'
+                    );
+                });
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+
+            // Comparaison barèmes
+            const comparaisonContainer = document.getElementById('rp_comparaison_container');
+            const comparaisonTbody = document.getElementById('rp_comparaison_tbody');
+            const comparaisonData = data.comparaison_baremes || [];
+            comparaisonTbody.innerHTML = '';
+            if (comparaisonData.length > 0) {
+                comparaisonData.forEach(function (b) {
+                    const cls = (b.annee === data.annee) ? 'table-primary fw-bold' : '';
+                    comparaisonTbody.insertAdjacentHTML('beforeend',
+                        '<tr class="' + cls + '"><td>Barème ' + b.annee + '</td>' +
+                        '<td class="text-end">' + b.formatted.brut + ' GNF</td>' +
+                        '<td class="text-end">' + b.formatted.cnss + ' GNF</td>' +
+                        '<td class="text-end">' + b.formatted.rts + ' GNF</td>' +
+                        '<td class="text-end">' + b.formatted.net_calcule + ' GNF</td></tr>'
+                    );
+                });
+                comparaisonContainer.style.display = 'block';
+            } else {
+                comparaisonContainer.style.display = 'none';
+            }
+
+            dernierBrut = data.brut;
+            dernierParams = { net_cible: netBrut, pct_indemnites_forfaitaires: pctIndem, garantir_net_minimum: garantirNetMinimum };
+            divResultat.style.display = 'block';
+        })
+        .catch(function (err) {
+            btnCalculer.disabled = false;
+            btnCalculer.innerHTML = '<i class="bi bi-calculator"></i> Calculer le brut';
+            divErreur.textContent = 'Erreur réseau : ' + err.message;
+            divErreur.style.display = 'block';
+        });
+    });
+
+    btnAppliquer.addEventListener('click', function () {
+        if (dernierBrut === null) return;
+        const champMontant = document.getElementById('montant');
+        if (champMontant) {
+            champMontant.value = dernierBrut;
+            champMontant.focus();
+            champMontant.classList.add('border-success', 'border-3');
+            setTimeout(function () { champMontant.classList.remove('border-success', 'border-3'); }, 2000);
+            champMontant.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    const btnRepartir = document.getElementById('rp_btn_repartir_brut');
+    if (btnRepartir) {
+        btnRepartir.addEventListener('click', function () {
+            if (!dernierBrut) return;
+            var champBrut = document.getElementById('dec_brut');
+            if (champBrut) {
+                champBrut.value = dernierBrut;
+
+                // Activer le mode NET GARANTI dans le widget structuration
+                // Le net cible est lu depuis le champ de saisie rétro-paie
+                var netCibleEl = document.getElementById('rp_net_cible');
+                var netCible = netCibleEl ? parseEntier(netCibleEl.value) : 0;
+                // Accéder à la variable netGaranti de la closure structuration
+                // via la fonction exposée sur window
+                if (typeof window._setNetGaranti === 'function') {
+                    window._setNetGaranti(netCible);
+                }
+
+                // Basculer en mode fiscal (75/25) — recommandation optimale
+                appliquerMode('fiscal');
+                var btnDec = document.getElementById('dec_btn_repartir');
+                if (btnDec) btnDec.click();
+                var cardPrimary = document.querySelector('.card.border-primary');
+                if (cardPrimary) cardPrimary.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    }
+
+    btnPdf.addEventListener('click', function () {
+        if (!dernierParams) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = RETROPAIE_PDF_URL;
+        form.target = '_blank';
+        const fields = {
+            'csrfmiddlewaretoken': CSRF_TOKEN,
+            'net_cible': String(dernierParams.net_cible),
+            'pct_indemnites_forfaitaires': String(dernierParams.pct_indemnites_forfaitaires),
+            'garantir_net_minimum': dernierParams.garantir_net_minimum ? 'true' : 'false',
+        };
+        Object.entries(fields).forEach(function ([name, value]) {
+            const input = document.createElement('input');
+            input.type = 'hidden'; input.name = name; input.value = value;
+            form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    });
+
+    document.getElementById('rp_net_cible').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); btnCalculer.click(); }
+    });
+})();
+</script>
+{% endblock %}

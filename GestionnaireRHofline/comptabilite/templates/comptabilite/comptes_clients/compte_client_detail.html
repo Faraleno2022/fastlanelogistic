@@ -1,0 +1,346 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}Compte Client {{ client.raison_sociale }} - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Compte Client - {{ client.raison_sociale }}</h1>
+            <p class="text-muted mb-0">
+                <i class="bi bi-person-check me-2"></i>Client - Code: {{ client.code }}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'comptabilite:compte_client_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+            </a>
+            <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>Imprimer
+            </button>
+        </div>
+    </div>
+
+    <!-- Informations du client -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations du Client</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Code Client</label>
+                            <p class="form-control-plaintext"><strong>{{ client.code }}</strong></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Raison Sociale</label>
+                            <p class="form-control-plaintext"><strong>{{ client.raison_sociale }}</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">NIF</label>
+                            <p class="form-control-plaintext">{{ client.nif|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Statut</label>
+                            <p class="form-control-plaintext">
+                                {% if client.est_actif %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactif</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Téléphone</label>
+                            <p class="form-control-plaintext">{{ client.telephone|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Email</label>
+                            <p class="form-control-plaintext">{{ client.email|default:"-" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label text-muted">Adresse</label>
+                            <p class="form-control-plaintext">{{ client.adresse|default:"-" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Résumé du compte -->
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Résumé du Compte</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label text-muted">Total Factures</label>
+                            <p class="form-control-plaintext">
+                                <strong>{{ total_factures|floatformat:0 }} GNF</strong>
+                                <small class="text-muted d-block">({{ factures.count }} factures)</small>
+                            </p>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label text-muted">Total Payé</label>
+                            <p class="form-control-plaintext">
+                                <strong>{{ total_paye|floatformat:0 }} GNF</strong>
+                                <small class="text-muted d-block">({{ reglements.count }} règlements)</small>
+                            </p>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label text-muted">Solde Dû</label>
+                            <p class="form-control-plaintext">
+                                <strong class="{% if solde > 0 %}text-danger{% elif solde < 0 %}text-success{% else %}text-muted{% endif %}">
+                                    {{ solde|floatformat:0 }} GNF
+                                </strong>
+                                <small class="text-muted d-block">
+                                    {% if solde > 0 %}
+                                        Débiteur
+                                    {% elif solde < 0 %}
+                                        Créditeur
+                                    {% else %}
+                                        Soldé
+                                    {% endif %}
+                                </small>
+                            </p>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label text-muted">Statut Compte</label>
+                            <p class="form-control-plaintext">
+                                {% if solde > 0 %}
+                                    <span class="badge bg-danger">Débiteur</span>
+                                {% elif solde < 0 %}
+                                    <span class="badge bg-success">Créditeur</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Soldé</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'comptabilite:facture_create' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Nouvelle Facture
+                        </a>
+                        <a href="{% url 'comptabilite:reglement_create' %}" class="btn btn-outline-success">
+                            <i class="bi bi-cash me-2"></i>Nouveau Règlement
+                        </a>
+                        <button class="btn btn-outline-warning" onclick="alert('Modification non disponible pour le moment')">
+                            <i class="bi bi-pencil me-2"></i>Modifier Client
+                        </button>
+                        <button class="btn btn-outline-info" onclick="exportPDF()">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Export PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Statistiques</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Factures par statut</label>
+                        <div class="small">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Brouillon:</span>
+                                <span class="badge bg-secondary">{{ factures_brouillon }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Validées:</span>
+                                <span class="badge bg-warning">{{ factures_validees }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Payées:</span>
+                                <span class="badge bg-success">{{ factures_payees }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Informations Comptables</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Compte Comptable</label>
+                        <p class="form-control-plaintext">
+                            {% if client.compte_comptable %}
+                                {{ client.compte_comptable.numero_compte }} - {{ client.compte_comptable.intitule }}
+                            {% else %}
+                                <span class="text-muted">Non défini</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Plafond de Crédit</label>
+                        <p class="form-control-plaintext">{{ client.plafond_credit|floatformat:0 }} GNF</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Solde Actuel</label>
+                        <p class="form-control-plaintext">{{ client.solde|floatformat:0 }} GNF</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Factures récentes -->
+    {% if factures %}
+        <div class="card mb-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Factures ({{ factures.count }})</h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-list me-1"></i>Voir toutes
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>N° Facture</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th class="text-end">Montant TTC</th>
+                                <th class="text-end">Payé</th>
+                                <th class="text-end">Restant</th>
+                                <th class="text-center">Statut</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for facture in factures %}
+                            <tr>
+                                <td><strong>{{ facture.numero }}</strong></td>
+                                <td>{{ facture.date_facture|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if facture.type_facture == 'vente' %}
+                                        <span class="badge bg-success">Vente</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Achat</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">{{ facture.montant_ttc|floatformat:0 }} GNF</td>
+                                <td class="text-end">{{ facture.montant_paye|floatformat:0 }} GNF</td>
+                                <td class="text-end">
+                                    <strong class="{% if facture.montant_ttc > facture.montant_paye %}text-danger{% else %}text-success{% endif %}">
+                                        {{ facture.montant_ttc|add:facture.montant_paye|floatformat:0 }} GNF
+                                    </strong>
+                                </td>
+                                <td class="text-center">
+                                    {% if facture.statut == 'brouillon' %}
+                                        <span class="badge bg-secondary">Brouillon</span>
+                                    {% elif facture.statut == 'validee' %}
+                                        <span class="badge bg-warning">Validée</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Payée</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="#" class="btn btn-sm btn-outline-primary" title="Voir">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-success" title="Régler">
+                                            <i class="bi bi-cash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Règlements récents -->
+    {% if reglements %}
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Règlements ({{ reglements.count }})</h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-list me-1"></i>Voir tous
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>N° Règlement</th>
+                                <th>Date</th>
+                                <th>Facture</th>
+                                <th>Mode</th>
+                                <th class="text-end">Montant</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reglement in reglements %}
+                            <tr>
+                                <td><strong>{{ reglement.numero }}</strong></td>
+                                <td>{{ reglement.date_reglement|date:"d/m/Y" }}</td>
+                                <td>{{ reglement.facture.numero }}</td>
+                                <td>
+                                    {% for mode, label in reglement.MODES_PAIEMENT %}
+                                        {% if reglement.mode_paiement == mode %}
+                                            <span class="badge bg-info">{{ label }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td class="text-end">{{ reglement.montant|floatformat:0 }} GNF</td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="#" class="btn btn-sm btn-outline-primary" title="Voir">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-warning" title="Imprimer">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function exportPDF() {
+    alert('Export PDF - Cette fonctionnalité sera bientôt disponible.');
+}
+</script>
+{% endblock %}

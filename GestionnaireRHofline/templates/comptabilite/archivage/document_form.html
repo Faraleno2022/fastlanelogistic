@@ -1,0 +1,102 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouveau{% endif %} Document{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-archive me-2"></i>
+                        {% if object %}Modifier le document {{ object.reference }}{% else %}Nouveau document{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">Identification</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Référence *</label>
+                                    {{ form.reference }}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Titre *</label>
+                                    {{ form.titre }}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    {{ form.description }}
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Classement</label>
+                                        {{ form.classement }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Politique rétention</label>
+                                        {{ form.politique_retention }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">Fichier</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Fichier *</label>
+                                    {{ form.fichier }}
+                                    {% if object.fichier %}
+                                    <small class="text-muted d-block mt-1">Fichier actuel: <a href="{{ object.fichier.url }}" target="_blank">{{ object.fichier.name }}</a></small>
+                                    {% endif %}
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Format</label>
+                                        {{ form.format_fichier }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Date document *</label>
+                                        {{ form.date_document }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Exercice</label>
+                                        {{ form.exercice }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Date expiration</label>
+                                        {{ form.date_expiration }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Statut</label>
+                                        {{ form.statut }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Confidentialité</label>
+                                        {{ form.niveau_confidentialite }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'comptabilite:archivage_documents' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>{% if object %}Enregistrer{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

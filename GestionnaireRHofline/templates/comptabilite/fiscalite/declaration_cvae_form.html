@@ -1,0 +1,121 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouvelle{% endif %} déclaration CVAE{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-file-earmark-ruled text-primary"></i>
+                {% if object %}Modifier la déclaration CVAE{% else %}Nouvelle déclaration CVAE{% endif %}
+            </h1>
+        </div>
+        <a href="{% url 'comptabilite:fiscalite_declarations_cvae' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <h6 class="text-muted text-uppercase mb-3">Identification</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Dossier fiscal</label>
+                                {{ form.dossier_fiscal }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Référence *</label>
+                                {{ form.reference }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Année *</label>
+                                {{ form.annee }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Statut</label>
+                                {{ form.statut }}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted text-uppercase mb-3">Calcul de la valeur ajoutée</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Chiffre d'affaires (GNF)</label>
+                                {{ form.chiffre_affaires }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Achats (GNF)</label>
+                                {{ form.achats }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Services extérieurs (GNF)</label>
+                                {{ form.services_exterieurs }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Autres charges externes (GNF)</label>
+                                {{ form.autres_charges_externes }}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted text-uppercase mb-3">Calcul CVAE</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Taux CVAE</label>
+                                {{ form.taux_cvae }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Dégrèvement</label>
+                                {{ form.degrevement }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Cotisation minimum</label>
+                                {{ form.cotisation_minimum }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:fiscalite_declarations_cvae' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Aide au calcul</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <p><strong>Formule CVAE :</strong></p>
+                    <ul class="mb-0">
+                        <li>Valeur ajoutée = CA - Achats - Services ext. - Autres charges</li>
+                        <li>CVAE brute = Valeur ajoutée × Taux</li>
+                        <li>CVAE nette = max(CVAE brute - Dégrèvement, Cotisation min.)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

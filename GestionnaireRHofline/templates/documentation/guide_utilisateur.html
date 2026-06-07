@@ -1,0 +1,1002 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Guide Utilisateur — GuinéeRH{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .no-print, nav, .sidebar, footer { display: none !important; }
+        body { font-size: 11pt; }
+        .doc-container { max-width: 100% !important; padding: 0 !important; }
+        h1 { font-size: 22pt; }
+        h2 { font-size: 16pt; page-break-before: always; }
+        h3 { font-size: 13pt; }
+        .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    }
+    .doc-container { max-width: 960px; margin: 0 auto; }
+    .doc-toc a { text-decoration: none; color: #0d6efd; }
+    .doc-toc a:hover { text-decoration: underline; }
+    .doc-toc li { margin-bottom: 4px; }
+    .doc-section { scroll-margin-top: 80px; }
+    .doc-badge { font-size: 0.7rem; vertical-align: middle; }
+    .doc-tip { border-left: 4px solid #0d6efd; background: #f0f7ff; }
+    .doc-warn { border-left: 4px solid #ffc107; background: #fffbf0; }
+    .doc-shortcut kbd { background: #eee; border: 1px solid #ccc; border-radius: 3px; padding: 1px 6px; font-size: 0.85em; }
+</style>
+
+<div class="doc-container px-3 py-4">
+
+    <!-- ============================================================ -->
+    <!-- COUVERTURE -->
+    <!-- ============================================================ -->
+    <div class="text-center mb-5 pb-4 border-bottom">
+        <h1 class="display-4 fw-bold text-primary">
+            <i class="fas fa-users-cog"></i> GuinéeRH
+        </h1>
+        <p class="lead text-muted mb-1">Gestionnaire des Ressources Humaines — République de Guinée</p>
+        <p class="text-muted">Guide Utilisateur Complet</p>
+        <div class="mt-3">
+            <span class="badge bg-primary doc-badge">Version 2.0</span>
+            <span class="badge bg-secondary doc-badge">Moteur Conformité v1.2.2</span>
+            <span class="badge bg-info doc-badge">Avril 2026</span>
+        </div>
+        <div class="mt-4 no-print">
+            <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
+                <i class="fas fa-print"></i> Imprimer / Exporter PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TABLE DES MATIÈRES -->
+    <!-- ============================================================ -->
+    <div class="card shadow-sm mb-5 no-print">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Table des matières</h5>
+        </div>
+        <div class="card-body">
+            <ol class="doc-toc mb-0">
+                <li><a href="#intro">Introduction & Présentation</a></li>
+                <li><a href="#demarrage">Démarrage rapide</a>
+                    <ol type="a">
+                        <li><a href="#connexion">Connexion & Profil</a></li>
+                        <li><a href="#entreprise">Configuration entreprise</a></li>
+                        <li><a href="#structure">Structure organisationnelle</a></li>
+                    </ol>
+                </li>
+                <li><a href="#employes">Gestion des employés</a>
+                    <ol type="a">
+                        <li><a href="#emp-creation">Créer un employé</a></li>
+                        <li><a href="#emp-contrat">Contrats</a></li>
+                        <li><a href="#emp-famille">Famille & Ayants droit</a></li>
+                        <li><a href="#emp-documents">Documents</a></li>
+                        <li><a href="#emp-evaluation">Évaluations de performance</a></li>
+                        <li><a href="#emp-sanctions">Sanctions disciplinaires</a></li>
+                        <li><a href="#emp-medical">Suivi médical</a></li>
+                        <li><a href="#emp-missions">Missions & Déplacements</a></li>
+                    </ol>
+                </li>
+                <li><a href="#paie">Paie & Rémunération</a>
+                    <ol type="a">
+                        <li><a href="#paie-config">Configuration</a></li>
+                        <li><a href="#paie-rubriques">Rubriques de paie</a></li>
+                        <li><a href="#paie-elements">Éléments de salaire</a></li>
+                        <li><a href="#paie-periodes">Périodes de paie</a></li>
+                        <li><a href="#paie-calcul">Calcul automatique</a></li>
+                        <li><a href="#paie-bulletin">Bulletin de paie</a></li>
+                        <li><a href="#paie-conformite">Analyseur de conformité fiscale</a></li>
+                        <li><a href="#paie-simulation">Simulation & Scénarios</a></li>
+                        <li><a href="#paie-prets">Prêts & Avances</a></li>
+                        <li><a href="#paie-frais">Notes de frais</a></li>
+                        <li><a href="#paie-declarations">Déclarations sociales</a></li>
+                    </ol>
+                </li>
+                <li><a href="#temps">Temps & Présences</a>
+                    <ol type="a">
+                        <li><a href="#temps-pointage">Pointage</a></li>
+                        <li><a href="#temps-absences">Absences</a></li>
+                        <li><a href="#temps-hs">Heures supplémentaires</a></li>
+                        <li><a href="#temps-feries">Jours fériés</a></li>
+                    </ol>
+                </li>
+                <li><a href="#conges">Congés</a>
+                    <ol type="a">
+                        <li><a href="#conges-types">Types de congés</a></li>
+                        <li><a href="#conges-demande">Demander un congé</a></li>
+                        <li><a href="#conges-solde">Soldes & Calcul automatique</a></li>
+                        <li><a href="#conges-validation">Circuit de validation</a></li>
+                    </ol>
+                </li>
+                <li><a href="#recrutement">Recrutement & Intégration</a>
+                    <ol type="a">
+                        <li><a href="#recru-offres">Offres d'emploi</a></li>
+                        <li><a href="#recru-candidatures">Candidatures</a></li>
+                        <li><a href="#recru-entretiens">Entretiens</a></li>
+                        <li><a href="#recru-decisions">Décisions d'embauche</a></li>
+                        <li><a href="#recru-integration">Onboarding</a></li>
+                    </ol>
+                </li>
+                <li><a href="#formation">Formation</a></li>
+                <li><a href="#comptabilite">Comptabilité</a></li>
+                <li><a href="#portail">Portail employé</a></li>
+                <li><a href="#securite">Sécurité & Permissions</a></li>
+                <li><a href="#conformite">Conformité légale Guinée</a></li>
+                <li><a href="#faq">FAQ</a></li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 1. INTRODUCTION -->
+    <!-- ============================================================ -->
+    <h2 id="intro" class="doc-section text-primary border-bottom pb-2 mb-4">
+        <i class="fas fa-info-circle"></i> 1. Introduction & Présentation
+    </h2>
+
+    <p><strong>GuinéeRH</strong> est un logiciel complet de gestion des ressources humaines et de la paie, conçu spécifiquement pour les entreprises opérant en <strong>République de Guinée</strong>.</p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-primary">
+                <div class="card-body text-center">
+                    <i class="fas fa-calculator fa-2x text-primary mb-2"></i>
+                    <h6>Paie automatisée</h6>
+                    <small class="text-muted">Calcul en 1 clic conforme au CGI guinéen : CNSS, RTS, VF/TA</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-success">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                    <h6>Conformité fiscale</h6>
+                    <small class="text-muted">Moteur intelligent v1.2.2 avec alertes, score de conformité et défense juridique</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-info">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x text-info mb-2"></i>
+                    <h6>RH complète</h6>
+                    <small class="text-muted">Employés, congés, recrutement, formation, évaluations, comptabilité</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h5>Modules disponibles</h5>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Module</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><i class="fas fa-users"></i> Employés</td><td>Gestion complète des dossiers du personnel (50+ champs)</td></tr>
+            <tr><td><i class="fas fa-money-bill-wave"></i> Paie</td><td>Calcul automatique, bulletins, déclarations, simulations</td></tr>
+            <tr><td><i class="fas fa-clock"></i> Temps & Présences</td><td>Pointage, absences, heures supplémentaires</td></tr>
+            <tr><td><i class="fas fa-umbrella-beach"></i> Congés</td><td>14 types de congés avec workflow de validation</td></tr>
+            <tr><td><i class="fas fa-user-plus"></i> Recrutement</td><td>Offres publiques, candidatures, entretiens, onboarding</td></tr>
+            <tr><td><i class="fas fa-graduation-cap"></i> Formation</td><td>Catalogue, sessions, évaluations, plans annuels</td></tr>
+            <tr><td><i class="fas fa-book"></i> Comptabilité</td><td>Plan SYSCOHADA, écritures, rapprochements bancaires</td></tr>
+            <tr><td><i class="fas fa-id-badge"></i> Portail employé</td><td>Libre-service : bulletins, congés, attestations</td></tr>
+            <tr><td><i class="fas fa-building"></i> Multi-entreprise</td><td>Isolation complète des données par entreprise</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ============================================================ -->
+    <!-- 2. DÉMARRAGE RAPIDE -->
+    <!-- ============================================================ -->
+    <h2 id="demarrage" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-rocket"></i> 2. Démarrage rapide
+    </h2>
+
+    <h3 id="connexion" class="doc-section">a) Connexion & Profil</h3>
+    <ol>
+        <li>Accédez à l'adresse de votre application (ex : <code>www.guineerh.space</code>)</li>
+        <li>Saisissez votre <strong>nom d'utilisateur</strong> et <strong>mot de passe</strong></li>
+        <li>Cliquez sur <strong>Se connecter</strong></li>
+    </ol>
+    <div class="doc-tip p-3 rounded mb-3">
+        <i class="fas fa-lightbulb text-primary"></i>
+        <strong>Astuce :</strong> Après connexion, accédez à <strong>Mon profil</strong> pour modifier votre mot de passe et vos informations personnelles.
+    </div>
+
+    <h3 id="entreprise" class="doc-section mt-4">b) Configuration entreprise</h3>
+    <p>Avant toute utilisation, configurez votre entreprise :</p>
+    <ol>
+        <li>Allez dans <strong>Paramètres → Entreprise</strong></li>
+        <li>Renseignez les informations légales :
+            <ul>
+                <li><strong>NIF</strong> (Numéro d'Identification Fiscale)</li>
+                <li><strong>Numéro CNSS</strong></li>
+                <li><strong>Raison sociale</strong>, siège, secteur d'activité</li>
+            </ul>
+        </li>
+        <li>Activez les modules souhaités (Paie, Congés, Recrutement, etc.)</li>
+        <li>Configurez la <strong>devise de paie</strong> (GNF par défaut)</li>
+    </ol>
+
+    <h3 id="structure" class="doc-section mt-4">c) Structure organisationnelle</h3>
+    <p>Menu <strong>Organisation → Structure</strong> :</p>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Niveau</th><th>Description</th><th>Exemples</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Établissement</td><td>Lieu de travail physique</td><td>Siège, Agence Conakry, Usine Kamsar</td></tr>
+            <tr><td>Service</td><td>Département fonctionnel</td><td>Direction, Comptabilité, Production</td></tr>
+            <tr><td>Poste</td><td>Fonction occupée</td><td>Directeur, Comptable, Opérateur</td></tr>
+        </tbody>
+    </table>
+    <div class="doc-warn p-3 rounded mb-3">
+        <i class="fas fa-exclamation-triangle text-warning"></i>
+        <strong>Important :</strong> La structure doit être créée <em>avant</em> l'ajout des employés, car chaque employé est rattaché à un établissement, un service et un poste.
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 3. GESTION DES EMPLOYÉS -->
+    <!-- ============================================================ -->
+    <h2 id="employes" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-users"></i> 3. Gestion des employés
+    </h2>
+
+    <h3 id="emp-creation" class="doc-section">a) Créer un employé</h3>
+    <p>Menu <strong>Employés → Nouvel employé</strong></p>
+    <p>Le formulaire comporte plusieurs sections :</p>
+    <div class="accordion mb-4" id="accEmploye">
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accEmpIdentite">Identité</button></h2>
+            <div id="accEmpIdentite" class="accordion-collapse collapse" data-bs-parent="#accEmploye">
+                <div class="accordion-body">
+                    <ul class="mb-0">
+                        <li><strong>Matricule</strong> — Identifiant unique (auto-généré ou manuel)</li>
+                        <li><strong>Civilité</strong> — M. / Mme / Mlle</li>
+                        <li><strong>Nom, Prénoms</strong> — Obligatoires</li>
+                        <li><strong>Sexe</strong> — M / F</li>
+                        <li><strong>Date & lieu de naissance</strong></li>
+                        <li><strong>Nationalité</strong></li>
+                        <li><strong>Situation matrimoniale</strong> — Célibataire, Marié(e), Divorcé(e), Veuf/Veuve</li>
+                        <li><strong>Nombre d'enfants</strong> — Impact sur le calcul des allocations</li>
+                        <li><strong>Photo</strong> — Format JPEG ou PNG (max 5 Mo)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accEmpPro">Informations professionnelles</button></h2>
+            <div id="accEmpPro" class="accordion-collapse collapse" data-bs-parent="#accEmploye">
+                <div class="accordion-body">
+                    <ul class="mb-0">
+                        <li><strong>Établissement</strong> — Lieu d'affectation</li>
+                        <li><strong>Service</strong> — Département</li>
+                        <li><strong>Poste</strong> — Fonction</li>
+                        <li><strong>Date d'embauche</strong></li>
+                        <li><strong>Type de contrat</strong> — CDI, CDD, Stage, Apprentissage, Temporaire</li>
+                        <li><strong>Dates de contrat</strong> — Début et fin (si CDD)</li>
+                        <li><strong>Supérieur hiérarchique</strong></li>
+                        <li><strong>Catégorie professionnelle</strong> — Cadre, Agent de maîtrise, Employé, Ouvrier</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accEmpBank">Coordonnées bancaires</button></h2>
+            <div id="accEmpBank" class="accordion-collapse collapse" data-bs-parent="#accEmploye">
+                <div class="accordion-body">
+                    <ul class="mb-0">
+                        <li><strong>Mode de paiement</strong> — Virement, Chèque, Espèces, Mobile Money</li>
+                        <li><strong>Banque & Agence</strong></li>
+                        <li><strong>Numéro de compte & RIB</strong></li>
+                        <li><strong>Opérateur Mobile Money</strong> — Orange Money, MTN, etc.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accEmpContact">Contact & Pièce d'identité</button></h2>
+            <div id="accEmpContact" class="accordion-collapse collapse" data-bs-parent="#accEmploye">
+                <div class="accordion-body">
+                    <ul class="mb-0">
+                        <li><strong>Adresse, Commune</strong></li>
+                        <li><strong>Téléphone(s)</strong> — Principal et secondaire</li>
+                        <li><strong>Email(s)</strong> — Professionnel et personnel</li>
+                        <li><strong>Contact d'urgence</strong></li>
+                        <li><strong>Pièce d'identité</strong> — Type (CNI/Passeport), Numéro, Date d'expiration</li>
+                        <li><strong>Numéro CNSS</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="doc-tip p-3 rounded mb-3">
+        <i class="fas fa-lightbulb text-primary"></i>
+        <strong>Import en masse :</strong> Utilisez <strong>Employés → Importer</strong> pour charger un fichier Excel avec tous vos employés d'un coup. Un modèle téléchargeable est disponible.
+    </div>
+
+    <h3 id="emp-contrat" class="doc-section mt-4">b) Contrats</h3>
+    <p>Chaque employé peut avoir un ou plusieurs contrats. Accédez au dossier de l'employé, onglet <strong>Contrat</strong> :</p>
+    <ul>
+        <li>Types : <strong>CDI</strong>, <strong>CDD</strong>, <strong>Stage</strong>, <strong>Apprentissage</strong>, <strong>Temporaire</strong></li>
+        <li>Joignez le document scanné (PDF)</li>
+        <li>Le système alerte automatiquement à l'approche de la fin d'un CDD</li>
+    </ul>
+
+    <h3 id="emp-famille" class="doc-section mt-4">c) Famille & Ayants droit</h3>
+    <p>Onglet <strong>Famille</strong> du dossier employé :</p>
+    <ul>
+        <li><strong>Conjoint(e)</strong> — Nom, prénoms, date de naissance, profession</li>
+        <li><strong>Enfants</strong> — Nom, date de naissance, scolarisé (oui/non)</li>
+        <li>Le nombre d'enfants impacte les <strong>allocations familiales</strong> et la <strong>charge fiscale</strong></li>
+    </ul>
+
+    <h3 id="emp-documents" class="doc-section mt-4">d) Documents</h3>
+    <ul>
+        <li>CV, copies de diplômes, pièces d'identité, certificats</li>
+        <li>Formats acceptés : PDF, JPEG, PNG (max 10 Mo par fichier)</li>
+        <li>Les documents sont stockés de manière sécurisée et accessibles uniquement aux utilisateurs autorisés</li>
+    </ul>
+
+    <h3 id="emp-evaluation" class="doc-section mt-4">e) Évaluations de performance</h3>
+    <p>Menu <strong>Employés → [Employé] → Évaluations</strong></p>
+    <ul>
+        <li>Création de <strong>campagnes d'évaluation</strong> (annuelle, semestrielle)</li>
+        <li>Définition d'<strong>objectifs</strong> avec pondération</li>
+        <li>Évaluation des <strong>compétences</strong> (techniques, comportementales)</li>
+        <li>Notation et commentaires du manager</li>
+        <li>Historique complet consultable</li>
+    </ul>
+
+    <h3 id="emp-sanctions" class="doc-section mt-4">f) Sanctions disciplinaires</h3>
+    <ul>
+        <li>Types : Avertissement verbal, Avertissement écrit, Blâme, Mise à pied, Licenciement</li>
+        <li>Chaque sanction est datée et documentée</li>
+        <li>Historique complet pour conformité avec le Code du Travail guinéen</li>
+    </ul>
+
+    <h3 id="emp-medical" class="doc-section mt-4">g) Suivi médical</h3>
+    <ul>
+        <li>Enregistrement des <strong>visites médicales</strong> (embauche, annuelle, reprise)</li>
+        <li>Suivi des <strong>arrêts de travail</strong> (maladie, accident)</li>
+        <li>Alertes pour les visites à planifier</li>
+        <li>Gestion de la <strong>couverture INAM</strong></li>
+    </ul>
+
+    <h3 id="emp-missions" class="doc-section mt-4">h) Missions & Déplacements</h3>
+    <ul>
+        <li>Planification des déplacements professionnels</li>
+        <li>Gestion des <strong>per diem</strong> et frais de mission</li>
+        <li>Suivi des ordres de mission</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <!-- 4. PAIE & RÉMUNÉRATION -->
+    <!-- ============================================================ -->
+    <h2 id="paie" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-money-bill-wave"></i> 4. Paie & Rémunération
+    </h2>
+
+    <h3 id="paie-config" class="doc-section">a) Configuration</h3>
+    <p>Menu <strong>Paie → Configuration</strong></p>
+    <p>Avant le premier calcul, vérifiez les constantes :</p>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Constante</th><th>Valeur par défaut</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>SMIG</td><td>550 000 GNF</td><td>Salaire minimum (plancher CNSS)</td></tr>
+            <tr><td>Plafond CNSS</td><td>2 500 000 GNF</td><td>Plafond des cotisations</td></tr>
+            <tr><td>CNSS Salarié</td><td>5%</td><td>Part salariale</td></tr>
+            <tr><td>CNSS Employeur</td><td>18%</td><td>Part patronale</td></tr>
+            <tr><td>Versement Forfaitaire (VF)</td><td>6%</td><td>Charge patronale</td></tr>
+            <tr><td>Taxe d'Apprentissage (TA)</td><td>2%</td><td>Charge patronale</td></tr>
+            <tr><td>ONFPP</td><td>1,5%</td><td>Si ≥ 30 employés (remplace TA)</td></tr>
+        </tbody>
+    </table>
+
+    <h5 class="mt-3">Barème RTS (Retenue à la Source)</h5>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Tranche</th><th>De (GNF)</th><th>À (GNF)</th><th>Taux</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td>0</td><td>1 000 000</td><td>0%</td></tr>
+            <tr><td>2</td><td>1 000 001</td><td>5 000 000</td><td>10%</td></tr>
+            <tr><td>3</td><td>5 000 001</td><td>10 000 000</td><td>15%</td></tr>
+            <tr><td>4</td><td>10 000 001</td><td>20 000 000</td><td>20%</td></tr>
+            <tr><td>5</td><td>20 000 001</td><td>50 000 000</td><td>25%</td></tr>
+            <tr><td>6</td><td>50 000 001</td><td>+∞</td><td>35%</td></tr>
+        </tbody>
+    </table>
+    <div class="doc-tip p-3 rounded mb-3">
+        <i class="fas fa-lightbulb text-primary"></i>
+        <strong>Personnalisation :</strong> Toutes les constantes sont modifiables dans <strong>Paie → Configuration entreprise</strong> pour s'adapter aux réglementations en vigueur.
+    </div>
+
+    <h3 id="paie-rubriques" class="doc-section mt-4">b) Rubriques de paie</h3>
+    <p>Les rubriques définissent chaque ligne du bulletin :</p>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Catégorie</th><th>Exemples</th><th>Impact</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><span class="badge bg-success">Salaire de base</span></td><td>Salaire mensuel</td><td>Base de tous les calculs</td></tr>
+            <tr><td><span class="badge bg-info">Prime</span></td><td>Ancienneté, rendement, risque</td><td>Soumise CNSS + RTS</td></tr>
+            <tr><td><span class="badge bg-warning text-dark">Indemnité</span></td><td>Transport, logement, repas</td><td>Exonérée RTS (plafonnée 25%)</td></tr>
+            <tr><td><span class="badge bg-secondary">Avantage</span></td><td>Véhicule, logement de fonction</td><td>Avantage en nature</td></tr>
+            <tr><td><span class="badge bg-danger">Cotisation</span></td><td>CNSS salarié</td><td>Retenue obligatoire</td></tr>
+            <tr><td><span class="badge bg-dark">Retenue</span></td><td>RTS, prêt, avance</td><td>Déduite du net</td></tr>
+        </tbody>
+    </table>
+    <p>Chaque rubrique est configurable : soumise CNSS (oui/non), soumise RTS (oui/non), incluse dans le brut (oui/non).</p>
+
+    <h3 id="paie-elements" class="doc-section mt-4">c) Éléments de salaire</h3>
+    <p>Menu <strong>Paie → Éléments de salaire → [Employé]</strong></p>
+    <p>Affectez les rubriques à chaque employé avec leur montant :</p>
+    <ul>
+        <li><strong>Montant fixe</strong> — Ex : Transport = 500 000 GNF</li>
+        <li><strong>Pourcentage</strong> — Ex : Prime ancienneté = 2% du salaire de base</li>
+        <li><strong>Formule</strong> — Règles conditionnelles personnalisées</li>
+    </ul>
+
+    <h3 id="paie-periodes" class="doc-section mt-4">d) Périodes de paie</h3>
+    <p>Menu <strong>Paie → Périodes</strong></p>
+    <p>Cycle de vie d'une période :</p>
+    <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+        <span class="badge bg-secondary fs-6">Brouillon</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="badge bg-primary fs-6">Calculée</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="badge bg-success fs-6">Validée</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="badge bg-dark fs-6">Clôturée</span>
+    </div>
+    <ul>
+        <li><strong>Brouillon</strong> — Période créée, prête pour le calcul</li>
+        <li><strong>Calculée</strong> — Bulletins générés, vérification possible</li>
+        <li><strong>Validée</strong> — Approuvée par le responsable paie</li>
+        <li><strong>Clôturée</strong> — Verrouillée, aucune modification possible</li>
+    </ul>
+
+    <h3 id="paie-calcul" class="doc-section mt-4">e) Calcul automatique</h3>
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white">
+            <h6 class="mb-0"><i class="fas fa-cogs"></i> Pipeline de calcul — MoteurCalculPaie</h6>
+        </div>
+        <div class="card-body">
+            <p>Cliquez sur <strong>Calculer</strong> dans la période de paie. Le moteur exécute automatiquement :</p>
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr><th>Étape</th><th>Opération</th><th>Détail</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>Gains</td><td>Somme de tous les éléments de salaire (base + primes + indemnités + HS)</td></tr>
+                    <tr><td>2</td><td>Brut</td><td>Total gains − absences non payées</td></tr>
+                    <tr><td>3</td><td>CNSS</td><td>Brut × 5% (part salariale), plancher 550K, plafond 2,5M GNF</td></tr>
+                    <tr><td>4</td><td>Indemnités forfaitaires</td><td>Détection intelligente des indemnités exonérées (max 25% du brut)</td></tr>
+                    <tr><td>5</td><td>Base imposable</td><td>Brut − CNSS − indemnités exonérées</td></tr>
+                    <tr><td>6</td><td>RTS</td><td>Application du barème progressif à 6 tranches (0% → 35%)</td></tr>
+                    <tr><td>7</td><td>Charges patronales</td><td>VF 6% + TA 2% (ou ONFPP 1,5% si ≥ 30 employés)</td></tr>
+                    <tr><td>8</td><td>Retenues</td><td>Prêts, avances, autres retenues</td></tr>
+                    <tr><td>9</td><td>Net à payer</td><td>Brut − CNSS − RTS − retenues + rappels</td></tr>
+                    <tr><td>10</td><td>Conformité</td><td>Analyse automatique du risque fiscal (score, alertes, défense)</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="doc-tip p-3 rounded mb-3">
+        <i class="fas fa-lightbulb text-primary"></i>
+        <strong>Heures supplémentaires :</strong> 4 catégories automatiquement calculées — +30% (8h–21h semaine), +60% (21h–5h nuit), +20% (jour férié), +100% (nuit fériée).
+    </div>
+    <div class="doc-tip p-3 rounded mb-3">
+        <i class="fas fa-lightbulb text-primary"></i>
+        <strong>Stagiaires / Apprentis :</strong> Exonération RTS automatique si ancienneté ≤ 12 mois et indemnité ≤ 1 200 000 GNF.
+    </div>
+
+    <h3 id="paie-bulletin" class="doc-section mt-4">f) Bulletin de paie</h3>
+    <p>Menu <strong>Paie → Bulletins</strong></p>
+    <ul>
+        <li><strong>Consulter</strong> — Détail complet avec toutes les lignes</li>
+        <li><strong>Imprimer / PDF</strong> — Format officiel prêt à signer</li>
+        <li><strong>Envoyer</strong> — Par email ou via un lien public (token unique)</li>
+        <li><strong>Lien public</strong> — L'employé peut télécharger son bulletin sans se connecter</li>
+    </ul>
+
+    <h3 id="paie-conformite" class="doc-section mt-4">g) Analyseur de conformité fiscale</h3>
+    <div class="card border-success mb-4">
+        <div class="card-header bg-success text-white">
+            <h6 class="mb-0"><i class="fas fa-shield-alt"></i> Moteur de Conformité v1.2.2</h6>
+        </div>
+        <div class="card-body">
+            <p>Intégré à chaque bulletin, le moteur analyse automatiquement la structure salariale et fournit :</p>
+
+            <h6 class="mt-3">1. Score de conformité (0–100)</h6>
+            <p>Un score global basé sur le respect des seuils CGI. Affiché avec une barre de progression colorée.</p>
+
+            <h6>2. Niveau de risque fiscal</h6>
+            <table class="table table-sm table-bordered">
+                <tbody>
+                    <tr><td>🟢 <strong>Risque faible</strong></td><td>Structure conforme et crédible</td></tr>
+                    <tr><td>🟡 <strong>Risque modéré</strong></td><td>Structure légale mais optimisée au-delà des pratiques usuelles</td></tr>
+                    <tr><td>🔴 <strong>Risque élevé</strong></td><td>Risque de requalification fiscale — action corrective nécessaire</td></tr>
+                </tbody>
+            </table>
+
+            <h6>3. Décision recommandée</h6>
+            <table class="table table-sm table-bordered">
+                <tbody>
+                    <tr><td><span class="badge bg-success">✅ Valider</span></td><td>Le bulletin peut être validé en l'état</td></tr>
+                    <tr><td><span class="badge bg-warning text-dark">⚠️ Ajuster recommandé</span></td><td>Des ajustements sont conseillés pour réduire le risque</td></tr>
+                    <tr><td><span class="badge bg-danger">🚨 Corriger immédiatement</span></td><td>Corrections obligatoires avant validation</td></tr>
+                </tbody>
+            </table>
+
+            <h6>4. Phrase de défense juridique</h6>
+            <p>Pour chaque bulletin, le moteur génère une <strong>phrase prête à l'emploi</strong> que vous pouvez utiliser face à un inspecteur fiscal. Cliquez sur le bouton <strong>Copier</strong> pour la copier dans votre presse-papiers et la coller dans un email ou un document.</p>
+            <div class="doc-tip p-3 rounded">
+                <i class="fas fa-gavel text-primary"></i>
+                <strong>Exemple :</strong> <em>« La structure de rémunération est conforme aux seuils usuels du Code Général des Impôts et cohérente avec le niveau de responsabilité et la catégorie professionnelle du salarié. »</em>
+                <br><small class="text-muted">⚖️ Recommandation basée sur les pratiques fiscales usuelles en République de Guinée (CGI, art. 55)</small>
+            </div>
+
+            <h6 class="mt-3">5. Alertes détaillées</h6>
+            <p>Tableau des points de vigilance : type d'alerte, rubrique concernée, constat et action recommandée.</p>
+
+            <h6>6. Scénarios d'optimisation</h6>
+            <p>Trois scénarios côte à côte pour ajuster la structure salariale :</p>
+            <table class="table table-sm table-bordered">
+                <tbody>
+                    <tr><td><strong>Maximale</strong></td><td>Utiliser le plafond CGI de 25%</td></tr>
+                    <tr><td><strong>Recommandée</strong> <span class="badge bg-success doc-badge">Conseillé</span></td><td>Seuil de 20% — équilibre optimal</td></tr>
+                    <tr><td><strong>Prudente</strong></td><td>Seuil de 15% — minimise tout risque</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h3 id="paie-simulation" class="doc-section mt-4">h) Simulation & Scénarios</h3>
+    <p>Menu <strong>Paie → Simulateur</strong></p>
+    <ul>
+        <li><strong>Simulateur IRPP</strong> — Entrez un salaire brut, obtenez le net prévu instantanément</li>
+        <li><strong>Simulation comparative</strong> — Comparez différents barèmes RTS</li>
+        <li><strong>Scénario d'augmentation</strong> — « Si j'augmente de X%, quel sera le net ? »</li>
+    </ul>
+
+    <h3 id="paie-prets" class="doc-section mt-4">i) Prêts & Avances</h3>
+    <p>Menu <strong>Paie → Prêts</strong></p>
+    <ol>
+        <li>Créez un prêt : montant, nombre d'échéances, date de début</li>
+        <li>Le manager approuve ou rejette</li>
+        <li>Le remboursement est <strong>automatiquement déduit du bulletin</strong> chaque mois</li>
+        <li>Suivi du solde restant en temps réel</li>
+    </ol>
+
+    <h3 id="paie-frais" class="doc-section mt-4">j) Notes de frais</h3>
+    <p>Workflow complet :</p>
+    <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+        <span class="badge bg-secondary fs-6">Saisie</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="badge bg-primary fs-6">Soumission</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="badge bg-success fs-6">Validation</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="badge bg-info fs-6">Remboursement</span>
+    </div>
+    <p>Les frais validés sont intégrés au prochain bulletin de paie.</p>
+
+    <h3 id="paie-declarations" class="doc-section mt-4">k) Déclarations sociales</h3>
+    <ul>
+        <li><strong>CNSS</strong> — Génération automatique de la déclaration mensuelle (télé-déclaration)</li>
+        <li><strong>DMU</strong> — Déclaration Mensuelle Unique</li>
+        <li>Export au format <strong>Excel</strong> prêt à soumettre aux organismes</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <!-- 5. TEMPS & PRÉSENCES -->
+    <!-- ============================================================ -->
+    <h2 id="temps" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-clock"></i> 5. Temps & Présences
+    </h2>
+
+    <h3 id="temps-pointage" class="doc-section">a) Pointage</h3>
+    <p>Menu <strong>Temps → Pointages</strong></p>
+    <ul>
+        <li>Deux modes : <strong>Pointage rapide</strong> (Entrée / Sortie en 1 clic) ou <strong>Saisie manuelle</strong></li>
+        <li>Heures travaillées calculées automatiquement</li>
+        <li>Rapport de présence exportable en PDF</li>
+    </ul>
+
+    <h3 id="temps-absences" class="doc-section mt-4">b) Absences</h3>
+    <p>8 types d'absences pris en charge :</p>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Type</th><th>Impact sur la paie</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Maladie (avec certificat)</td><td>Configurable (payée / non payée)</td></tr>
+            <tr><td>Accident de travail</td><td>Couverture CNSS/INAM</td></tr>
+            <tr><td>Injustifiée</td><td>Non payée (déduction automatique)</td></tr>
+            <tr><td>Permission</td><td>Payée</td></tr>
+            <tr><td>Convenance personnelle</td><td>Non payée</td></tr>
+            <tr><td>Formation</td><td>Payée</td></tr>
+            <tr><td>Maternité</td><td>14 semaines (Code du Travail)</td></tr>
+            <tr><td>Événement familial</td><td>Selon type (mariage, décès…)</td></tr>
+        </tbody>
+    </table>
+    <p>Vue <strong>Calendrier</strong> disponible pour visualiser les absences sur le mois.</p>
+
+    <h3 id="temps-hs" class="doc-section mt-4">c) Heures supplémentaires</h3>
+    <ul>
+        <li>L'employé ou le manager saisit les heures</li>
+        <li>Le responsable <strong>valide ou rejette</strong></li>
+        <li>4 taux selon le Code du Travail :</li>
+    </ul>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Type</th><th>Horaire</th><th>Majoration</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>HS Jour</td><td>Au-delà de 40h/semaine (8h–21h)</td><td>+30%</td></tr>
+            <tr><td>HS Nuit</td><td>21h–5h</td><td>+60%</td></tr>
+            <tr><td>HS Jour férié</td><td>Jour férié (jour)</td><td>+20%</td></tr>
+            <tr><td>HS Nuit fériée</td><td>Jour férié (nuit)</td><td>+100%</td></tr>
+        </tbody>
+    </table>
+
+    <h3 id="temps-feries" class="doc-section mt-4">d) Jours fériés</h3>
+    <ul>
+        <li>Calendrier des jours fériés de Guinée pré-configuré</li>
+        <li>Possibilité d'ajouter des jours fériés spécifiques à l'entreprise</li>
+        <li>Jours récurrents (ex : 1er janvier) ou ponctuels</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <!-- 6. CONGÉS -->
+    <!-- ============================================================ -->
+    <h2 id="conges" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-umbrella-beach"></i> 6. Congés
+    </h2>
+
+    <h3 id="conges-types" class="doc-section">a) Types de congés</h3>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Type</th><th>Durée légale</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Congé annuel</td><td>2,5 jours/mois travaillé + bonification ancienneté</td></tr>
+            <tr><td>Maladie</td><td>Selon certificat médical</td></tr>
+            <tr><td>Maternité</td><td>14 semaines</td></tr>
+            <tr><td>Mariage de l'employé</td><td>3 jours</td></tr>
+            <tr><td>Naissance d'un enfant</td><td>3 jours</td></tr>
+            <tr><td>Décès conjoint</td><td>5 jours</td></tr>
+            <tr><td>Décès parent/enfant</td><td>3 jours</td></tr>
+            <tr><td>Décès autre</td><td>1 jour</td></tr>
+            <tr><td>Formation</td><td>Selon programme</td></tr>
+            <tr><td>Examen</td><td>Selon convocation</td></tr>
+            <tr><td>Sans solde</td><td>Variable</td></tr>
+            <tr><td>Récupération</td><td>Variable</td></tr>
+        </tbody>
+    </table>
+
+    <h3 id="conges-demande" class="doc-section mt-4">b) Demander un congé</h3>
+    <ol>
+        <li>Menu <strong>Congés → Nouvelle demande</strong> (ou <strong>Portail → Mes congés → Demander</strong>)</li>
+        <li>Sélectionnez le type, la date de début et de fin</li>
+        <li>Ajoutez un motif ou un justificatif si nécessaire</li>
+        <li>Soumettez la demande</li>
+    </ol>
+
+    <h3 id="conges-solde" class="doc-section mt-4">c) Soldes & Calcul automatique</h3>
+    <ul>
+        <li><strong>Acquisition</strong> : 2,5 jours ouvrables par mois travaillé</li>
+        <li><strong>Bonification ancienneté</strong> : jours supplémentaires selon l'ancienneté</li>
+        <li>Le solde est mis à jour automatiquement à chaque validation de congé</li>
+        <li>Consultable dans <strong>Portail → Mon solde de congés</strong></li>
+    </ul>
+
+    <h3 id="conges-validation" class="doc-section mt-4">d) Circuit de validation</h3>
+    <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+        <span class="badge bg-secondary fs-6">Demande</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="badge bg-warning text-dark fs-6">En attente</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="badge bg-success fs-6">Approuvée</span>
+        ou
+        <span class="badge bg-danger fs-6">Refusée</span>
+    </div>
+    <p>Le supérieur hiérarchique ou le responsable RH valide la demande. Le solde est automatiquement débité.</p>
+
+    <!-- ============================================================ -->
+    <!-- 7. RECRUTEMENT -->
+    <!-- ============================================================ -->
+    <h2 id="recrutement" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-user-plus"></i> 7. Recrutement & Intégration
+    </h2>
+
+    <h3 id="recru-offres" class="doc-section">a) Offres d'emploi</h3>
+    <ul>
+        <li>Créez des offres avec : titre, description, secteur, compétences requises, salaire, date limite</li>
+        <li>Les offres sont accessibles sur une <strong>page publique</strong> (pas besoin de compte)</li>
+        <li>15 secteurs pré-définis (Mines, BTP, Commerce, Banque, Transport, etc.)</li>
+    </ul>
+
+    <h3 id="recru-candidatures" class="doc-section mt-4">b) Candidatures</h3>
+    <ul>
+        <li>Les candidats postulent en ligne : CV, lettre de motivation, documents</li>
+        <li>Suivi des statuts : Reçue → Présélectionnée → En évaluation → Retenue / Rejetée</li>
+        <li>Notation et évaluation par les recruteurs</li>
+    </ul>
+
+    <h3 id="recru-entretiens" class="doc-section mt-4">c) Entretiens</h3>
+    <p>5 types d'entretiens disponibles :</p>
+    <ul>
+        <li>Téléphonique, En personne, Vidéo, Technique, RH</li>
+        <li>Planification avec date, heure, lieu, évaluateurs</li>
+        <li>Grille d'évaluation avec score</li>
+    </ul>
+
+    <h3 id="recru-decisions" class="doc-section mt-4">d) Décisions d'embauche</h3>
+    <ul>
+        <li>Proposition de poste et conditions salariales</li>
+        <li>Suivi : Offre faite → Acceptée / Refusée par le candidat</li>
+    </ul>
+
+    <h3 id="recru-integration" class="doc-section mt-4">e) Onboarding (Intégration)</h3>
+    <ul>
+        <li>Checklist d'intégration automatique :</li>
+    </ul>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr><td><i class="far fa-square"></i> Vérification des antécédents</td></tr>
+            <tr><td><i class="far fa-square"></i> Attribution du badge / accès</td></tr>
+            <tr><td><i class="far fa-square"></i> Équipement informatique</td></tr>
+            <tr><td><i class="far fa-square"></i> Formation initiale</td></tr>
+            <tr><td><i class="far fa-square"></i> Visite médicale d'embauche</td></tr>
+            <tr><td><i class="far fa-square"></i> Signature du contrat</td></tr>
+        </tbody>
+    </table>
+    <div class="doc-tip p-3 rounded mb-3">
+        <i class="fas fa-lightbulb text-primary"></i>
+        <strong>Conversion automatique :</strong> Une fois le candidat embauché, cliquez sur <strong>« Créer employé »</strong> pour générer automatiquement sa fiche employé à partir de sa candidature.
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 8. FORMATION -->
+    <!-- ============================================================ -->
+    <h2 id="formation" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-graduation-cap"></i> 8. Formation
+    </h2>
+    <ul>
+        <li><strong>Catalogue</strong> — 7 domaines : Technique, Management, Sécurité, Informatique, Langues, Soft skills, Réglementaire</li>
+        <li><strong>Sessions</strong> — Planification avec formateur, lieu, dates, capacité</li>
+        <li><strong>Inscriptions</strong> — Internes (employés) ou externes (page publique)</li>
+        <li><strong>Évaluations</strong> — Questionnaires post-formation</li>
+        <li><strong>Certificats</strong> — Génération automatique</li>
+        <li><strong>Plan annuel</strong> — Planification des besoins en formation par service</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <!-- 9. COMPTABILITÉ -->
+    <!-- ============================================================ -->
+    <h2 id="comptabilite" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-book"></i> 9. Comptabilité
+    </h2>
+    <p>Module conforme au <strong>SYSCOHADA</strong> (Système Comptable Ouest-Africain).</p>
+    <ul>
+        <li><strong>Plan comptable</strong> — 9 classes de comptes pré-configurées</li>
+        <li><strong>Journaux</strong> — Achats, Ventes, Banque, Caisse, Opérations Diverses, À-nouveau, Salaires</li>
+        <li><strong>Écritures comptables</strong> — Saisie en partie double (débit = crédit)</li>
+        <li><strong>Exercice comptable</strong> — Ouverture, clôture, statuts</li>
+        <li><strong>Comptes bancaires</strong> — Gestion multi-banques</li>
+        <li><strong>Rapprochement bancaire</strong> — Pointage des relevés vs écritures</li>
+        <li><strong>Pièces comptables</strong> — Attachement de factures et justificatifs</li>
+    </ul>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Classe</th><th>Intitulé</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td>Comptes de capitaux</td></tr>
+            <tr><td>2</td><td>Comptes d'immobilisations</td></tr>
+            <tr><td>3</td><td>Comptes de stocks</td></tr>
+            <tr><td>4</td><td>Comptes de tiers</td></tr>
+            <tr><td>5</td><td>Comptes de trésorerie</td></tr>
+            <tr><td>6</td><td>Comptes de charges</td></tr>
+            <tr><td>7</td><td>Comptes de produits</td></tr>
+            <tr><td>8</td><td>Comptes des autres charges</td></tr>
+            <tr><td>9</td><td>Comptes analytiques</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ============================================================ -->
+    <!-- 10. PORTAIL EMPLOYÉ -->
+    <!-- ============================================================ -->
+    <h2 id="portail" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-id-badge"></i> 10. Portail employé
+    </h2>
+    <p>Le portail permet aux employés d'accéder en libre-service à leurs informations :</p>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Fonctionnalité</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><i class="fas fa-file-invoice-dollar"></i> Mes bulletins</td><td>Consulter et télécharger tous les bulletins de paie</td></tr>
+            <tr><td><i class="fas fa-umbrella-beach"></i> Mes congés</td><td>Demander un congé, voir le solde, consulter l'historique</td></tr>
+            <tr><td><i class="fas fa-user-edit"></i> Mon profil</td><td>Mettre à jour les informations personnelles</td></tr>
+            <tr><td><i class="fas fa-file-alt"></i> Attestation</td><td>Générer un certificat de salaire (pour banque, visa, etc.)</td></tr>
+            <tr><td><i class="fas fa-link"></i> Lien public</td><td>Accéder au bulletin via un lien unique sans connexion</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ============================================================ -->
+    <!-- 11. SÉCURITÉ -->
+    <!-- ============================================================ -->
+    <h2 id="securite" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-lock"></i> 11. Sécurité & Permissions
+    </h2>
+
+    <h5>Niveaux d'accès</h5>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr><th>Niveau</th><th>Rôle</th><th>Droits</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td>Consultation</td><td>Lecture seule</td></tr>
+            <tr><td>2</td><td>Opérateur</td><td>Saisie de données</td></tr>
+            <tr><td>3</td><td>Manager</td><td>Validation, approbation</td></tr>
+            <tr><td>4</td><td>Responsable RH</td><td>Gestion complète du personnel</td></tr>
+            <tr><td>5</td><td>Administrateur</td><td>Configuration, utilisateurs, tous les modules</td></tr>
+        </tbody>
+    </table>
+
+    <h5 class="mt-3">Droits par module</h5>
+    <p>Pour chaque module, un utilisateur peut avoir :</p>
+    <ul>
+        <li><i class="fas fa-eye text-info"></i> <strong>Lecture</strong> — Consulter les données</li>
+        <li><i class="fas fa-edit text-success"></i> <strong>Écriture</strong> — Créer de nouvelles entrées</li>
+        <li><i class="fas fa-pen text-warning"></i> <strong>Modification</strong> — Modifier les entrées existantes</li>
+        <li><i class="fas fa-trash text-danger"></i> <strong>Suppression</strong> — Supprimer</li>
+        <li><i class="fas fa-check-circle text-primary"></i> <strong>Validation</strong> — Approuver les opérations</li>
+    </ul>
+
+    <h5 class="mt-3">Mesures de sécurité</h5>
+    <ul>
+        <li><strong>Isolation multi-entreprise</strong> — Chaque entreprise ne voit que ses propres données</li>
+        <li><strong>Journal d'audit</strong> — Toutes les actions sont tracées (utilisateur, date, IP, action)</li>
+        <li><strong>Ré-authentification</strong> — Requise pour les opérations sensibles</li>
+        <li><strong>Identifiants UUID</strong> — Protection contre les attaques IDOR</li>
+        <li><strong>En-têtes de sécurité HTTP</strong> — CSP, HSTS, X-Frame-Options</li>
+        <li><strong>Limitation de débit</strong> — Protection contre les attaques par force brute</li>
+        <li><strong>Validation des fichiers</strong> — Types et tailles contrôlés à l'upload</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <!-- 12. CONFORMITÉ LÉGALE -->
+    <!-- ============================================================ -->
+    <h2 id="conformite" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-balance-scale"></i> 12. Conformité légale — République de Guinée
+    </h2>
+    <p>GuinéeRH est conçu pour respecter la réglementation guinéenne :</p>
+
+    <h5>Code du Travail</h5>
+    <ul>
+        <li>Types de contrats conformes (CDI, CDD, Stage, Apprentissage)</li>
+        <li>Durée légale du travail : 40h/semaine</li>
+        <li>Heures supplémentaires avec majorations légales</li>
+        <li>Congés payés : 2,5 jours/mois + bonification ancienneté</li>
+        <li>Congé maternité : 14 semaines</li>
+        <li>Sanctions disciplinaires conformes à la procédure légale</li>
+    </ul>
+
+    <h5>Code Général des Impôts (CGI)</h5>
+    <ul>
+        <li><strong>RTS progressif</strong> — 6 tranches (0% à 35%)</li>
+        <li><strong>Indemnités forfaitaires</strong> — Exonérées jusqu'à 25% du brut (art. 55)</li>
+        <li><strong>Détection intelligente</strong> — Le moteur identifie automatiquement les rubriques exonérables</li>
+        <li><strong>Versement Forfaitaire</strong> — 6% à la charge de l'employeur</li>
+        <li><strong>Taxe d'Apprentissage</strong> — 2% (ou ONFPP 1,5% si ≥ 30 employés)</li>
+    </ul>
+
+    <h5>Sécurité Sociale (CNSS)</h5>
+    <ul>
+        <li>Cotisation salariale : 5% du brut</li>
+        <li>Cotisation patronale : 18% du brut</li>
+        <li>Plancher : SMIG (550 000 GNF)</li>
+        <li>Plafond : 2 500 000 GNF</li>
+        <li>Télé-déclaration mensuelle automatisée</li>
+    </ul>
+
+    <h5>SYSCOHADA</h5>
+    <ul>
+        <li>Plan comptable conforme au référentiel OHADA</li>
+        <li>Comptabilité en partie double</li>
+        <li>9 classes de comptes</li>
+    </ul>
+
+    <h5>Inspection du travail</h5>
+    <ul>
+        <li>Registres légaux accessibles</li>
+        <li>Checklist d'auto-évaluation</li>
+        <li>Suivi des visites d'inspection</li>
+        <li>Gestion des expatriés et permis de travail</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <!-- 13. FAQ -->
+    <!-- ============================================================ -->
+    <h2 id="faq" class="doc-section text-primary border-bottom pb-2 mb-4 mt-5">
+        <i class="fas fa-question-circle"></i> 13. Questions fréquentes
+    </h2>
+
+    <div class="accordion mb-4" id="accFaq">
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">Comment modifier le salaire d'un employé ?</button></h2>
+            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#accFaq">
+                <div class="accordion-body">
+                    Allez dans <strong>Paie → Éléments de salaire → [Employé]</strong>. Modifiez la rubrique « Salaire de base ». Le nouveau montant sera appliqué au prochain calcul de paie.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">Comment recalculer un bulletin déjà généré ?</button></h2>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accFaq">
+                <div class="accordion-body">
+                    Si la période est en statut <strong>Calculée</strong>, vous pouvez relancer le calcul. Si elle est <strong>Validée</strong> ou <strong>Clôturée</strong>, elle ne peut plus être modifiée — créez un bulletin de rappel sur la période suivante.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">Comment envoyer les bulletins aux employés ?</button></h2>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accFaq">
+                <div class="accordion-body">
+                    Depuis la liste des bulletins, utilisez l'envoi par <strong>email</strong> ou <strong>WhatsApp</strong>. Les employés peuvent aussi accéder à leurs bulletins via le <strong>Portail employé</strong> ou un <strong>lien public</strong> unique.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">Que signifie le score de conformité sur le bulletin ?</button></h2>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#accFaq">
+                <div class="accordion-body">
+                    Le <strong>score de conformité (0–100)</strong> mesure à quel point la structure salariale respecte les seuils du CGI. Un score ≥ 80 indique une conformité satisfaisante. En dessous, consultez les alertes et la décision recommandée (Valider / Ajuster / Corriger).
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">Comment utiliser la phrase de défense fiscale ?</button></h2>
+            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#accFaq">
+                <div class="accordion-body">
+                    Sur le détail du bulletin, dans le bloc de risque fiscal, cliquez sur le bouton <strong>« Copier »</strong>. La phrase est copiée dans votre presse-papiers. Collez-la dans un email ou un courrier de réponse à un contrôle fiscal. Elle fait référence au CGI art. 55.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">Comment ajouter un nouvel utilisateur ?</button></h2>
+            <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#accFaq">
+                <div class="accordion-body">
+                    <strong>Administration → Gérer les utilisateurs → Inviter</strong>. Définissez le niveau d'accès (Consultation à Admin) et les modules autorisés. L'utilisateur recevra un email d'invitation.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">Mes données sont-elles isolées des autres entreprises ?</button></h2>
+            <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#accFaq">
+                <div class="accordion-body">
+                    <strong>Oui, totalement.</strong> GuinéeRH utilise une isolation multi-entreprise complète. Chaque entreprise ne peut voir et gérer que ses propres données. Aucun croisement n'est possible entre les entreprises.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER -->
+    <!-- ============================================================ -->
+    <div class="text-center mt-5 pt-4 border-top text-muted">
+        <p class="mb-1"><strong>GuinéeRH</strong> — Gestionnaire des Ressources Humaines</p>
+        <p class="mb-1"><small>www.guineerh.space</small></p>
+        <p class="mb-0"><small>© 2026 — Tous droits réservés</small></p>
+        <p class="mt-2"><small class="text-muted">Version du guide : Avril 2026 — Moteur de conformité v1.2.2</small></p>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,240 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Déclaration IS {{ declaration.reference }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-file-earmark-check text-primary"></i> {{ declaration.reference }}
+            </h1>
+            <p class="text-muted mb-0">Déclaration IS - {{ declaration.periode_fin|date:"Y" }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:fiscalite_declaration_is_update' declaration.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="{% url 'comptabilite:fiscalite_declarations_is' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small">Base imposable</h6>
+                    <p class="fs-4 fw-bold mb-0">{{ declaration.base_imposable|floatformat:0 }} GNF</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small">IS Net</h6>
+                    <p class="fs-4 fw-bold text-primary mb-0">{{ declaration.is_net|floatformat:0 }} GNF</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small">Acomptes versés</h6>
+                    <p class="fs-4 fw-bold text-success mb-0">{{ declaration.acomptes_verses|floatformat:0 }} GNF</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small">Solde à payer</h6>
+                    <p class="fs-4 fw-bold {% if declaration.solde_a_payer > 0 %}text-danger{% else %}text-success{% endif %} mb-0">
+                        {{ declaration.solde_a_payer|floatformat:0 }} GNF
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Détermination du résultat fiscal</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Résultat comptable brut</td>
+                                <td class="text-end fw-semibold">{{ declaration.resultat_comptable_brut|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-light">
+                                <td colspan="2" class="fw-semibold">Réintégrations</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">Amortissements non déductibles</td>
+                                <td class="text-end">+ {{ declaration.reintegrations_amortissements|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">Provisions non déductibles</td>
+                                <td class="text-end">+ {{ declaration.reintegrations_provisions|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">Amendes et pénalités</td>
+                                <td class="text-end">+ {{ declaration.reintegrations_amendes|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">Dons excessifs</td>
+                                <td class="text-end">+ {{ declaration.reintegrations_dons_excessifs|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">Autres réintégrations</td>
+                                <td class="text-end">+ {{ declaration.autres_reintegrations|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td class="fw-semibold">Total réintégrations</td>
+                                <td class="text-end fw-semibold">{{ declaration.total_reintegrations|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-light">
+                                <td colspan="2" class="fw-semibold">Déductions</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">Dividendes exonérés</td>
+                                <td class="text-end">- {{ declaration.deductions_dividendes|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">Plus-values exonérées</td>
+                                <td class="text-end">- {{ declaration.deductions_plus_values|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">Provisions réglementées</td>
+                                <td class="text-end">- {{ declaration.deductions_provisions_reglementees|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">Autres déductions</td>
+                                <td class="text-end">- {{ declaration.autres_deductions|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td class="fw-semibold">Total déductions</td>
+                                <td class="text-end fw-semibold">{{ declaration.total_deductions|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td class="fw-bold">Résultat fiscal</td>
+                                <td class="text-end fw-bold">{{ declaration.resultat_fiscal|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Déficits antérieurs reportés</td>
+                                <td class="text-end">- {{ declaration.deficits_anterieurs|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td class="fw-bold">Base imposable</td>
+                                <td class="text-end fw-bold">{{ declaration.base_imposable|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Calcul de l'IS</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Base imposable × Taux IS ({{ declaration.taux_is }}%)</td>
+                                <td class="text-end fw-semibold">{{ declaration.is_brut|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Crédits d'impôt</td>
+                                <td class="text-end">- {{ declaration.credits_impot|floatformat:2 }}</td>
+                            </tr>
+                            {% if declaration.is_minimum_applicable %}
+                            <tr>
+                                <td>Minimum fiscal applicable</td>
+                                <td class="text-end">{{ declaration.minimum_fiscal|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="table-primary">
+                                <td class="fw-bold">IS Net à payer</td>
+                                <td class="text-end fw-bold">{{ declaration.is_net|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Acomptes versés</td>
+                                <td class="text-end text-success">- {{ declaration.acomptes_verses|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-{% if declaration.solde_a_payer > 0 %}danger{% else %}success{% endif %}">
+                                <td class="fw-bold">Solde à payer</td>
+                                <td class="text-end fw-bold">{{ declaration.solde_a_payer|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-sm-5 text-muted">Type</dt>
+                        <dd class="col-sm-7">{{ declaration.get_type_declaration_display }}</dd>
+
+                        <dt class="col-sm-5 text-muted">Période</dt>
+                        <dd class="col-sm-7">{{ declaration.periode_debut|date:"d/m/Y" }} - {{ declaration.periode_fin|date:"d/m/Y" }}</dd>
+
+                        <dt class="col-sm-5 text-muted">Statut</dt>
+                        <dd class="col-sm-7">
+                            {% if declaration.statut == 'brouillon' %}
+                            <span class="badge bg-secondary">Brouillon</span>
+                            {% elif declaration.statut == 'calcule' %}
+                            <span class="badge bg-info">Calculé</span>
+                            {% elif declaration.statut == 'valide' %}
+                            <span class="badge bg-primary">Validé</span>
+                            {% elif declaration.statut == 'depose' %}
+                            <span class="badge bg-success">Déposé</span>
+                            {% elif declaration.statut == 'paye' %}
+                            <span class="badge bg-dark">Payé</span>
+                            {% endif %}
+                        </dd>
+
+                        {% if declaration.date_depot %}
+                        <dt class="col-sm-5 text-muted">Date dépôt</dt>
+                        <dd class="col-sm-7">{{ declaration.date_depot|date:"d/m/Y" }}</dd>
+                        {% endif %}
+
+                        {% if declaration.date_paiement %}
+                        <dt class="col-sm-5 text-muted">Date paiement</dt>
+                        <dd class="col-sm-7">{{ declaration.date_paiement|date:"d/m/Y" }}</dd>
+                        {% endif %}
+
+                        <dt class="col-sm-5 text-muted">Créé le</dt>
+                        <dd class="col-sm-7">{{ declaration.date_creation|date:"d/m/Y H:i" }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if declaration.dossier_fiscal %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-folder"></i> Dossier fiscal</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'comptabilite:fiscalite_dossier_detail' declaration.dossier_fiscal.pk %}">
+                        {{ declaration.dossier_fiscal }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

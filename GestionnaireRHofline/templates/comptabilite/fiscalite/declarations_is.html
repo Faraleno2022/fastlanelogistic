@@ -1,0 +1,143 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Déclarations IS{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-file-earmark-check text-primary"></i> Déclarations IS
+            </h1>
+            <p class="text-muted mb-0">Gérez vos déclarations d'Impôt sur les Sociétés.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comptabilite:fiscalite_declaration_is_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle déclaration
+            </a>
+            <a href="{% url 'comptabilite:fiscalite_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <form method="get" class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous</option>
+                        {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'comptabilite:fiscalite_declarations_is' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Total IS</h6>
+                        <i class="bi bi-cash text-primary"></i>
+                    </div>
+                    <p class="display-6 fw-bold mb-0">{{ total_is|floatformat:0 }} GNF</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-0">Solde à payer</h6>
+                        <i class="bi bi-wallet2 text-danger"></i>
+                    </div>
+                    <p class="display-6 fw-bold text-danger mb-0">{{ total_solde|floatformat:0 }} GNF</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if declarations %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Référence</th>
+                            <th>Type</th>
+                            <th>Période</th>
+                            <th>Statut</th>
+                            <th class="text-end">Base imposable</th>
+                            <th class="text-end">IS Net</th>
+                            <th class="text-end">Solde</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for decl in declarations %}
+                        <tr>
+                            <td class="fw-semibold">{{ decl.reference }}</td>
+                            <td>{{ decl.get_type_declaration_display }}</td>
+                            <td>{{ decl.periode_debut|date:"d/m/Y" }} - {{ decl.periode_fin|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if decl.statut == 'brouillon' %}
+                                <span class="badge bg-secondary">Brouillon</span>
+                                {% elif decl.statut == 'calcule' %}
+                                <span class="badge bg-info">Calculé</span>
+                                {% elif decl.statut == 'valide' %}
+                                <span class="badge bg-primary">Validé</span>
+                                {% elif decl.statut == 'depose' %}
+                                <span class="badge bg-success">Déposé</span>
+                                {% elif decl.statut == 'paye' %}
+                                <span class="badge bg-dark">Payé</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">{{ decl.base_imposable|floatformat:2 }}</td>
+                            <td class="text-end">{{ decl.is_net|floatformat:2 }}</td>
+                            <td class="text-end {% if decl.solde_a_payer > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ decl.solde_a_payer|floatformat:2 }}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'comptabilite:fiscalite_declaration_is_detail' decl.pk %}" class="btn btn-sm btn-outline-primary" title="Détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'comptabilite:fiscalite_declaration_is_update' decl.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-file-earmark-check text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Aucune déclaration IS trouvée</h5>
+                <p class="text-muted mb-3">Créez votre première déclaration d'Impôt sur les Sociétés.</p>
+                <a href="{% url 'comptabilite:fiscalite_declaration_is_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nouvelle déclaration
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

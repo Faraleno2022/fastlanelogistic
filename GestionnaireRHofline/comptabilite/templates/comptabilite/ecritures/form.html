@@ -1,0 +1,352 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Nouvelle Écriture Comptable" %} - {{ block.super }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-edit text-primary"></i>
+                        {% trans "Nouvelle Écriture Comptable" %}
+                    </h1>
+                    <p class="text-muted mb-0">{% trans "Enregistrer une nouvelle écriture comptable" %}</p>
+                </div>
+                <div>
+                    <a href="{% url 'comptabilite:ecriture_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> {% trans "Retour à la liste" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="row">
+        <div class="col-lg-8">
+            <form method="post" id="ecriture-form">
+                {% csrf_token %}
+                
+                <!-- Informations générales -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle text-primary"></i>
+                            {% trans "Informations générales" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.numero_ecriture.id_for_label }}" class="form-label">
+                                    {% trans "Numéro d'écriture" %}
+                                </label>
+                                {{ form.numero_ecriture }}
+                                {% if form.numero_ecriture.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.numero_ecriture.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_ecriture.id_for_label }}" class="form-label">
+                                    {% trans "Date de l'écriture" %} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.date_ecriture }}
+                                {% if form.date_ecriture.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.date_ecriture.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.journal.id_for_label }}" class="form-label">
+                                    {% trans "Journal" %} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.journal }}
+                                {% if form.journal.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.journal.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.exercice.id_for_label }}" class="form-label">
+                                    {% trans "Exercice" %} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.exercice }}
+                                {% if form.exercice.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.exercice.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.libelle.id_for_label }}" class="form-label">
+                                {% trans "Libellé de l'écriture" %} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.libelle }}
+                            {% if form.libelle.errors %}
+                                <div class="text-danger small">
+                                    {{ form.libelle.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lignes d'écriture -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list text-primary"></i>
+                            {% trans "Lignes d'écriture" %}
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="addLigne()">
+                            <i class="fas fa-plus"></i> {% trans "Ajouter une ligne" %}
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="lignes-table">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Compte" %}</th>
+                                        <th>{% trans "Libellé" %}</th>
+                                        <th class="text-end">{% trans "Débit" %}</th>
+                                        <th class="text-end">{% trans "Crédit" %}</th>
+                                        <th class="text-center">{% trans "Actions" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lignes-tbody">
+                                    <!-- Lignes initiales -->
+                                    <tr>
+                                        <td>
+                                            <select name="compte[]" class="form-select" required>
+                                                <option value="">{% trans "Sélectionner un compte" %}</option>
+                                                {% for compte in comptes %}
+                                                <option value="{{ compte.id }}">{{ compte.numero_compte }} - {{ compte.intitule }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="libelle_ligne[]" class="form-control" placeholder="{% trans 'Libellé de la ligne' %}">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="debit[]" class="form-control text-end" step="0.01" min="0" placeholder="0.00">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="credit[]" class="form-control text-end" step="0.01" min="0" placeholder="0.00">
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="removeLigne(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <select name="compte[]" class="form-select" required>
+                                                <option value="">{% trans "Sélectionner un compte" %}</option>
+                                                {% for compte in comptes %}
+                                                <option value="{{ compte.id }}">{{ compte.numero_compte }} - {{ compte.intitule }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="libelle_ligne[]" class="form-control" placeholder="{% trans 'Libellé de la ligne' %}">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="debit[]" class="form-control text-end" step="0.01" min="0" placeholder="0.00">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="credit[]" class="form-control text-end" step="0.01" min="0" placeholder="0.00">
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="removeLigne(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-info fw-bold">
+                                        <td colspan="2">{% trans "Totaux" %}</td>
+                                        <td class="text-end" id="total-debit">0.00</td>
+                                        <td class="text-end" id="total-credit">0.00</td>
+                                        <td class="text-center" id="ecart">0.00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i>
+                            {% trans "Le total des débits doit être égal au total des crédits pour que l'écriture soit équilibrée." %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'comptabilite:ecriture_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> {% trans "Annuler" %}
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        <i class="fas fa-save"></i> {% trans "Enregistrer l'écriture" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Aide -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle text-info"></i>
+                        {% trans "Aide" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">{% trans "Principe de la comptabilité" %}</h6>
+                        <p class="small text-muted">
+                            {% trans "Chaque écriture doit respecter le principe : Total Débits = Total Crédits" %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">{% trans "Débit vs Crédit" %}</h6>
+                        <p class="small text-muted">
+                            {% trans "Débit : Augmentation des comptes de charges et d'actifs" %}<br>
+                            {% trans "Crédit : Augmentation des comptes de produits et de passifs" %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">{% trans "Équilibre" %}</h6>
+                        <p class="small text-muted">
+                            {% trans "L'écart doit être de 0.00 pour pouvoir enregistrer l'écriture" %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addLigne() {
+    const tbody = document.getElementById('lignes-tbody');
+    const newRow = document.createElement('tr');
+    
+    // Options des comptes
+    let compteOptions = '<option value="">{% trans "Sélectionner un compte" %}</option>';
+    {% for compte in comptes %}
+    compteOptions += '<option value="{{ compte.id }}">{{ compte.numero_compte }} - {{ compte.intitule }}</option>';
+    {% endfor %}
+    
+    newRow.innerHTML = `
+        <td>
+            <select name="compte[]" class="form-select" required>
+                ${compteOptions}
+            </select>
+        </td>
+        <td>
+            <input type="text" name="libelle_ligne[]" class="form-control" placeholder="{% trans 'Libellé de la ligne' %}">
+        </td>
+        <td>
+            <input type="number" name="debit[]" class="form-control text-end" step="0.01" min="0" placeholder="0.00" onchange="calculerTotaux()">
+        </td>
+        <td>
+            <input type="number" name="credit[]" class="form-control text-end" step="0.01" min="0" placeholder="0.00" onchange="calculerTotaux()">
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeLigne(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(newRow);
+}
+
+function removeLigne(button) {
+    const row = button.closest('tr');
+    const tbody = row.parentElement;
+    
+    // Garder au moins 2 lignes
+    if (tbody.children.length > 2) {
+        row.remove();
+        calculerTotaux();
+    } else {
+        alert("Il doit y avoir au moins 2 lignes dans une écriture comptable");
+    }
+}
+
+function calculerTotaux() {
+    let totalDebit = 0;
+    let totalCredit = 0;
+    
+    const debits = document.querySelectorAll('input[name="debit[]"]');
+    const credits = document.querySelectorAll('input[name="credit[]"]');
+    
+    debits.forEach(input => {
+        totalDebit += parseFloat(input.value) || 0;
+    });
+    
+    credits.forEach(input => {
+        totalCredit += parseFloat(input.value) || 0;
+    });
+    
+    const ecart = totalDebit - totalCredit;
+    
+    document.getElementById('total-debit').textContent = totalDebit.toFixed(2);
+    document.getElementById('total-credit').textContent = totalCredit.toFixed(2);
+    document.getElementById('ecart').textContent = ecart.toFixed(2);
+    
+    // Mettre à jour le style de l'écart
+    const ecartElement = document.getElementById('ecart');
+    ecartElement.parentElement.className = 'text-center fw-bold';
+    if (ecart === 0) {
+        ecartElement.parentElement.classList.add('text-success');
+    } else {
+        ecartElement.parentElement.classList.add('text-danger');
+    }
+    
+    // Activer/désactiver le bouton de soumission
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = ecart !== 0;
+    
+    if (ecart !== 0) {
+        submitBtn.title = "L'écriture doit être équilibrée (débits = crédits)";
+    } else {
+        submitBtn.title = '';
+    }
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    // Ajouter les écouteurs d'événements
+    document.querySelectorAll('input[name="debit[]"], input[name="credit[]"]').forEach(input => {
+        input.addEventListener('change', calculerTotaux);
+        input.addEventListener('input', calculerTotaux);
+    });
+    
+    // Calcul initial
+    calculerTotaux();
+});
+</script>
+{% endblock %}

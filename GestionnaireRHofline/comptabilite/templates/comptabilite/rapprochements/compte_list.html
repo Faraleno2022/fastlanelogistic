@@ -1,0 +1,240 @@
+{% extends "comptabilite/base/list.html" %}
+{% load i18n %}
+{% load intcomma_filters %}
+
+{% block title %}{% trans "Comptes Bancaires" %} - {{ block.super }}{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">
+            <i class="fas fa-university text-primary"></i>
+            {% trans "Comptes Bancaires" %}
+        </h1>
+        <p class="text-muted mb-0">{% trans "Gestion des comptes bancaires de l'entreprise" %}</p>
+    </div>
+    <div>
+        <a href="{% url 'comptabilite:compte-bancaire-create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> {% trans "Nouveau Compte" %}
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block filters %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-filter"></i> {% trans "Filtres et Recherche" %}
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">{% trans "Recherche" %}</label>
+                <input type="text" id="search" name="search" class="form-control" 
+                       placeholder="{% trans 'Numéro, banque, intitulé...' %}"
+                       value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <label for="banque" class="form-label">{% trans "Banque" %}</label>
+                <select id="banque" name="banque" class="form-select">
+                    <option value="">{% trans "Toutes" %}</option>
+                    {% for banque in banques %}
+                    <option value="{{ banque }}" {% if request.GET.banque == banque %}selected{% endif %}>
+                        {{ banque }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="devise" class="form-label">{% trans "Devise" %}</label>
+                <select id="devise" name="devise" class="form-select">
+                    <option value="">{% trans "Toutes" %}</option>
+                    <option value="GNF" {% if request.GET.devise == 'GNF' %}selected{% endif %}>GNF</option>
+                    <option value="EUR" {% if request.GET.devise == 'EUR' %}selected{% endif %}>EUR</option>
+                    <option value="USD" {% if request.GET.devise == 'USD' %}selected{% endif %}>USD</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="actif" class="form-label">&nbsp;</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="actif" 
+                           id="actif" value="1" {% if request.GET.actif %}checked{% endif %}>
+                    <label class="form-check-label" for="actif">
+                        {% trans "Actifs uniquement" %}
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary flex-fill">
+                        <i class="fas fa-search"></i> {% trans "Rechercher" %}
+                    </button>
+                    <a href="?" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block table_content %}
+<div class="card">
+    <div class="card-header">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-list"></i>
+            {% trans "Liste des Comptes" %}
+            {% if object_list %}
+            <span class="badge bg-primary ms-2">{{ object_list|length }}</span>
+            {% endif %}
+        </h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>{% trans "Banque" %}</th>
+                    <th>{% trans "Code" %}</th>
+                    <th>{% trans "Libellé" %}</th>
+                    <th>{% trans "IBAN" %}</th>
+                    <th class="text-end">{% trans "Solde Initial" %}</th>
+                    <th>{% trans "État" %}</th>
+                    <th style="width: 120px;">{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compte in object_list %}
+                <tr>
+                    <td>
+                        <strong>{{ compte.banque }}</strong>
+                    </td>
+                    <td>
+                        <code>{{ compte.code }}</code>
+                    </td>
+                    <td>
+                        {{ compte.libelle }}
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">{{ compte.iban|default:"N/A" }}</span>
+                    </td>
+                    <td class="text-end">
+                        <strong class="{% if compte.solde_initial < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ compte.solde_initial|floatformat:2 }} GNF
+                        </strong>
+                    </td>
+                    <td>
+                        {% if compte.est_actif %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check"></i> {% trans "Actif" %}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-pause"></i> {% trans "Inactif" %}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{% url 'comptabilite:compte-bancaire-detail' compte.pk %}" 
+                               class="btn btn-outline-primary" 
+                               title="{% trans 'Voir détails' %}">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'comptabilite:compte-bancaire-update' compte.pk %}" 
+                               class="btn btn-outline-warning"
+                               title="{% trans 'Éditer' %}">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if compte.rapprochements.count == 0 %}
+                            <a href="{% url 'comptabilite:compte-bancaire-delete' compte.pk %}" 
+                               class="btn btn-outline-danger"
+                               title="{% trans 'Supprimer' %}">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            {% else %}
+                            <button class="btn btn-outline-danger" disabled
+                                    title="{% trans 'Impossible de supprimer un compte avec des rapprochements' %}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-5">
+                        <i class="fas fa-university fa-3x mb-3 text-muted"></i>
+                        <h5>{% trans "Aucun compte bancaire" %}</h5>
+                        <p class="text-muted">
+                            {% trans "Commencez par ajouter votre premier compte bancaire." %}
+                        </p>
+                        <a href="{% url 'comptabilite:compte-bancaire-create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> {% trans "Ajouter un Compte" %}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if object_list %}
+    <div class="card-footer bg-light">
+        <div class="row">
+            <div class="col-md-6">
+                <small class="text-muted">
+                    <i class="fas fa-calculator"></i>
+                    {% trans "Total solde" %}: 
+                    <strong class="{% if total_solde < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ total_solde|floatformat:2 }} GNF
+                    </strong>
+                </small>
+            </div>
+            <div class="col-md-6 text-end">
+                <small class="text-muted">
+                    {% blocktrans count count=object_list|length %}{{ count }} compte trouvé{% plural %}{{ count }} comptes trouvés{% endblocktrans %}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Pagination des comptes" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

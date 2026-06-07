@@ -1,0 +1,99 @@
+{% extends 'comptabilite/base_compta.html' %}
+
+{% block title %}Impayés Clients{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Impayés Clients</h4>
+    <div>
+        <a href="{% url 'comptabilite:compte_client_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i>Comptes Clients
+        </a>
+    </div>
+</div>
+
+<!-- Résumé -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm bg-danger text-white">
+            <div class="card-body text-center">
+                <h6 class="mb-1">Total Impayés</h6>
+                <h3 class="mb-0">{{ total_impayes|floatformat:0 }} GNF</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Nombre de Factures</h6>
+                <h3 class="mb-0 text-danger">{{ nb_impayes }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-warning">
+    <i class="bi bi-info-circle me-2"></i>Liste des factures clients non totalement réglées au {{ today|date:"d/m/Y" }}
+</div>
+
+<!-- Liste des impayés -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background-color: #F8D7DA;">
+                    <tr>
+                        <th>N° Facture</th>
+                        <th>Client</th>
+                        <th>Date Facture</th>
+                        <th>Échéance</th>
+                        <th class="text-center">Retard</th>
+                        <th class="text-end">Montant TTC</th>
+                        <th class="text-end">Payé</th>
+                        <th class="text-end">Reste dû</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for facture in factures %}
+                    <tr class="{% if facture.est_en_retard %}table-danger{% endif %}">
+                        <td><strong>{{ facture.numero }}</strong></td>
+                        <td>
+                            <a href="{% url 'comptabilite:compte_client_detail' facture.tiers.pk %}">
+                                {{ facture.tiers.raison_sociale }}
+                            </a>
+                        </td>
+                        <td>{{ facture.date_facture|date:"d/m/Y" }}</td>
+                        <td>{{ facture.date_echeance|date:"d/m/Y"|default:"-" }}</td>
+                        <td class="text-center">
+                            {% if facture.est_en_retard %}
+                                <span class="badge bg-danger">+{{ facture.jours_retard }} j</span>
+                            {% else %}
+                                <span class="badge bg-success">À échoir</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">{{ facture.montant_ttc|floatformat:0 }}</td>
+                        <td class="text-end text-success">{{ facture.montant_paye|floatformat:0 }}</td>
+                        <td class="text-end text-danger fw-bold">{{ facture.reste_a_payer_calc|floatformat:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-success">
+                            <i class="bi bi-check-circle fs-1 d-block mb-2"></i>
+                            Aucune facture impayée
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if factures %}
+                <tfoot style="background-color: #F8D7DA; font-weight: bold;">
+                    <tr>
+                        <td colspan="7" class="text-end">TOTAL IMPAYÉS :</td>
+                        <td class="text-end text-danger">{{ total_impayes|floatformat:0 }} GNF</td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "comptabilite/base_module.html" %}
+{% load static %}
+
+{% block title %}Historique des Modifications{% endblock %}
+
+{% block page_header %}
+<div class="mb-4">
+    <h1 class="mb-0">Historique des Modifications</h1>
+    <p class="text-muted mt-2">Piste d'audit complète de toutes les modifications</p>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Type d'Objet</label>
+                <select name="type_objet" class="form-control">
+                    <option value="">--- Tous les types ---</option>
+                    <option value="DECLARATION_TVA" {% if request.GET.type_objet == 'DECLARATION_TVA' %}selected{% endif %}>Déclaration TVA</option>
+                    <option value="LIGNE_TVA" {% if request.GET.type_objet == 'LIGNE_TVA' %}selected{% endif %}>Ligne TVA</option>
+                    <option value="ECRITURE" {% if request.GET.type_objet == 'ECRITURE' %}selected{% endif %}>Écriture</option>
+                    <option value="FACTURE" {% if request.GET.type_objet == 'FACTURE' %}selected{% endif %}>Facture</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Action</label>
+                <select name="action" class="form-control">
+                    <option value="">--- Toutes les actions ---</option>
+                    <option value="CREATE" {% if request.GET.action == 'CREATE' %}selected{% endif %}>Création</option>
+                    <option value="UPDATE" {% if request.GET.action == 'UPDATE' %}selected{% endif %}>Modification</option>
+                    <option value="DELETE" {% if request.GET.action == 'DELETE' %}selected{% endif %}>Suppression</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Utilisateur</label>
+                <select name="utilisateur" class="form-control">
+                    <option value="">--- Tous les utilisateurs ---</option>
+                    {% for user in utilisateurs %}
+                    <option value="{{ user.id }}" {% if request.GET.utilisateur == user.id|stringformat:"s" %}selected{% endif %}>
+                        {{ user.get_full_name|default:user.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="opacity: 0;">Bouton</label>
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Timeline ou liste d'historique -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 small">
+            <thead class="table-light">
+                <tr>
+                    <th>Date/Heure</th>
+                    <th>Type d'Objet</th>
+                    <th>Action</th>
+                    <th>Champ</th>
+                    <th>Ancienne Valeur</th>
+                    <th>Nouvelle Valeur</th>
+                    <th>Utilisateur</th>
+                    <th>Motif</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for modification in object_list %}
+                <tr>
+                    <td>
+                        <small class="text-muted">{{ modification.date_modification|date:"d/m/Y H:i:s" }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark">{{ modification.get_type_objet_display }}</span>
+                    </td>
+                    <td>
+                        {% if modification.action == 'CREATE' %}
+                        <span class="badge bg-success">Création</span>
+                        {% elif modification.action == 'UPDATE' %}
+                        <span class="badge bg-info">Modification</span>
+                        {% elif modification.action == 'DELETE' %}
+                        <span class="badge bg-danger">Suppression</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ modification.get_action_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if modification.champ_modifie %}
+                        <code>{{ modification.champ_modifie }}</code>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if modification.valeur_ancienne %}
+                        <small class="text-muted">{{ modification.valeur_ancienne|truncatewords:5 }}</small>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if modification.valeur_nouvelle %}
+                        <small class="text-muted">{{ modification.valeur_nouvelle|truncatewords:5 }}</small>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ modification.utilisateur.get_full_name|default:modification.utilisateur.username }}</td>
+                    <td>
+                        {% if modification.motif %}
+                        <small class="text-muted" title="{{ modification.motif }}">{{ modification.motif|truncatewords:3 }}</small>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        Aucune modification trouvée
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination" class="mt-4">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">Première</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédente</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item disabled">
+            <span class="page-link">
+                Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivante</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernière</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

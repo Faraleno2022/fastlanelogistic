@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Contact - International Consulting Guinea{% endblock %}
+
+{% block extra_css %}
+
+<style>
+
+    body {
+        background-color: #121212; 
+        color: #eee; 
+    }
+
+    .contact-hero {
+        width: 100%;
+        height: 60vh;
+        min-height: 400px;
+        position: relative;
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                    url('{% static 'images/contact.png' %}') no-repeat center center/cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .contact-hero .hero-overlay {
+        padding: 40px;
+    }
+
+    .contact-hero h1 {
+        font-size: 3em;
+        margin-bottom: 10px;
+    }
+
+    .contact-hero .orange-text {
+        color: #f9a825;
+    }
+
+    .contact-hero p {
+        font-size: 1.2em;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .contact-page-section {
+        padding: 40px 0;
+        background-color: #1e1e1e;
+    }
+
+    .contact-page-section .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .contact-page-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    .contact-form {
+        background-color: #2c2c2c;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .contact-form .section-title {
+        margin-bottom: 20px;
+        font-size: 2em;
+        color: #f9a825;
+    }
+
+    .contact-form .form-group {
+        margin-bottom: 20px;
+    }
+
+    .contact-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #eee;
+    }
+
+    .contact-form input[type="text"],
+    .contact-form input[type="email"],
+    .contact-form input[type="tel"],
+    .contact-form select,
+    .contact-form textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #666;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 16px;
+        color: #ccc;
+        background-color: #333;
+    }
+
+    .contact-form textarea {
+        resize: vertical;
+    }
+
+    .contact-form .submit-btn {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 4px;
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: background-color 0.3s ease;
+        background-color: #f9a825;
+    }
+
+    .contact-form .submit-btn:hover {
+        background-color: #d97706;
+    }
+
+    .company-info {
+        background-color: #2c2c2c;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .company-info .section-title {
+        margin-bottom: 20px;
+        font-size: 2em;
+        color: #f9a825;
+    }
+
+    .company-info .info-card {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        gap: 15px;
+    }
+
+    .company-info .info-icon {
+        background-color: #f9a825;
+        color: #fff;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 18px;
+    }
+
+    .company-info .info-content h3 {
+        color: #f9a825;
+        margin-top: 0;
+        margin-bottom: 5px;
+        font-size: 1.3em;
+    }
+
+    .company-info .info-content p a {
+        color: #f9a825;
+        text-decoration: none;
+    }
+    .company-info .info-content p a:hover {
+        text-decoration: underline;
+    }
+
+    /* Styles spécifiques pour les liens mailto et tel */
+    .company-info .info-content p a[href^="mailto:"],
+    .company-info .info-content p a[href^="tel:"] {
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .company-info .info-content p a[href^="mailto:"]:hover,
+    .company-info .info-content p a[href^="tel:"]:hover {
+        color: #f9a825;
+        text-decoration: underline;
+    }
+
+
+    .company-info .map-container {
+        margin-top: 30px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .company-info .map-container iframe {
+        width: 100%;
+        height: 300px;
+        border: 0;
+    }
+
+    @media (max-width: 768px) {
+        .contact-page-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .company-info {
+            margin-top: 30px;
+        }
+
+        .contact-hero h1 {
+            font-size: 2.5em;
+        }
+
+        .contact-hero p {
+            font-size: 1em;
+        }
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+    <section class="contact-hero" style = "background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+                url('{% static 'images/contact.png' %}') no-repeat center center/cover;">
+        <div class="hero-overlay">
+            <h1>CONTACTEZ-<span class="orange-text">NOUS</span></h1>
+            <p>Une question, un projet ? Notre équipe vous répond sous 24h</p>
+        </div>
+    </section>
+
+    <section class="contact-page-section">
+        <div class="container">
+            <div class="contact-page-grid">
+                <div class="contact-form">
+                    <h2 class="section-title"><span class="orange-text">Écrivez-</span>nous</h2>
+
+                    <form method="post" id="contactForm">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label for="contact_name">Votre nom complet</label>
+                            <input type="text"
+                                   name="contact_name"
+                                   placeholder="Votre nom complet"
+                                   required
+                                   value="{{ form.contact_name.value|default_if_none:'' }}"
+                                   id="contact_name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact_email">Votre email</label>
+                            <input type="email"
+                                   name="contact_email"
+                                   placeholder="Votre email"
+                                   required
+                                   value="{{ form.contact_email.value|default_if_none:'' }}"
+                                   id="contact_email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact_phone_number">Téléphone (optionnel)</label>
+                            <input type="tel"
+                                   name="contact_phone_number"
+                                   placeholder="Téléphone (optionnel)"
+                                   value="{{ form.contact_phone_number.value|default_if_none:'' }}"
+                                   id="contact_phone_number">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact_subject">Sujet de votre message</label>
+                            <select name="contact_subject" required id="contact_subject">
+                                <option value="" disabled selected>Sujet de votre message</option>
+                                <option value="consulting" {% if form.contact_subject.value == "consulting" %}selected{% endif %}>Demande de consulting</option>
+                                <option value="recruitment" {% if form.contact_subject.value == "recruitment" %}selected{% endif %}>Recrutement</option>
+                                <option value="partnership" {% if form.contact_subject.value == "partnership" %}selected{% endif %}>Partenariat</option>
+                                <option value="other" {% if form.contact_subject.value == "other" %}selected{% endif %}>Autre demande</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact_message">Votre message...</label>
+                            <textarea name="contact_message"
+                                      rows="6"
+                                      placeholder="Votre message..."
+                                      required
+                                      id="contact_message">{{ form.contact_message.value|default_if_none:'' }}</textarea>
+                        </div>
+
+                        <button type="submit" class="submit-btn orange-bg">
+                            <span class="btn-text">Envoyer le message</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="company-info">
+                    <h2 class="section-title"><span class="orange-text">Nos</span> Informations</h2>
+                    <div class="info-card">
+                        <div class="info-icon orange-bg">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 class="orange-text">Adresse</h3>
+                            <p>
+                                <strong>Carrefour 6ème Tranche (T6)</strong><br>
+                                Immeuble le Général, 2ème Étage<br>
+                                Au-dessus de la Pharmacie DOUK<br>
+                                Kaloum-Conakry, Guinée
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon orange-bg">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 class="orange-text">Téléphone</h3>
+                            <p><a href="tel:+224620113225">+224 620 11 32 25</a></p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon orange-bg">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 class="orange-text">Email</h3>
+                            <p><a href="mailto:contact@icguinea.com">contact@icguinea.com</a></p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon orange-bg">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 class="orange-text">Horaires</h3>
+                            <p>Lundi - Vendredi : <span class="orange-text">8h 30 - 17h 30</span><br>
+                            Samedi : <span class="orange-text">9h 00- 13h 00</span><br>
+                            Dimanche : Fermé</p>
+                        </div>
+                    </div>
+
+                    <div class="map-container">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3933.3219359601535!2d-13.5769362!3d9.653509!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xf1d2b0059b8d197%3A0xa11919d241a67e01!2sT6%20rond%20point!5e0!3m2!1sfr!2s!4v1748257046072!5m2!1sfr!2s"
+                            width="600" 
+                            height="450" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

@@ -1,0 +1,257 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}{{ tiers.raison_sociale }} - Détail Tiers - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ tiers.raison_sociale }}</h1>
+            <p class="text-muted mb-0">
+                {% if tiers.type_tiers == 'client' %}
+                    <i class="bi bi-person-check me-2"></i>Client
+                {% elif tiers.type_tiers == 'fournisseur' %}
+                    <i class="bi bi-truck me-2"></i>Fournisseur
+                {% else %}
+                    <i class="bi bi-building me-2"></i>Autre
+                {% endif %}
+                - Code: {{ tiers.code }}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'comptabilite:tiers_update' tiers.pk %}" class="btn btn-warning me-2">
+                <i class="bi bi-pencil me-2"></i>Modifier
+            </a>
+            <a href="{% url 'comptabilite:tiers_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <!-- Informations principales -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations du Tiers</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">Code Tiers:</td>
+                                    <td><strong>{{ tiers.code }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Raison Sociale:</td>
+                                    <td><strong>{{ tiers.raison_sociale }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Type:</td>
+                                    <td>
+                                        {% if tiers.type_tiers == 'client' %}
+                                            <span class="badge bg-success">Client</span>
+                                        {% elif tiers.type_tiers == 'fournisseur' %}
+                                            <span class="badge bg-warning">Fournisseur</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Autre</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Statut:</td>
+                                    <td>
+                                        {% if tiers.est_actif %}
+                                            <span class="badge bg-success">Actif</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">NIF:</td>
+                                    <td>{{ tiers.nif|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Téléphone:</td>
+                                    <td>{{ tiers.telephone|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Email:</td>
+                                    <td>
+                                        {% if tiers.email %}
+                                            <a href="mailto:{{ tiers.email }}">{{ tiers.email }}</a>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Date de création:</td>
+                                    <td>{{ tiers.date_creation|date:"d/m/Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if tiers.adresse %}
+                    <div class="mt-3 pt-3 border-top">
+                        <h6 class="text-muted mb-2">Adresse</h6>
+                        <p class="mb-0">{{ tiers.adresse|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Actions Rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if tiers.type_tiers == 'client' %}
+                            <a href="{% url 'comptabilite:facture_create' %}?type=vente&tiers={{ tiers.pk }}" class="btn btn-primary">
+                                <i class="bi bi-file-plus me-2"></i>Nouvelle Facture Vente
+                            </a>
+                        {% elif tiers.type_tiers == 'fournisseur' %}
+                            <a href="{% url 'comptabilite:facture_create' %}?type=achat&tiers={{ tiers.pk }}" class="btn btn-primary">
+                                <i class="bi bi-file-plus me-2"></i>Nouvelle Facture Achat
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'comptabilite:tiers_update' tiers.pk %}" class="btn btn-outline-warning">
+                            <i class="bi bi-pencil me-2"></i>Modifier les informations
+                        </a>
+                        
+                        <button class="btn btn-outline-info" onclick="window.print()">
+                            <i class="bi bi-printer me-2"></i>Imprimer la fiche
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="card mt-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Statistiques</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="mb-1">{{ factures|length }}</h4>
+                            <p class="text-muted small mb-0">Factures</p>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="mb-1">
+                                {% if tiers.type_tiers == 'client' %}
+                                    {{ factures|dictsort:"statut"|groupby:"statut"|dictsort:"grouper"|first|last|length }}
+                                {% else %}
+                                    {{ factures|dictsort:"statut"|groupby:"statut"|dictsort:"grouper"|last|last|length }}
+                                {% endif %}
+                            </h4>
+                            <p class="text-muted small mb-0">
+                                {% if tiers.type_tiers == 'client' %}Payées{% else %}Réglées{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Factures récentes -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Factures Récentes</h5>
+            <div>
+                {% if tiers.type_tiers == 'client' %}
+                    <a href="{% url 'comptabilite:facture_create' %}?type=vente&tiers={{ tiers.pk }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Nouvelle Facture
+                    </a>
+                {% endif %}
+                <a href="{% url 'comptabilite:facture_list' %}?tiers={{ tiers.pk }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-list me-1"></i>Voir tout
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if factures %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Montant TTC</th>
+                                <th>Statut</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for facture in factures %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'comptabilite:facture_detail' facture.pk %}" class="text-decoration-none">
+                                        {{ facture.numero_facture }}
+                                    </a>
+                                </td>
+                                <td>{{ facture.date_facture|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if facture.type_facture == 'vente' %}
+                                        <span class="badge bg-success">Vente</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Achat</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">{{ facture.montant_ttc|floatformat:0 }} GNF</td>
+                                <td>
+                                    {% if facture.statut == 'payee' %}
+                                        <span class="badge bg-success">Payée</span>
+                                    {% elif facture.statut == 'partiellement_payee' %}
+                                        <span class="badge bg-warning">Partiellement payée</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Non payée</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'comptabilite:facture_detail' facture.pk %}" class="btn btn-sm btn-outline-primary" title="Voir">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'comptabilite:facture_update' facture.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
+                    <h6 class="mt-3 text-muted">Aucune facture</h6>
+                    <p class="text-muted">Ce tiers n'a pas encore de factures.</p>
+                    {% if tiers.type_tiers == 'client' %}
+                        <a href="{% url 'comptabilite:facture_create' %}?type=vente&tiers={{ tiers.pk }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Créer la première facture
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

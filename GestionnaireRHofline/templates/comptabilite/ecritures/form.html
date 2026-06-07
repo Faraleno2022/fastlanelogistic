@@ -1,0 +1,222 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load humanize %}
+
+{% block title %}{% if ecriture %}Modifier{% else %}Nouvelle{% endif %} Écriture{% endblock %}
+
+{% block compta_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-journal-text me-2"></i>{% if ecriture %}Modifier l'écriture {{ ecriture.numero_ecriture }}{% else %}Nouvelle écriture comptable{% endif %}</h4>
+    <a href="{% url 'comptabilite:ecriture_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+</div>
+
+<form method="post" id="ecritureForm">
+    {% csrf_token %}
+    
+    <!-- En-tête de l'écriture -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations générales</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Exercice <span class="text-danger">*</span></label>
+                    {{ form.exercice }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Journal <span class="text-danger">*</span></label>
+                    {{ form.journal }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">N° Écriture</label>
+                    {{ form.numero_ecriture }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                    {{ form.date_ecriture }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Libellé <span class="text-danger">*</span></label>
+                    {{ form.libelle }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lignes d'écriture -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lignes d'écriture</h6>
+            <button type="button" class="btn btn-sm btn-primary" id="addLigne">
+                <i class="bi bi-plus-circle me-1"></i>Ajouter une ligne
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0" id="lignesTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 35%">Compte</th>
+                        <th style="width: 25%">Libellé</th>
+                        <th style="width: 15%" class="text-end">Débit</th>
+                        <th style="width: 15%" class="text-end">Crédit</th>
+                        <th style="width: 10%"></th>
+                    </tr>
+                </thead>
+                <tbody id="lignesBody">
+                    {% if ecriture %}
+                        {% for ligne in ecriture.lignes.all %}
+                        <tr class="ligne-row">
+                            <td>
+                                <select name="compte[]" class="form-select form-select-sm" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    {% for c in comptes %}
+                                    <option value="{{ c.pk }}" {% if c.pk == ligne.compte_id %}selected{% endif %}>{{ c.numero_compte }} - {{ c.intitule }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="text" name="libelle_ligne[]" class="form-control form-control-sm" value="{{ ligne.libelle|default:'' }}"></td>
+                            <td><input type="number" name="debit[]" class="form-control form-control-sm text-end debit-input" step="1" min="0" value="{{ ligne.montant_debit|default:'' }}"></td>
+                            <td><input type="number" name="credit[]" class="form-control form-control-sm text-end credit-input" step="1" min="0" value="{{ ligne.montant_credit|default:'' }}"></td>
+                            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-ligne"><i class="bi bi-trash"></i></button></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr class="ligne-row">
+                            <td>
+                                <select name="compte[]" class="form-select form-select-sm" required>
+                                    <option value="">-- Sélectionner un compte --</option>
+                                    {% for c in comptes %}
+                                    <option value="{{ c.pk }}">{{ c.numero_compte }} - {{ c.intitule }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="text" name="libelle_ligne[]" class="form-control form-control-sm" placeholder="Libellé"></td>
+                            <td><input type="number" name="debit[]" class="form-control form-control-sm text-end debit-input" step="1" min="0" placeholder="0"></td>
+                            <td><input type="number" name="credit[]" class="form-control form-control-sm text-end credit-input" step="1" min="0" placeholder="0"></td>
+                            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-ligne"><i class="bi bi-trash"></i></button></td>
+                        </tr>
+                        <tr class="ligne-row">
+                            <td>
+                                <select name="compte[]" class="form-select form-select-sm" required>
+                                    <option value="">-- Sélectionner un compte --</option>
+                                    {% for c in comptes %}
+                                    <option value="{{ c.pk }}">{{ c.numero_compte }} - {{ c.intitule }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="text" name="libelle_ligne[]" class="form-control form-control-sm" placeholder="Libellé"></td>
+                            <td><input type="number" name="debit[]" class="form-control form-control-sm text-end debit-input" step="1" min="0" placeholder="0"></td>
+                            <td><input type="number" name="credit[]" class="form-control form-control-sm text-end credit-input" step="1" min="0" placeholder="0"></td>
+                            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-ligne"><i class="bi bi-trash"></i></button></td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="2" class="text-end">Totaux :</th>
+                        <th class="text-end" id="totalDebit">0</th>
+                        <th class="text-end" id="totalCredit">0</th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <th colspan="2" class="text-end">Différence :</th>
+                        <th colspan="2" class="text-center" id="difference">
+                            <span class="badge bg-success">Équilibrée</span>
+                        </th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Boutons d'action -->
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'comptabilite:ecriture_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle me-1"></i>Annuler
+        </a>
+        <button type="submit" class="btn btn-primary" id="btnSubmit">
+            <i class="bi bi-check-circle me-1"></i>Enregistrer l'écriture
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lignesBody = document.getElementById('lignesBody');
+    const addBtn = document.getElementById('addLigne');
+    
+    // Template pour nouvelle ligne
+    const ligneTemplate = `
+        <tr class="ligne-row">
+            <td>
+                <select name="compte[]" class="form-select form-select-sm" required>
+                    <option value="">-- Sélectionner un compte --</option>
+                    {% for c in comptes %}
+                    <option value="{{ c.pk }}">{{ c.numero_compte }} - {{ c.intitule }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td><input type="text" name="libelle_ligne[]" class="form-control form-control-sm" placeholder="Libellé"></td>
+            <td><input type="number" name="debit[]" class="form-control form-control-sm text-end debit-input" step="1" min="0" placeholder="0"></td>
+            <td><input type="number" name="credit[]" class="form-control form-control-sm text-end credit-input" step="1" min="0" placeholder="0"></td>
+            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-ligne"><i class="bi bi-trash"></i></button></td>
+        </tr>
+    `;
+    
+    // Ajouter une ligne
+    addBtn.addEventListener('click', function() {
+        lignesBody.insertAdjacentHTML('beforeend', ligneTemplate);
+        updateTotals();
+    });
+    
+    // Supprimer une ligne
+    lignesBody.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-ligne')) {
+            const rows = lignesBody.querySelectorAll('.ligne-row');
+            if (rows.length > 1) {
+                e.target.closest('tr').remove();
+                updateTotals();
+            }
+        }
+    });
+    
+    // Mettre à jour les totaux
+    function updateTotals() {
+        let totalDebit = 0, totalCredit = 0;
+        
+        document.querySelectorAll('.debit-input').forEach(input => {
+            totalDebit += parseFloat(input.value) || 0;
+        });
+        
+        document.querySelectorAll('.credit-input').forEach(input => {
+            totalCredit += parseFloat(input.value) || 0;
+        });
+        
+        document.getElementById('totalDebit').textContent = totalDebit.toLocaleString('fr-FR');
+        document.getElementById('totalCredit').textContent = totalCredit.toLocaleString('fr-FR');
+        
+        const diff = totalDebit - totalCredit;
+        const diffEl = document.getElementById('difference');
+        
+        if (diff === 0 && totalDebit > 0) {
+            diffEl.innerHTML = '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Équilibrée</span>';
+        } else {
+            diffEl.innerHTML = `<span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Écart: ${Math.abs(diff).toLocaleString('fr-FR')} GNF</span>`;
+        }
+    }
+    
+    // Écouter les changements sur les inputs
+    lignesBody.addEventListener('input', function(e) {
+        if (e.target.classList.contains('debit-input') || e.target.classList.contains('credit-input')) {
+            updateTotals();
+        }
+    });
+    
+    // Initialiser les totaux
+    updateTotals();
+});
+</script>
+{% endblock %}

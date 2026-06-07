@@ -1,0 +1,112 @@
+{% extends "comptabilite/base_module.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} une Règle{% endblock %}
+
+{% block page_header %}
+<div class="mb-4">
+    <h1 class="mb-0">{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} une Règle de Conformité</h1>
+    <p class="text-muted mt-2">Définition des critères de conformité à vérifier</p>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {% include "includes/form_field.html" with field=form.code %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {% include "includes/form_field.html" with field=form.nom %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {% include "includes/form_field.html" with field=form.description %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {% include "includes/form_field.html" with field=form.critere_conformite %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {% include "includes/form_field.html" with field=form.consequence_non_conformite %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {% include "includes/form_field.html" with field=form.documentation_requise %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {% include "includes/form_field.html" with field=form.periodicite %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {% include "includes/form_field.html" with field=form.criticite %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {% include "includes/form_field.html" with field=form.module_concerne %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                {% include "includes/form_field.html" with field=form.actif %}
+                                <label class="form-check-label" for="id_actif">
+                                    Règle active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Enregistrer
+                        </button>
+                        <a href="{% url 'comptabilite:regle_list' %}" class="btn btn-secondary">
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Aide</h5>
+            </div>
+            <div class="card-body small">
+                <h6>Criticités</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Haute</strong> - Vérification obligatoire</li>
+                    <li><strong>Moyenne</strong> - Vérification recommandée</li>
+                    <li><strong>Basse</strong> - Vérification optionnelle</li>
+                </ul>
+                
+                <h6 class="mt-3">Périodicités</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Mensuelle</strong> - 12 fois par an</li>
+                    <li><strong>Trimestrielle</strong> - 4 fois par an</li>
+                    <li><strong>Semestrielle</strong> - 2 fois par an</li>
+                    <li><strong>Annuelle</strong> - 1 fois par an</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Archivage - Dashboard{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-archive text-primary"></i> Documentation & Archivage
+        </h1>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-file-earmark text-primary fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Documents archivés</h6>
+                            <h3 class="mb-0">{{ nb_documents|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-folder text-success fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Classements</h6>
+                            <h3 class="mb-0">{{ classements|length|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">En attente validation</h6>
+                            <h3 class="mb-0">{{ validations_attente|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-clock-history text-danger fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-0">Expirant bientôt</h6>
+                            <h3 class="mb-0">{{ docs_expirant|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'comptabilite:archivage_documents' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-file-earmark-plus"></i> Documents archivés
+                        </a>
+                        <a href="{% url 'comptabilite:archivage_classements' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-folder"></i> Classements
+                        </a>
+                        <a href="{% url 'comptabilite:archivage_politiques' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-clock-history"></i> Politiques de rétention
+                        </a>
+                        <a href="{% url 'comptabilite:archivage_pieces' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-paperclip"></i> Pièces justificatives
+                        </a>
+                        <a href="{% url 'comptabilite:archivage_validations' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-check-circle"></i> Validations en attente
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> À propos du module</h5>
+                </div>
+                <div class="card-body">
+                    <p>Le module <strong>Documentation & Archivage</strong> permet de :</p>
+                    <ul>
+                        <li>Archiver les documents comptables</li>
+                        <li>Définir les politiques de rétention légale</li>
+                        <li>Gérer les pièces justificatives</li>
+                        <li>Valider et vérifier les signatures</li>
+                        <li>Tracer les accès aux documents</li>
+                        <li>Gérer la destruction sécurisée</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

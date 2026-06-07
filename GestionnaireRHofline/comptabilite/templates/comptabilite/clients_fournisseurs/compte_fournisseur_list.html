@@ -1,0 +1,344 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Comptes Fournisseurs" %} - {{ block.super }}{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-building text-primary"></i>
+                        {% trans "Comptes Fournisseurs" %}
+                    </h1>
+                    <p class="text-muted mb-0">{% trans "Gestion des comptes fournisseurs et suivi des dettes" %}</p>
+                </div>
+                <div>
+                    <a href="{% url 'comptabilite:dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> {% trans "Retour" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ nb_fournisseurs }}</h4>
+                            <p class="card-text">{% trans "Fournisseurs actifs" %}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-building fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_dettes|floatformat:0 }}</h4>
+                            <p class="card-text">{% trans "Total dettes" %}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-coins fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ dette_moyenne|floatformat:0 }}</h4>
+                            <p class="card-text">{% trans "Dette moyenne" %}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">
+                                {% widthratio fournisseurs|length nb_fournisseurs 100 %}%
+                            </h4>
+                            <p class="card-text">{% trans "Avec dettes" %}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-percentage fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des fournisseurs -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list"></i>
+                {% trans "Liste des fournisseurs" %}
+            </h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary" onclick="exportData()">
+                    <i class="fas fa-download"></i> {% trans "Exporter" %}
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="printList()">
+                    <i class="fas fa-print"></i> {% trans "Imprimer" %}
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if fournisseurs %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="fournisseurs-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>{% trans "Code" %}</th>
+                            <th>{% trans "Raison sociale" %}</th>
+                            <th>{% trans "Contact" %}</th>
+                            <th class="text-end">{% trans "Total factures" %}</th>
+                            <th class="text-end">{% trans "Total payé" %}</th>
+                            <th class="text-end">{% trans "Solde dû" %}</th>
+                            <th class="text-center">{% trans "Statut" %}</th>
+                            <th class="text-center">{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fournisseur in fournisseurs %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-secondary">{{ fournisseur.code }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ fournisseur.raison_sociale }}</strong>
+                                {% if fournisseur.nif %}
+                                <br><small class="text-muted">NIF: {{ fournisseur.nif }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if fournisseur.telephone %}
+                                <i class="fas fa-phone text-muted"></i> {{ fournisseur.telephone }}
+                                {% endif %}
+                                {% if fournisseur.email %}
+                                <br><i class="fas fa-envelope text-muted"></i> {{ fournisseur.email }}
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <span class="text-primary">{{ fournisseur.total_factures|default:0|floatformat:0 }}</span>
+                            </td>
+                            <td class="text-end">
+                                <span class="text-success">{{ fournisseur.total_paye|default:0|floatformat:0 }}</span>
+                            </td>
+                            <td class="text-end">
+                                <span class="fw-bold {% if fournisseur.solde_calcule > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ fournisseur.solde_calcule|floatformat:0 }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if fournisseur.solde_calcule > 0 %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> {% trans "Dette" %}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i> {% trans "À jour" %}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'comptabilite:compte_fournisseur_detail' fournisseur.pk %}" 
+                                       class="btn btn-outline-primary" title="{% trans 'Voir détails' %}">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button class="btn btn-outline-info" onclick="showPayments('{{ fournisseur.pk }}')" 
+                                            title="{% trans 'Voir paiements' %}">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="newPayment('{{ fournisseur.pk }}')" 
+                                            title="{% trans 'Nouveau paiement' %}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr class="fw-bold">
+                            <td colspan="3">{% trans "Totaux" %}</td>
+                            <td class="text-end text-primary">
+                                {% for fournisseur in fournisseurs %}{{ fournisseur.total_factures|default:0|add:0 }}{% endfor %}|floatformat:0
+                            </td>
+                            <td class="text-end text-success">
+                                {% for fournisseur in fournisseurs %}{{ fournisseur.total_paye|default:0|add:0 }}{% endfor %}|floatformat:0
+                            </td>
+                            <td class="text-end {% if total_dettes > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ total_dettes|floatformat:0 }}
+                            </td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">{% trans "Aucun fournisseur trouvé" %}</h5>
+                <p class="text-muted">{% trans "Commencez par ajouter des fournisseurs pour voir apparaître leurs comptes ici." %}</p>
+                <button class="btn btn-primary" onclick="addFournisseur()">
+                    <i class="fas fa-plus"></i> {% trans "Ajouter un fournisseur" %}
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-chart-pie text-info"></i>
+                        {% trans "Répartition des dettes" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="dettes-chart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        {% trans "Fournisseurs avec dettes importantes" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for fournisseur in fournisseurs %}
+                    {% if fournisseur.solde_calcule > 1000000 %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ fournisseur.raison_sociale }}</span>
+                        <span class="badge bg-warning">{{ fournisseur.solde_calcule|floatformat:0 }}</span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% if not fournisseurs %}
+                    <p class="text-muted text-center">{% trans "Aucune dette importante" %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialisation du tableau avec DataTables si disponible
+$(document).ready(function() {
+    if (typeof $.fn.DataTable !== 'undefined') {
+        $('#fournisseurs-table').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json'
+            },
+            pageLength: 25,
+            order: [[5, 'desc']] // Trier par solde dû décroissant
+        });
+    }
+});
+
+function exportData() {
+    // Implémenter l'exportation des données
+    console.log('Exportation des données...');
+}
+
+function printList() {
+    window.print();
+}
+
+function showPayments(fournisseurId) {
+    // Implémenter l'affichage des paiements
+    console.log('Afficher les paiements pour:', fournisseurId);
+}
+
+function newPayment(fournisseurId) {
+    // Implémenter la création d'un nouveau paiement
+    console.log('Nouveau paiement pour:', fournisseurId);
+}
+
+function addFournisseur() {
+    // Rediriger vers la page d'ajout de fournisseur
+    window.location.href = '{% url "comptabilite:tiers_create" %}';
+}
+
+// Graphique des dettes (si Chart.js est disponible)
+if (typeof Chart !== 'undefined' && document.getElementById('dettes-chart')) {
+    const ctx = document.getElementById('dettes-chart').getContext('2d');
+    
+    // Données des fournisseurs (seront injectées par Django)
+    const chartData = {
+        labels: [],
+        data: []
+    };
+    
+    // Injecter les données depuis le template Django
+    {% for fournisseur in fournisseurs %}
+    chartData.labels.push('{{ fournisseur.raison_sociale|escapejs }}');
+    chartData.data.push({{ fournisseur.solde_calcule|default:0 }});
+    {% endfor %}
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                data: chartData.data,
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+</script>
+
+<style>
+@media print {
+    .btn, .card-header .btn-group {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

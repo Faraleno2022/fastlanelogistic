@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer Rubrique - Gestionnaire RH Guinée{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-trash me-2"></i>Supprimer une Rubrique</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    {% if nb_lignes_bulletin > 0 %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Suppression impossible !</strong><br>
+                        La rubrique <strong>{{ rubrique.code_rubrique }} - {{ rubrique.libelle_rubrique }}</strong>
+                        est utilisée dans <strong>{{ nb_lignes_bulletin }}</strong> ligne(s) de bulletin de paie.
+                        <br><br>
+                        Vous pouvez la <strong>désactiver</strong> depuis sa page de détail au lieu de la supprimer.
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'paie:liste_rubriques' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+                        </a>
+                        <a href="{% url 'paie:detail_rubrique' rubrique.pk %}" class="btn btn-primary">
+                            <i class="bi bi-eye me-2"></i>Voir le détail
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Attention !</strong> Vous êtes sur le point de supprimer la rubrique suivante :
+                    </div>
+
+                    <table class="table">
+                        <tr>
+                            <th>Code</th>
+                            <td><strong>{{ rubrique.code_rubrique }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Libellé</th>
+                            <td>{{ rubrique.libelle_rubrique }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type</th>
+                            <td>
+                                {% if rubrique.type_rubrique == 'gain' %}
+                                    <span class="badge bg-success">Gain</span>
+                                {% elif rubrique.type_rubrique == 'retenue' %}
+                                    <span class="badge bg-danger">Retenue</span>
+                                {% elif rubrique.type_rubrique == 'cotisation' %}
+                                    <span class="badge bg-info">Cotisation</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Info</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if nb_elements > 0 %}
+                        <tr>
+                            <th>Éléments de salaire liés</th>
+                            <td><span class="text-warning">{{ nb_elements }} élément(s) seront aussi supprimés</span></td>
+                        </tr>
+                        {% endif %}
+                    </table>
+
+                    <p class="text-danger"><strong>Cette action est irréversible.</strong></p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'paie:liste_rubriques' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Confirmer la suppression
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

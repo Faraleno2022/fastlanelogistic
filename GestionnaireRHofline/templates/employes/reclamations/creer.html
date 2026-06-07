@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nouvelle Réclamation{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'employes:liste_reclamations' %}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <h2><i class="fas fa-plus-circle me-2"></i>Nouvelle Réclamation</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employe" class="form-label">Employé *</label>
+                                <select class="form-select" id="employe" name="employe" required>
+                                    <option value="">Sélectionner</option>
+                                    {% for emp in employes %}
+                                    <option value="{{ emp.id }}">{{ emp.matricule }} - {{ emp.nom }} {{ emp.prenoms }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="categorie" class="form-label">Catégorie *</label>
+                                <select class="form-select" id="categorie" name="categorie" required>
+                                    <option value="">Sélectionner</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.id }}">{{ cat.libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="objet" class="form-label">Objet *</label>
+                            <input type="text" class="form-control" id="objet" name="objet" required
+                                   placeholder="Résumé de la réclamation">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description détaillée *</label>
+                            <textarea class="form-control" id="description" name="description" rows="5" required
+                                      placeholder="Décrivez votre réclamation en détail..."></textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="priorite" class="form-label">Priorité</label>
+                                <select class="form-select" id="priorite" name="priorite">
+                                    {% for code, libelle in priorites %}
+                                    <option value="{{ code }}" {% if code == 'normale' %}selected{% endif %}>{{ libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="pieces_jointes" class="form-label">Pièces jointes</label>
+                                <input type="file" class="form-control" id="pieces_jointes" name="pieces_jointes">
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input type="checkbox" class="form-check-input" id="confidentiel" name="confidentiel">
+                            <label class="form-check-label" for="confidentiel">
+                                <i class="fas fa-lock me-1"></i>Réclamation confidentielle
+                                <small class="text-muted d-block">Visible uniquement par le service RH</small>
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'employes:liste_reclamations' %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Soumettre
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations</h6>
+                </div>
+                <div class="card-body small">
+                    <p>Votre réclamation sera traitée dans les meilleurs délais.</p>
+                    <ul class="mb-0">
+                        <li>Soyez précis dans votre description</li>
+                        <li>Joignez tout document utile</li>
+                        <li>Vous serez notifié de l'avancement</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

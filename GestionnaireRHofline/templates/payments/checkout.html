@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Paiement - {{ plan.nom }} - GuinéeRH{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #EF7707 0%, #FF8C00 100%);">
+                    <h4 class="mb-0">
+                        <i class="bi bi-credit-card"></i> Finaliser votre 
+                        {% if type_transaction == 'upgrade' %}mise à niveau{% elif type_transaction == 'renouvellement' %}renouvellement{% else %}abonnement{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Résumé du plan -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-gem text-primary"></i> {{ plan.nom }}</h5>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="bi bi-people"></i> {{ plan.max_utilisateurs }} utilisateurs</li>
+                                <li><i class="bi bi-person-badge"></i> {{ plan.max_employes }} employés max</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <p class="text-muted mb-1">Entreprise</p>
+                            <h5>{{ request.user.entreprise.nom_entreprise }}</h5>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <form method="post" id="checkout-form">
+                        {% csrf_token %}
+                        
+                        <!-- Choix de la durée -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Durée de l'abonnement</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check card p-3 h-100">
+                                        <input class="form-check-input" type="radio" name="duree" id="mensuel" value="mensuel" checked>
+                                        <label class="form-check-label w-100" for="mensuel">
+                                            <strong>Mensuel</strong>
+                                            <div class="fs-4 text-primary">{{ plan.prix_mensuel|intcomma }} GNF</div>
+                                            <small class="text-muted">par mois</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check card p-3 h-100 border-success">
+                                        <input class="form-check-input" type="radio" name="duree" id="annuel" value="annuel">
+                                        <label class="form-check-label w-100" for="annuel">
+                                            <strong>Annuel</strong>
+                                            <span class="badge bg-success">-17%</span>
+                                            <div class="fs-4 text-success">{{ plan.prix_annuel|intcomma }} GNF</div>
+                                            <small class="text-muted">par an (2 mois offerts)</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Récapitulatif -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h6 class="card-title">Récapitulatif</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Plan {{ plan.nom }}</span>
+                                    <span id="prix-plan">{{ plan.prix_mensuel|intcomma }} GNF</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Durée</span>
+                                    <span id="duree-text">1 mois</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between fw-bold fs-5">
+                                    <span>Total à payer</span>
+                                    <span class="text-primary" id="total">{{ plan.prix_mensuel|intcomma }} GNF</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Méthodes de paiement -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Mode de paiement</label>
+                            <input type="hidden" name="passerelle" value="paycard">
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3">
+                                    <div class="card text-center p-2 payment-method-card" data-method="ORANGE_MONEY" style="cursor:pointer;">
+                                        <img src="{% static 'img/orange-money.png' %}" alt="Orange Money" height="40" class="mx-auto mb-1" onerror="this.outerHTML='<i class=\'bi bi-phone fs-1 text-warning\'></i>'">
+                                        <small>Orange Money</small>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="card text-center p-2 payment-method-card" data-method="MOMO" style="cursor:pointer;">
+                                        <img src="{% static 'img/mtn-money.png' %}" alt="MTN MoMo" height="40" class="mx-auto mb-1" onerror="this.outerHTML='<i class=\'bi bi-phone fs-1 text-warning\'></i>'">
+                                        <small>MTN MoMo</small>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="card text-center p-2 payment-method-card" data-method="CREDIT_CARD" style="cursor:pointer;">
+                                        <img src="{% static 'img/visa.png' %}" alt="Carte bancaire" height="40" class="mx-auto mb-1" onerror="this.outerHTML='<i class=\'bi bi-credit-card fs-1 text-primary\'></i>'">
+                                        <small>Carte bancaire</small>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="card text-center p-2 payment-method-card" data-method="PAYCARD" style="cursor:pointer;">
+                                        <img src="{% static 'img/paycard.png' %}" alt="Paycard" height="40" class="mx-auto mb-1" onerror="this.outerHTML='<i class=\'bi bi-wallet2 fs-1 text-success\'></i>'">
+                                        <small>Paycard</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="payment_method" id="payment_method" value="">
+                            <small class="text-muted mt-1 d-block">Sélectionnez un mode ou laissez vide pour choisir sur Paycard</small>
+                        </div>
+                        
+                        <!-- Boutons -->
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'payments:plans' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg flex-grow-1" id="btn-payer">
+                                <i class="bi bi-lock-fill"></i> Payer maintenant
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center text-muted small">
+                    <i class="bi bi-shield-check"></i> Paiement sécurisé via Paycard
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const prixMensuel = {{ plan.prix_mensuel }};
+    const prixAnnuel = {{ plan.prix_annuel }};
+    
+    const mensuelRadio = document.getElementById('mensuel');
+    const annuelRadio = document.getElementById('annuel');
+    const prixPlan = document.getElementById('prix-plan');
+    const dureeText = document.getElementById('duree-text');
+    const total = document.getElementById('total');
+    
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+    
+    function updatePrix() {
+        if (annuelRadio.checked) {
+            prixPlan.textContent = formatNumber(prixAnnuel) + ' GNF';
+            dureeText.textContent = '12 mois';
+            total.textContent = formatNumber(prixAnnuel) + ' GNF';
+        } else {
+            prixPlan.textContent = formatNumber(prixMensuel) + ' GNF';
+            dureeText.textContent = '1 mois';
+            total.textContent = formatNumber(prixMensuel) + ' GNF';
+        }
+    }
+    
+    mensuelRadio.addEventListener('change', updatePrix);
+    annuelRadio.addEventListener('change', updatePrix);
+    
+    // Sélection du mode de paiement
+    document.querySelectorAll('.payment-method-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.payment-method-card').forEach(function(c) {
+                c.classList.remove('border-primary', 'shadow-sm');
+            });
+            this.classList.add('border-primary', 'shadow-sm');
+            document.getElementById('payment_method').value = this.dataset.method;
+        });
+    });
+    
+    // Désactiver le bouton lors de la soumission
+    document.getElementById('checkout-form').addEventListener('submit', function() {
+        const btn = document.getElementById('btn-payer');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Redirection en cours...';
+    });
+});
+</script>
+{% endblock %}

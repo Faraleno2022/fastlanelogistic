@@ -1,0 +1,39 @@
+{% extends 'emails/base_email.html' %}
+{% load humanize %}
+
+{% block title %}Bulletin de paie disponible{% endblock %}
+{% block header %}Bulletin de Paie{% endblock %}
+
+{% block content %}
+<p>Bonjour {{ employe.prenoms }},</p>
+
+<div class="success-box">
+    <strong>Votre bulletin de paie est disponible !</strong><br>
+    Période: {{ periode.get_mois_display }} {{ periode.annee }}
+</div>
+
+<table>
+    <tr>
+        <th>Salaire brut</th>
+        <td>{{ bulletin.salaire_brut|floatformat:0 }} GNF</td>
+    </tr>
+    <tr>
+        <th>CNSS</th>
+        <td>{{ bulletin.cnss_employe|floatformat:0 }} GNF</td>
+    </tr>
+    <tr>
+        <th>RTS</th>
+        <td>{{ bulletin.irg|floatformat:0 }} GNF</td>
+    </tr>
+    <tr style="background: #d4edda;">
+        <th><strong>Net à payer</strong></th>
+        <td><strong>{{ bulletin.net_a_payer|floatformat:0 }} GNF</strong></td>
+    </tr>
+</table>
+
+<p>Connectez-vous à votre espace personnel pour consulter le détail de votre bulletin.</p>
+
+<p style="text-align: center;">
+    <a href="#" class="btn btn-success">Voir mon bulletin</a>
+</p>
+{% endblock %}

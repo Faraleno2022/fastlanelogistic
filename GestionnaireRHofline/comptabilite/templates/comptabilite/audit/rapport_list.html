@@ -1,0 +1,153 @@
+{% extends "comptabilite/base_module.html" %}
+{% load static %}
+
+{% block title %}Rapports d'Audit{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0">Rapports d'Audit</h1>
+        <p class="text-muted mt-2">Gestion centralisée des audits et des conformités</p>
+    </div>
+    <a href="{% url 'comptabilite:rapport_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nouveau Rapport
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Statut</label>
+                <select name="statut" class="form-control">
+                    <option value="">--- Tous les statuts ---</option>
+                    <option value="PLANIFIE" {% if request.GET.statut == 'PLANIFIE' %}selected{% endif %}>Planifié</option>
+                    <option value="EN_COURS" {% if request.GET.statut == 'EN_COURS' %}selected{% endif %}>En cours</option>
+                    <option value="TERMINE" {% if request.GET.statut == 'TERMINE' %}selected{% endif %}>Terminé</option>
+                    <option value="PUBLIE" {% if request.GET.statut == 'PUBLIE' %}selected{% endif %}>Publié</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Niveau de Risque</label>
+                <select name="niveau_risque" class="form-control">
+                    <option value="">--- Tous les niveaux ---</option>
+                    <option value="FAIBLE" {% if request.GET.niveau_risque == 'FAIBLE' %}selected{% endif %}>Faible</option>
+                    <option value="MOYEN" {% if request.GET.niveau_risque == 'MOYEN' %}selected{% endif %}>Moyen</option>
+                    <option value="ELEVE" {% if request.GET.niveau_risque == 'ELEVE' %}selected{% endif %}>Élevé</option>
+                    <option value="CRITIQUE" {% if request.GET.niveau_risque == 'CRITIQUE' %}selected{% endif %}>Critique</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Recherche</label>
+                <input type="text" name="q" class="form-control" placeholder="Code ou titre..." value="{{ request.GET.q }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+                <a href="{% url 'comptabilite:rapport_list' %}" class="btn btn-outline-secondary">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tableau des rapports -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Code</th>
+                    <th>Titre</th>
+                    <th>Statut</th>
+                    <th>Risque</th>
+                    <th>Début</th>
+                    <th>Fin</th>
+                    <th>Alertes</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rapport in object_list %}
+                <tr>
+                    <td>
+                        <code class="bg-light px-2 py-1">{{ rapport.code }}</code>
+                    </td>
+                    <td>
+                        <strong>{{ rapport.titre }}</strong>
+                        {% if rapport.description %}
+                        <br><small class="text-muted">{{ rapport.description|truncatewords:10 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ rapport.get_statut_badge }}">
+                            {{ rapport.get_statut_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ rapport.get_risque_badge }}">
+                            {{ rapport.get_niveau_risque_global_display }}
+                        </span>
+                    </td>
+                    <td>{{ rapport.date_debut|date:"d/m/Y" }}</td>
+                    <td>{{ rapport.date_fin|date:"d/m/Y" }}</td>
+                    <td>
+                        <span class="badge bg-danger">
+                            {{ rapport.alertes_nonconformite.all|length }} alerte(s)
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'comptabilite:rapport_detail' rapport.pk %}" class="btn btn-sm btn-info">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{% url 'comptabilite:rapport_update' rapport.pk %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        Aucun rapport d'audit trouvé
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination" class="mt-4">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">Première</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédente</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item disabled">
+            <span class="page-link">
+                Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivante</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernière</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

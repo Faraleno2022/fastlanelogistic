@@ -1,0 +1,155 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouvelle{% endif %} procédure{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-clipboard-check text-primary"></i>
+                {% if object %}Modifier la procédure{% else %}Nouvelle procédure{% endif %}
+            </h1>
+        </div>
+        <a href="{% url 'comptabilite:controle_procedures' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <h6 class="text-muted mb-3">Identification</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Code *</label>
+                                {{ form.code }}
+                                {% for error in form.code.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Titre *</label>
+                                {{ form.titre }}
+                                {% for error in form.titre.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Description *</label>
+                                {{ form.description }}
+                                {% for error in form.description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Objectif *</label>
+                                {{ form.objectif }}
+                                {% for error in form.objectif.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Classification</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Type de contrôle *</label>
+                                {{ form.type_controle }}
+                                {% for error in form.type_controle.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Fréquence *</label>
+                                {{ form.frequence }}
+                                {% for error in form.frequence.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Processus *</label>
+                                {{ form.processus }}
+                                {% for error in form.processus.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Documentation</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Étapes du contrôle *</label>
+                                {{ form.etapes_controle }}
+                                {% for error in form.etapes_controle.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Documents requis</label>
+                                {{ form.documents_requis }}
+                                {% for error in form.documents_requis.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Critères de succès</label>
+                                {{ form.criteres_succes }}
+                                {% for error in form.criteres_succes.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-3">Gestion</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Responsable</label>
+                                {{ form.responsable }}
+                                {% for error in form.responsable.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Statut *</label>
+                                {{ form.statut }}
+                                {% for error in form.statut.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Version</label>
+                                {{ form.version }}
+                                {% for error in form.version.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date de mise en vigueur</label>
+                                {{ form.date_mise_en_vigueur }}
+                                {% for error in form.date_mise_en_vigueur.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Prochaine revue</label>
+                                {{ form.prochaine_revue }}
+                                {% for error in form.prochaine_revue.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'comptabilite:controle_procedures' %}" class="btn btn-outline-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Types de contrôle</h6>
+                </div>
+                <div class="card-body text-muted small">
+                    <ul class="mb-0">
+                        <li><strong>Préventif</strong> : Empêche les erreurs avant qu'elles ne se produisent</li>
+                        <li><strong>Détectif</strong> : Identifie les erreurs après leur survenue</li>
+                        <li><strong>Correctif</strong> : Corrige les erreurs détectées</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

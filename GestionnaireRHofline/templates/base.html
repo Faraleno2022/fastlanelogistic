@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com; font-src 'self' fonts.gstatic.com cdn.jsdelivr.net; img-src 'self' data: blob:; connect-src 'self';">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}Gestionnaire RH Guinée{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}GuinéeRH - Logiciel de gestion des ressources humaines conforme au Code du Travail Guinéen. Paie, CNSS, congés, contrats.{% endblock %}">
+    <meta name="keywords" content="logiciel RH Guinée, gestion paie Guinée, CNSS Guinée, ressources humaines Conakry, logiciel paie guinéen">
+    <meta name="author" content="GuinéeRH">
+    <meta name="robots" content="{% block robots %}noindex, nofollow{% endblock %}">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="GuinéeRH">
+    <meta property="og:locale" content="fr_GN">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+    
+    <!-- Bootstrap 5 CSS - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    
+    <!-- Bootstrap Icons - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    
+    <!-- Font Awesome - LOCAL -->
+    <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+    <!-- Searchable Select CSS (listes déroulantes avec recherche et scrollbar) -->
+    <link rel="stylesheet" href="{% static 'css/searchable_select.css' %}">
+
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        /* Styles de base pour éviter le FOUC (Flash of Unstyled Content) */
+        body { min-height: 100vh; }
+        .form-control, .form-select { min-height: 38px; }
+        .btn { cursor: pointer; }
+        /* Table header orange clair */
+        .table-orange-light, .table-orange-light > tr > th, .table-orange-light > tr > td {
+            background-color: #FFD699 !important;
+            color: #333 !important;
+        }
+    </style>
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 sidebar" style="background: #e8e8e8;">
+                {% include 'partials/sidebar.html' %}
+            </nav>
+            
+            <!-- Overlay pour fermer la sidebar sur mobile -->
+            <div id="sidebar-overlay" class="sidebar-overlay"></div>
+            
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                {% include 'partials/messages.html' %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <!-- jQuery - LOCAL -->
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    
+    <!-- Bootstrap 5 JS Bundle - LOCAL -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    
+    <!-- Script de vérification du chargement -->
+    <script>
+        // Vérifier que Bootstrap est chargé
+        if (typeof bootstrap === 'undefined') {
+            console.error('❌ Bootstrap JS non chargé!');
+        } else {
+            console.log('✅ Bootstrap JS chargé');
+        }
+        
+        // Vérifier que jQuery est chargé
+        if (typeof jQuery === 'undefined') {
+            console.error('❌ jQuery non chargé!');
+        } else {
+            console.log('✅ jQuery chargé');
+        }
+    </script>
+    
+    <!-- Script pour la sidebar responsive -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            
+            // Fonction pour ouvrir la sidebar
+            function openSidebar() {
+                sidebar.classList.add('show');
+                sidebarOverlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // Fonction pour fermer la sidebar
+            function closeSidebar() {
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+            
+            // Toggle sidebar au clic sur le bouton
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (sidebar.classList.contains('show')) {
+                        closeSidebar();
+                    } else {
+                        openSidebar();
+                    }
+                });
+            }
+            
+            // Fermer la sidebar au clic sur l'overlay
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    closeSidebar();
+                });
+            }
+            
+            // Fermer la sidebar au clic sur un lien (mobile)
+            const sidebarLinks = sidebar.querySelectorAll('.nav-link');
+            sidebarLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+            
+            // Fermer la sidebar avec la touche Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+                    closeSidebar();
+                }
+            });
+            
+            // Gérer le redimensionnement de la fenêtre
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+    </script>
+
+    <!-- Searchable Select JS (listes déroulantes avec recherche et scrollbar) -->
+    <script src="{% static 'js/searchable_select.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

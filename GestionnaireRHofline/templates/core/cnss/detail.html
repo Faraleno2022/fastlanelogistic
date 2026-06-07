@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Déclaration CNSS {{ transmission.reference }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-file-text"></i> {{ transmission.reference }}</h1>
+    <a href="{% url 'core:cnss_dashboard' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+
+{% if not is_valid %}
+<div class="alert alert-danger">
+    <strong>Erreurs de validation :</strong>
+    <ul class="mb-0">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header">Données de la déclaration</div>
+            <div class="card-body">
+                <table class="table">
+                    <tr><th>Période</th><td>{{ transmission.periode_mois|stringformat:"02d" }}/{{ transmission.periode_annee }}</td></tr>
+                    <tr><th>Nombre de salariés</th><td>{{ transmission.nombre_salaries }}</td></tr>
+                    <tr><th>Masse salariale brute</th><td>{{ transmission.masse_salariale_brute|floatformat:0 }} GNF</td></tr>
+                    <tr><th>Base CNSS totale</th><td>{{ transmission.base_cnss_totale|floatformat:0 }} GNF</td></tr>
+                    <tr><th>Cotisation employé</th><td>{{ transmission.cotisation_employe|floatformat:0 }} GNF</td></tr>
+                    <tr><th>Cotisation employeur</th><td>{{ transmission.cotisation_employeur|floatformat:0 }} GNF</td></tr>
+                    <tr class="table-primary"><th>Total cotisations</th><td><strong>{{ transmission.total_cotisations|floatformat:0 }} GNF</strong></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">Statut</div>
+            <div class="card-body text-center">
+                <span class="badge bg-{% if transmission.statut == 'accepte' %}success{% elif transmission.statut == 'transmis' %}info{% elif transmission.statut == 'rejete' %}danger{% else %}secondary{% endif %} fs-5">
+                    {{ transmission.get_statut_display }}
+                </span>
+                {% if transmission.date_transmission %}
+                <p class="mt-2 mb-0 small text-muted">Transmis le {{ transmission.date_transmission|date:"d/m/Y H:i" }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card shadow">
+            <div class="card-header">Actions</div>
+            <div class="card-body">
+                <a href="{% url 'core:cnss_telecharger' transmission.id %}" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-download"></i> Télécharger fichier
+                </a>
+                {% if transmission.statut != 'transmis' and transmission.statut != 'accepte' %}
+                <form method="post" action="{% url 'core:cnss_marquer_transmis' transmission.id %}">
+                    {% csrf_token %}
+                    <input type="text" name="numero_accuse" class="form-control mb-2" placeholder="N° accusé réception">
+                    <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Marquer transmis</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

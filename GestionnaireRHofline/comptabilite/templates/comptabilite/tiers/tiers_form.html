@@ -1,0 +1,201 @@
+{% extends "comptabilite/base_compta.html" %}
+{% load static %}
+
+{% block title %}{% if tiers %}Modifier{% else %}Nouveau{% endif %} Tiers - Gestionnaire RH{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                {% if tiers %}Modifier le Tiers{% else %}Nouveau Tiers{% endif %}
+            </h1>
+            <p class="text-muted mb-0">
+                {% if tiers %}
+                    Modifier les informations de {{ tiers.raison_sociale }}
+                {% else %}
+                    Ajouter un nouveau client ou fournisseur
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'comptabilite:tiers_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <!-- Messages de succès -->
+    {% if success %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            {% if tiers %}
+                Le tiers a été modifié avec succès!
+            {% else %}
+                Le tiers a été créé avec succès!
+            {% endif %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endif %}
+
+    <!-- Formulaire -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations du Tiers</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Informations générales -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Informations générales</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.code.id_for_label }}" class="form-label">
+                                        Code Tiers <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.code }}
+                                    {% if form.code.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.code.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Code unique d'identification du tiers</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.raison_sociale.id_for_label }}" class="form-label">
+                                        Raison Sociale <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.raison_sociale }}
+                                    {% if form.raison_sociale.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.raison_sociale.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.type_tiers.id_for_label }}" class="form-label">
+                                        Type de Tiers <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.type_tiers }}
+                                    {% if form.type_tiers.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.type_tiers.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Coordonnées</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.nif.id_for_label }}" class="form-label">NIF</label>
+                                    {{ form.nif }}
+                                    {% if form.nif.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.nif.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Numéro d'Identification Fiscale</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.telephone.id_for_label }}" class="form-label">Téléphone</label>
+                                    {{ form.telephone }}
+                                    {% if form.telephone.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.telephone.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.email.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Adresse -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Adresse</h6>
+                            <div class="mb-3">
+                                <label for="{{ form.adresse.id_for_label }}" class="form-label">Adresse complète</label>
+                                {{ form.adresse }}
+                                {% if form.adresse.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.adresse.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'comptabilite:tiers_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle me-2"></i>Annuler
+                                </a>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    {% if tiers %}Modifier{% else %}Créer{% endif %} le Tiers
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aide -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Aide
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Types de Tiers</h6>
+                        <ul class="small text-muted">
+                            <li><strong>Client:</strong> Personnes ou entreprises qui vous achètent des biens/services</li>
+                            <li><strong>Fournisseur:</strong> Personnes ou entreprises qui vous vendent des biens/services</li>
+                            <li><strong>Autre:</strong> Banques, administrations, partenaires...</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Conseils</h6>
+                        <ul class="small text-muted">
+                            <li>Utilisez un code unique pour chaque tiers</li>
+                            <li>Le NIF est obligatoire pour les factures</li>
+                            <li>L'email sera utilisé pour l'envoi des factures</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-info small">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        <strong>Astuce:</strong> Vous pourrez modifier ces informations à tout moment.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

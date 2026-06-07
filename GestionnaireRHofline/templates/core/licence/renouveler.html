@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Renouveler la Licence - Gestionnaire RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Renouveler la Licence
+                    </h5>
+                </div>
+                <div class="card-body">
+                    
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Informations licence actuelle -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Licence actuelle</h6>
+                        <hr>
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Clé:</small><br>
+                                <code>{{ licence.cle_licence }}</code>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Expiration:</small><br>
+                                {% if licence.date_expiration %}
+                                    <strong class="{% if licence.jours_restants <= 30 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ licence.date_expiration|date:"d/m/Y" }}
+                                    </strong>
+                                    <br>
+                                    <small>({{ licence.jours_restants }} jours restants)</small>
+                                {% else %}
+                                    <span class="text-success">Perpétuelle</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulaire de renouvellement -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="cle_renouvellement" class="form-label">
+                                <i class="fas fa-key me-1"></i>Clé de renouvellement
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg text-center text-uppercase" 
+                                   id="cle_renouvellement" 
+                                   name="cle_renouvellement"
+                                   placeholder="XXXX-XXXX-XXXX-XXXX"
+                                   maxlength="19"
+                                   pattern="[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}"
+                                   required>
+                            <div class="form-text">
+                                Entrez la clé de renouvellement fournie par le support.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-sync-alt me-2"></i>Renouveler la licence
+                            </button>
+                            <a href="{% url 'core:licence_statut' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour au statut
+                            </a>
+                        </div>
+                    </form>
+                    
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar-alt text-primary"></i><br>
+                                <strong>Mensuel</strong><br>
+                                +30 jours
+                            </small>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar-check text-success"></i><br>
+                                <strong>Annuel</strong><br>
+                                +1 an
+                            </small>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted">
+                                <i class="fas fa-infinity text-warning"></i><br>
+                                <strong>Perpétuel</strong><br>
+                                Illimité
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact support -->
+            <div class="card mt-3">
+                <div class="card-body text-center">
+                    <p class="mb-2">Besoin d'une clé de renouvellement?</p>
+                    <a href="mailto:faraleno16@gmail.com?subject=Demande de renouvellement licence {{ licence.cle_licence }}&body=Bonjour,%0A%0AJe souhaite renouveler ma licence.%0A%0AClé actuelle: {{ licence.cle_licence }}%0AID Machine: {{ machine_id }}%0A%0ACordialement" 
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-envelope me-2"></i>Contacter le support
+                    </a>
+                    <p class="mt-2 mb-0">
+                        <small class="text-muted">
+                            <i class="fas fa-phone me-1"></i>+224 622 61 35 59
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Formatage automatique de la clé
+document.getElementById('cle_renouvellement').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    let formatted = '';
+    for (let i = 0; i < value.length && i < 16; i++) {
+        if (i > 0 && i % 4 === 0) {
+            formatted += '-';
+        }
+        formatted += value[i];
+    }
+    e.target.value = formatted;
+});
+</script>
+{% endblock %}

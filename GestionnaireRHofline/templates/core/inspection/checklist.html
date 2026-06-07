@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Checklist Conformité{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h4 mb-0"><i class="bi bi-list-check"></i> Checklist de Conformité</h1>
+    <a href="{% url 'core:inspection_dashboard' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="alert {% if score >= 80 %}alert-success{% elif score >= 50 %}alert-warning{% else %}alert-danger{% endif %} mb-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><strong>Score global :</strong> {{ items_conformes }}/{{ total_items }}</span>
+                <span class="fs-4"><strong>{{ score }}%</strong></span>
+            </div>
+            <div class="progress mt-2" style="height: 20px;">
+                <div class="progress-bar bg-{% if score >= 80 %}success{% elif score >= 50 %}warning{% else %}danger{% endif %}" style="width: {{ score }}%"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="alert {% if score_obligatoire >= 80 %}alert-success{% elif score_obligatoire >= 50 %}alert-warning{% else %}alert-danger{% endif %} mb-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><strong>Obligatoires :</strong> {{ obligatoires_conformes }}/{{ items_obligatoires }}</span>
+                <span class="fs-4"><strong>{{ score_obligatoire }}%</strong></span>
+            </div>
+            <div class="progress mt-2" style="height: 20px;">
+                <div class="progress-bar bg-{% if score_obligatoire >= 80 %}success{% elif score_obligatoire >= 50 %}warning{% else %}danger{% endif %}" style="width: {{ score_obligatoire }}%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Légende :</strong>
+    <span class="badge bg-success ms-2">Auto</span> Vérification automatique |
+    <span class="badge bg-secondary ms-2">Manuel</span> Validation manuelle requise
+</div>
+
+{% for cat in checklist %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-light"><strong>{{ cat.categorie }}</strong></div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            {% for item in cat.items %}
+            <tr>
+                <td style="width: 40px;" class="text-center align-middle">
+                    {% if item.conforme %}
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    {% else %}
+                    <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                    {% endif %}
+                </td>
+                <td class="align-middle">
+                    <strong>{{ item.libelle }}</strong>
+                    {% if item.obligatoire %}<span class="badge bg-primary ms-1">Obligatoire</span>{% endif %}
+                    <br><small class="text-muted">{{ item.detail }}</small>
+                </td>
+                <td class="text-end align-middle" style="width: 200px;">
+                    {% if item.code|slice:":3" == "AFF" or item.code|slice:":3" == "SEC" and item.code != "SEC_FORMATION" and item.code != "SEC_MEDICAL" %}
+                    <!-- Validation manuelle -->
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="code" value="{{ item.code|lower|cut:"AFF_"|cut:"SEC_" }}">
+                        {% if item.conforme %}
+                        <input type="hidden" name="code" value="affichage_{{ item.code|lower|cut:'AFF_' }}">
+                        <button type="submit" name="valide" value="false" class="btn btn-sm btn-outline-danger" title="Marquer non conforme">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        <span class="text-success ms-2">Validé</span>
+                        {% else %}
+                        <input type="hidden" name="code" value="{% if 'AFF_' in item.code %}affichage_{{ item.code|lower|cut:'AFF_' }}{% elif 'SEC_' in item.code %}securite_{{ item.code|lower|cut:'SEC_' }}{% endif %}">
+                        <button type="submit" name="valide" value="true" class="btn btn-sm btn-success" title="Valider">
+                            <i class="bi bi-check"></i> Valider
+                        </button>
+                        {% endif %}
+                    </form>
+                    <span class="badge bg-secondary ms-1">Manuel</span>
+                    {% else %}
+                    <!-- Vérification automatique -->
+                    {% if item.conforme %}
+                    <span class="text-success"><i class="bi bi-check"></i> Conforme</span>
+                    {% else %}
+                    <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> À régulariser</span>
+                    {% endif %}
+                    <span class="badge bg-success ms-1">Auto</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endfor %}
+
+<div class="text-end">
+    <a href="{% url 'core:generer_rapport' %}" class="btn btn-primary"><i class="bi bi-file-earmark-pdf"></i> Générer rapport</a>
+</div>
+{% endblock %}

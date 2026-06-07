@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Heures Supplémentaires{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-clock me-2"></i>Heures Supplémentaires</h2>
+                <div>
+                    <a href="{% url 'temps_travail:recap_heures_supplementaires' %}?annee={{ annee }}&mois={{ mois }}" class="btn btn-info me-2">
+                        <i class="fas fa-chart-bar me-1"></i>Récapitulatif
+                    </a>
+                    <a href="{% url 'temps_travail:ajouter_heure_supplementaire' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Ajouter
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card" style="background: #e8e8e8;">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.nb_hs }}</h3>
+                    <small>Enregistrements</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card" style="background: #e8e8e8;">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.total_heures|floatformat:1 }}h</h3>
+                    <small>Total heures</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card" style="background: #e8e8e8;">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.total_montant|floatformat:0|intcomma }} GNF</h3>
+                    <small>Montant total</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Année</label>
+                    <select class="form-select" name="annee">
+                        {% for a in "2023 2024 2025 2026"|make_list %}
+                        <option value="{{ forloop.counter|add:2022 }}" {% if annee == forloop.counter|add:2022 %}selected{% endif %}>{{ forloop.counter|add:2022 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Mois</label>
+                    <select class="form-select" name="mois">
+                        <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+                        <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+                        <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+                        <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+                        <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+                        <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+                        <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+                        <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+                        <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+                        <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+                        <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+                        <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Employé</label>
+                    <select class="form-select" name="employe">
+                        <option value="">Tous</option>
+                        {% for emp in employes %}
+                        <option value="{{ emp.id }}" {% if emp.id == employe_selectionne %}selected{% endif %}>
+                            {{ emp.matricule }} - {{ emp.nom }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select" name="statut">
+                        <option value="">Tous</option>
+                        {% for code, libelle in statuts %}
+                        <option value="{{ code }}" {% if code == statut_selectionne %}selected{% endif %}>{{ libelle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead style="background: #e8e8e8;">
+                        <tr>
+                            <th>Date</th>
+                            <th>Employé</th>
+                            <th>Type</th>
+                            <th class="text-center">Heures</th>
+                            <th class="text-center">Taux</th>
+                            <th class="text-end">Montant</th>
+                            <th>Statut</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hs in hs_list %}
+                        <tr>
+                            <td>{{ hs.date_hs|date:"d/m/Y" }}</td>
+                            <td>{{ hs.employe.nom }} {{ hs.employe.prenoms }}</td>
+                            <td>
+                                <span class="badge bg-{% if 'nuit' in hs.type_hs %}dark{% elif 'dimanche' in hs.type_hs %}danger{% else %}primary{% endif %}">
+                                    {{ hs.get_type_hs_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">{{ hs.nombre_heures|floatformat:1 }}h</td>
+                            <td class="text-center">+{{ hs.taux_majoration|floatformat:0 }}%</td>
+                            <td class="text-end fw-bold">{{ hs.montant_hs|floatformat:0|intcomma }} GNF</td>
+                            <td>
+                                {% if hs.statut == 'en_attente' %}
+                                <span class="badge bg-warning">En attente</span>
+                                {% elif hs.statut == 'valide' %}
+                                <span class="badge bg-success">Validé</span>
+                                {% elif hs.statut == 'rejete' %}
+                                <span class="badge bg-danger">Rejeté</span>
+                                {% elif hs.statut == 'paye' %}
+                                <span class="badge bg-info">Payé</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if hs.statut == 'en_attente' %}
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'temps_travail:valider_heure_supplementaire' hs.pk %}" 
+                                       class="btn btn-success" title="Valider">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{% url 'temps_travail:rejeter_heure_supplementaire' hs.pk %}" 
+                                       class="btn btn-danger" title="Rejeter">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                    <a href="{% url 'temps_travail:supprimer_heure_supplementaire' hs.pk %}" 
+                                       class="btn btn-outline-danger" title="Supprimer"
+                                       onclick="return confirm('Supprimer ces heures supplémentaires ?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                <i class="fas fa-clock fa-3x mb-3"></i>
+                                <p>Aucune heure supplémentaire enregistrée</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Légende des taux -->
+    <div class="card mt-4">
+        <div class="card-header" style="background: #e8e8e8;">
+            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Taux de majoration (Code du Travail guinéen)</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <ul class="list-unstyled mb-0">
+                        <li><span class="badge bg-primary">+15%</span> Jour (1-8h après 40h/sem)</li>
+                        <li><span class="badge bg-primary">+25%</span> Jour (1-8h, taux majoré)</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <ul class="list-unstyled mb-0">
+                        <li><span class="badge bg-primary">+50%</span> Jour (>8h) ou Nuit</li>
+                        <li><span class="badge bg-danger">+75%</span> Dimanche/Férié jour</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <ul class="list-unstyled mb-0">
+                        <li><span class="badge bg-dark">+100%</span> Dimanche/Férié nuit</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Demandes de Partenariat - Administration{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-handshake me-2"></i>Demandes de Partenariat</h2>
+        <a href="{% url 'core:superuser_manage_users' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Retour
+        </a>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.total }}</h3>
+                    <small>Total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.nouveau }}</h3>
+                    <small>Nouvelles</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.en_cours }}</h3>
+                    <small>En cours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.accepte }}</h3>
+                    <small>Acceptées</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.refuse }}</h3>
+                    <small>Refusées</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="nouveau" {% if statut_filter == 'nouveau' %}selected{% endif %}>Nouveau</option>
+                        <option value="en_cours" {% if statut_filter == 'en_cours' %}selected{% endif %}>En cours</option>
+                        <option value="accepte" {% if statut_filter == 'accepte' %}selected{% endif %}>Accepté</option>
+                        <option value="refuse" {% if statut_filter == 'refuse' %}selected{% endif %}>Refusé</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Recherche</label>
+                    <input type="text" name="search" class="form-control" placeholder="Entreprise, email, contact..." value="{{ search }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-2"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des demandes -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Entreprise</th>
+                            <th>Contact</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th>Documents</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for demande in demandes %}
+                        <tr>
+                            <td>{{ demande.date_soumission|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <strong>{{ demande.nom_entreprise }}</strong><br>
+                                <small class="text-muted">{{ demande.secteur_activite }}</small>
+                            </td>
+                            <td>
+                                {{ demande.nom_contact }}<br>
+                                <small class="text-muted">{{ demande.email }}</small>
+                            </td>
+                            <td>{{ demande.get_type_partenariat_display }}</td>
+                            <td>
+                                {% if demande.statut == 'nouveau' %}
+                                    <span class="badge bg-info">Nouveau</span>
+                                {% elif demande.statut == 'en_cours' %}
+                                    <span class="badge bg-warning text-dark">En cours</span>
+                                {% elif demande.statut == 'accepte' %}
+                                    <span class="badge bg-success">Accepté</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Refusé</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if demande.document_cgi %}
+                                    <a href="{% url 'core:telecharger_document_partenariat' demande.pk 'cgi' %}" class="btn btn-sm btn-outline-primary" title="Document CGI">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                {% endif %}
+                                {% if demande.autre_document %}
+                                    <a href="{% url 'core:telecharger_document_partenariat' demande.pk 'autre' %}" class="btn btn-sm btn-outline-secondary" title="Autre document">
+                                        <i class="bi bi-file-earmark"></i>
+                                    </a>
+                                {% endif %}
+                                {% if not demande.document_cgi and not demande.autre_document %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'core:superuser_demande_detail' demande.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                                Aucune demande de partenariat
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

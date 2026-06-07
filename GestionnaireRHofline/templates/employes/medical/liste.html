@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Visites Médicales{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-stethoscope me-2"></i>Visites Médicales</h2>
+                <div>
+                    <a href="{% url 'employes:tableau_bord_medical' %}" class="btn btn-outline-info">
+                        <i class="fas fa-tachometer-alt me-1"></i>Tableau de bord
+                    </a>
+                    <a href="{% url 'employes:planifier_visite' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Planifier
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4>{{ stats.nb_total|default:"0" }}</h4>
+                    <small>Total visites</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4>{{ stats.nb_aptes|default:"0" }}</h4>
+                    <small>Aptes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4>{{ stats.nb_reserves|default:"0" }}</h4>
+                    <small>Avec réserves</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4>{{ stats.nb_en_attente|default:"0" }}</h4>
+                    <small>En attente</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Employé</label>
+                    <select class="form-select" name="employe">
+                        <option value="">Tous</option>
+                        {% for emp in employes %}
+                        <option value="{{ emp.id }}" {% if filtre_employe == emp.id|stringformat:"s" %}selected{% endif %}>
+                            {{ emp.nom }} {{ emp.prenoms }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" name="type">
+                        <option value="">Tous</option>
+                        {% for code, libelle in types_visite %}
+                        <option value="{{ code }}" {% if filtre_type == code %}selected{% endif %}>{{ libelle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Aptitude</label>
+                    <select class="form-select" name="aptitude">
+                        <option value="">Toutes</option>
+                        {% for code, libelle in aptitudes %}
+                        <option value="{{ code }}" {% if filtre_aptitude == code %}selected{% endif %}>{{ libelle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Année</label>
+                    <input type="number" class="form-control" name="annee" value="{{ annee }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-orange-light">
+                        <tr>
+                            <th>Employé</th>
+                            <th>Type de visite</th>
+                            <th>Date</th>
+                            <th>Médecin</th>
+                            <th>Aptitude</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visite in visites %}
+                        <tr>
+                            <td>
+                                <strong>{{ visite.employe.nom }} {{ visite.employe.prenoms }}</strong><br>
+                                <small class="text-muted">{{ visite.employe.matricule }}</small>
+                            </td>
+                            <td>{{ visite.get_type_visite_display }}</td>
+                            <td>{{ visite.date_visite|date:"d/m/Y" }}</td>
+                            <td>{{ visite.medecin|default:"-" }}</td>
+                            <td>
+                                {% if visite.aptitude == 'apte' %}
+                                <span class="badge bg-success">Apte</span>
+                                {% elif visite.aptitude == 'apte_reserves' %}
+                                <span class="badge bg-warning">Avec réserves</span>
+                                {% elif visite.aptitude == 'inapte_temporaire' %}
+                                <span class="badge bg-danger">Inapte temp.</span>
+                                {% elif visite.aptitude == 'inapte_definitif' %}
+                                <span class="badge bg-dark">Inapte déf.</span>
+                                {% elif visite.aptitude == 'en_attente' %}
+                                <span class="badge bg-secondary">En attente</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'employes:detail_visite' visite.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if visite.aptitude == 'en_attente' %}
+                                <a href="{% url 'employes:enregistrer_resultat' visite.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="fas fa-stethoscope fa-3x mb-3"></i>
+                                <p>Aucune visite médicale</p>
+                                <a href="{% url 'employes:planifier_visite' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>Planifier une visite
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

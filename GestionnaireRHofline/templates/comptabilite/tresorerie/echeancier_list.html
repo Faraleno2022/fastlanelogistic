@@ -1,0 +1,88 @@
+{% extends 'comptabilite/base_compta.html' %}
+{% load static %}
+
+{% block title %}Échéancier{% endblock %}
+
+{% block compta_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-calendar-check text-primary"></i> Échéancier
+        </h1>
+        <div>
+            <a href="{% url 'comptabilite:echeancier_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle échéance
+            </a>
+            <a href="{% url 'comptabilite:tresorerie_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {% if echeances %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date échéance</th>
+                            <th>Type</th>
+                            <th>Tiers</th>
+                            <th>Libellé</th>
+                            <th class="text-end">Montant</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for echeance in echeances %}
+                        <tr>
+                            <td>{{ echeance.date_echeance|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if echeance.type_echeance == 'encaissement' %}
+                                <span class="badge bg-success">Encaissement</span>
+                                {% else %}
+                                <span class="badge bg-danger">Décaissement</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ echeance.tiers|default:"-" }}</td>
+                            <td>{{ echeance.libelle }}</td>
+                            <td class="text-end">{{ echeance.montant|floatformat:0 }} GNF</td>
+                            <td>
+                                {% if echeance.est_realise %}
+                                <span class="badge bg-success">Réalisé</span>
+                                {% elif echeance.date_echeance < today %}
+                                <span class="badge bg-danger">En retard</span>
+                                {% else %}
+                                <span class="badge bg-warning">En attente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'comptabilite:echeancier_detail' echeance.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if not echeance.est_realise %}
+                                <a href="{% url 'comptabilite:echeancier_realiser' echeance.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-check"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">Aucune échéance enregistrée</p>
+                <a href="{% url 'comptabilite:echeancier_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Créer une échéance
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
