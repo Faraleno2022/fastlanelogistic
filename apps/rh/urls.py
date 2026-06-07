@@ -4,6 +4,9 @@ from . import views
 app_name = "rh"
 
 urlpatterns = [
+    # Page d'accueil du module RH
+    path("", views.landing, name="landing"),
+
     # Employés
     path("employes/", views.liste_employes, name="liste_employes"),
     path("employes/nouveau/", views.employe_create, name="employe_create"),

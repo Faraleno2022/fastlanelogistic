@@ -1,4 +1,5 @@
 import calendar
+import os
 from datetime import date, timedelta
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required
@@ -10,6 +11,16 @@ from apps.core.utils import format_protected_error
 
 from .models import Employe, Attendance, HeureSup
 from .forms import EmployeForm, AttendanceForm, HeureSupForm
+
+
+# ---------- Landing /rh/ ----------
+
+def landing(request):
+    """Tableau de bord du module RH : modules web Fastlane + téléchargement de l'app desktop complète."""
+    return render(request, "rh/landing.html", {
+        "download_url": os.environ.get("RH_EXE_DOWNLOAD_URL", ""),
+        "exe_version": os.environ.get("RH_EXE_VERSION", "1.0"),
+    })
 
 
 # ---------- Employés ----------

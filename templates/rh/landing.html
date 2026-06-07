@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Module RH — Fastlane Logistic{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- En-tête -->
+  <div class="text-center mb-5">
+    <h1 class="display-5 fw-bold mb-2">
+      <i class="bi bi-people-fill text-primary"></i> Module Ressources Humaines
+    </h1>
+    <p class="lead text-muted mb-0">
+      Gérez vos employés, la paie, les congés et les déclarations sociales.
+    </p>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Module web Fastlane -->
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm border-primary">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="bi bi-cloud-fill"></i> RH en ligne</h4>
+          <small>Accessible depuis ce site, partout</small>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">Modules opérationnels intégrés à Fastlane Logistic :</p>
+          <div class="list-group list-group-flush mb-3">
+            <a href="{% url 'rh:liste_employes' %}" class="list-group-item list-group-item-action">
+              <i class="bi bi-person-badge text-primary"></i> <strong>Employés</strong>
+              <small class="text-muted d-block">Fiches employés, salaires, affectations camions</small>
+            </a>
+            <a href="{% url 'rh:attendance' %}" class="list-group-item list-group-item-action">
+              <i class="bi bi-calendar-check text-primary"></i> <strong>Pointage / Attendance</strong>
+              <small class="text-muted d-block">Suivi mensuel de présence par employé</small>
+            </a>
+            <a href="{% url 'rh:heures_sup' %}" class="list-group-item list-group-item-action">
+              <i class="bi bi-clock-history text-primary"></i> <strong>Heures supplémentaires</strong>
+              <small class="text-muted d-block">Enregistrement et validation des heures sup</small>
+            </a>
+          </div>
+          <div class="alert alert-light mb-0 small">
+            <i class="bi bi-info-circle"></i> Données partagées avec le module Flotte (affectation chauffeurs ↔ camions).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module desktop complet -->
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm border-success">
+        <div class="card-header bg-success text-white">
+          <h4 class="mb-0"><i class="bi bi-pc-display"></i> RH complet (poste local)</h4>
+          <small>Logiciel installé sur le PC du service RH</small>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">Application desktop complète pour la gestion RH guinéenne avancée :</p>
+          <ul class="mb-3">
+            <li><strong>Paie</strong> conforme Guinée (CNSS, RTS, tranches d'impôt)</li>
+            <li><strong>Congés</strong> automatiques, soldes acquis</li>
+            <li><strong>Formation</strong> et plans de carrière</li>
+            <li><strong>Recrutement</strong> et candidatures</li>
+            <li><strong>Comptabilité</strong> et déclarations sociales</li>
+            <li><strong>Multi-entreprise</strong> et bulletins PDF</li>
+          </ul>
+
+          {% if download_url %}
+            <a href="{{ download_url }}" class="btn btn-success w-100 mb-2">
+              <i class="bi bi-download"></i> Télécharger GestionnaireRH&nbsp;v{{ exe_version }}
+            </a>
+            <p class="small text-muted mb-0">
+              Compatible Windows&nbsp;10 / 11. Fonctionne hors ligne. Licence requise après installation.
+            </p>
+          {% else %}
+            <div class="alert alert-warning mb-0">
+              <i class="bi bi-envelope"></i> <strong>Sur demande :</strong>
+              contactez l'équipe Fastlane pour obtenir le logiciel et votre licence.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Comparatif -->
+  <div class="mt-5">
+    <h5 class="text-muted mb-3"><i class="bi bi-table"></i> Que choisir ?</h5>
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle bg-white">
+        <thead class="table-light">
+          <tr>
+            <th>Besoin</th>
+            <th class="text-center text-primary"><i class="bi bi-cloud"></i> RH en ligne</th>
+            <th class="text-center text-success"><i class="bi bi-pc-display"></i> RH complet</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Suivi des employés et présence</td><td class="text-center">✅</td><td class="text-center">✅</td></tr>
+          <tr><td>Heures supplémentaires</td><td class="text-center">✅</td><td class="text-center">✅</td></tr>
+          <tr><td>Calcul de paie (CNSS, RTS)</td><td class="text-center text-muted">—</td><td class="text-center">✅</td></tr>
+          <tr><td>Congés et soldes automatiques</td><td class="text-center text-muted">—</td><td class="text-center">✅</td></tr>
+          <tr><td>Bulletins PDF et déclarations sociales</td><td class="text-center text-muted">—</td><td class="text-center">✅</td></tr>
+          <tr><td>Fonctionne sans Internet</td><td class="text-center text-muted">—</td><td class="text-center">✅</td></tr>
+          <tr><td>Accessible depuis n'importe où</td><td class="text-center">✅</td><td class="text-center text-muted">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
