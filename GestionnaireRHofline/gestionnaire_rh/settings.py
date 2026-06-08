@@ -259,7 +259,8 @@ else:
     if DEBUG:
         STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     else:
-        STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+        # Storage tolérant aux références manquantes (sourcemaps non livrés).
+        STATICFILES_STORAGE = 'gestionnaire_rh.storage.ToleranteStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
