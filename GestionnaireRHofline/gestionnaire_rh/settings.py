@@ -271,6 +271,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Si True, la racine "/" redirige vers le formulaire de connexion au lieu
+# de la page publique (utile pour un déploiement type espace privé).
+LOGIN_IS_HOMEPAGE = config('LOGIN_IS_HOMEPAGE', default=False, cast=bool)
+
 # Custom User Model
 AUTH_USER_MODEL = 'core.Utilisateur'
 

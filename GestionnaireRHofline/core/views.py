@@ -145,10 +145,18 @@ def profile_view(request):
 
 
 def index_view(request):
-    """Page d'accueil - redirige vers le dashboard si connecté, sinon affiche landing page"""
+    """Page d'accueil - redirige vers le dashboard si connecté, sinon affiche landing page.
+
+    Si LOGIN_IS_HOMEPAGE est activé (ex: déploiement app.fastlanelogisticgn.com),
+    la racine renvoie directement vers le formulaire de connexion au lieu de la
+    page publique.
+    """
     if request.user.is_authenticated:
         return redirect('dashboard:index')
-    
+
+    if getattr(settings, 'LOGIN_IS_HOMEPAGE', False):
+        return redirect('login')
+
     # Récupérer les offres d'emploi ouvertes et non expirées pour affichage public
     from recrutement.models import OffreEmploi
     from formation.models import CatalogueFormation
