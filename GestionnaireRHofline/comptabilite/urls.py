@@ -46,12 +46,14 @@ try:
     import os
     import importlib.util
     
-    # NOTE: le dossier `comptabilite/views/` existe (package) et masque le fichier `comptabilite/views.py`.
-    # On charge donc explicitement `views.py` avec un nom de module qualifié afin que les imports relatifs fonctionnent.
+    # NOTE: les vues "legacy" (fonctionnelles) vivent dans `comptabilite/views_legacy.py`.
+    # Le dossier `comptabilite/views/` est le package des vues basées classes
+    # (rapprochements, fiscalité, audit). On charge le fichier legacy explicitement
+    # par son chemin pour éviter tout conflit de résolution de module.
     base_dir = os.path.dirname(__file__)
-    views_path = os.path.join(base_dir, 'views.py')
+    views_path = os.path.join(base_dir, 'views_legacy.py')
     if not os.path.exists(views_path):
-        views_path = os.path.join(base_dir, 'views.pyc')
+        views_path = os.path.join(base_dir, 'views_legacy.pyc')
     spec = importlib.util.spec_from_file_location('comptabilite.views_legacy', views_path)
     comptabilite_views = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(comptabilite_views)
