@@ -132,6 +132,10 @@ build_log.txt
 # Temporary scripts
 _*.py
 _*.bat
+# IMPORTANT : ne jamais ignorer les __init__.py (le motif _*.py les attrapait,
+# ce qui faisait disparaître les packages migrations/ → "App does not have migrations").
+!__init__.py
+!**/__init__.py
 
 # Other
 .claude/
