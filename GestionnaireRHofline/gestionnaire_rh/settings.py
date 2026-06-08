@@ -37,14 +37,29 @@ REGISTRATION_DISABLED = config('REGISTRATION_DISABLED', default=True, cast=bool)
 ADMIN_REGISTRATION_CODE = config('ADMIN_REGISTRATION_CODE', default='625196629')
 
 ALLOWED_HOSTS = [
+    'rh.fastlanelogisticgn.com',
     'fastlanelogisticgn.com',
     'www.fastlanelogisticgn.com',
     'www.guineerh.space',
     'guineerh.space',
     'guineerh.pythonanywhere.com',
+    'Fastlane.pythonanywhere.com',
     'localhost',
     '127.0.0.1',
     'testserver',
+]
+
+# Permet d'ajouter des hosts supplémentaires via la variable d'env
+# DJANGO_EXTRA_ALLOWED_HOSTS (séparés par des virgules)
+_extra = config('DJANGO_EXTRA_ALLOWED_HOSTS', default='')
+if _extra:
+    ALLOWED_HOSTS += [h.strip() for h in _extra.split(',') if h.strip()]
+
+# CSRF trusted origins (Django 4+ : obligatoire pour POST en HTTPS)
+CSRF_TRUSTED_ORIGINS = [
+    'https://rh.fastlanelogisticgn.com',
+    'https://www.fastlanelogisticgn.com',
+    'https://fastlanelogisticgn.com',
 ]
 
 # Application definition
