@@ -96,7 +96,9 @@ INSTALLED_APPS = [
     'dashboard',
     'payments',
     'portail',
-    'comptabilite',
+    # 'comptabilite',  # Désactivé en déploiement web : refactorisation incomplète
+    # (conflit views.py / views/ + imports manquants comme CompteBancaireForm).
+    # La comptabilité reste disponible dans l'app desktop GestionnaireRH.exe.
 ]
 
 MIDDLEWARE = [
