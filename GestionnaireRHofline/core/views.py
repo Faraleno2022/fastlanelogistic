@@ -155,7 +155,7 @@ def index_view(request):
         return redirect('dashboard:index')
 
     if getattr(settings, 'LOGIN_IS_HOMEPAGE', False):
-        return redirect('login')
+        return redirect('core:login')
 
     # Récupérer les offres d'emploi ouvertes et non expirées pour affichage public
     from recrutement.models import OffreEmploi
