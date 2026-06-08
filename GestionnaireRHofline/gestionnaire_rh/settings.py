@@ -37,6 +37,7 @@ REGISTRATION_DISABLED = config('REGISTRATION_DISABLED', default=True, cast=bool)
 ADMIN_REGISTRATION_CODE = config('ADMIN_REGISTRATION_CODE', default='625196629')
 
 ALLOWED_HOSTS = [
+    'app.fastlanelogisticgn.com',
     'rh.fastlanelogisticgn.com',
     'fastlanelogisticgn.com',
     'www.fastlanelogisticgn.com',
@@ -57,6 +58,7 @@ if _extra:
 
 # CSRF trusted origins (Django 4+ : obligatoire pour POST en HTTPS)
 CSRF_TRUSTED_ORIGINS = [
+    'https://app.fastlanelogisticgn.com',
     'https://rh.fastlanelogisticgn.com',
     'https://www.fastlanelogisticgn.com',
     'https://fastlanelogisticgn.com',
