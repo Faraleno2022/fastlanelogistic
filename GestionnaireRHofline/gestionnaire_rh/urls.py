@@ -80,7 +80,7 @@ urlpatterns = [
     path('formation/', include('formation.urls')),
     path('payments/', include('payments.urls')),
     path('portail/', include('portail.urls')),
-    # path('comptabilite/', include('comptabilite.urls')),  # Désactivé web (voir settings.py)
+    path('comptabilite/', include('comptabilite.urls')),
     path('contrats/', include('contrats.urls')),
     # path('api/', include('api.urls')),  # TODO: Create api app
 ]

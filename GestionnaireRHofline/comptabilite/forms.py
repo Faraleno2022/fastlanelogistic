@@ -1,7 +1,8 @@
 from django import forms
 from .models import (
     PlanComptable, Journal, ExerciceComptable, EcritureComptable,
-    LigneEcriture, Tiers, Facture, LigneFacture, Reglement
+    LigneEcriture, Tiers, Facture, LigneFacture, Reglement,
+    CompteBancaire, RapprochementBancaire, EcartBancaire,
 )
 from core.widgets import ScrollableSelectWidget
 
@@ -265,3 +266,154 @@ class ReglementForm(forms.ModelForm):
             self.fields['facture'].queryset = Facture.objects.filter(
                 entreprise=entreprise, statut='validee'
             )
+
+
+# ============================================================================
+# MODULE RAPPROCHEMENT BANCAIRE
+# ============================================================================
+
+class CompteBancaireForm(forms.ModelForm):
+    """Formulaire pour les comptes bancaires."""
+
+    class Meta:
+        model = CompteBancaire
+        fields = [
+            'code', 'libelle', 'banque', 'iban', 'bic',
+            'solde_initial', 'compte_comptable', 'est_actif',
+        ]
+        widgets = {
+            'code': forms.TextInput(attrs={'class': 'form-control'}),
+            'libelle': forms.TextInput(attrs={'class': 'form-control'}),
+            'banque': forms.TextInput(attrs={'class': 'form-control'}),
+            'iban': forms.TextInput(attrs={'class': 'form-control'}),
+            'bic': forms.TextInput(attrs={'class': 'form-control'}),
+            'solde_initial': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'compte_comptable': ScrollableSelectWidget(attrs={'class': 'form-select'}),
+            'est_actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, user=None, entreprise=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # La vue CompteBancaireCreateView passe `user` ; on en déduit l'entreprise.
+        if entreprise is None and user is not None:
+            entreprise = getattr(user, 'entreprise', None)
+        if entreprise is not None:
+            self.fields['compte_comptable'].queryset = PlanComptable.objects.filter(
+                entreprise=entreprise, est_actif=True
+            ).order_by('numero_compte')
+        self.fields['compte_comptable'].required = False
+
+
+class RapprochementBancaireForm(forms.ModelForm):
+    """Formulaire pour les rapprochements bancaires.
+
+    En création, la vue appelle le service avec compte_bancaire et
+    date_rapprochement ; les soldes sont calculés automatiquement.
+    """
+
+    class Meta:
+        model = RapprochementBancaire
+        fields = ['compte_bancaire', 'date_rapprochement', 'notes']
+        widgets = {
+            'compte_bancaire': ScrollableSelectWidget(attrs={'class': 'form-select'}),
+            'date_rapprochement': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    def __init__(self, *args, user=None, entreprise=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if entreprise is None and user is not None:
+            entreprise = getattr(user, 'entreprise', None)
+        if entreprise is not None:
+            self.fields['compte_bancaire'].queryset = CompteBancaire.objects.filter(
+                entreprise=entreprise, est_actif=True
+            ).order_by('code')
+        self.fields['notes'].required = False
+
+
+class EcartBancaireForm(forms.ModelForm):
+    """Formulaire pour les écarts bancaires."""
+
+    class Meta:
+        model = EcartBancaire
+        fields = ['type_ecart', 'montant', 'description', 'compte_comptable']
+        widgets = {
+            'type_ecart': forms.Select(attrs={'class': 'form-select'}),
+            'montant': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'compte_comptable': ScrollableSelectWidget(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, user=None, entreprise=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if entreprise is None and user is not None:
+            entreprise = getattr(user, 'entreprise', None)
+        if entreprise is not None:
+            self.fields['compte_comptable'].queryset = PlanComptable.objects.filter(
+                entreprise=entreprise, est_actif=True
+            ).order_by('numero_compte')
+        self.fields['compte_comptable'].required = False
+
+
+class OperationImportForm(forms.Form):
+    """Formulaire d'import d'opérations bancaires depuis un fichier."""
+
+    FORMATS = [
+        ('csv', 'CSV'),
+        ('ofx', 'OFX'),
+        ('qif', 'QIF'),
+        ('xlsx', 'Excel (xlsx)'),
+    ]
+    ENCODAGES = [
+        ('utf-8', 'UTF-8'),
+        ('latin-1', 'Latin-1 (ISO-8859-1)'),
+        ('windows-1252', 'Windows-1252'),
+    ]
+
+    compte_bancaire = forms.ModelChoiceField(
+        queryset=CompteBancaire.objects.none(),
+        widget=ScrollableSelectWidget(attrs={'class': 'form-select'}),
+        label="Compte bancaire",
+    )
+    fichier = forms.FileField(
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        label="Fichier d'opérations",
+    )
+    format_fichier = forms.ChoiceField(
+        choices=FORMATS,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Format",
+    )
+    encodage = forms.ChoiceField(
+        choices=ENCODAGES,
+        initial='utf-8',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Encodage",
+    )
+
+    def __init__(self, *args, user=None, entreprise=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if entreprise is None and user is not None:
+            entreprise = getattr(user, 'entreprise', None)
+        if entreprise is not None:
+            self.fields['compte_bancaire'].queryset = CompteBancaire.objects.filter(
+                entreprise=entreprise, est_actif=True
+            ).order_by('code')
+
+
+class BulkLettrageForm(forms.Form):
+    """Formulaire de lettrage en masse d'opérations bancaires."""
+
+    operation_ids = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=False,
+        help_text="Liste d'IDs d'opérations séparés par des virgules.",
+    )
+    ecriture_id = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=False,
+    )
+
+    def clean_operation_ids(self):
+        raw = self.cleaned_data.get('operation_ids', '') or ''
+        return [v for v in (s.strip() for s in raw.split(',')) if v]
