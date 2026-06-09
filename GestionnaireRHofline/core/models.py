@@ -9,13 +9,14 @@ class Entreprise(models.Model):
     TYPES_MODULE = [
         ('rh', 'Ressources Humaines'),
         ('compta', 'Comptabilité'),
+        ('secretariat', 'Secrétariat'),
         ('both', 'RH + Comptabilité'),
     ]
-    
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom_entreprise = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, max_length=100)
-    type_module = models.CharField(max_length=10, choices=TYPES_MODULE, default='rh', verbose_name='Type de compte')
+    type_module = models.CharField(max_length=20, choices=TYPES_MODULE, default='rh', verbose_name='Type de compte')
     secteur_activite = models.CharField(max_length=100, blank=True, null=True, verbose_name='Secteur d\'activité')
     nif = models.CharField(max_length=50, unique=True, blank=True, null=True, verbose_name='NIF')
     nifp = models.CharField(max_length=50, blank=True, null=True, verbose_name='NIF-p (eTax DGI)')
@@ -67,6 +68,10 @@ class Entreprise(models.Model):
     @property
     def has_compta(self):
         return self.type_module in ['compta', 'both']
+
+    @property
+    def has_secretariat(self):
+        return self.type_module in ['secretariat', 'both']
 
     def has_module(self, module_name):
         """Vérifie si l'entreprise a accès à un module donné"""

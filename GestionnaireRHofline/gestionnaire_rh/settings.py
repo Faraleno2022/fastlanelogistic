@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     'payments',
     'portail',
     'comptabilite',
+    'secretariat',
 ]
 
 MIDDLEWARE = [

@@ -57,8 +57,11 @@ def login_view(request):
     """Vue de connexion"""
     if request.user.is_authenticated:
         # Rediriger selon le type de module
-        if request.user.entreprise and request.user.entreprise.type_module == 'compta':
+        ent = request.user.entreprise
+        if ent and ent.type_module == 'compta':
             return redirect('comptabilite:dashboard')
+        if ent and ent.type_module == 'secretariat':
+            return redirect('secretariat:dashboard')
         return redirect('dashboard:index')
     
     if request.method == 'POST':
@@ -152,6 +155,11 @@ def index_view(request):
     page publique.
     """
     if request.user.is_authenticated:
+        ent = request.user.entreprise
+        if ent and ent.type_module == 'compta':
+            return redirect('comptabilite:dashboard')
+        if ent and ent.type_module == 'secretariat':
+            return redirect('secretariat:dashboard')
         return redirect('dashboard:index')
 
     if getattr(settings, 'LOGIN_IS_HOMEPAGE', False):

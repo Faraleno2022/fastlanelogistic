@@ -1,0 +1,87 @@
+{% extends 'secretariat/base_secretariat.html' %}
+{% load secretariat_extras %}
+{% block title %}Tableau de bord - Secrétariat{% endblock %}
+{% block content %}
+<div class="sec-topbar">
+    <div><h4 class="mb-0"><i class="bi bi-speedometer2"></i> Tableau de bord — Secrétariat</h4>
+        <small>{{ today|date:"l d F Y" }}</small></div>
+    <div class="text-end"><small>{{ request.user.get_full_name|default:request.user.username }}</small></div>
+</div>
+
+<!-- Indicateurs -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="sec-card p-3 h-100">
+            <div class="text-muted small">RDV aujourd'hui</div>
+            <div class="h3 mb-0" style="color:#1F4E78;">{{ rdv_jour|length }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sec-card p-3 h-100">
+            <div class="text-muted small">Courriers à traiter</div>
+            <div class="h3 mb-0" style="color:#E63946;">{{ courriers_a_traiter }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sec-card p-3 h-100">
+            <div class="text-muted small">Appels à suivre</div>
+            <div class="h3 mb-0" style="color:#2E75B6;">{{ appels_suivi }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sec-card p-3 h-100">
+            <div class="text-muted small">Documents</div>
+            <div class="h3 mb-0" style="color:#0F2C47;">{{ documents_total }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- RDV du jour -->
+    <div class="col-lg-6">
+        <div class="sec-card p-3 h-100">
+            <h6 class="mb-3"><i class="bi bi-calendar-event text-primary"></i> Rendez-vous du jour</h6>
+            {% for r in rdv_jour %}
+            <div class="d-flex justify-content-between border-bottom py-2">
+                <div><strong>{{ r.date_heure|time:"H:i" }}</strong> · {{ r.visiteur_nom }}
+                    <div class="small text-muted">{{ r.motif }}</div></div>
+                <span class="badge bg-secondary align-self-center">{{ r.get_statut_display }}</span>
+            </div>
+            {% empty %}
+            <p class="text-muted small mb-0">Aucun rendez-vous aujourd'hui.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- Tâches urgentes -->
+    <div class="col-lg-6">
+        <div class="sec-card p-3 h-100">
+            <h6 class="mb-3"><i class="bi bi-exclamation-triangle text-danger"></i> Tâches urgentes</h6>
+            {% for t in taches_urgentes %}
+            <div class="d-flex justify-content-between border-bottom py-2">
+                <div>{{ t.titre }}
+                    <div class="small text-muted">{% if t.date_limite %}Échéance : {{ t.date_limite|date:"d/m/Y" }}{% endif %}</div></div>
+                <span class="badge bg-warning text-dark align-self-center">{{ t.get_etat_display }}</span>
+            </div>
+            {% empty %}
+            <p class="text-muted small mb-0">Aucune tâche urgente.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Accès rapide aux modules -->
+<h6 class="mt-4 mb-3 text-muted">Modules</h6>
+<div class="row g-3">
+    {% for s, m in modules.items %}
+    <div class="col-6 col-md-4 col-lg-3">
+        <a href="{% url 'secretariat:liste' slug=s %}" class="text-decoration-none">
+            <div class="sec-card p-3 text-center h-100">
+                <i class="bi {{ m.icon }}" style="font-size:1.8rem; color:#1F4E78;"></i>
+                <div class="mt-2 fw-semibold text-dark">{{ m.label_plural }}</div>
+                <div class="h5 mb-0" style="color:#2E75B6;">{{ stats|get_item:s }}</div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
