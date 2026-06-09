@@ -17,7 +17,7 @@
 
 <!-- En-tête entreprise -->
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body text-center py-3" style="background: linear-gradient(90deg, #EF7707 0%, #FF8C00 100%); color: white; border-radius: 12px;">
+    <div class="card-body text-center py-3" style="background: linear-gradient(90deg, #1F4E78 0%, #2E75B6 100%); color: white; border-radius: 12px;">
         <h5 class="mb-1">{{ request.user.entreprise.nom_entreprise }}</h5>
         <p class="mb-0">BALANCE GÉNÉRALE DES COMPTES</p>
         <small>Arrêtée au {{ today|date:"d/m/Y"|default:"--/--/----" }}</small>
@@ -28,7 +28,7 @@
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover table-sm mb-0">
-                <thead style="background-color: #FFD699;">
+                <thead style="background-color: #D6E4F0;">
                     <tr>
                         <th style="width: 12%">N° Compte</th>
                         <th style="width: 36%">Intitulé</th>
@@ -62,7 +62,7 @@
                     <tr><td colspan="6" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Aucune écriture comptabilisée</td></tr>
                     {% endfor %}
                 </tbody>
-                <tfoot style="background-color: #FFD699; font-weight: bold;">
+                <tfoot style="background-color: #D6E4F0; font-weight: bold;">
                     <tr>
                         <td colspan="2" class="text-end">TOTAUX :</td>
                         <td class="text-end">{{ total_debit|floatformat:0|default:"0" }}</td>

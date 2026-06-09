@@ -2,15 +2,23 @@
 /* Thème Orange / Gris Anthracite */
 
 :root {
-    --primary-color: #EF7707;      /* Orange */
-    --secondary-color: #212121;    /* Gris Anthracite */
+    /* Charte FASTLANE LOGISTIC */
+    --primary-color: #1F4E78;      /* Navy Fastlane (principal) */
+    --secondary-color: #0F2C47;    /* Navy foncé */
     --success-color: #28a745;      /* Vert */
     --danger-color: #dc3545;       /* Rouge */
-    --warning-color: #EF7707;      /* Orange */
-    --info-color: #17a2b8;         /* Bleu info */
-    --orange-main: #EF7707;
+    --warning-color: #f0ad4e;      /* Ambre (warning sémantique) */
+    --info-color: #2E75B6;         /* Bleu Fastlane */
+    --orange-main: #1F4E78;        /* (ancien orange) -> navy */
     --gray-light: #939393;
     --gray-dark: #212121;
+    /* Palette Fastlane officielle */
+    --fl-navy: #0F2C47;
+    --fl-navy-2: #1F4E78;
+    --fl-blue: #2E75B6;
+    --fl-blue-light: #5B9BD5;
+    --fl-red: #E63946;
+    --fl-red-dark: #B8202D;
 }
 
 /* Body avec navbar fixe */
@@ -73,11 +81,11 @@ main {
 
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(239, 119, 7, 0.15);
+    box-shadow: 0 10px 20px rgba(31, 78, 120, 0.15);
 }
 
 .card-header {
-    background: linear-gradient(135deg, rgba(239, 119, 7, 0.08) 0%, rgba(33, 33, 33, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(31, 78, 120, 0.08) 0%, rgba(33, 33, 33, 0.05) 100%);
     border-bottom: 2px solid var(--primary-color);
     font-weight: 600;
 }
@@ -116,12 +124,12 @@ main {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--orange-main) 0%, #d96a06 100%);
+    background: linear-gradient(135deg, var(--orange-main) 0%, #163A5F 100%);
     border: none;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #c56506 0%, var(--orange-main) 100%);
+    background: linear-gradient(135deg, #0F2C47 0%, var(--orange-main) 100%);
 }
 
 .btn-success {
@@ -142,7 +150,7 @@ main {
 /* Forms */
 .form-control:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(239, 119, 7, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(31, 78, 120, 0.25);
 }
 
 /* Alerts */

@@ -87,10 +87,10 @@
     {% for emp in employes_page %}
     <div class="col-xl-4 col-md-6">
         <div class="card h-100 shadow-sm border-0"
-             style="border-left: 4px solid {% if emp.statut_employe == 'actif' %}#EF7707{% else %}#6c757d{% endif %} !important; border-left-style: solid !important;">
+             style="border-left: 4px solid {% if emp.statut_employe == 'actif' %}#1F4E78{% else %}#6c757d{% endif %} !important; border-left-style: solid !important;">
             <!-- En-tête employé -->
             <div class="card-header d-flex justify-content-between align-items-start py-2"
-                 style="background: linear-gradient(135deg, {% if emp.statut_employe == 'actif' %}#EF7707 0%, #FF8C00{% else %}#6c757d 0%, #868e96{% endif %} 100%); color: #fff;">
+                 style="background: linear-gradient(135deg, {% if emp.statut_employe == 'actif' %}#1F4E78 0%, #2E75B6{% else %}#6c757d 0%, #868e96{% endif %} 100%); color: #fff;">
                 <div>
                     <div class="fw-bold">{{ emp.nom }} {{ emp.prenoms }}</div>
                     <small class="opacity-75">{{ emp.matricule }}</small>
@@ -206,7 +206,7 @@
         <!-- Pages numérotées (±2 autour de la page courante) -->
         {% for i in employes_page.paginator.page_range %}
             {% if i == employes_page.number %}
-                <li class="page-item active"><span class="page-link" style="background:#EF7707;border-color:#EF7707;">{{ i }}</span></li>
+                <li class="page-item active"><span class="page-link" style="background:#1F4E78;border-color:#1F4E78;">{{ i }}</span></li>
             {% elif i >= employes_page.number|add:"-2" and i <= employes_page.number|add:"2" %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ i }}&q={{ q_nom }}&statut={{ statut_f }}&par_page={{ par_page }}">{{ i }}</a>
