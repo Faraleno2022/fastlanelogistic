@@ -93,12 +93,14 @@ MODULES = {
 
 
 def _check_access(request):
-    """L'utilisateur doit avoir une entreprise avec accès secrétariat."""
+    """L'utilisateur doit avoir une entreprise avec accès secrétariat
+    (ou être superuser)."""
+    if request.user.is_superuser:
+        return True
     ent = getattr(request.user, 'entreprise', None)
     if ent is None:
         return False
-    # Accès si type_module secretariat/both, sinon superuser
-    return request.user.is_superuser or getattr(ent, 'has_secretariat', False) or ent.type_module == 'secretariat'
+    return getattr(ent, 'has_secretariat', False) or ent.type_module == 'secretariat'
 
 
 def _get_config(slug):
