@@ -15,7 +15,7 @@ from django.utils import timezone
 
 
 class StockBase(models.Model):
-    entreprise = models.ForeignKey('core.Entreprise', on_delete=models.CASCADE, related_name='%(class)ss')
+    entreprise = models.ForeignKey('core.Entreprise', on_delete=models.CASCADE, related_name='stock_%(class)ss')
     cree_par = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
