@@ -62,6 +62,8 @@ def login_view(request):
             return redirect('comptabilite:dashboard')
         if ent and ent.type_module == 'secretariat':
             return redirect('secretariat:dashboard')
+        if ent and ent.type_module == 'stock':
+            return redirect('stock:dashboard')
         return redirect('dashboard:index')
     
     if request.method == 'POST':
@@ -160,6 +162,8 @@ def index_view(request):
             return redirect('comptabilite:dashboard')
         if ent and ent.type_module == 'secretariat':
             return redirect('secretariat:dashboard')
+        if ent and ent.type_module == 'stock':
+            return redirect('stock:dashboard')
         return redirect('dashboard:index')
 
     if getattr(settings, 'LOGIN_IS_HOMEPAGE', False):
@@ -294,6 +298,8 @@ def register_entreprise(request):
                     return redirect('comptabilite:dashboard')
                 elif entreprise.type_module == 'secretariat':
                     return redirect('secretariat:dashboard')
+                elif entreprise.type_module == 'stock':
+                    return redirect('stock:dashboard')
                 else:
                     return redirect('dashboard:index')
         else:

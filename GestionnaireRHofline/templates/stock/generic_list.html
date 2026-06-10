@@ -1,0 +1,59 @@
+{% extends 'stock/base_stock.html' %}
+{% block title %}{{ cfg.label_plural }} - Stock{% endblock %}
+{% block content %}
+<div class="sec-topbar">
+    <h4 class="mb-0"><i class="bi {{ cfg.icon }}"></i> {{ cfg.label_plural }}</h4>
+    {% if not cfg.readonly %}
+    <a href="{% url 'stock:creer' slug=slug %}" class="btn btn-light btn-sm"><i class="bi bi-plus-lg"></i> Nouveau</a>
+    {% endif %}
+</div>
+
+<div class="sec-card p-3">
+    <form method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Rechercher...">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+            {% if q %}<a href="{% url 'stock:liste' slug=slug %}" class="btn btn-outline-secondary">Réinitialiser</a>{% endif %}
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle">
+            <thead class="table-dark">
+                <tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}
+                    {% if slug == 'articles' %}<th>Statut</th>{% endif %}
+                    {% if not cfg.readonly %}<th class="text-end">Actions</th>{% endif %}</tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for cell in row.cells %}<td>{{ cell|default:"—" }}</td>{% endfor %}
+                    {% if slug == 'articles' %}
+                    <td>{% if row.statut == 'rupture' %}<span class="badge bg-danger">Rupture</span>
+                        {% elif row.statut == 'alerte' %}<span class="badge bg-warning text-dark">Seuil</span>
+                        {% elif row.statut == 'surstock' %}<span class="badge bg-info text-dark">Surstock</span>
+                        {% else %}<span class="badge bg-success">OK</span>{% endif %}</td>
+                    {% endif %}
+                    {% if not cfg.readonly %}
+                    <td class="text-end text-nowrap">
+                        <a href="{% url 'stock:modifier' slug=slug pk=row.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'stock:supprimer' slug=slug pk=row.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr><td colspan="20" class="text-center text-muted py-4">Aucun élément.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page.has_other_pages %}
+    <nav><ul class="pagination pagination-sm justify-content-center mb-0">
+        {% if page.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">«</a></li>{% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page.number }} / {{ page.paginator.num_pages }}</span></li>
+        {% if page.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page.next_page_number }}{% if q %}&q={{ q }}{% endif %}">»</a></li>{% endif %}
+    </ul></nav>
+    {% endif %}
+</div>
+{% endblock %}

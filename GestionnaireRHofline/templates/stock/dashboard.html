@@ -1,0 +1,66 @@
+{% extends 'stock/base_stock.html' %}
+{% block title %}Tableau de bord - Stock{% endblock %}
+{% block content %}
+<div class="sec-topbar">
+    <div><h4 class="mb-0"><i class="bi bi-speedometer2"></i> Tableau de bord — Stock</h4>
+        <small>{{ today|date:"l d F Y" }}</small></div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-2"><div class="sec-card p-3 h-100">
+        <div class="text-muted small">Articles</div><div class="h4 mb-0" style="color:#1F4E78;">{{ nb_articles }}</div></div></div>
+    <div class="col-6 col-lg-2"><div class="sec-card p-3 h-100">
+        <div class="text-muted small">Stock total</div><div class="h4 mb-0" style="color:#2E75B6;">{{ stock_total|floatformat:0 }}</div></div></div>
+    <div class="col-6 col-lg-2"><div class="sec-card p-3 h-100">
+        <div class="text-muted small">En rupture</div><div class="h4 mb-0 text-danger">{{ nb_ruptures }}</div></div></div>
+    <div class="col-6 col-lg-2"><div class="sec-card p-3 h-100">
+        <div class="text-muted small">Proches rupture</div><div class="h4 mb-0 text-warning">{{ nb_proches }}</div></div></div>
+    <div class="col-6 col-lg-2"><div class="sec-card p-3 h-100">
+        <div class="text-muted small">Entrées (mois)</div><div class="h4 mb-0 text-success">{{ entrees_mois|floatformat:0 }}</div></div></div>
+    <div class="col-6 col-lg-2"><div class="sec-card p-3 h-100">
+        <div class="text-muted small">Sorties (mois)</div><div class="h4 mb-0" style="color:#E63946;">{{ sorties_mois|floatformat:0 }}</div></div></div>
+</div>
+
+<div class="sec-card p-3 mb-4">
+    <div class="d-flex justify-content-between">
+        <span class="text-muted">Valeur totale du stock</span>
+        <strong style="color:#1F4E78; font-size:1.3rem;">{{ valeur_stock|floatformat:0 }} GNF</strong>
+    </div>
+</div>
+
+<div class="sec-card p-3 mb-4">
+    <h6 class="mb-3"><i class="bi bi-exclamation-triangle text-danger"></i> Alertes de stock</h6>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light"><tr><th>Code</th><th>Article</th><th>Stock</th><th>Seuil</th><th>Statut</th></tr></thead>
+            <tbody>
+                {% for a in alertes %}
+                <tr>
+                    <td>{{ a.code }}</td><td>{{ a.designation }}</td>
+                    <td>{{ a.quantite_stock|floatformat:0 }}</td><td>{{ a.stock_min|floatformat:0 }}</td>
+                    <td>{% if a.statut_stock == 'rupture' %}<span class="badge bg-danger">Rupture</span>
+                        {% elif a.statut_stock == 'alerte' %}<span class="badge bg-warning text-dark">Seuil atteint</span>
+                        {% else %}<span class="badge bg-secondary">{{ a.statut_stock }}</span>{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-3">Aucune alerte 🎉</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h6 class="mb-3 text-muted">Modules</h6>
+<div class="row g-3">
+    {% for s, m in modules.items %}
+    <div class="col-6 col-md-4 col-lg-3">
+        <a href="{% url 'stock:liste' slug=s %}" class="text-decoration-none">
+            <div class="sec-card p-3 text-center h-100">
+                <i class="bi {{ m.icon }}" style="font-size:1.8rem; color:#1F4E78;"></i>
+                <div class="mt-2 fw-semibold text-dark">{{ m.label_plural }}</div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -100,6 +100,7 @@ INSTALLED_APPS = [
     'portail',
     'comptabilite',
     'secretariat',
+    'stock',
 ]
 
 MIDDLEWARE = [

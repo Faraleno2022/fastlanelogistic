@@ -10,6 +10,7 @@ class Entreprise(models.Model):
         ('rh', 'Ressources Humaines'),
         ('compta', 'Comptabilité'),
         ('secretariat', 'Secrétariat'),
+        ('stock', 'Gestion de stock'),
         ('both', 'RH + Comptabilité'),
     ]
 
@@ -72,6 +73,10 @@ class Entreprise(models.Model):
     @property
     def has_secretariat(self):
         return self.type_module in ['secretariat', 'both']
+
+    @property
+    def has_stock(self):
+        return self.type_module in ['stock', 'both']
 
     def has_module(self, module_name):
         """Vérifie si l'entreprise a accès à un module donné"""
