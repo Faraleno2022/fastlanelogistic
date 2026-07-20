@@ -38,12 +38,6 @@ ADMIN_REGISTRATION_CODE = config('ADMIN_REGISTRATION_CODE', default='625196629')
 
 ALLOWED_HOSTS = [
     'app.fastlanelogisticgn.com',
-    'rh.fastlanelogisticgn.com',
-    'fastlanelogisticgn.com',
-    'www.fastlanelogisticgn.com',
-    'www.guineerh.space',
-    'guineerh.space',
-    'guineerh.pythonanywhere.com',
     'Fastlane.pythonanywhere.com',
     'localhost',
     '127.0.0.1',
@@ -57,13 +51,6 @@ if _extra:
     ALLOWED_HOSTS += [h.strip() for h in _extra.split(',') if h.strip()]
 
 # CSRF trusted origins (Django 4+ : obligatoire pour POST en HTTPS)
-CSRF_TRUSTED_ORIGINS = [
-    'https://app.fastlanelogisticgn.com',
-    'https://rh.fastlanelogisticgn.com',
-    'https://www.fastlanelogisticgn.com',
-    'https://fastlanelogisticgn.com',
-]
-
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -272,10 +259,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Si True, la racine "/" redirige vers le formulaire de connexion au lieu
-# de la page publique (utile pour un déploiement type espace privé).
-LOGIN_IS_HOMEPAGE = config('LOGIN_IS_HOMEPAGE', default=False, cast=bool)
 
 # Custom User Model
 AUTH_USER_MODEL = 'core.Utilisateur'
@@ -587,10 +570,8 @@ DEFENDER_STORE_ACCESS_ATTEMPTS = False
 
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
-    'https://fastlanelogisticgn.com',
-    'https://www.fastlanelogisticgn.com',
-    'https://www.guineerh.space',
-    'https://guineerh.space',
+    'https://app.fastlanelogisticgn.com',
+    'https://Fastlane.pythonanywhere.com',
 ]
 
 if PYINSTALLER_MODE:

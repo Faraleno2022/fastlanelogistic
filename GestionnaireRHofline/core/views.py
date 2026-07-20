@@ -150,12 +150,7 @@ def profile_view(request):
 
 
 def index_view(request):
-    """Page d'accueil - redirige vers le dashboard si connecté, sinon affiche landing page.
-
-    Si LOGIN_IS_HOMEPAGE est activé (ex: déploiement app.fastlanelogisticgn.com),
-    la racine renvoie directement vers le formulaire de connexion au lieu de la
-    page publique.
-    """
+    """Point d'entrée privé de l'application."""
     if request.user.is_authenticated:
         ent = request.user.entreprise
         if ent and ent.type_module == 'compta':
@@ -166,36 +161,12 @@ def index_view(request):
             return redirect('stock:dashboard')
         return redirect('dashboard:index')
 
-    if getattr(settings, 'LOGIN_IS_HOMEPAGE', False):
-        return redirect('core:login')
-
-    # Récupérer les offres d'emploi ouvertes et non expirées pour affichage public
-    from recrutement.models import OffreEmploi
-    from formation.models import CatalogueFormation
-    from datetime import date
-    from django.db.models import Q
-    
-    # Toutes les offres ouvertes (aucune limite) pour affichage public
-    offres_emploi = OffreEmploi.objects.filter(
-        statut_offre='ouverte'
-    ).select_related('entreprise', 'service').order_by('-date_publication')
-
-    # Toutes les formations publiées (aucune limite) pour affichage public
-    formations = CatalogueFormation.objects.filter(
-        publiee=True,
-        actif=True
-    ).select_related('entreprise').order_by('-date_publication')
-    
-    return render(request, 'landing.html', {
-        'offres_emploi': offres_emploi,
-        'formations': formations,
-        'today': date.today(),
-    })
+    return redirect('core:login')
 
 
 def landing_page(request):
-    """Landing page publique pour le schéma public (multi-tenant)"""
-    return render(request, 'landing.html')
+    """Compatibilité des anciennes URLs publiques : accès à la connexion."""
+    return redirect('core:login')
 
 
 def csrf_failure(request, reason=""):
