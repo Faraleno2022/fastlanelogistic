@@ -52,6 +52,7 @@ from .models import (
 from employes.models import Employe
 from .services import MoteurCalculPaie
 from .utils import format_anciennete_bulletin
+from .utils_declarations import analyser_bases_vf_onfpp, somme_base_onfpp_effective
 from core.decorators import reauth_required, entreprise_active_required
 
 
@@ -1161,7 +1162,6 @@ def telecharger_bulletin_pdf(request, pk):
     if base_vf > 0 and y > 2.75*cm:
         base_vf_f = float(base_vf)
         brut_gnf = float(bulletin.salaire_brut)
-        deduction = max(0, brut_gnf - base_vf_f)
         ta_ou_onfpp = 'ONFPP' if onfpp > 0 else 'TA'
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
         charge_valeur = onfpp if onfpp > 0 else ta
@@ -1169,8 +1169,8 @@ def telecharger_bulletin_pdf(request, pk):
         p.setFont(_FB, 4.8)
         p.setFillColor(colors.HexColor("#444444"))
         p.drawString(1.5*cm, y,
-            f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} - indemnites exonerees plafonnees {deduction:,.0f} "
-            f"(25% max du brut) = {base_vf_f:,.0f} GNF"
+            f"Base VF = remunerations brutes {base_vf_f:,.0f} GNF | "
+            f"Base {ta_ou_onfpp} = {base_charge_note:,.0f} GNF"
             .replace(",", " "))
         y -= 0.16*cm
         p.drawString(1.5*cm, y,
@@ -1212,12 +1212,18 @@ def telecharger_bulletin_pdf(request, pk):
 
     # Badge conformité
     badge_x, badge_y, badge_w, badge_h = 1.5*cm, 0.78*cm, 5.5*cm, 0.45*cm
-    p.setFillColor(colors.HexColor("#198754"))
+    conforme_cgi = (
+        abs(Decimal(str(base_vf)) - Decimal(str(bulletin.salaire_brut or 0))) <= Decimal('1')
+        and (onfpp <= 0 or abs(Decimal(str(base_onfpp)) - Decimal(str(bulletin.salaire_brut or 0))) <= Decimal('1'))
+        and abs(Decimal(str(vf)) - (Decimal(str(bulletin.salaire_brut or 0)) * Decimal('0.06')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)) <= Decimal('1')
+        and (onfpp <= 0 or abs(Decimal(str(onfpp)) - (Decimal(str(bulletin.salaire_brut or 0)) * Decimal('0.015')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)) <= Decimal('1'))
+    )
+    p.setFillColor(colors.HexColor("#198754" if conforme_cgi else "#dc3545"))
     p.roundRect(badge_x, badge_y, badge_w, badge_h, 3, stroke=0, fill=1)
     p.setFillColor(colors.white)
     p.setFont(_FB, 5.5)
     p.drawCentredString(badge_x + badge_w / 2, badge_y + 0.13*cm,
-                        "\u2713 Conforme CGI Guinee | Compatible CNSS")
+                        "Conforme CGI Guinee | Compatible CNSS" if conforme_cgi else "Conformite fiscale a verifier")
 
     # QR Code (coin bas droit)
     try:
@@ -1798,7 +1804,6 @@ def telecharger_bulletin_public(request, token):
     if base_vf > 0 and y > 2.75*cm:
         base_vf_f = float(base_vf)
         brut_gnf = float(bulletin.salaire_brut)
-        deduction = max(0, brut_gnf - base_vf_f)
         ta_ou_onfpp = 'ONFPP' if onfpp > 0 else 'TA'
         taux_ta_note = '1,5' if onfpp > 0 else taux_ta_label
         charge_valeur = onfpp if onfpp > 0 else ta
@@ -1806,8 +1811,8 @@ def telecharger_bulletin_public(request, token):
         p.setFont(_FB, 4.8)
         p.setFillColor(colors.HexColor("#444444"))
         p.drawString(1.5*cm, y,
-            f"Base VF/{ta_ou_onfpp} = Brut {brut_gnf:,.0f} - indemnites exonerees plafonnees {deduction:,.0f} "
-            f"(25% max du brut) = {base_vf_f:,.0f} GNF"
+            f"Base VF = remunerations brutes {base_vf_f:,.0f} GNF | "
+            f"Base {ta_ou_onfpp} = {base_charge_note:,.0f} GNF"
             .replace(",", " "))
         y -= 0.16*cm
         p.drawString(1.5*cm, y,
@@ -1849,12 +1854,18 @@ def telecharger_bulletin_public(request, token):
 
     # Badge conformité
     badge_x, badge_y, badge_w, badge_h = 1.5*cm, 0.78*cm, 5.5*cm, 0.45*cm
-    p.setFillColor(colors.HexColor("#198754"))
+    conforme_cgi = (
+        abs(Decimal(str(base_vf)) - Decimal(str(bulletin.salaire_brut or 0))) <= Decimal('1')
+        and (onfpp <= 0 or abs(Decimal(str(base_onfpp)) - Decimal(str(bulletin.salaire_brut or 0))) <= Decimal('1'))
+        and abs(Decimal(str(vf)) - (Decimal(str(bulletin.salaire_brut or 0)) * Decimal('0.06')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)) <= Decimal('1')
+        and (onfpp <= 0 or abs(Decimal(str(onfpp)) - (Decimal(str(bulletin.salaire_brut or 0)) * Decimal('0.015')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)) <= Decimal('1'))
+    )
+    p.setFillColor(colors.HexColor("#198754" if conforme_cgi else "#dc3545"))
     p.roundRect(badge_x, badge_y, badge_w, badge_h, 3, stroke=0, fill=1)
     p.setFillColor(colors.white)
     p.setFont(_FB, 5.5)
     p.drawCentredString(badge_x + badge_w / 2, badge_y + 0.13*cm,
-                        "\u2713 Conforme CGI Guinee | Compatible CNSS")
+                        "Conforme CGI Guinee | Compatible CNSS" if conforme_cgi else "Conformite fiscale a verifier")
 
     # QR Code (coin bas droit)
     try:
@@ -2093,6 +2104,34 @@ def _filtres_periode_livre_paie(request):
     return annee, mois
 
 
+def _libelle_portee_livre_paie(annee, mois, annees=None):
+    annees = list(annees or [])
+    if annee and mois:
+        return {
+            'badge': 'Mensuel',
+            'titre': f'Rapport mensuel - {mois:02d}/{annee}',
+            'description': 'Les totaux affichés concernent uniquement le mois sélectionné.',
+        }
+    if annee:
+        return {
+            'badge': 'Annuel',
+            'titre': f'Cumul annuel - {annee}',
+            'description': 'Les totaux affichés cumulent tous les mois disponibles de l’année.',
+        }
+    if len(annees) == 1:
+        annee_unique = annees[0]
+        return {
+            'badge': 'Annuel',
+            'titre': f'Cumul annuel - {annee_unique}',
+            'description': 'Les totaux affichés cumulent tous les mois disponibles de l’année.',
+        }
+    return {
+        'badge': 'Toutes périodes',
+        'titre': 'Cumul toutes périodes',
+        'description': 'Les totaux affichés cumulent toutes les périodes de paie disponibles.',
+    }
+
+
 def _normaliser_texte_livre(valeur):
     texte = str(valeur or '').strip().lower()
     return ''.join(
@@ -2211,14 +2250,15 @@ def livre_paie(request):
     controles_livre = _controles_livre_paie(bulletins, totaux)
 
     # Années disponibles
-    annees = PeriodePaie.objects.filter(
+    annees = list(PeriodePaie.objects.filter(
         entreprise=request.user.entreprise
-    ).values_list('annee', flat=True).distinct().order_by('-annee')
+    ).values_list('annee', flat=True).distinct().order_by('-annee'))
     pdf_params = []
     if annee:
         pdf_params.append(f'annee={annee}')
     if mois:
         pdf_params.append(f'mois={mois}')
+    portee_livre = _libelle_portee_livre_paie(annee, mois, annees)
 
     return render(request, 'paie/livre_paie.html', {
         'bulletins': bulletins,
@@ -2227,6 +2267,7 @@ def livre_paie(request):
         'mois': mois,
         'annees': annees,
         'controles_livre': controles_livre,
+        'portee_livre': portee_livre,
         'livre_pdf_query': f"?{'&'.join(pdf_params)}" if pdf_params else '',
     })
 
@@ -2395,15 +2436,16 @@ def telecharger_livre_paie_pdf(request):
 
     story = []
 
-    titre = "Livre de Paie - Toutes les périodes"
-    if annee:
-        titre = f"Livre de Paie - Année {int(annee)}"
-    if mois:
-        titre += f" - Mois {int(mois)}"
+    annees = PeriodePaie.objects.filter(
+        entreprise=request.user.entreprise
+    ).values_list('annee', flat=True).distinct().order_by('-annee')
+    portee_livre = _libelle_portee_livre_paie(annee, mois, annees)
+    titre = f"Livre de Paie - {portee_livre['titre']}"
     story.append(Paragraph(titre, styles['LivreTitre']))
 
     statut_table = Table([
         ['STATUT', controles_livre['statut']],
+        ['Portée', f"{portee_livre['badge']} - {portee_livre['description']}"],
         ['Controle', 'Net = brut - retenues affichees | CNSS plafonnee OK'],
     ], colWidths=[2.5 * cm, 10.5 * cm])
     statut_table.setStyle(TableStyle([
@@ -2628,7 +2670,7 @@ def declarations_sociales(request):
     )
     salaire_brut_total = totaux['total_brut'] or Decimal('0')
     total_base_vf = totaux['total_base_vf'] or Decimal('0')
-    total_base_onfpp = totaux['total_base_onfpp'] or total_base_vf
+    total_base_onfpp = somme_base_onfpp_effective(bulletins) or total_base_vf
     total_onfpp = totaux['total_onfpp'] or Decimal('0')
     total_ta = totaux['total_ta'] or Decimal('0')
     if total_salaries >= 30 and not total_onfpp:
@@ -2670,20 +2712,10 @@ def declarations_sociales(request):
     total_dgi = declaration_irg['total_irg'] + declaration_charges['vf']
     total_onfpp_ta = declaration_charges['onfpp'] + declaration_charges['ta']
     total_dmu = total_dgi + total_onfpp_ta
-    deduction_vf_onfpp = max(Decimal('0'), salaire_brut_total - total_base_vf)
-    taux_optimisation_global = (
-        (deduction_vf_onfpp * Decimal('100') / salaire_brut_total).quantize(Decimal('0.01'))
-        if salaire_brut_total else Decimal('0.00')
-    )
-    mode_fiscal_code = (
-        'optimise'
-        if total_base_vf and total_base_vf < salaire_brut_total
-        else 'strict'
-    )
-    mode_fiscal_label = (
-        'Optimisé - base VF/ONFPP réduite des indemnités exonérées'
-        if mode_fiscal_code == 'optimise'
-        else 'Strict fiscal - VF/ONFPP sur salaire brut'
+    analyse_bases = analyser_bases_vf_onfpp(
+        salaire_brut_total,
+        total_base_vf,
+        total_base_onfpp,
     )
 
     total_general = declaration_cnss['total_cotisation'] + total_dmu
@@ -2714,12 +2746,17 @@ def declarations_sociales(request):
         'total_dmu': total_dmu,
         'total_onfpp_ta': total_onfpp_ta,
         'total_general': total_general,
-        'mode_fiscal_code': mode_fiscal_code,
-        'mode_fiscal_label': mode_fiscal_label,
-        'taux_optimisation_global': taux_optimisation_global,
+        'mode_fiscal_code': analyse_bases['mode_fiscal'],
+        'mode_fiscal_label': analyse_bases['mode_fiscal_label'],
+        'bases_vf_onfpp_distinctes': analyse_bases['bases_vf_onfpp_distinctes'],
+        'taux_optimisation_global': analyse_bases['taux_optimisation_global'],
+        'taux_optimisation_vf': analyse_bases['taux_optimisation_vf'],
+        'taux_optimisation_onfpp': analyse_bases['taux_optimisation_onfpp'],
         'detail_employes': detail_employes,
         'annee': int(annee),
         'mois': int(mois) if mois else None,
+        'portee_declaration': 'Mensuelle' if mois else 'Annuelle',
+        'portee_detail': f"{int(mois):02d}/{int(annee)}" if mois else f"Année complète {int(annee)}",
         'annees': annees,
         'periodes': periodes
     })
@@ -2767,13 +2804,16 @@ def declarations_sociales_pdf(request):
         total_cnss_employeur=Sum('cnss_employeur'),
         total_rts=Sum('irg'),
         total_vf=Sum('versement_forfaitaire'),
+        total_ta=Sum('taxe_apprentissage'),
         total_onfpp=Sum('contribution_onfpp'),
     )
     salaire_brut_total = totaux['total_brut'] or Decimal('0')
     total_base_vf = totaux['total_base_vf'] or Decimal('0')
-    total_base_onfpp = totaux['total_base_onfpp'] or total_base_vf
+    total_base_onfpp = somme_base_onfpp_effective(bulletins) or total_base_vf
     total_onfpp = totaux['total_onfpp'] or Decimal('0')
+    total_ta = totaux['total_ta'] or Decimal('0')
     if total_salaries >= 30 and not total_onfpp:
+        total_ta = Decimal('0')
         total_onfpp = (total_base_onfpp * Decimal('0.015')).quantize(Decimal('1'))
 
     declaration_cnss = {
@@ -2792,19 +2832,15 @@ def declarations_sociales_pdf(request):
         'base_vf': total_base_vf,
         'base_onfpp': total_base_onfpp,
         'vf': totaux['total_vf'] or Decimal('0'),
+        'ta': total_ta,
         'onfpp': total_onfpp,
     }
     total_dgi = declaration_irg['total_irg'] + declaration_charges['vf']
-    total_dmu = total_dgi + declaration_charges['onfpp']
-    deduction_vf_onfpp = max(Decimal('0'), salaire_brut_total - total_base_vf)
-    taux_optimisation_global = (
-        (deduction_vf_onfpp * Decimal('100') / salaire_brut_total).quantize(Decimal('0.01'))
-        if salaire_brut_total else Decimal('0.00')
-    )
-    mode_fiscal_label = (
-        'Optimisé - base VF/ONFPP réduite des indemnités exonérées'
-        if total_base_vf and total_base_vf < salaire_brut_total
-        else 'Strict fiscal - VF/ONFPP sur salaire brut'
+    total_dmu = total_dgi + declaration_charges['onfpp'] + declaration_charges['ta']
+    analyse_bases = analyser_bases_vf_onfpp(
+        salaire_brut_total,
+        total_base_vf,
+        total_base_onfpp,
     )
     total_general = declaration_cnss['total_cotisation'] + total_dmu
     
@@ -2865,10 +2901,11 @@ def declarations_sociales_pdf(request):
     elements.append(Paragraph("Mode fiscal et base VF/ONFPP", styles['Heading2']))
     mode_data = [
         ['Libellé', 'Valeur'],
-        ['Mode fiscal appliqué', mode_fiscal_label],
+        ['Mode fiscal appliqué', analyse_bases['mode_fiscal_label']],
         ['Base VF', f"{declaration_charges['base_vf']:,.0f}"],
         ['Base ONFPP', f"{declaration_charges['base_onfpp']:,.0f}"],
-        ['Taux optimisation base', f"{taux_optimisation_global}%"],
+        ['Optimisation base VF', f"{analyse_bases['taux_optimisation_vf']}%"],
+        ['Optimisation base ONFPP', f"{analyse_bases['taux_optimisation_onfpp']}%"],
     ]
     mode_table = Table(mode_data, colWidths=[7*cm, 9*cm])
     mode_table.setStyle(TableStyle([
@@ -2889,7 +2926,8 @@ def declarations_sociales_pdf(request):
         ['  RTS (Trésor Public)', f"{declaration_irg['total_irg']:,.0f}"],
         ['  VF', f"{declaration_charges['vf']:,.0f}"],
         ['Total ONFPP', f"{declaration_charges['onfpp']:,.0f}"],
-        ['TOTAL DMU (RTS + VF + ONFPP)', f"{total_dmu:,.0f}"],
+        ['Total TA', f"{declaration_charges['ta']:,.0f}"],
+        ['TOTAL DMU (RTS + VF + ONFPP/TA)', f"{total_dmu:,.0f}"],
         ['TOTAL GÉNÉRAL (CNSS + DMU)', f"{total_general:,.0f}"],
     ]
     recap_table = Table(recap_data, colWidths=[10*cm, 6*cm])
@@ -3049,6 +3087,8 @@ def elements_salaire_employe(request, employe_id):
         'employe': employe,
         'gains': gains,
         'retenues': retenues,
+        'gains_actifs_count': sum(1 for e in gains if e.actif),
+        'retenues_actifs_count': sum(1 for e in retenues if e.actif),
         'total_gains': total_gains,
         'total_retenues': total_retenues,
         'cnss_estime': cnss_estime,
@@ -4084,7 +4124,7 @@ def config_paie_entreprise(request):
                 config.taux_hs_ferie_nuit = to_decimal(request.POST.get('taux_hs_ferie_nuit'), '100')
 
                 config.mode_conges = mode_conges
-                config.jours_conges_par_mois = to_decimal(request.POST.get('jours_conges_par_mois'), '1.5')
+                config.jours_conges_par_mois = to_decimal(request.POST.get('jours_conges_par_mois'), '2.5')
                 config.jours_conges_anciennete = to_decimal(request.POST.get('jours_conges_anciennete'), '2')
                 config.tranche_anciennete_annees = to_int(request.POST.get('tranche_anciennete_annees'), '5')
 
@@ -5248,8 +5288,8 @@ def api_impact_fiscal(request):
         statut_employe='actif'
     ).count()
 
-    constantes = _charger_constantes()
     annee = date.today().year
+    constantes = _charger_constantes(date(annee, 1, 1))
 
     # Charger meilleur barème dispo
     tranches = _charger_tranches_db(annee, 'officiel')
@@ -5430,8 +5470,8 @@ def api_optimiser_decomposition(request):
         statut_employe='actif'
     ).count()
 
-    constantes = _charger_constantes()
     annee = date.today().year
+    constantes = _charger_constantes(date(annee, 1, 1))
     tranches = _charger_tranches_db(annee, 'officiel')
     if not tranches:
         tranches = list(BAREME_CGI_REFERENCE)
@@ -5772,15 +5812,17 @@ def api_proposition_complete(request):
     # ── Étape 3 : Optimisation dynamique de la structure ──────────────────
     from .services_simulation import optimiser_structure_dynamique, _charger_constantes, _charger_tranches_db, BAREME_CGI_REFERENCE
 
-    constantes_sim = _charger_constantes()
+    constantes_sim = _charger_constantes(date(annee, 1, 1))
     tranches_sim = _charger_tranches_db(annee, 'officiel')
     if not tranches_sim:
         tranches_sim = list(BAREME_CGI_REFERENCE)
 
     try:
         optim = optimiser_structure_dynamique(
-            brut_calcule, tranches_sim, constantes_sim, objectif=objectif,
-            taux_max=taux_max
+            brut_calcule, tranches_sim, constantes_sim,
+            nb_salaries=nb_salaries,
+            objectif=objectif,
+            taux_max=taux_max,
         )
     except Exception as e:
         return JsonResponse({'error': f'Erreur optimisation : {str(e)}'}, status=500)
@@ -5819,6 +5861,20 @@ def api_proposition_complete(request):
     taux_optimal = best['taux_indem_pct']
     pct_base = round(100 - taux_optimal, 1)
     pct_indem = taux_optimal
+
+    # Recalculer les charges patronales au taux RÉELLEMENT recommandé (taux_optimal),
+    # et non à taux_max : sinon le coût employeur affiché suppose taux_max% d'indemnités
+    # exonérées (base VF/ONFPP réduite) alors que la structure recommandée en applique
+    # taux_optimal%. Cela rendait le coût de la « Proposition » incohérent avec le bloc
+    # « Structuration » et affichait une fausse économie (ex. −21 054 GNF alors que
+    # taux_optimal = 0%). On aligne cp sur best['cout_total_employeur'].
+    try:
+        cp = calculer_charges_patronales(
+            brut_calcule, annee=annee, nb_salaries=nb_salaries,
+            pct_indemnites_forfaitaires=taux_optimal,
+        )
+    except Exception:
+        pass
 
     # Répartition recommandée des indemnités (proportionnelle)
     # Chaque indemnité floor indépendamment, base absorbe le résidu
@@ -5939,7 +5995,7 @@ def api_proposition_complete(request):
                 f"Pour un net exact de {fmt(net_cible)} GNF, brut recommandé : "
                 f"{fmt(brut_calcule)} GNF avec {pct_indem}% d'indemnités exonérées. "
                 f"Net à payer = {fmt(retro['net_calcule'])} GNF"
-                + (f". Économie employeur : −{fmt(economie_cout)} GNF vs structure sans optimisation"
+                + (f". Économie employeur : {fmt(economie_cout)} GNF vs structure sans optimisation"
                    if economie_cout > 0 else '')
                 + f". Coût total employeur : {fmt(cp['cout_total_employeur'])} GNF."
             ),
@@ -6010,8 +6066,8 @@ def api_valider_simulation(request):
         statut_employe='actif'
     ).count()
 
-    constantes = _charger_constantes()
     annee = date.today().year
+    constantes = _charger_constantes(date(annee, 1, 1))
     tranches = _charger_tranches_db(annee, 'officiel')
     if not tranches:
         tranches = list(BAREME_CGI_REFERENCE)
@@ -6258,8 +6314,8 @@ def api_simulation_pdf(request):
             return JsonResponse({'error': 'Données insuffisantes'}, status=400)
 
         from .services_simulation import calculer_un_bareme, _charger_constantes, BAREME_CGI_REFERENCE, _charger_tranches_db
-        constantes = _charger_constantes()
         annee = date.today().year
+        constantes = _charger_constantes(date(annee, 1, 1))
         tranches_bareme = _charger_tranches_db(annee, 'officiel')
         if not tranches_bareme:
             tranches_bareme = list(BAREME_CGI_REFERENCE)

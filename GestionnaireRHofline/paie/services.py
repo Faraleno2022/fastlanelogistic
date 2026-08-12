@@ -44,6 +44,38 @@ def _to_json_safe(value):
     return value
 
 
+def _compter_salaries_a_la_periode(entreprise, periode):
+    """Effectif servant à la bascule TA/ONFPP pour le mois calculé."""
+    if not entreprise:
+        return 0
+
+    # Pour une période déjà calculée, les bulletins figés constituent la
+    # source historique la plus fiable et évitent d'utiliser l'effectif actuel.
+    if getattr(periode, 'statut_periode', '') in ('calculee', 'cloturee'):
+        nb_bulletins = BulletinPaie.objects.filter(
+            periode=periode,
+            employe__entreprise=entreprise,
+        ).values('employe_id').distinct().count()
+        if nb_bulletins:
+            return nb_bulletins
+
+    premier_jour = date(periode.annee, periode.mois, 1)
+    dernier_jour = date(
+        periode.annee,
+        periode.mois,
+        calendar.monthrange(periode.annee, periode.mois)[1],
+    )
+    return Employe.objects.filter(
+        entreprise=entreprise,
+    ).filter(
+        models.Q(date_embauche__isnull=True) |
+        models.Q(date_embauche__lte=dernier_jour)
+    ).filter(
+        models.Q(statut_employe='actif') |
+        models.Q(date_depart__gte=premier_jour)
+    ).count()
+
+
 def salaire_base_rubrique_q(prefix='rubrique__'):
     """Critere commun pour identifier une rubrique de salaire de base."""
     p = prefix
@@ -174,10 +206,10 @@ class MoteurCalculPaie:
             'bases_taxables': {},
         }
         # Nombre de salariés actifs de l'entreprise (pour TA vs ONFPP)
-        self.nb_salaries = Employe.objects.filter(
-            entreprise=employe.entreprise,
-            statut_employe='actif'
-        ).count() if employe.entreprise else 0
+        self.nb_salaries = _compter_salaries_a_la_periode(
+            employe.entreprise,
+            periode,
+        )
         self.constantes = self._charger_constantes()
         self._appliquer_config_entreprise()
         appliquer_constantes_cnss_legales(self.constantes)
@@ -1194,8 +1226,8 @@ class MoteurCalculPaie:
 
         from .formules import evaluer_formule as _evaluer_vf
         params_vf = getattr(self.employe.entreprise, 'parametres_calcul_paie', None)
-        mode_base_vf = params_vf.mode_base_vf if params_vf else 'brut_moins_deduction'
-        mode_base_onfpp = getattr(params_vf, 'mode_base_onfpp', 'base_vf') if params_vf else 'base_vf'
+        mode_base_vf = params_vf.mode_base_vf if params_vf else 'brut'
+        mode_base_onfpp = getattr(params_vf, 'mode_base_onfpp', 'brut') if params_vf else 'brut'
 
         if params_vf and params_vf.mode_base_vf == 'formule' and params_vf.formule_base_vf:
             # Mode personnalisé : formule définie par l'entreprise
@@ -1209,9 +1241,9 @@ class MoteurCalculPaie:
                     'avertissement',
                     "Formule personnalisée de base VF invalide. Calcul standard appliqué."
                 )
-                deduction_vf = self._arrondir(min(exoneration_vf, base_vf_ta))
-                base_vf_nette = base_vf_ta - deduction_vf
-        elif params_vf and params_vf.mode_base_vf == 'brut':
+                deduction_vf = Decimal('0')
+                base_vf_nette = base_vf_ta
+        elif not params_vf or params_vf.mode_base_vf == 'brut':
             # Mode legacy : base = brut directement, pas de déduction
             deduction_vf = Decimal('0')
             base_vf_nette = base_vf_ta
@@ -1233,7 +1265,7 @@ class MoteurCalculPaie:
             'vf',
             'VF',
             base_vf_nette,
-            'salaire brut - exoneration indemnitaire plafonnee',
+            'remunerations brutes moins exemptions VF explicites',
         )
 
         self.montants['base_vf'] = base_vf_nette
@@ -2094,13 +2126,19 @@ class MoteurCalculPaie:
             if not emp.date_embauche:
                 return Decimal('0')
             
-            # Calculer l'ancienneté en mois à la fin du mois actuel
+            # Calculer l'ancienneté totale pour les bonus, puis les seuls mois
+            # acquis dans l'année de paie pour le droit de base.
             dernier_jour = date(
                 self.periode.annee, 
                 self.periode.mois, 
                 calendar.monthrange(self.periode.annee, self.periode.mois)[1]
             )
             anciennete_mois = self._calculer_anciennete_mois(emp.date_embauche, dernier_jour)
+            if emp.date_embauche > dernier_jour:
+                mois_acquis_annee = 0
+            else:
+                premier_mois = emp.date_embauche.month if emp.date_embauche.year == self.periode.annee else 1
+                mois_acquis_annee = max(0, self.periode.mois - premier_mois + 1)
             
             # Récupérer la configuration de paie (jours/mois)
             # Initialiser config_paie à None avant toute tentative
@@ -2127,8 +2165,8 @@ class MoteurCalculPaie:
                 # Par défaut: 2.5 jours/mois (Code du Travail Guinée)
                 jours_par_mois = Decimal('2.50')
             
-            # Calculer les congés acquis
-            conges_acquis = anciennete_mois * jours_par_mois
+            # Acquisition progressive de l'année, plafonnée à douze mois.
+            conges_acquis = Decimal(str(min(mois_acquis_annee, 12))) * jours_par_mois
             
             # Ajouter bonus ancienneté si applicable
             if config_paie and hasattr(config_paie, 'jours_conges_anciennete') and config_paie.jours_conges_anciennete:
@@ -2139,8 +2177,16 @@ class MoteurCalculPaie:
                     bonus = (anciennete_ans // config_paie.tranche_anciennete_annees) * config_paie.jours_conges_anciennete
                     conges_acquis += Decimal(str(bonus))
             
-            # Limiter à 30 jours par an maximum
-            conges_acquis = min(conges_acquis, Decimal('30'))
+            # La base est plafonnée au droit annuel configuré. Le bonus
+            # d'ancienneté reste ajouté au-delà de cette base.
+            plafond_annuel = jours_par_mois * Decimal('12')
+            conges_base = min(
+                Decimal(str(min(mois_acquis_annee, 12))) * jours_par_mois,
+                plafond_annuel,
+            )
+            bonus_anciennete = max(Decimal('0'), conges_acquis - (
+                Decimal(str(min(mois_acquis_annee, 12))) * jours_par_mois))
+            conges_acquis = conges_base + bonus_anciennete
             
             # Créer ou mettre à jour le SoldeConge
             solde_conge, created = SoldeConge.objects.get_or_create(

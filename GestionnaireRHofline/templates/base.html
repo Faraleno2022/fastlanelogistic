@@ -6,21 +6,21 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com; font-src 'self' fonts.gstatic.com cdn.jsdelivr.net; img-src 'self' data: blob:; connect-src 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>{% block title %}Gestionnaire RH Guinée{% endblock %}</title>
-    
+    <title>{% block title %}Fastlane Logistic — Gestion RH{% endblock %}</title>
+
     <!-- SEO Meta Tags -->
-    <meta name="description" content="{% block meta_description %}GuinéeRH - Logiciel de gestion des ressources humaines conforme au Code du Travail Guinéen. Paie, CNSS, congés, contrats.{% endblock %}">
-    <meta name="keywords" content="logiciel RH Guinée, gestion paie Guinée, CNSS Guinée, ressources humaines Conakry, logiciel paie guinéen">
-    <meta name="author" content="GuinéeRH">
+    <meta name="description" content="{% block meta_description %}Fastlane Logistic - Plateforme de gestion des ressources humaines conforme au Code du Travail Guinéen. Paie, CNSS, congés, contrats.{% endblock %}">
+    <meta name="keywords" content="Fastlane Logistic, gestion RH, gestion paie Guinée, CNSS Guinée, ressources humaines Conakry">
+    <meta name="author" content="Fastlane Logistic">
     <meta name="robots" content="{% block robots %}noindex, nofollow{% endblock %}">
-    
+
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="GuinéeRH">
+    <meta property="og:site_name" content="Fastlane Logistic">
     <meta property="og:locale" content="fr_GN">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{% static 'img/logo_fastlane.png' %}">
+    <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
     
     <!-- Bootstrap 5 CSS - LOCAL -->
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
@@ -46,7 +46,7 @@
         .btn { cursor: pointer; }
         /* Table header orange clair */
         .table-orange-light, .table-orange-light > tr > th, .table-orange-light > tr > td {
-            background-color: #D6E4F0 !important;
+            background-color: #CFE0F0 !important;
             color: #333 !important;
         }
     </style>
@@ -57,7 +57,7 @@
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
-            <nav id="sidebar" class="col-md-3 col-lg-2 sidebar" style="background: #e8e8e8;">
+            <nav id="sidebar" class="col-md-3 col-lg-2 sidebar" style="background: #e8e8e8; padding-top: 8px;">
                 {% include 'partials/sidebar.html' %}
             </nav>
             

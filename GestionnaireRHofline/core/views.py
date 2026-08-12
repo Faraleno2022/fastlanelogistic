@@ -57,13 +57,8 @@ def login_view(request):
     """Vue de connexion"""
     if request.user.is_authenticated:
         # Rediriger selon le type de module
-        ent = request.user.entreprise
-        if ent and ent.type_module == 'compta':
+        if request.user.entreprise and request.user.entreprise.type_module == 'compta':
             return redirect('comptabilite:dashboard')
-        if ent and ent.type_module == 'secretariat':
-            return redirect('secretariat:dashboard')
-        if ent and ent.type_module == 'stock':
-            return redirect('stock:dashboard')
         return redirect('dashboard:index')
     
     if request.method == 'POST':
@@ -150,12 +145,7 @@ def profile_view(request):
 
 
 def index_view(request):
-    """Page d'accueil - redirige vers le dashboard si connecté, sinon affiche landing page.
-
-    Si LOGIN_IS_HOMEPAGE est activé (ex: déploiement app.fastlanelogisticgn.com),
-    la racine renvoie directement vers le formulaire de connexion au lieu de la
-    page publique.
-    """
+    """Point d'entrée privé de l'application."""
     if request.user.is_authenticated:
         ent = request.user.entreprise
         if ent and ent.type_module == 'compta':
@@ -166,36 +156,12 @@ def index_view(request):
             return redirect('stock:dashboard')
         return redirect('dashboard:index')
 
-    if getattr(settings, 'LOGIN_IS_HOMEPAGE', False):
-        return redirect('core:login')
-
-    # Récupérer les offres d'emploi ouvertes et non expirées pour affichage public
-    from recrutement.models import OffreEmploi
-    from formation.models import CatalogueFormation
-    from datetime import date
-    from django.db.models import Q
-    
-    # Toutes les offres ouvertes (aucune limite) pour affichage public
-    offres_emploi = OffreEmploi.objects.filter(
-        statut_offre='ouverte'
-    ).select_related('entreprise', 'service').order_by('-date_publication')
-
-    # Toutes les formations publiées (aucune limite) pour affichage public
-    formations = CatalogueFormation.objects.filter(
-        publiee=True,
-        actif=True
-    ).select_related('entreprise').order_by('-date_publication')
-    
-    return render(request, 'landing.html', {
-        'offres_emploi': offres_emploi,
-        'formations': formations,
-        'today': date.today(),
-    })
+    return redirect('core:login')
 
 
 def landing_page(request):
-    """Landing page publique pour le schéma public (multi-tenant)"""
-    return render(request, 'landing.html')
+    """Compatibilité des anciennes URLs publiques : accès à la connexion."""
+    return redirect('core:login')
 
 
 def csrf_failure(request, reason=""):
@@ -294,9 +260,7 @@ def register_entreprise(request):
                     f'Entreprise {entreprise.nom_entreprise} créée avec succès! Bienvenue {admin_user.get_full_name()}!'
                 )
                 # Rediriger selon le type de module choisi
-                if entreprise.type_module == 'compta':
-                    return redirect('comptabilite:dashboard')
-                elif entreprise.type_module == 'secretariat':
+                if entreprise.type_module == 'secretariat':
                     return redirect('secretariat:dashboard')
                 elif entreprise.type_module == 'stock':
                     return redirect('stock:dashboard')
@@ -353,10 +317,11 @@ def manage_users(request):
         messages.error(request, "Vous n'avez pas les permissions pour gérer les utilisateurs.")
         return redirect('dashboard:index')
     
-    # Vérifier le quota d'utilisateurs
+    # Vérifier le quota d'utilisateurs (aucun quota avec une licence offline valide)
+    from .licence_utils import licence_offline_valide
     entreprise = request.user.entreprise
     current_users = entreprise.utilisateurs.filter(actif=True).count()
-    quota_reached = current_users >= entreprise.max_utilisateurs
+    quota_reached = current_users >= entreprise.max_utilisateurs and not licence_offline_valide()
     quota_percentage = int((current_users / entreprise.max_utilisateurs) * 100) if entreprise.max_utilisateurs > 0 else 0
     
     if request.method == 'POST':
@@ -416,10 +381,11 @@ def send_invitation(request):
         last_name = request.POST.get('last_name')
         profil_id = request.POST.get('profil')
         
-        # Vérifier le quota
+        # Vérifier le quota (aucun quota avec une licence offline valide)
+        from .licence_utils import licence_offline_valide
         entreprise = request.user.entreprise
         current_users = entreprise.utilisateurs.filter(actif=True).count()
-        if current_users >= entreprise.max_utilisateurs:
+        if current_users >= entreprise.max_utilisateurs and not licence_offline_valide():
             messages.error(request, "Quota d'utilisateurs atteint.")
             return redirect('core:manage_users')
         
@@ -1250,3 +1216,44 @@ def telecharger_document_partenariat(request, pk, type_doc):
         response = HttpResponse(f.read(), content_type=content_type or 'application/octet-stream')
         response['Content-Disposition'] = f'attachment; filename="{file_field.name.split("/")[-1]}"'
         return response
+
+
+@login_required
+def changer_societe(request):
+    """Multi-sociétés : basculer vers une autre entreprise autorisée.
+    Superuser : toutes les entreprises actives ; sinon celles accordées
+    via AccesEntreprise (+ l'entreprise d'origine)."""
+    from .models import Entreprise, AccesEntreprise
+
+    if request.user.is_superuser:
+        entreprises = Entreprise.objects.filter(actif=True).order_by('nom_entreprise')
+    else:
+        ids = set(AccesEntreprise.objects.filter(
+            utilisateur=request.user).values_list('entreprise_id', flat=True))
+        if request.user.entreprise_id:
+            ids.add(request.user.entreprise_id)
+        entreprises = Entreprise.objects.filter(pk__in=ids, actif=True).order_by('nom_entreprise')
+
+    if request.method == 'POST':
+        cible = entreprises.filter(pk=request.POST.get('entreprise')).first()
+        if cible is None:
+            messages.error(request, "Vous n'avez pas accès à cette société.")
+            return redirect('core:changer_societe')
+        if cible.pk == request.user.entreprise_id:
+            messages.info(request, f"Vous êtes déjà sur {cible.nom_entreprise}.")
+            return redirect('dashboard:index')
+        # Mémoriser la société quittée pour pouvoir y revenir
+        if request.user.entreprise_id and not request.user.is_superuser:
+            AccesEntreprise.objects.get_or_create(
+                utilisateur=request.user, entreprise_id=request.user.entreprise_id,
+                defaults={'accorde_par': request.user})
+        request.user.entreprise = cible
+        request.user.save(update_fields=['entreprise'])
+        log_activity(request, f'Bascule vers la société {cible.nom_entreprise}', 'core')
+        messages.success(request, f"Vous travaillez maintenant sur : {cible.nom_entreprise}.")
+        return redirect('dashboard:index')
+
+    return render(request, 'core/changer_societe.html', {
+        'entreprises': entreprises,
+        'entreprise_courante': request.user.entreprise,
+    })

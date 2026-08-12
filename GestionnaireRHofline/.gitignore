@@ -21,6 +21,8 @@ wheels/
 MANIFEST
 
 # Virtual Environment
+.venv/
+.venv*/
 venv/
 env/
 ENV/
@@ -32,6 +34,9 @@ venv.bak/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+db.sqlite3-shm
+db.sqlite3-wal
+db.sqlite3.backup_*
 /media
 /staticfiles
 /static_root
@@ -44,6 +49,8 @@ db.sqlite3-journal
 *.key
 *.crt
 *.p12
+*.lic
+license.dat
 
 # Logs
 logs/
@@ -118,6 +125,7 @@ uwsgi.ini
 Output/
 dist_nuitka/
 installer/
+redist/
 runtime_hooks/
 nul
 
@@ -132,10 +140,6 @@ build_log.txt
 # Temporary scripts
 _*.py
 _*.bat
-# IMPORTANT : ne jamais ignorer les __init__.py (le motif _*.py les attrapait,
-# ce qui faisait disparaître les packages migrations/ → "App does not have migrations").
-!__init__.py
-!**/__init__.py
 
 # Other
 .claude/
@@ -143,3 +147,4 @@ db_template.sqlite3
 GuineeRH_Document_Commercial.docx
 generate_doc_commercial.js
 templates/widgets/
+tmp/

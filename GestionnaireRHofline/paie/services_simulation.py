@@ -7,7 +7,7 @@ Algorithme validé par les tests T01–T17 (cf. _test_rts_tmp.py)
 from decimal import Decimal, ROUND_HALF_UP, ROUND_FLOOR
 from datetime import date
 
-from .models import TrancheRTS, Constante
+from .models import TrancheRTS
 
 
 # ---------------------------------------------------------------------------
@@ -75,14 +75,16 @@ def _charger_tranches_db(annee: int, type_bareme: str = 'officiel') -> list:
     return result
 
 
-def _charger_constantes() -> dict:
+def _charger_constantes(date_reference=None) -> dict:
     """
     Charge les constantes fiscales actives.
     Complète avec des valeurs par défaut si absentes de la DB.
     """
-    constantes = {}
-    for c in Constante.objects.filter(actif=True):
-        constantes[c.code] = c.valeur
+    from .cache_service import PayrollCacheService
+
+    constantes = dict(PayrollCacheService.get_constantes(
+        date_reference=date_reference
+    ))
 
     defaults = {
         'TAUX_CNSS_EMPLOYE':   Decimal('5'),
@@ -154,7 +156,7 @@ def _calcul_rts_par_tranches(base: Decimal, tranches: list) -> tuple:
         return 0, []
 
     base = Decimal(str(base))
-    impot_total = Decimal('0')
+    impot_total = 0
     details = []
 
     for t in tranches:
@@ -167,7 +169,7 @@ def _calcul_rts_par_tranches(base: Decimal, tranches: list) -> tuple:
 
         plafond = min(base, borne_sup) if borne_sup is not None else base
         base_tranche = plafond - borne_inf
-        impot_tranche = base_tranche * taux / Decimal('100')
+        impot_tranche = _half_up(base_tranche * taux / Decimal('100'))
         impot_total += impot_tranche
 
         details.append({
@@ -175,10 +177,10 @@ def _calcul_rts_par_tranches(base: Decimal, tranches: list) -> tuple:
             'borne_sup': int(borne_sup) if borne_sup is not None else None,
             'taux': float(taux),
             'base_tranche': _half_up(base_tranche),
-            'impot_tranche': _half_up(impot_tranche),
+            'impot_tranche': impot_tranche,
         })
 
-    return _half_up(impot_total), details
+    return impot_total, details
 
 
 def calculer_un_bareme(
@@ -196,13 +198,13 @@ def calculer_un_bareme(
       plafond_exon = floor(brut × 25%)
       exon   = min(indemnites, plafond_exon)
       depasse = max(0, indemnites − plafond_exon)
-      base_rts = brut − CNSS − exon + depasse
+      base_rts = brut − CNSS − exon
       RTS    = calcul progressif (ROUND_HALF_UP sur montants partiels)
       net    = brut − CNSS − RTS
       VF/TA/ONFPP = base VF × taux
     """
-    brut = Decimal(str(brut))
-    total_indemnites = Decimal(str(max(Decimal('0'), total_indemnites)))
+    brut = max(Decimal('0'), Decimal(str(brut)))
+    total_indemnites = max(Decimal('0'), Decimal(str(total_indemnites)))
 
     # CNSS Guinee: parametres legaux fixes, sans surcharge flottante.
     plancher_cnss   = Decimal('550000')
@@ -232,7 +234,10 @@ def calculer_un_bareme(
     depasse = int(max(Decimal('0'), total_indemnites - Decimal(str(plafond_exon))))
 
     # -- Base RTS --
-    base_rts_raw = int(brut) - cnss - exon + depasse
+    # Le brut inclut deja toutes les indemnites. Soustraire l'exoneration
+    # suffit : la fraction depassant 25 % reste donc taxable dans le brut.
+    # Ajouter ``depasse`` ici la compterait une seconde fois.
+    base_rts_raw = int(brut) - cnss - exon
     base_rts     = max(0, base_rts_raw)
 
     # -- RTS par tranches --
@@ -248,8 +253,9 @@ def calculer_un_bareme(
     net = int(brut) - cnss - rts
 
     # -- Charges patronales --
-    deduction_vf = int(exon)
-    base_vf = max(Decimal('0'), brut - Decimal(str(deduction_vf)))
+    # L'exonération indemnitaire est réservée à la RTS.
+    deduction_vf = 0
+    base_vf = max(Decimal('0'), brut)
     vf = _half_up(base_vf * taux_vf / Decimal('100'))
     # Seuil TA/ONFPP : < seuil -> TA 2%, >= seuil -> ONFPP 1,5% sur base VF
     seuil_ta_onfpp = int(constantes.get('SEUIL_TA_ONFPP', Decimal('30')))
@@ -259,7 +265,7 @@ def calculer_un_bareme(
         base_onfpp = Decimal('0')
     else:
         ta    = 0
-        base_onfpp = base_vf
+        base_onfpp = brut
         onfpp = _half_up(base_onfpp * TAUX_ONFPP_LEGAL / Decimal('100'))
 
     return {
@@ -391,7 +397,6 @@ def simuler_multi_baremes(
 
     brut             = Decimal(str(brut))
     total_indemnites = Decimal(str(max(0, total_indemnites)))
-    constantes       = _charger_constantes()
     resultats        = []
     type_labels      = {'officiel': 'Officiel', 'simulation': 'Simulation', 'test': 'Test'}
 
@@ -417,6 +422,9 @@ def simuler_multi_baremes(
                 label    = f'Barème {annee} {type_b} (fallback référence)'
             else:
                 label = f'Barème {annee} — {type_labels.get(type_b, type_b)}'
+
+        annee_constantes = annee if annee is not None else annee_ref
+        constantes = _charger_constantes(date(annee_constantes, 1, 1))
 
         result = calculer_un_bareme(
             brut, total_indemnites, tranches, constantes, nb_salaries
@@ -445,13 +453,11 @@ def optimiser_net(
     nb_salaries: int = 0,
 ) -> dict:
     """
-    Trouve la répartition brut / indemnités qui maximise le net à payer
-    pour une enveloppe salariale totale donnée (brut + indemnités).
+    Trouve la répartition interne du brut total qui maximise le net à payer.
 
-    Stratégie : les indemnités sont exonérées jusqu'à 25% du brut.
-    L'optimal est donc : indemnités = 25% du brut, soit :
-      brut_optimal = enveloppe / 1.25
-      indemnités_optimal = enveloppe - brut_optimal
+    Le brut fourni inclut les indemnités, comme ``calculer_un_bareme`` et le
+    bulletin réel. Le montant brut reste donc constant entre les scénarios ;
+    seule la part d'indemnités varie de 0 % à 25 % du brut.
 
     On compare aussi avec le scénario "tout en brut" (indemnités=0)
     et le scénario actuel si fourni.
@@ -462,8 +468,6 @@ def optimiser_net(
         annee_ref = date.today().year
 
     enveloppe = Decimal(str(enveloppe_totale))
-    constantes = _charger_constantes()
-
     # Charger le barème
     if bareme_id and bareme_id != BAREME_FALLBACK_ID:
         parts = bareme_id.split('-', 1)
@@ -477,16 +481,19 @@ def optimiser_net(
         if not tranches:
             tranches = list(BAREME_CGI_REFERENCE)
     else:
+        annee = annee_ref
         tranches = list(BAREME_CGI_REFERENCE)
+
+    constantes = _charger_constantes(date(annee, 1, 1))
 
     # Scénario 1 : Tout en brut (indemnités = 0)
     r_brut_pur = calculer_un_bareme(enveloppe, Decimal('0'), tranches, constantes, nb_salaries)
     r_brut_pur['scenario'] = 'Tout en brut (0 indemnités)'
     r_brut_pur['conforme_25'] = True
 
-    # Scénario 2 : Optimal 25% (indemnités = 25% du brut)
-    brut_optimal = _floor_gnf(enveloppe * Decimal('100') / Decimal('125'))
-    indem_optimal = int(enveloppe) - brut_optimal
+    # Scénario 2 : Optimal 25% du brut total
+    brut_optimal = int(enveloppe)
+    indem_optimal = _floor_gnf(enveloppe * Decimal('25') / Decimal('100'))
     r_optimal = calculer_un_bareme(
         Decimal(str(brut_optimal)), Decimal(str(indem_optimal)),
         tranches, constantes, nb_salaries
@@ -495,8 +502,8 @@ def optimiser_net(
     r_optimal['conforme_25'] = True
 
     # Scénario 3 : 30% indemnités (au-delà du plafond, pour montrer l'effet)
-    brut_30 = _floor_gnf(enveloppe * Decimal('100') / Decimal('130'))
-    indem_30 = int(enveloppe) - brut_30
+    brut_30 = int(enveloppe)
+    indem_30 = _floor_gnf(enveloppe * Decimal('30') / Decimal('100'))
     r_30 = calculer_un_bareme(
         Decimal(str(brut_30)), Decimal(str(indem_30)),
         tranches, constantes, nb_salaries
@@ -578,7 +585,9 @@ def simuler_scenario_augmentation(
             'cout_total_apres': b['brut'] + b['total_charges_pat'],
         })
 
-    constantes = _charger_constantes()
+    if annee_ref is None:
+        annee_ref = date.today().year
+    constantes = _charger_constantes(date(annee_ref, 1, 1))
     return {
         'pourcentage': float(pct),
         'brut_actuel': int(brut),

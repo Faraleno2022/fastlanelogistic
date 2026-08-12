@@ -64,7 +64,7 @@ class SecurityHeadersMiddleware:
         response['Cross-Origin-Resource-Policy'] = 'same-origin'
 
         # Masquer la version du serveur
-        response['Server'] = 'GuinéeRH'
+        response['Server'] = 'Fastlane Logistic'
 
         # Empêcher la mise en cache de pages sensibles
         if request.path.startswith(('/paie/', '/employes/', '/comptabilite/', '/portail/')):
@@ -294,6 +294,11 @@ class EntrepriseQuotaMiddleware:
         if not entreprise.actif:
             messages.error(request, "Votre entreprise est désactivée. Contactez le support.")
             return redirect('core:login')
+
+        # ── Licence offline valide → accès complet, aucune restriction de plan ──
+        from core.licence_utils import licence_offline_valide
+        if licence_offline_valide():
+            return self.get_response(request)
 
         # ── 2. Abonnement expiré ──
         if entreprise.date_expiration:

@@ -7,50 +7,49 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.views.static import serve
-from django.http import HttpResponse
-from core.views_modules.demo import demo_accueil, demo_telecharger_pdf
+from django.http import HttpResponse, JsonResponse
 import os
+import sys
+import time
+import threading
+
+
+def quitter_application(request):
+    """Ferme complètement l'application de bureau (serveur + fenêtre + processus).
+
+    Réservé au mode bureau (variable GESTIONNAIRE_RH_DESKTOP). Permet à
+    l'utilisateur de libérer le port et la mémoire pour lancer une autre
+    application. os._exit() arrête tout le processus, y compris la fenêtre
+    native et le thread serveur Django.
+    """
+    # Mode bureau = app packagée (sys.frozen) OU lancée via run_server (env).
+    is_desktop = getattr(sys, 'frozen', False) or os.environ.get('GESTIONNAIRE_RH_DESKTOP') == '1'
+    if not is_desktop:
+        return HttpResponse(status=404)
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+
+    def _shutdown():
+        # Laisser le temps à la réponse HTTP de partir avant de tuer le processus.
+        time.sleep(0.5)
+        sys.stdout.flush() if sys.stdout else None
+        os._exit(0)
+
+    threading.Thread(target=_shutdown, daemon=True).start()
+    return JsonResponse({'ok': True, 'message': 'Fermeture de GestionnaireRH...'})
 
 def robots_txt(request):
-    content = """# Robots.txt pour GuinéeRH
+    # Application interne privée : aucune indexation par les moteurs de recherche.
+    content = """# Robots.txt pour Fastlane Logistic (application interne privée)
 User-agent: *
-Allow: /
-Allow: /login/
-Allow: /inscription/
-Disallow: /admin/
-Disallow: /api/
-Disallow: /employes/
-Disallow: /paie/
-Disallow: /conges/
-Disallow: /core/
-Disallow: /comptabilite/
-Sitemap: https://www.guineerh.space/sitemap.xml
+Disallow: /
 """
     return HttpResponse(content, content_type="text/plain")
 
 def sitemap_xml(request):
+    # Application interne privée : pas de sitemap public.
     content = """<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url>
-        <loc>https://www.guineerh.space/</loc>
-        <changefreq>weekly</changefreq>
-        <priority>1.0</priority>
-    </url>
-    <url>
-        <loc>https://www.guineerh.space/login/</loc>
-        <changefreq>monthly</changefreq>
-        <priority>0.9</priority>
-    </url>
-    <url>
-        <loc>https://www.guineerh.space/inscription/</loc>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://www.guineerh.space/documentation-legale/</loc>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
 </urlset>"""
     return HttpResponse(content, content_type="application/xml")
 
@@ -61,9 +60,8 @@ def google_verification_2(request):
     return HttpResponse("google-site-verification: google10babad53f3eade7.html", content_type="text/html")
 
 urlpatterns = [
-    # Démonstration commerciale (accessible sans authentification)
-    path('demo/', demo_accueil, name='demo_accueil'),
-    path('demo/pdf/', demo_telecharger_pdf, name='demo_telecharger_pdf'),
+    # Fermeture complète de l'application de bureau (mode bureau uniquement)
+    path('app/quitter/', quitter_application, name='quitter_application'),
 
     path('robots.txt', robots_txt, name='robots_txt'),
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
@@ -115,6 +113,6 @@ urlpatterns += [
 ]
 
 # Customisation de l'admin
-admin.site.site_header = "Gestionnaire RH Guinée"
-admin.site.site_title = "Administration RH"
-admin.site.index_title = "Bienvenue dans l'administration RH"
+admin.site.site_header = "Fastlane Logistic — Administration RH"
+admin.site.site_title = "Administration RH Fastlane"
+admin.site.index_title = "Bienvenue dans l'administration RH Fastlane Logistic"

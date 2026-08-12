@@ -23,7 +23,7 @@
   .optim-card { border: 2px solid #198754; background: linear-gradient(135deg, #f0fff4 0%, #e8f5e9 100%); }
   .scenario-best { background: #d4edda !important; border-left: 4px solid #198754; }
   .scenario-row:hover { background: #f0f7ff; }
-  .augmentation-card { border: 2px solid #fd7e14; background: linear-gradient(135deg, #fff8f0 0%, #fff3e0 100%); }
+  .augmentation-card { border: 2px solid #fd7e14; background: linear-gradient(135deg, #fff8f0 0%, #EAF2FA 100%); }
   .hero-stat { text-align: center; padding: 1rem; }
   .hero-stat .value { font-size: 1.5rem; font-weight: 800; }
   .hero-stat .label { font-size: .75rem; color: #6c757d; text-transform: uppercase; letter-spacing: .5px; }
@@ -634,7 +634,9 @@ Exonérées à hauteur de 25% du brut (CGI Art. 93)" data-bs-toggle="tooltip"></
   document.getElementById('btnOptimiser').addEventListener('click', function() {
     var brut = parseMontant(document.getElementById('idBrut').value);
     var indem = parseMontant(document.getElementById('idIndemnites').value);
-    var enveloppe = brut + indem;
+    // Le salaire brut saisi inclut deja les indemnites : conserver le meme
+    // brut total et optimiser uniquement sa repartition interne.
+    var enveloppe = brut;
 
     if (enveloppe <= 0) {
       alert('Saisissez un salaire brut avant d\'optimiser.');

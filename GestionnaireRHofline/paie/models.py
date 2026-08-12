@@ -169,7 +169,7 @@ class BulletinPaie(models.Model):
     retenue_trop_percu = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text='Retenue trop-perçu mois précédent (hors base)')
     
     # Charges patronales
-    base_vf = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text='Base de calcul du VF (brut - déduction)')
+    base_vf = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text='Base de calcul du VF (brut par défaut)')
     versement_forfaitaire = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text='VF 6% sur base VF')
     taxe_apprentissage = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text='TA 2% sur base VF')
     taux_ta = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text='Taux TA appliqué (%)')
@@ -323,17 +323,13 @@ class BulletinPaie(models.Model):
             niveau = 'eleve'
             classe = 'danger'
             raisons.append('Base VF/ONFPP manquante')
-        elif taux > Decimal('25.01'):
+        elif abs(brut - base_vf) > Decimal('1'):
             niveau = 'eleve'
             classe = 'danger'
-            raisons.append('Optimisation superieure au plafond 25%')
-        elif taux >= Decimal('23.00'):
-            niveau = 'moyen'
-            classe = 'warning'
-            raisons.append('Structure fortement optimisee')
+            raisons.append('Base VF differente du brut')
 
         if base_vf > 0:
-            vf_attendue = (base_vf * Decimal('0.06')).quantize(Decimal('1'))
+            vf_attendue = (brut * Decimal('0.06')).quantize(Decimal('1'))
             vf_reelle = Decimal(self.versement_forfaitaire or 0).quantize(Decimal('1'))
             if abs(vf_reelle - vf_attendue) > Decimal('1'):
                 niveau = 'eleve'
@@ -341,11 +337,11 @@ class BulletinPaie(models.Model):
                 raisons.append('Ecart VF')
 
             if (self.taxe_apprentissage or 0) > 0:
-                base_charge = base_vf
+                base_charge = brut
                 taux_ta_onfpp = Decimal('0.02')
                 reel = Decimal(self.taxe_apprentissage or 0).quantize(Decimal('1'))
             else:
-                base_charge = Decimal(self.base_onfpp or 0) or base_vf
+                base_charge = brut
                 taux_ta_onfpp = Decimal('0.015')
                 reel = Decimal(self.contribution_onfpp or 0).quantize(Decimal('1'))
             attendu = (base_charge * taux_ta_onfpp).quantize(Decimal('1'))
@@ -1146,7 +1142,7 @@ class ConfigurationPaieEntreprise(models.Model):
     )
     
     MODES_CONGES = (
-        ('code_travail', 'Code du Travail (1,5 j/mois)'),
+        ('code_travail', 'Code du Travail (2,5 j/mois)'),
         ('convention', 'Convention Collective (2,5 j/mois)'),
         ('personnalise', 'Personnalisé'),
     )
@@ -1177,14 +1173,14 @@ class ConfigurationPaieEntreprise(models.Model):
         help_text='Code du Travail: 60%, Convention: 25%'
     )
     taux_hs_nuit = models.DecimalField(
-        max_digits=5, decimal_places=2, default=50.00,
+        max_digits=5, decimal_places=2, default=20.00,
         verbose_name='Majoration heures de nuit (%)',
         help_text='20h-6h. Code du Travail: 20%, Convention: 50%'
     )
     taux_hs_dimanche = models.DecimalField(
-        max_digits=5, decimal_places=2, default=100.00,
+        max_digits=5, decimal_places=2, default=60.00,
         verbose_name='Majoration dimanche/férié jour (%)',
-        help_text='Convention: 100%'
+        help_text='Jour férié: 60%'
     )
     taux_hs_ferie_nuit = models.DecimalField(
         max_digits=5, decimal_places=2, default=100.00,
@@ -1200,9 +1196,9 @@ class ConfigurationPaieEntreprise(models.Model):
         verbose_name='Mode calcul congés'
     )
     jours_conges_par_mois = models.DecimalField(
-        max_digits=4, decimal_places=2, default=1.50,
+        max_digits=4, decimal_places=2, default=2.50,
         verbose_name='Jours de congé acquis par mois',
-        help_text='Code du Travail: 1,5 j/mois (18j/an), Convention: 2,5 j/mois (30j/an)'
+        help_text='Minimum légal Code du Travail Art. 222 : 2,5 j/mois (30 j/an). Une convention collective peut être plus favorable.'
     )
     jours_conges_anciennete = models.DecimalField(
         max_digits=4, decimal_places=2, default=2.00,
@@ -1289,7 +1285,8 @@ class ConfigurationPaieEntreprise(models.Model):
         self.taux_hs_au_dela = Decimal('60.00')
         self.taux_hs_nuit = Decimal('20.00')
         self.mode_conges = 'code_travail'
-        self.jours_conges_par_mois = Decimal('1.50')
+        # Code du Travail Art. 222 : minimum légal 2,5 j/mois (30 j/an)
+        self.jours_conges_par_mois = Decimal('2.50')
         self.save()
     
     def appliquer_mode_convention(self):
@@ -1336,12 +1333,12 @@ class ParametresCalculPaie(models.Model):
 
     # Base VF / TA
     MODE_BASE_VF = [
-        ('brut_moins_deduction', 'Mode optimise GuineeRH : VF/TA sur brut - deduction CGI plafonnee'),
-        ('brut', 'Mode strict fiscal : VF/TA sur salaire brut'),
+        ('brut_moins_deduction', 'Mode historique non standard : VF/TA sur brut - deduction'),
+        ('brut', 'Mode legal par defaut : VF/TA sur salaire brut'),
         ('formule', 'Formule personnalisee'),
     ]
     mode_base_vf = models.CharField(
-        max_length=30, choices=MODE_BASE_VF, default='brut_moins_deduction'
+        max_length=30, choices=MODE_BASE_VF, default='brut'
     )
     formule_base_vf = models.TextField(
         blank=True,
@@ -1349,11 +1346,11 @@ class ParametresCalculPaie(models.Model):
     )
 
     MODE_BASE_ONFPP = [
-        ('base_vf', 'Mode standard GuineeRH : ONFPP sur base VF/TA'),
-        ('brut', 'Mode strict fiscal : ONFPP sur salaire brut'),
+        ('base_vf', 'Mode personnalise : ONFPP sur base VF/TA'),
+        ('brut', 'Mode legal par defaut : ONFPP sur salaire brut'),
     ]
     mode_base_onfpp = models.CharField(
-        max_length=20, choices=MODE_BASE_ONFPP, default='base_vf'
+        max_length=20, choices=MODE_BASE_ONFPP, default='brut'
     )
 
     # Base RTS personnalisée
@@ -1378,9 +1375,9 @@ class ParametresCalculPaie(models.Model):
         self.mode_exoneration_indemnites = 'plafond_pct'
         self.plafond_exoneration_pct = Decimal('25')
         self.formule_exoneration = ''
-        self.mode_base_vf = 'brut_moins_deduction'
+        self.mode_base_vf = 'brut'
         self.formule_base_vf = ''
-        self.mode_base_onfpp = 'base_vf'
+        self.mode_base_onfpp = 'brut'
         self.utiliser_formule_base_rts = False
         self.formule_base_rts = ''
 

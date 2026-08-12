@@ -28,12 +28,10 @@ def _base_cnss_attendue(brut):
 
 def _charges_attendues_bulletin(bulletin, effectif):
     brut = Decimal(str(bulletin.salaire_brut or 0))
-    abattement = Decimal(str(getattr(bulletin, 'abattement_forfaitaire', 0) or 0))
     base_cnss = _base_cnss_attendue(brut)
     cnss_5 = _arrondir_gnf(base_cnss * Decimal('0.05'))
     cnss_18 = _arrondir_gnf(base_cnss * Decimal('0.18'))
-    deduction_vf = _arrondir_gnf(min(abattement, brut))
-    base_vf = max(Decimal('0'), brut - deduction_vf)
+    base_vf = _arrondir_gnf(max(Decimal('0'), brut))
     vf = _arrondir_gnf(base_vf * Decimal('0.06'))
     if effectif >= 30:
         ta = Decimal('0')
@@ -113,8 +111,11 @@ def _build_repartition_service_paie(bulletins, effectif_total):
         brut = Decimal(str(bulletin.salaire_brut or 0))
         cnss_18 = Decimal(str(bulletin.cnss_employeur or attendu['cnss_18']))
         vf = Decimal(str(bulletin.versement_forfaitaire or attendu['vf']))
-        ta = attendu['ta'] if effectif_total < 30 else Decimal('0')
-        onfpp = attendu['onfpp'] if effectif_total >= 30 else Decimal('0')
+        # Les montants des bulletins sont deja arrondis individuellement.
+        # Les additionner evite les ecarts entre le total affiche et les
+        # declarations, qui reposent elles aussi sur les bulletins figes.
+        ta = Decimal(str(bulletin.taxe_apprentissage or 0))
+        onfpp = Decimal(str(bulletin.contribution_onfpp or 0))
 
         row['effectif'] += 1
         if bulletin.employe.sexe == 'M':
@@ -255,7 +256,15 @@ def index(request):
     # Rediriger les utilisateurs comptabilité vers le module comptabilité
     if entreprise and entreprise.type_module == 'compta':
         return redirect('comptabilite:compte-bancaire-list')
-    
+
+    # Rediriger les comptes Secrétariat seul vers le module secrétariat
+    if entreprise and entreprise.type_module == 'secretariat':
+        return redirect('secretariat:dashboard')
+
+    # Rediriger les comptes Gestion de Stock seul vers le module stock
+    if entreprise and entreprise.type_module == 'stock':
+        return redirect('stock:dashboard')
+
     entreprise_id = request.user.entreprise_id
 
     # Filtre periode (mois/annee). Par defaut, aucun filtre: toutes les periodes.
@@ -453,9 +462,9 @@ def index(request):
         cnss_5=Sum('cnss_employe'),
         cnss_18=Sum('cnss_employeur'),
     )
-    if context.get('total_employes', 0) >= 30:
-        totaux['ta'] = Decimal('0')
-        totaux['onfpp'] = ((totaux.get('base_vf') or Decimal('0')) * Decimal('0.015')).quantize(Decimal('1'))
+    # Conserver les sommes des charges arrondies bulletin par bulletin.
+    # Recalculer un taux sur la base globale cree des ecarts d'arrondi et
+    # masque les eventuelles anomalies, deja exposees par le risque fiscal.
     context.update(_build_paie_totaux_context(totaux))
     context['risque_fiscal'] = _build_risque_fiscal_paie(bulletins_paie, context.get('total_employes', 0))
     context['repartition_service_paie'] = _build_repartition_service_paie(
@@ -868,7 +877,7 @@ def telecharger_manuel(request):
     
     p.setFont("Helvetica-Oblique", 10)
     p.drawCentredString(width/2, height - 17*cm, f"Version 3.1 - {timezone.now().strftime('%B %Y')}")
-    p.drawCentredString(width/2, height - 17.6*cm, "www.guineerh.space")
+    p.drawCentredString(width/2, height - 17.6*cm, "app.fastlanelogisticgn.com")
     
     y = nouvelle_page()
     
@@ -1318,8 +1327,8 @@ def telecharger_manuel(request):
     y -= 0.8*cm
     y = draw_title(y, "SUPPORT ET CONTACT")
     y = draw_text(y, "Pour toute question ou assistance technique:")
-    y = draw_bullet(y, "Site web: www.guineerh.space")
-    y = draw_bullet(y, "Email: support@guineerh.space")
+    y = draw_bullet(y, "Site web: app.fastlanelogisticgn.com")
+    y = draw_bullet(y, "Email: support@fastlanelogisticgn.com")
     y -= 0.3*cm
     y = draw_text(y, "Notre équipe est disponible du lundi au vendredi, de 8h à 17h.")
     

@@ -46,14 +46,12 @@ try:
     import os
     import importlib.util
     
-    # NOTE: les vues "legacy" (fonctionnelles) vivent dans `comptabilite/views_legacy.py`.
-    # Le dossier `comptabilite/views/` est le package des vues basées classes
-    # (rapprochements, fiscalité, audit). On charge le fichier legacy explicitement
-    # par son chemin pour éviter tout conflit de résolution de module.
+    # NOTE: le dossier `comptabilite/views/` existe (package) et masque le fichier `comptabilite/views.py`.
+    # On charge donc explicitement `views.py` avec un nom de module qualifié afin que les imports relatifs fonctionnent.
     base_dir = os.path.dirname(__file__)
-    views_path = os.path.join(base_dir, 'views_legacy.py')
+    views_path = os.path.join(base_dir, 'views.py')
     if not os.path.exists(views_path):
-        views_path = os.path.join(base_dir, 'views_legacy.pyc')
+        views_path = os.path.join(base_dir, 'views.pyc')
     spec = importlib.util.spec_from_file_location('comptabilite.views_legacy', views_path)
     comptabilite_views = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(comptabilite_views)
@@ -103,10 +101,16 @@ try:
 
     # États financiers
     grand_livre_view = comptabilite_views.grand_livre
+    grand_livre_pdf_view = comptabilite_views.grand_livre_pdf
+    grand_livre_excel_view = comptabilite_views.grand_livre_excel
     balance_view = comptabilite_views.balance
+    balance_pdf_view = comptabilite_views.balance_pdf
+    balance_excel_view = comptabilite_views.balance_excel
     journal_general_view = comptabilite_views.journal_general
     bilan_view = comptabilite_views.bilan
+    bilan_pdf_view = comptabilite_views.bilan_pdf
     compte_resultat_view = comptabilite_views.compte_resultat
+    compte_resultat_pdf_view = comptabilite_views.compte_resultat_pdf
     compte_fournisseur_list_view = comptabilite_views.compte_fournisseur_list
     compte_fournisseur_detail_view = comptabilite_views.compte_fournisseur_detail
     compte_client_list_view = comptabilite_views.compte_client_list
@@ -1714,18 +1718,25 @@ compte_fournisseur_patterns = [
 ]
 
 # États Financiers URLs
+grand_livre_pdf_view = globals().get('grand_livre_pdf_view', grand_livre_view)
+grand_livre_excel_view = globals().get('grand_livre_excel_view', grand_livre_view)
+balance_pdf_view = globals().get('balance_pdf_view', balance_view)
+balance_excel_view = globals().get('balance_excel_view', balance_view)
+bilan_pdf_view = globals().get('bilan_pdf_view', bilan_view)
+compte_resultat_pdf_view = globals().get('compte_resultat_pdf_view', compte_resultat_view)
+
 etats_patterns = [
     path('grand-livre/', grand_livre_view, name='grand_livre'),
-    path('grand-livre/pdf/', grand_livre_view, name='grand_livre_pdf'),
-    path('grand-livre/excel/', grand_livre_view, name='grand_livre_excel'),
+    path('grand-livre/pdf/', grand_livre_pdf_view, name='grand_livre_pdf'),
+    path('grand-livre/excel/', grand_livre_excel_view, name='grand_livre_excel'),
     path('balance/', balance_view, name='balance'),
-    path('balance/pdf/', balance_view, name='balance_pdf'),
-    path('balance/excel/', balance_view, name='balance_excel'),
+    path('balance/pdf/', balance_pdf_view, name='balance_pdf'),
+    path('balance/excel/', balance_excel_view, name='balance_excel'),
     path('journal-general/', journal_general_view, name='journal_general'),
     path('bilan/', bilan_view, name='bilan'),
-    path('bilan/pdf/', bilan_view, name='bilan_pdf'),
+    path('bilan/pdf/', bilan_pdf_view, name='bilan_pdf'),
     path('compte-resultat/', compte_resultat_view, name='compte_resultat'),
-    path('compte-resultat/pdf/', compte_resultat_view, name='compte_resultat_pdf'),
+    path('compte-resultat/pdf/', compte_resultat_pdf_view, name='compte_resultat_pdf'),
 ]
 
 # ============================================================================
@@ -1777,10 +1788,12 @@ ajax_patterns = [
 # DASHBOARDS & REPORTS
 # ============================================================================
 
+from . import views_livres as _views_livres_dash
+
 dashboard_report_patterns = [
-    # Dashboard principal
-    path('', TemplateView.as_view(template_name='comptabilite/dashboard.html'), name='dashboard'),
-    path('tableau-de-bord/', TemplateView.as_view(template_name='comptabilite/dashboard.html'), name='dashboard'),
+    # Dashboard principal — tableau de bord métier calculé (moteur comptable)
+    path('', _views_livres_dash.tableau_bord_compta, name='dashboard'),
+    path('tableau-de-bord/', _views_livres_dash.tableau_bord_compta, name='dashboard'),
 ]
 
 # ============================================================================
@@ -1840,6 +1853,72 @@ archivage_patterns = [
     path('archivage/', include('comptabilite.urls_archivage')),
 ]
 
+# ── Livres et documents SYSCOHADA (journaux par type, caisse, bordereaux,
+#    emprunts, TFT, notes annexes, registre immobilisations) ────────────────
+from . import views_livres
+
+livres_patterns = [
+    # Journaux par type (AC/VT/CA/BQ/OD/SA)
+    path('livres/journal/<str:type_journal>/', views_livres.journal_par_type, name='journal_par_type'),
+    # Balance auxiliaire clients / fournisseurs
+    path('livres/balance-auxiliaire/<str:categorie>/', views_livres.balance_auxiliaire, name='balance_auxiliaire'),
+    # Caisse
+    path('caisse/pieces/', views_livres.piece_caisse_list, name='piece_caisse_list'),
+    path('caisse/pieces/nouvelle/', views_livres.piece_caisse_create, name='piece_caisse_create'),
+    path('caisse/pieces/<int:pk>/imprimer/', views_livres.piece_caisse_print, name='piece_caisse_print'),
+    path('caisse/livre/', views_livres.livre_caisse, name='livre_caisse'),
+    path('caisse/situation/', views_livres.situation_caisse, name='situation_caisse'),
+    # Reçu / quittance
+    path('reglements/<uuid:pk>/recu/', views_livres.reglement_recu, name='reglement_recu'),
+    # Bordereaux
+    path('bordereaux/', views_livres.bordereau_list, name='bordereau_list'),
+    path('bordereaux/nouveau/', views_livres.bordereau_create, name='bordereau_create'),
+    path('bordereaux/<int:pk>/imprimer/', views_livres.bordereau_print, name='bordereau_print'),
+    # Emprunts
+    path('emprunts/', views_livres.emprunt_list, name='emprunt_list'),
+    path('emprunts/nouveau/', views_livres.emprunt_create, name='emprunt_create'),
+    path('emprunts/<int:pk>/', views_livres.emprunt_detail, name='emprunt_detail'),
+    # États financiers complémentaires
+    path('etats/flux-tresorerie/', views_livres.tableau_flux_tresorerie, name='flux_tresorerie'),
+    path('etats/notes-annexes/', views_livres.notes_annexes, name='notes_annexes'),
+    path('etats/registre-immobilisations/', views_livres.registre_immobilisations, name='registre_immobilisations'),
+    # Arrêté de caisse
+    path('caisse/arretes/', views_livres.arrete_caisse_list, name='arrete_caisse_list'),
+    path('caisse/arretes/nouveau/', views_livres.arrete_caisse_create, name='arrete_caisse_create'),
+    path('caisse/arretes/<int:pk>/imprimer/', views_livres.arrete_caisse_print, name='arrete_caisse_print'),
+    # Relevés de tiers, relances, échéanciers
+    path('tiers/<uuid:pk>/releve/', views_livres.releve_tiers, name='releve_tiers'),
+    path('tiers/<uuid:pk>/relance/', views_livres.lettre_relance, name='lettre_relance'),
+    path('livres/echeancier/<str:categorie>/', views_livres.echeancier_tiers, name='echeancier_tiers'),
+    # Journaux spécialisés et livres
+    path('livres/journal-tva/', views_livres.journal_tva, name='journal_tva'),
+    path('livres/journal-immobilisations/', views_livres.journal_immobilisations, name='journal_immobilisations'),
+    path('livres/amortissements/', views_livres.livre_amortissements, name='livre_amortissements'),
+    # Analyses et états de gestion
+    path('etats/analyse-charges-produits/', views_livres.analyse_charges_produits, name='analyse_charges_produits'),
+    path('etats/variation-capitaux/', views_livres.variation_capitaux_propres, name='variation_capitaux'),
+    path('etats/situation-bancaire/', views_livres.situation_bancaire, name='situation_bancaire'),
+    # Chèques émis
+    path('cheques/', views_livres.cheque_list, name='cheque_list'),
+    path('cheques/nouveau/', views_livres.cheque_create, name='cheque_create'),
+    path('cheques/<int:pk>/imprimer/', views_livres.cheque_print, name='cheque_print'),
+    # Assistant opération (moteur comptable)
+    path('operations/nouvelle/', views_livres.nouvelle_operation, name='nouvelle_operation'),
+    path('plan-comptable/initialiser-syscohada/', views_livres.initialiser_plan_syscohada,
+         name='initialiser_plan_syscohada'),
+    path('plan-comptable/importer-excel/', views_livres.importer_plan_excel,
+         name='importer_plan_excel'),
+    path('cloture-periode/', views_livres.cloture_periode, name='cloture_periode'),
+    path('cloture-exercice/', views_livres.cloture_exercice, name='cloture_exercice'),
+    path('fiscal/situation/', views_livres.situation_fiscale, name='situation_fiscale'),
+    path('approbations/', views_livres.approbations, name='approbations'),
+    # Déclarations de patente
+    path('fiscal/patente/', views_livres.patente_list, name='patente_list'),
+    path('fiscal/patente/nouvelle/', views_livres.patente_create, name='patente_create'),
+    path('fiscal/patente/<int:pk>/modifier/', views_livres.patente_create, name='patente_update'),
+    path('fiscal/patente/<int:pk>/imprimer/', views_livres.patente_print, name='patente_print'),
+]
+
 urlpatterns = (
     # Comptabilité Générale
     plan_comptable_patterns +
@@ -1878,7 +1957,10 @@ urlpatterns = (
     
     # Documentation & Archivage
     archivage_patterns +
-    
+
+    # Livres et documents SYSCOHADA
+    livres_patterns +
+
     # Utilities
     import_export_patterns +
     ajax_patterns +

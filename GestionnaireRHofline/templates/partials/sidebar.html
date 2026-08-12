@@ -5,10 +5,10 @@
     #sidebar .sidebar-heading { color: #1F4E78 !important; }
     #sidebar .border-top { border-color: rgba(0,0,0,0.1) !important; }
 </style>
-<div class="position-sticky pt-3">
+<div class="position-sticky">
     <!-- Moyens de paiement et Plans -->
     <div class="px-3 mb-2">
-        <a href="{% url 'payments:plans' %}" class="btn btn-sm w-100 py-1" style="font-size: 0.75rem; background: linear-gradient(135deg, #1F4E78 0%, #163A5F 100%); color: white; border: none;">
+        <a href="{% url 'payments:plans' %}" class="btn btn-sm w-100 py-1" style="font-size: 0.75rem; background: linear-gradient(135deg, #1F4E78 0%, #163A5C 100%); color: white; border: none;">
             <i class="bi bi-gem"></i> Plans & Tarifs
         </a>
         <div class="d-flex justify-content-center gap-1 mt-1" style="font-size: 0.65rem;">
@@ -513,6 +513,30 @@
         </li>
         {% endif %}
         
+        <!-- Secrétariat (visible pour tous les types de compte) -->
+        <li class="nav-item">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <span>SECRÉTARIAT</span>
+            </h6>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if 'secretariat' in request.path %}active{% endif %}" href="{% url 'secretariat:dashboard' %}">
+                <i class="bi bi-folder-open"></i> Secrétariat
+            </a>
+        </li>
+
+        <!-- Gestion du Stock (visible pour tous les types de compte) -->
+        <li class="nav-item">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <span>STOCK</span>
+            </h6>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if '/stock/' in request.path %}active{% endif %}" href="{% url 'stock:dashboard' %}">
+                <i class="bi bi-boxes"></i> Gestion du Stock
+            </a>
+        </li>
+
         <!-- Mon Profil (visible pour tous) -->
         <li class="nav-item mt-4 border-top pt-3">
             <a class="nav-link" href="{% url 'core:profile' %}">

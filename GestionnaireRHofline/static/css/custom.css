@@ -1,24 +1,19 @@
-/* Gestionnaire RH Guinée - Styles personnalisés */
-/* Thème Orange / Gris Anthracite */
+/* Fastlane Logistic - Styles personnalisés */
+/* Thème Bleu Marine / Rouge / Gris Anthracite (charte Fastlane) */
 
 :root {
-    /* Charte FASTLANE LOGISTIC */
-    --primary-color: #1F4E78;      /* Navy Fastlane (principal) */
-    --secondary-color: #0F2C47;    /* Navy foncé */
+    --primary-color: #1F4E78;      /* Bleu marine Fastlane */
+    --primary-dark: #163A5C;       /* Bleu marine foncé */
+    --secondary-color: #212121;    /* Gris Anthracite */
     --success-color: #28a745;      /* Vert */
-    --danger-color: #dc3545;       /* Rouge */
-    --warning-color: #f0ad4e;      /* Ambre (warning sémantique) */
-    --info-color: #2E75B6;         /* Bleu Fastlane */
-    --orange-main: #1F4E78;        /* (ancien orange) -> navy */
+    --danger-color: #C8102E;       /* Rouge Fastlane */
+    --warning-color: #E8A33D;      /* Ambre */
+    --info-color: #2E6CA4;         /* Bleu info */
+    --accent-red: #C8102E;         /* Rouge Fastlane (accent) */
+    /* Alias de compatibilité (ancien thème orange) -> couleurs Fastlane */
+    --orange-main: #1F4E78;
     --gray-light: #939393;
     --gray-dark: #212121;
-    /* Palette Fastlane officielle */
-    --fl-navy: #0F2C47;
-    --fl-navy-2: #1F4E78;
-    --fl-blue: #2E75B6;
-    --fl-blue-light: #5B9BD5;
-    --fl-red: #E63946;
-    --fl-red-dark: #B8202D;
 }
 
 /* Body avec navbar fixe */
@@ -124,12 +119,12 @@ main {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--orange-main) 0%, #163A5F 100%);
+    background: linear-gradient(135deg, var(--orange-main) 0%, #163A5C 100%);
     border: none;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #0F2C47 0%, var(--orange-main) 100%);
+    background: linear-gradient(135deg, #16406B 0%, var(--orange-main) 100%);
 }
 
 .btn-success {

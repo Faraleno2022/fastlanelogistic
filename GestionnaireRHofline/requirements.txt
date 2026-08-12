@@ -49,7 +49,7 @@ redis==5.0.1
 reportlab==4.0.7
 setuptools==80.9.0
 six==1.17.0
-simpleeval==1.0.3
+simpleeval==1.0.7
 sqlparse==0.5.3
 tablib==3.5.0
 typing_extensions==4.15.0
@@ -63,3 +63,9 @@ xlwt==1.3.0
 requests==2.31.0
 django-tenants==3.6.1
 qrcode==8.0
+# Dépendances de la version DESKTOP uniquement (fenêtre native WebView2).
+# Marquées Windows-only : pip les ignore sur Linux (PythonAnywhere), où le WSGI
+# n'importe jamais run_server.py. Évite l'échec d'installation de pythonnet (Mono).
+pywebview==6.2.1; platform_system == "Windows"
+pythonnet==3.1.0; platform_system == "Windows"
+clr_loader==0.3.1; platform_system == "Windows"

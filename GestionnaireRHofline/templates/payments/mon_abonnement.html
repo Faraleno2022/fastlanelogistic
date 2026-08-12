@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load humanize %}
 
-{% block title %}Mon abonnement - GuinéeRH{% endblock %}
+{% block title %}Mon abonnement - Fastlane Logistic{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -16,7 +16,7 @@
         <!-- Abonnement actuel -->
         <div class="col-lg-8 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header text-white" style="background: linear-gradient(135deg, #1F4E78 0%, #2E75B6 100%);">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #1F4E78 0%, #2E6CA4 100%);">
                     <h5 class="mb-0"><i class="bi bi-card-checklist"></i> Abonnement actuel</h5>
                 </div>
                 <div class="card-body">
@@ -98,6 +98,22 @@
                                     <i class="bi bi-x-circle text-danger"></i>
                                 {% endif %}
                                 Formation
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                {% if abonnement.plan.module_comptabilite %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                {% endif %}
+                                Comptabilité
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                {% if abonnement.plan.module_portail %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                {% endif %}
+                                Portail Employé
                             </div>
                             <div class="col-6 col-md-4 mb-2">
                                 {% if abonnement.plan.support_prioritaire %}

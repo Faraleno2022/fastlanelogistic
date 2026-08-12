@@ -1,15 +1,13 @@
 """
-Configuration WSGI pour PythonAnywhere
-À copier dans: /var/www/fastlanelogisticgn_com_wsgi.py
-(ou le fichier WSGI généré automatiquement quand vous créez la Web App
- avec le domaine personnalisé fastlanelogisticgn.com sur PythonAnywhere)
+Configuration WSGI pour app.fastlanelogisticgn.com sur PythonAnywhere.
+À copier dans le fichier WSGI de la Web App du compte Fastlane.
 """
 import os
 import sys
 from pathlib import Path
 
 # Chemin vers le projet
-path = '/home/guineerh/gestionrh'
+path = '/home/Fastlane/fastlane_app/GestionnaireRHofline'
 if path not in sys.path:
     sys.path.insert(0, path)
 
@@ -26,7 +24,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gestionnaire_rh.settings')
 
 # Variables de production (si non définies dans .env)
 os.environ.setdefault('DEBUG', 'False')
-os.environ.setdefault('SECRET_KEY', 'votre-cle-secrete-de-production-a-changer')
+os.environ.setdefault('DJANGO_EXTRA_ALLOWED_HOSTS', 'app.fastlanelogisticgn.com')
 
 from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()

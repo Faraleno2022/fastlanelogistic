@@ -231,7 +231,8 @@ def activate_from_file(activation_file_path: str) -> dict:
         return {'valid': False, 'reason': f'Erreur lecture du fichier : {e}'}
 
 
-# ─── Mode essai (30 jours sans licence) ───────────────────────────────────────
+# ─── Mode essai (3 mois sans licence) ─────────────────────────────────────────
+TRIAL_DAYS = 90  # durée de la période d'essai gratuite (3 mois)
 _TRIAL_FILE_NAME = '.trial_start'
 
 
@@ -271,7 +272,7 @@ def _trial_write(tp: Path, trial_start: datetime):
 
 
 def get_or_create_trial() -> dict:
-    """Gère une période d'essai de 30 jours sans licence."""
+    """Gère une période d'essai de 3 mois (TRIAL_DAYS jours) sans licence."""
     trial_paths = [
         _get_license_path().parent / _TRIAL_FILE_NAME,
         _get_appdata_license_path().parent / _TRIAL_FILE_NAME,
@@ -302,11 +303,11 @@ def get_or_create_trial() -> dict:
             'trial': True,
             'valid': False,
             'days_left': 0,
-            'days_elapsed': 30,
+            'days_elapsed': TRIAL_DAYS,
             'reason': "Manipulation de l'horloge détectée. Période d'essai révoquée.",
         }
 
-    days_left = max(0, 30 - days_elapsed)
+    days_left = max(0, TRIAL_DAYS - days_elapsed)
 
     return {
         'trial': True,

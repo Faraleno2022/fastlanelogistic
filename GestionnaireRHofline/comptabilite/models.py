@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 import uuid
 from core.models import Entreprise, Utilisateur
 
@@ -142,6 +142,8 @@ class EcritureComptable(models.Model):
     numero_ecriture = models.CharField(max_length=20, verbose_name='N° Écriture')
     date_ecriture = models.DateField(verbose_name='Date écriture')
     libelle = models.CharField(max_length=200, verbose_name='Libellé')
+    piece_jointe = models.FileField(upload_to='ecritures/pieces/', blank=True, null=True,
+                                    verbose_name='Pièce justificative (PDF, scan, photo…)')
     est_validee = models.BooleanField(default=False, verbose_name='Validée')
     date_validation = models.DateTimeField(null=True, blank=True)
     validee_par = models.ForeignKey('core.Utilisateur', on_delete=models.SET_NULL, null=True, blank=True)
@@ -171,7 +173,12 @@ class EcritureComptable(models.Model):
     
     @property
     def est_equilibree(self):
-        return self.total_debit == self.total_credit
+        """Équilibrée = au moins une ligne ET total débit = total crédit.
+
+        Une écriture sans aucune ligne ne doit jamais être considérée comme
+        équilibrée (0 == 0), sinon elle pourrait être validée vide.
+        """
+        return self.lignes.exists() and self.total_debit == self.total_credit
 
 
 class LigneEcriture(models.Model):
@@ -181,14 +188,39 @@ class LigneEcriture(models.Model):
     libelle = models.CharField(max_length=200, blank=True)
     montant_debit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     montant_credit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    
+    centre_analyse = models.ForeignKey('CentreAnalyse', on_delete=models.SET_NULL, null=True, blank=True,
+                                       related_name='lignes_ecritures',
+                                       verbose_name='Dimension analytique (projet, agence, centre de coût…)')
+
     class Meta:
         db_table = 'lignes_ecritures'
         verbose_name = 'Ligne d\'écriture'
         verbose_name_plural = 'Lignes d\'écritures'
-    
+
     def __str__(self):
         return f"{self.compte.numero_compte} - D:{self.montant_debit} C:{self.montant_credit}"
+
+    def _valider_montants(self):
+        """Règles comptables de base sur les montants d'une ligne."""
+        from django.core.exceptions import ValidationError
+        debit = self.montant_debit or Decimal('0.00')
+        credit = self.montant_credit or Decimal('0.00')
+        if debit < 0 or credit < 0:
+            raise ValidationError("Les montants d'une ligne d'écriture ne peuvent pas être négatifs.")
+        if debit > 0 and credit > 0:
+            raise ValidationError("Une ligne d'écriture ne peut pas porter à la fois un débit et un crédit.")
+        if debit == 0 and credit == 0:
+            raise ValidationError("Une ligne d'écriture doit porter un débit ou un crédit non nul.")
+
+    def clean(self):
+        super().clean()
+        self._valider_montants()
+
+    def save(self, *args, **kwargs):
+        # Les lignes sont souvent créées via objects.create() (sans formulaire) :
+        # on applique les règles de montants à chaque enregistrement.
+        self._valider_montants()
+        super().save(*args, **kwargs)
 
 
 class Tiers(models.Model):
@@ -230,6 +262,9 @@ class Facture(models.Model):
     TYPES_FACTURE = [
         ('achat', 'Facture d\'achat'),
         ('vente', 'Facture de vente'),
+        ('avoir_client', 'Facture d\'avoir (client)'),
+        ('avoir_fournisseur', 'Facture d\'avoir (fournisseur)'),
+        ('acompte', 'Facture d\'acompte'),
     ]
     STATUTS = [
         ('brouillon', 'Brouillon'),
@@ -241,7 +276,7 @@ class Facture(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     entreprise = models.ForeignKey('core.Entreprise', on_delete=models.CASCADE, related_name='factures')
     numero = models.CharField(max_length=50, verbose_name='N° Facture')
-    type_facture = models.CharField(max_length=10, choices=TYPES_FACTURE)
+    type_facture = models.CharField(max_length=20, choices=TYPES_FACTURE)
     tiers = models.ForeignKey(Tiers, on_delete=models.CASCADE, related_name='factures')
     date_facture = models.DateField(verbose_name='Date facture')
     date_echeance = models.DateField(verbose_name='Date échéance', null=True, blank=True)
@@ -274,6 +309,19 @@ class Facture(models.Model):
     def reste_a_payer(self):
         return self.montant_ttc - self.montant_paye
 
+    def recalculer_totaux(self, sauvegarder=True):
+        """Recalcule les totaux de la facture depuis ses lignes."""
+        from django.db.models import Sum
+
+        totaux = self.lignes.aggregate(
+            ht=Sum('montant_ht'), tva=Sum('montant_tva'), ttc=Sum('montant_ttc'))
+        self.montant_ht = totaux['ht'] or Decimal('0.00')
+        self.montant_tva = totaux['tva'] or Decimal('0.00')
+        self.montant_ttc = totaux['ttc'] or Decimal('0.00')
+        if sauvegarder:
+            self.save(update_fields=['montant_ht', 'montant_tva', 'montant_ttc'])
+        return self.montant_ht, self.montant_tva, self.montant_ttc
+
 
 class LigneFacture(models.Model):
     """Lignes de facture"""
@@ -293,10 +341,21 @@ class LigneFacture(models.Model):
         verbose_name_plural = 'Lignes de factures'
     
     def save(self, *args, **kwargs):
-        self.montant_ht = self.quantite * self.prix_unitaire
-        self.montant_tva = self.montant_ht * self.taux_tva / 100
-        self.montant_ttc = self.montant_ht + self.montant_tva
+        centime = Decimal('0.01')
+        self.montant_ht = (self.quantite * self.prix_unitaire).quantize(
+            centime, rounding=ROUND_HALF_UP)
+        self.montant_tva = (self.montant_ht * self.taux_tva / Decimal('100')).quantize(
+            centime, rounding=ROUND_HALF_UP)
+        self.montant_ttc = (self.montant_ht + self.montant_tva).quantize(
+            centime, rounding=ROUND_HALF_UP)
         super().save(*args, **kwargs)
+        self.facture.recalculer_totaux()
+
+    def delete(self, *args, **kwargs):
+        facture = self.facture
+        resultat = super().delete(*args, **kwargs)
+        facture.recalculer_totaux()
+        return resultat
 
 
 class Reglement(models.Model):
@@ -1741,27 +1800,34 @@ class DeclarationTVA(models.Model):
 
 class LigneDeclarationTVA(models.Model):
     """Lignes de détail dans une déclaration TVA"""
-    
+
     TYPES = [
         ('OPERATIONS', 'Opérations'),
         ('AJUSTEMENT', 'Ajustement'),
         ('CORRECTION', 'Correction'),
         ('OPTION', 'Option'),
     ]
-    
+    SENS = [
+        ('COLLECTEE', 'TVA collectée (ventes)'),
+        ('DEDUCTIBLE', 'TVA déductible (achats)'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     declaration = models.ForeignKey(DeclarationTVA, on_delete=models.CASCADE, related_name='lignes')
-    
+
     # Contenu
     numero_ligne = models.PositiveIntegerField(help_text='Numéro de ligne dans déclaration')
     description = models.CharField(max_length=200)
     taux = models.ForeignKey(TauxTVA, on_delete=models.PROTECT)
-    
+
     # Montants
     montant_ht = models.DecimalField(max_digits=15, decimal_places=2)
     montant_tva = models.DecimalField(max_digits=15, decimal_places=2)
-    
+
     type_ligne = models.CharField(max_length=20, choices=TYPES, default='OPERATIONS')
+    sens = models.CharField(max_length=12, choices=SENS, default='COLLECTEE',
+                            verbose_name='Sens de la TVA',
+                            help_text='Collectée sur les ventes ou déductible sur les achats')
     
     # Références
     compte_comptable = models.ForeignKey(PlanComptable, on_delete=models.PROTECT, null=True, blank=True)
@@ -2078,4 +2144,11 @@ from .models_archivage import (
     ClassementDocument, PolitiqueRetention, ArchiveDocument, MatricePiecesJustificatives,
     ValidationDocument, VerificationSignature, FluxDocument, SuppressionDocument,
     TraceAccesDocument, AlerteArchivage, RapportArchivage
+)
+
+# Import des modèles livres et documents SYSCOHADA (caisse, bordereaux, emprunts)
+from .models_livres import (
+    PieceCaisse, BordereauRemise, LigneBordereau, Emprunt, ArreteCaisse,
+    ChequeEmis, DeclarationPatente, RegleEcriture,
+    RegleValidation, DemandeApprobation, DecisionApprobation
 )

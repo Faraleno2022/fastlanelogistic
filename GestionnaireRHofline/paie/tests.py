@@ -14,15 +14,56 @@ from django.urls import reverse
 
 from core.models import Entreprise, Utilisateur
 from employes.models import Employe
-from paie.models import BulletinPaie, ElementSalaire, PeriodePaie, RubriquePaie
+from paie.models import (
+    BulletinPaie, ConfigurationPaieEntreprise, ElementSalaire, PeriodePaie, RubriquePaie,
+)
 from paie.services import MoteurCalculPaie, appliquer_constantes_cnss_legales
 from paie.services_retropaie import calculer_charges_patronales
-from paie.services_simulation import calculer_un_bareme as calculer_un_bareme_simulation
-from paie.views import _controles_livre_paie
+from paie.services_simulation import (
+    calculer_un_bareme as calculer_un_bareme_simulation,
+    optimiser_net,
+)
+from paie.views import _controles_livre_paie, _libelle_portee_livre_paie
 from paie.views_rapports import _audit_masse_salariale, _charges_patronales_bulletin
 from paie.views_etax import get_etax_data
 from paie.views_export import get_declarations_data
 from temps_travail.models import HeureSupplementaire
+
+
+class AcquisitionCongesPaieTests(TestCase):
+    def test_acquisition_est_progressive_dans_annee_courante(self):
+        entreprise = Entreprise.objects.create(
+            nom_entreprise='Congés SARL', slug='conges-sarl', email='conges@example.com')
+        employe = Employe.objects.create(
+            entreprise=entreprise, matricule='CONGE-001', nom='Test', prenoms='Congés',
+            statut_employe='actif', date_embauche=date(2020, 1, 1))
+        ConfigurationPaieEntreprise.objects.create(
+            entreprise=entreprise, jours_conges_par_mois=Decimal('2.50'),
+            jours_conges_anciennete=Decimal('0'))
+        periode = PeriodePaie.objects.create(
+            entreprise=entreprise, annee=2026, mois=3, libelle='Mars 2026',
+            date_debut=date(2026, 3, 1), date_fin=date(2026, 3, 31),
+            statut_periode='ouverte')
+
+        acquis = MoteurCalculPaie(employe, periode)._calculer_conges_acquis()
+
+        self.assertEqual(acquis, Decimal('7.50'))
+
+
+class LibellePorteeLivrePaieTests(SimpleTestCase):
+    """Controle les libelles de portee du livre de paie."""
+
+    def test_une_annee_disponible_sans_filtre_affiche_annuel(self):
+        portee = _libelle_portee_livre_paie(None, None, [2026])
+
+        self.assertEqual(portee['badge'], 'Annuel')
+        self.assertEqual(portee['titre'], 'Cumul annuel - 2026')
+
+    def test_plusieurs_annees_disponibles_affichent_toutes_periodes(self):
+        portee = _libelle_portee_livre_paie(None, None, [2026, 2025])
+
+        self.assertEqual(portee['badge'], 'Toutes périodes')
+        self.assertEqual(portee['titre'], 'Cumul toutes périodes')
 
 
 class HeuresSupplementairesBaseTests(TestCase):
@@ -113,11 +154,11 @@ class HeuresSupplementairesBaseTests(TestCase):
         HeureSupplementaire.objects.create(
             employe=self.employe,
             date_hs=date(2026, 5, 8),
-            type_hs='jour_25',
+            type_hs='jour_30',
             nombre_heures=Decimal('1.03'),
-            taux_majoration=Decimal('25'),
+            taux_majoration=Decimal('30'),
             taux_horaire_base=Decimal('40000'),
-            montant_hs=Decimal('51500'),
+            montant_hs=Decimal('53560'),
             statut='valide',
         )
 
@@ -126,8 +167,8 @@ class HeuresSupplementairesBaseTests(TestCase):
         moteur._calculer_gains()
 
         self.assertEqual(moteur.montants['heures_supplementaires'], Decimal('1.03'))
-        self.assertEqual(moteur.montants['montant_heures_sup'], Decimal('51500'))
-        self.assertGreaterEqual(moteur.montants['total_gains'], Decimal('7245419'))
+        self.assertEqual(moteur.montants['montant_heures_sup'], Decimal('53560'))
+        self.assertGreaterEqual(moteur.montants['total_gains'], Decimal('7247479'))
         self.assertEqual(moteur.lignes[-1]['nombre'], Decimal('1.03'))
 
 
@@ -216,9 +257,11 @@ class BulletinCnssIndemnitesTests(TestCase):
         self.assertEqual(montants['base_rts'], Decimal('1888158'))
         self.assertEqual(montants['irg'], Decimal('44408'))
         self.assertEqual(montants['net'], Decimal('2500000'))
-        self.assertEqual(montants['base_vf'], Decimal('2013158'))
-        self.assertEqual(montants['versement_forfaitaire'], Decimal('120789'))
-        self.assertEqual(montants['taxe_apprentissage'], Decimal('40263'))
+        # Depuis la migration 0142 (audit CGI art. 201) : base VF/TA = brut
+        # integral par defaut, l'exoneration de 25% ne s'applique qu'a la RTS.
+        self.assertEqual(montants['base_vf'], Decimal('2669408'))
+        self.assertEqual(montants['versement_forfaitaire'], Decimal('160164'))
+        self.assertEqual(montants['taxe_apprentissage'], Decimal('53388'))
 
 
 class LivrePaiePdfTests(TestCase):
@@ -357,6 +400,19 @@ class EtaxModeTaOnfppTests(TestCase):
         self.assertEqual(data['detail_employes'][0]['ta'], Decimal('0'))
         self.assertEqual(data['total_onfpp'], Decimal('382500'))
 
+    def test_etax_onfpp_utilise_base_onfpp_dediee(self):
+        BulletinPaie.objects.filter(periode=self.periode).update(
+            base_onfpp=Decimal('650000'),
+            contribution_onfpp=Decimal('0'),
+        )
+
+        data = get_etax_data(self.entreprise, 2026, 5)
+
+        self.assertEqual(data['total_base_vf'], Decimal('25500000'))
+        self.assertEqual(data['total_base_onfpp'], Decimal('19500000'))
+        self.assertEqual(data['total_onfpp'], Decimal('292500'))
+        self.assertEqual(data['detail_employes'][0]['onfpp'], Decimal('9750'))
+
     def test_dmu_expose_total_dgi_onfpp_et_base_vf(self):
         data = get_declarations_data(self.entreprise, 2026, 5)
 
@@ -366,6 +422,65 @@ class EtaxModeTaOnfppTests(TestCase):
         self.assertEqual(data['total_dmu'], Decimal('1912500'))
         self.assertEqual(data['mode_fiscal'], 'optimise')
         self.assertEqual(data['taux_optimisation_global'], Decimal('15.00'))
+        self.assertEqual(data['taux_optimisation_vf'], Decimal('15.00'))
+        self.assertEqual(data['taux_optimisation_onfpp'], Decimal('15.00'))
+
+    def test_dmu_expose_optimisations_vf_et_onfpp_separees(self):
+        BulletinPaie.objects.filter(periode=self.periode).update(
+            base_onfpp=Decimal('650000'),
+            contribution_onfpp=Decimal('0'),
+        )
+
+        data = get_declarations_data(self.entreprise, 2026, 5)
+
+        self.assertEqual(data['total_base_vf'], Decimal('25500000'))
+        self.assertEqual(data['total_base_onfpp'], Decimal('19500000'))
+        self.assertEqual(data['mode_fiscal'], 'bases_distinctes')
+        self.assertEqual(data['taux_optimisation_vf'], Decimal('15.00'))
+        self.assertEqual(data['taux_optimisation_onfpp'], Decimal('35.00'))
+        self.assertTrue(data['bases_vf_onfpp_distinctes'])
+
+    def test_declaration_annuelle_additionne_base_onfpp_effective_historique(self):
+        BulletinPaie.objects.filter(periode=self.periode).update(
+            base_onfpp=Decimal('650000'),
+            contribution_onfpp=Decimal('9750'),
+            taxe_apprentissage=Decimal('0'),
+        )
+        periode_avril = PeriodePaie.objects.create(
+            entreprise=self.entreprise,
+            annee=2026,
+            mois=4,
+            libelle='Avril 2026',
+            date_debut=date(2026, 4, 1),
+            date_fin=date(2026, 4, 30),
+            statut_periode='validee',
+        )
+        for employe in Employe.objects.filter(entreprise=self.entreprise):
+            BulletinPaie.objects.create(
+                employe=employe,
+                periode=periode_avril,
+                numero_bulletin=f'BUL-ETAX-AVR-{employe.id}',
+                mois_paie=4,
+                annee_paie=2026,
+                salaire_brut=Decimal('1000000'),
+                base_rts=Decimal('800000'),
+                cnss_employe=Decimal('50000'),
+                cnss_employeur=Decimal('180000'),
+                irg=Decimal('0'),
+                net_a_payer=Decimal('950000'),
+                versement_forfaitaire=Decimal('51000'),
+                base_vf=Decimal('850000'),
+                base_onfpp=Decimal('0'),
+                taxe_apprentissage=Decimal('0'),
+                contribution_onfpp=Decimal('12750'),
+                statut_bulletin='valide',
+            )
+
+        data = get_declarations_data(self.entreprise, 2026)
+
+        self.assertEqual(data['total_base_vf'], Decimal('51000000'))
+        self.assertEqual(data['total_base_onfpp'], Decimal('45000000'))
+        self.assertEqual(data['total_onfpp'], Decimal('675000'))
 
 class CNSSCalculTests(SimpleTestCase):
     """TU-01 à TU-03: Tests CNSS salarié et employeur"""
@@ -527,6 +642,70 @@ class CNSSCalculTests(SimpleTestCase):
         self.assertEqual(controles['retenues_hors_cnss_rts'][0]['montant'], Decimal('200000'))
 
 
+class SimulationCalculTests(SimpleTestCase):
+    """Parite du moteur de simulation avec les formules du bulletin reel."""
+
+    CONSTANTES = {
+        'TAUX_VF': Decimal('6'),
+        'SEUIL_TA_ONFPP': Decimal('30'),
+    }
+
+    def test_indemnites_au_dela_25_pct_non_comptees_deux_fois(self):
+        """L'excedent reste taxable dans le brut sans etre reintegre deux fois."""
+        resultat = calculer_un_bareme_simulation(
+            Decimal('6000000'),
+            Decimal('3000000'),
+            [
+                {'borne_inf': 0, 'borne_sup': 1000000, 'taux': 0},
+                {'borne_inf': 1000000, 'borne_sup': 3000000, 'taux': 5},
+                {'borne_inf': 3000000, 'borne_sup': 5000000, 'taux': 8},
+                {'borne_inf': 5000000, 'borne_sup': 10000000, 'taux': 10},
+            ],
+            self.CONSTANTES,
+            nb_salaries=1,
+        )
+
+        self.assertEqual(resultat['plafond_exon'], 1500000)
+        self.assertEqual(resultat['exon'], 1500000)
+        self.assertEqual(resultat['depasse'], 1500000)
+        self.assertEqual(resultat['base_rts'], 4375000)
+        self.assertEqual(resultat['rts'], 210000)
+        self.assertEqual(resultat['net'], 5665000)
+        self.assertEqual(resultat['base_vf'], 6000000)
+        self.assertEqual(resultat['vf'], 360000)
+        self.assertEqual(resultat['ta'], 120000)
+
+    def test_rts_arrondie_tranche_par_tranche(self):
+        """La simulation applique le meme arrondi partiel que services.py."""
+        resultat = calculer_un_bareme_simulation(
+            Decimal('2'),
+            Decimal('0'),
+            [
+                {'borne_inf': 0, 'borne_sup': 1, 'taux': 40},
+                {'borne_inf': 1, 'borne_sup': 2, 'taux': 40},
+            ],
+            self.CONSTANTES,
+        )
+
+        self.assertEqual(resultat['rts'], 0)
+        self.assertEqual(
+            [detail['impot_tranche'] for detail in resultat['detail_tranches']],
+            [0, 0],
+        )
+
+    @patch('paie.services_simulation._charger_constantes', return_value=CONSTANTES)
+    def test_optimiseur_conserve_le_brut_total(self, _mock_constantes):
+        """L'optimisation change la repartition, pas l'enveloppe brute."""
+        resultat = optimiser_net(Decimal('6000000'), bareme_id='fallback')
+        scenarios = resultat['scenarios']
+
+        self.assertEqual([scenario['brut'] for scenario in scenarios], [6000000] * 3)
+        self.assertEqual(scenarios[0]['total_indemnites'], 0)
+        self.assertEqual(scenarios[1]['total_indemnites'], 1500000)
+        self.assertEqual(scenarios[2]['total_indemnites'], 1800000)
+        self.assertEqual(resultat['recommandation']['brut'], 6000000)
+
+
 class ChargesPatronalesTests(SimpleTestCase):
     """TU-04 et TU-05: Tests VF et TA"""
 
@@ -534,9 +713,8 @@ class ChargesPatronalesTests(SimpleTestCase):
     TAUX_TA = Decimal('0.02')    # 2%
 
     def _calculer_vf_ta(self, salaire_brut):
-        """Calcule VF et TA sur base VF."""
-        deduction_vf = round(salaire_brut * Decimal('0.25'))
-        base_vf = salaire_brut - deduction_vf
+        """Calcule VF et TA sur le brut, indépendamment de la RTS."""
+        base_vf = salaire_brut
         vf = round(base_vf * self.TAUX_VF)
         ta = round(base_vf * self.TAUX_TA)
         return base_vf, vf, ta
@@ -546,15 +724,15 @@ class ChargesPatronalesTests(SimpleTestCase):
         salaire = Decimal('3600000')
         base_vf, vf, _ = self._calculer_vf_ta(salaire)
 
-        self.assertEqual(base_vf, Decimal('2700000'))
-        self.assertEqual(vf, Decimal('162000'))
+        self.assertEqual(base_vf, Decimal('3600000'))
+        self.assertEqual(vf, Decimal('216000'))
 
     def test_tu05_ta_2_pourcent(self):
         """TU-05: Taxe Apprentissage = 2% de la base VF"""
         salaire = Decimal('3600000')
         _, _, ta = self._calculer_vf_ta(salaire)
 
-        self.assertEqual(ta, Decimal('54000'))
+        self.assertEqual(ta, Decimal('72000'))
 
     def test_charges_patronales_total(self):
         """Total charges patronales = CNSS 18% + VF 6% + TA 2%"""
@@ -566,7 +744,7 @@ class ChargesPatronalesTests(SimpleTestCase):
         _, vf, ta = self._calculer_vf_ta(salaire)
         total = cnss_employeur + vf + ta
 
-        self.assertEqual(total, Decimal('666000'))
+        self.assertEqual(total, Decimal('738000'))
 
     def test_charges_patronales_onfpp_a_partir_de_30_salaries(self):
         """ONFPP = 1,5% de la base VF quand l'effectif atteint le seuil."""
@@ -584,12 +762,12 @@ class ChargesPatronalesTests(SimpleTestCase):
             charges = calculer_charges_patronales(Decimal('3600000'), nb_salaries=30)
 
         self.assertEqual(charges['libelle_ta'], 'ONFPP')
-        self.assertEqual(charges['base_vf'], 2700000)
-        self.assertEqual(charges['base_onfpp'], 2700000)
-        self.assertEqual(charges['base_ta_onfpp'], 2700000)
-        self.assertEqual(charges['vf'], 162000)
-        self.assertEqual(charges['ta'], 40500)
-        self.assertEqual(charges['total'], 652500)
+        self.assertEqual(charges['base_vf'], 3600000)
+        self.assertEqual(charges['base_onfpp'], 3600000)
+        self.assertEqual(charges['base_ta_onfpp'], 3600000)
+        self.assertEqual(charges['vf'], 216000)
+        self.assertEqual(charges['ta'], 54000)
+        self.assertEqual(charges['total'], 720000)
 
     def test_charges_patronales_onfpp_strict_sur_brut_sans_changer_vf(self):
         """Le mode ONFPP strict applique seulement l'ONFPP sur le brut."""
@@ -608,13 +786,13 @@ class ChargesPatronalesTests(SimpleTestCase):
                 Decimal('3600000'), nb_salaries=30, mode_base_onfpp='brut'
             )
 
-        self.assertEqual(charges['mode_base_vf'], 'brut_moins_deduction')
+        self.assertEqual(charges['mode_base_vf'], 'brut')
         self.assertEqual(charges['mode_base_onfpp'], 'brut')
-        self.assertEqual(charges['base_vf'], 2700000)
+        self.assertEqual(charges['base_vf'], 3600000)
         self.assertEqual(charges['base_onfpp'], 3600000)
-        self.assertEqual(charges['vf'], 162000)
+        self.assertEqual(charges['vf'], 216000)
         self.assertEqual(charges['ta'], 54000)
-        self.assertEqual(charges['total'], 666000)
+        self.assertEqual(charges['total'], 720000)
 
     def test_charges_patronales_ta_sous_30_salaries(self):
         """TA = 2% de la base VF tant que l'effectif reste sous le seuil."""
@@ -632,8 +810,8 @@ class ChargesPatronalesTests(SimpleTestCase):
             charges = calculer_charges_patronales(Decimal('3600000'), nb_salaries=29)
 
         self.assertEqual(charges['libelle_ta'], 'TA')
-        self.assertEqual(charges['ta'], 54000)
-        self.assertEqual(charges['total'], 666000)
+        self.assertEqual(charges['ta'], 72000)
+        self.assertEqual(charges['total'], 738000)
 
     def test_rapport_inclut_onfpp_dans_charges_patronales(self):
         """Les rapports doivent additionner CNSS patronale, VF, TA et ONFPP."""
@@ -672,6 +850,7 @@ class ChargesPatronalesTests(SimpleTestCase):
             def aggregate(self, **kwargs):
                 return {
                     'nb': len(self),
+                    'nb_employes': len(self),
                     'brut': sum((b.salaire_brut for b in self), Decimal('0')),
                     'cnss_sal': sum((b.cnss_employe for b in self), Decimal('0')),
                     'cnss_emp': sum((b.cnss_employeur for b in self), Decimal('0')),
@@ -708,22 +887,22 @@ class ChargesPatronalesTests(SimpleTestCase):
             Decimal('3600000'), Decimal('900000'), tranches, constantes, nb_salaries=30
         )
 
-        self.assertEqual(sous_seuil['ta'], 54000)
+        self.assertEqual(sous_seuil['ta'], 72000)
         self.assertEqual(sous_seuil['onfpp'], 0)
         self.assertEqual(au_seuil['ta'], 0)
-        self.assertEqual(au_seuil['base_onfpp'], 2700000)
-        self.assertEqual(au_seuil['onfpp'], 40500)
+        self.assertEqual(au_seuil['base_onfpp'], 3600000)
+        self.assertEqual(au_seuil['onfpp'], 54000)
 
     def test_onfpp_exemple_bulletin_base_vf(self):
-        """Cas audit: ONFPP sur base VF/ONFPP, pas sur le brut."""
+        """Cas audit: VF et ONFPP sur le brut."""
         brut = Decimal('4479445')
         base_vf, vf, _ = self._calculer_vf_ta(brut)
         onfpp = round(base_vf * Decimal('0.015'))
 
-        self.assertEqual(base_vf, Decimal('3359584'))
-        self.assertEqual(vf, Decimal('201575'))
-        self.assertEqual(onfpp, Decimal('50394'))
-        self.assertEqual(Decimal('450000') + vf + onfpp, Decimal('701969'))
+        self.assertEqual(base_vf, Decimal('4479445'))
+        self.assertEqual(vf, Decimal('268767'))
+        self.assertEqual(onfpp, Decimal('67192'))
+        self.assertEqual(Decimal('450000') + vf + onfpp, Decimal('785959'))
 
     def test_charges_patronales_mode_strict_fiscal_sur_brut(self):
         """Le mode strict fiscal applique VF/ONFPP directement sur le brut."""
@@ -763,7 +942,7 @@ class ChargesPatronalesTests(SimpleTestCase):
         self.assertEqual(bulletin.mode_base_vf_effectif, 'optimise')
         self.assertEqual(bulletin.taux_optimisation_vf_onfpp, Decimal('25.00'))
         self.assertEqual(bulletin.economie_vf_onfpp_vs_strict, Decimal('67500'))
-        self.assertEqual(bulletin.risque_fiscal_bulletin['niveau'], 'moyen')
+        self.assertEqual(bulletin.risque_fiscal_bulletin['niveau'], 'eleve')
 
     def test_bulletin_controle_onfpp_strict_sur_base_dediee(self):
         """Le controle accepte ONFPP sur brut quand base_onfpp est renseignee."""
@@ -789,7 +968,7 @@ class ChargesPatronalesTests(SimpleTestCase):
         )
 
         self.assertEqual(bulletin.risque_fiscal_bulletin['niveau'], 'eleve')
-        self.assertIn('Ecart VF', bulletin.risque_fiscal_bulletin['raisons'])
+        self.assertIn('Base VF differente du brut', bulletin.risque_fiscal_bulletin['raisons'])
 
 
 class IRGCalculTests(SimpleTestCase):

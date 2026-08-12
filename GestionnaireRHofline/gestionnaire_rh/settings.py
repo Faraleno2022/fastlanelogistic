@@ -33,36 +33,29 @@ else:
 # Bloquer temporairement les inscriptions (True = inscriptions bloquées)
 REGISTRATION_DISABLED = config('REGISTRATION_DISABLED', default=True, cast=bool)
 
+# Application de la licence (blocage web si licence/essai expiré).
+# Activée uniquement pour la version de bureau (exécutable PyInstaller figé).
+# Pour la version EN LIGNE (serveur, non figé), la demande de licence est
+# désactivée par défaut. Surchargeable via la variable d'environnement
+# LICENCE_ENFORCEMENT (True/False).
+LICENCE_ENFORCEMENT = config('LICENCE_ENFORCEMENT', default=PYINSTALLER_MODE, cast=bool)
+
 # Code de vérification administrateur pour créer un compte
 ADMIN_REGISTRATION_CODE = config('ADMIN_REGISTRATION_CODE', default='625196629')
 
 ALLOWED_HOSTS = [
     'app.fastlanelogisticgn.com',
-    'rh.fastlanelogisticgn.com',
     'fastlanelogisticgn.com',
-    'www.fastlanelogisticgn.com',
-    'www.guineerh.space',
-    'guineerh.space',
-    'guineerh.pythonanywhere.com',
-    'Fastlane.pythonanywhere.com',
+    'fastlane.pythonanywhere.com',
     'localhost',
     '127.0.0.1',
     'testserver',
 ]
 
-# Permet d'ajouter des hosts supplémentaires via la variable d'env
-# DJANGO_EXTRA_ALLOWED_HOSTS (séparés par des virgules)
-_extra = config('DJANGO_EXTRA_ALLOWED_HOSTS', default='')
-if _extra:
-    ALLOWED_HOSTS += [h.strip() for h in _extra.split(',') if h.strip()]
-
-# CSRF trusted origins (Django 4+ : obligatoire pour POST en HTTPS)
-CSRF_TRUSTED_ORIGINS = [
-    'https://app.fastlanelogisticgn.com',
-    'https://rh.fastlanelogisticgn.com',
-    'https://www.fastlanelogisticgn.com',
-    'https://fastlanelogisticgn.com',
-]
+# Hôtes additionnels via variable d'environnement (comparés en minuscules par Django)
+_extra_hosts = config('DJANGO_EXTRA_ALLOWED_HOSTS', default='')
+if _extra_hosts:
+    ALLOWED_HOSTS += [host.strip().lower() for host in _extra_hosts.split(',') if host.strip()]
 
 # Application definition
 INSTALLED_APPS = [
@@ -81,6 +74,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'import_export',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'axes',
     'csp',
@@ -129,6 +123,8 @@ MIDDLEWARE = [
     'core.middleware_guardian.ProjectIntegrityMiddleware',
     # Licence middleware
     'core.middleware_licence.LicenceMiddleware',
+    # Traçabilité du module Stock (utilisateur courant pour le journal d'audit)
+    'stock.audit.CurrentUserMiddleware',
 ]
 
 ROOT_URLCONF = 'gestionnaire_rh.urls'
@@ -263,8 +259,12 @@ else:
     if DEBUG:
         STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     else:
-        # Storage tolérant aux références manquantes (sourcemaps non livrés).
-        STATICFILES_STORAGE = 'gestionnaire_rh.storage.ToleranteStaticFilesStorage'
+        # Compression WhiteNoise SANS manifeste haché : le stockage manifeste
+        # (post_process) échoue dès qu'un fichier RÉFÉRENCÉ est absent — source-maps
+        # (.map) et polices FontAwesome (webfonts/*.ttf) manquants des assets vendored,
+        # ce qui bloquait collectstatic en production. Le stockage compressé sert les
+        # fichiers tels quels (avec gzip/brotli et cache), sans casser sur ces références.
+        STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
@@ -272,10 +272,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Si True, la racine "/" redirige vers le formulaire de connexion au lieu
-# de la page publique (utile pour un déploiement type espace privé).
-LOGIN_IS_HOMEPAGE = config('LOGIN_IS_HOMEPAGE', default=False, cast=bool)
 
 # Custom User Model
 AUTH_USER_MODEL = 'core.Utilisateur'
@@ -587,10 +583,8 @@ DEFENDER_STORE_ACCESS_ATTEMPTS = False
 
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
-    'https://fastlanelogisticgn.com',
-    'https://www.fastlanelogisticgn.com',
-    'https://www.guineerh.space',
-    'https://guineerh.space',
+    'https://app.fastlanelogisticgn.com',
+    'https://fastlane.pythonanywhere.com',
 ]
 
 if PYINSTALLER_MODE:

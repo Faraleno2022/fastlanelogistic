@@ -9,51 +9,51 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Connexion - GuinéeRH | Logiciel de Gestion des Ressources Humaines en Guinée</title>
+    <title>Connexion - Fastlane Logistic | Gestion des Ressources Humaines</title>
 
-    
+
 
     <!-- SEO Meta Tags -->
 
-    <meta name="description" content="GuinéeRH - Logiciel de gestion des ressources humaines conforme au Code du Travail Guinéen. Paie, CNSS, congés, contrats. Solution RH complète pour entreprises en Guinée.">
+    <meta name="description" content="Fastlane Logistic - Plateforme de gestion des ressources humaines conforme au Code du Travail Guinéen. Paie, CNSS, congés, contrats.">
 
-    <meta name="keywords" content="logiciel RH Guinée, gestion paie Guinée, CNSS Guinée, ressources humaines Conakry, logiciel paie guinéen, gestion employés Guinée, bulletin de paie Guinée, calcul salaire Guinée">
+    <meta name="keywords" content="Fastlane Logistic, gestion RH, gestion paie Guinée, CNSS Guinée, ressources humaines Conakry">
 
-    <meta name="author" content="GuinéeRH">
+    <meta name="author" content="Fastlane Logistic">
 
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="noindex, nofollow">
 
-    <link rel="canonical" href="https://www.guineerh.space/login/">
+    <link rel="canonical" href="https://app.fastlanelogisticgn.com/login/">
 
-    
+
 
     <!-- Open Graph / Facebook -->
 
     <meta property="og:type" content="website">
 
-    <meta property="og:url" content="https://www.guineerh.space/">
+    <meta property="og:url" content="https://app.fastlanelogisticgn.com/">
 
-    <meta property="og:title" content="GuinéeRH - Logiciel de Gestion RH pour la Guinée">
+    <meta property="og:title" content="Fastlane Logistic - Gestion RH">
 
-    <meta property="og:description" content="Solution complète de gestion des ressources humaines conforme au Code du Travail Guinéen. Paie, CNSS, congés, contrats et plus.">
+    <meta property="og:description" content="Plateforme interne de gestion des ressources humaines de Fastlane Logistic.">
 
-    <meta property="og:image" content="https://www.guineerh.space/static/img/og-image.png">
+    <meta property="og:image" content="https://app.fastlanelogisticgn.com/static/img/logo.png">
 
     <meta property="og:locale" content="fr_GN">
 
-    <meta property="og:site_name" content="GuinéeRH">
+    <meta property="og:site_name" content="Fastlane Logistic">
 
-    
+
 
     <!-- Twitter Card -->
 
     <meta name="twitter:card" content="summary_large_image">
 
-    <meta name="twitter:title" content="GuinéeRH - Logiciel de Gestion RH pour la Guinée">
+    <meta name="twitter:title" content="Fastlane Logistic - Gestion RH">
 
-    <meta name="twitter:description" content="Solution complète de gestion des ressources humaines conforme au Code du Travail Guinéen.">
+    <meta name="twitter:description" content="Plateforme interne de gestion des ressources humaines de Fastlane Logistic.">
 
-    <meta name="twitter:image" content="https://www.guineerh.space/static/img/og-image.png">
+    <meta name="twitter:image" content="https://app.fastlanelogisticgn.com/static/img/logo.png">
 
     
 
@@ -75,9 +75,9 @@
 
         "@type": "SoftwareApplication",
 
-        "name": "GuinéeRH",
+        "name": "Fastlane Logistic - Gestion RH",
 
-        "description": "Logiciel de gestion des ressources humaines conforme au Code du Travail Guinéen",
+        "description": "Plateforme de gestion des ressources humaines conforme au Code du Travail Guinéen",
 
         "applicationCategory": "BusinessApplication",
 
@@ -97,9 +97,9 @@
 
             "@type": "Organization",
 
-            "name": "GuinéeRH",
+            "name": "Fastlane Logistic",
 
-            "url": "https://www.guineerh.space",
+            "url": "https://app.fastlanelogisticgn.com",
 
             "address": {
 
@@ -177,13 +177,29 @@
 
         .login-header {
 
-            background: linear-gradient(135deg, #0F2C47 0%, #1F4E78 100%);
+            background: linear-gradient(135deg, #1F4E78 0%, #163A5C 100%);
 
             color: white;
 
             padding: 30px;
 
             text-align: center;
+
+        }
+
+        .login-header img {
+
+            max-height: 70px;
+
+            max-width: 220px;
+
+            margin-bottom: 12px;
+
+            background: #fff;
+
+            padding: 8px 14px;
+
+            border-radius: 10px;
 
         }
 
@@ -203,19 +219,17 @@
 
         .form-control:focus {
 
-            border-color: #2E75B6;
+            border-color: #1F4E78;
 
-            box-shadow: 0 0 0 0.2rem rgba(46, 117, 182, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(31, 78, 120, 0.25);
 
         }
 
         .btn-login {
 
-            background: linear-gradient(135deg, #1F4E78 0%, #2E75B6 100%);
+            background: linear-gradient(135deg, #1F4E78 0%, #163A5C 100%);
 
             border: none;
-
-            color: #fff;
 
             padding: 12px;
 
@@ -239,7 +253,7 @@
 
             height: 20px;
 
-            background: #E63946;
+            background: linear-gradient(to right, #CE1126 33.33%, #FCD116 33.33%, #FCD116 66.66%, #009460 66.66%);
 
             border-radius: 3px;
 
@@ -265,9 +279,11 @@
 
                 <div class="login-header">
 
-                    <i class="fas fa-users-cog"></i>
+                    <img src="{% static 'img/logo.png' %}" alt="Fastlane Logistic">
 
-                    <h3 class="mb-0">FASTLANE LOGISTIC</h3>
+                    <h3 class="mb-1">Fastlane Logistic</h3>
+
+                    <p class="mb-0">Gestion des Ressources Humaines</p>
 
                 </div>
 
